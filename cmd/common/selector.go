@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
-	cliConfig "github.com/oasisprotocol/oasis-sdk/cli/config"
+	cliConfig "github.com/oasisprotocol/cli/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 )

@@ -12,8 +12,8 @@ import (
 	registry "github.com/oasisprotocol/oasis-core/go/registry/api"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 
-	"github.com/oasisprotocol/oasis-sdk/cli/cmd/common"
-	cliConfig "github.com/oasisprotocol/oasis-sdk/cli/config"
+	"github.com/oasisprotocol/cli/cmd/common"
+	cliConfig "github.com/oasisprotocol/cli/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"

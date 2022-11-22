@@ -7,7 +7,7 @@ import (
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	coreSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 
-	"github.com/oasisprotocol/oasis-sdk/cli/wallet"
+	"github.com/oasisprotocol/cli/wallet"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/testing"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"

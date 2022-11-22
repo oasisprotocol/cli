@@ -6,9 +6,9 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 
-	"github.com/oasisprotocol/oasis-sdk/cli/config"
-	"github.com/oasisprotocol/oasis-sdk/cli/wallet"
-	"github.com/oasisprotocol/oasis-sdk/cli/wallet/test"
+	"github.com/oasisprotocol/cli/config"
+	"github.com/oasisprotocol/cli/wallet"
+	"github.com/oasisprotocol/cli/wallet/test"
 	configSdk "github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/testing"

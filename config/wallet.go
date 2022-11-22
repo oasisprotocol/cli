@@ -3,7 +3,7 @@ package config
 import (
 	"fmt"
 
-	"github.com/oasisprotocol/oasis-sdk/cli/wallet"
+	"github.com/oasisprotocol/cli/wallet"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 )

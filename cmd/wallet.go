@@ -17,11 +17,11 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/logging"
 	cmdBackground "github.com/oasisprotocol/oasis-core/go/oasis-node/cmd/common/background"
 
-	"github.com/oasisprotocol/oasis-sdk/cli/cmd/common"
-	"github.com/oasisprotocol/oasis-sdk/cli/config"
-	"github.com/oasisprotocol/oasis-sdk/cli/table"
-	"github.com/oasisprotocol/oasis-sdk/cli/wallet"
-	walletFile "github.com/oasisprotocol/oasis-sdk/cli/wallet/file"
+	"github.com/oasisprotocol/cli/cmd/common"
+	"github.com/oasisprotocol/cli/config"
+	"github.com/oasisprotocol/cli/table"
+	"github.com/oasisprotocol/cli/wallet"
+	walletFile "github.com/oasisprotocol/cli/wallet/file"
 )
 
 var (

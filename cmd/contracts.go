@@ -12,9 +12,9 @@ import (
 	flag "github.com/spf13/pflag"
 	"gopkg.in/yaml.v2"
 
+	"github.com/oasisprotocol/cli/cmd/common"
+	cliConfig "github.com/oasisprotocol/cli/config"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
-	"github.com/oasisprotocol/oasis-sdk/cli/cmd/common"
-	cliConfig "github.com/oasisprotocol/oasis-sdk/cli/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"

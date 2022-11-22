@@ -1,4 +1,4 @@
-module github.com/oasisprotocol/oasis-sdk/cli
+module github.com/oasisprotocol/cli
 
 go 1.17
 

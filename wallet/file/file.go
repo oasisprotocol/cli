@@ -22,8 +22,8 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/sakg"
 	coreSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 
-	"github.com/oasisprotocol/oasis-sdk/cli/config"
-	"github.com/oasisprotocol/oasis-sdk/cli/wallet"
+	"github.com/oasisprotocol/cli/config"
+	"github.com/oasisprotocol/cli/wallet"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/ed25519"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/secp256k1"

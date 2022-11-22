@@ -17,7 +17,7 @@ import (
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	consensusTx "github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 
-	"github.com/oasisprotocol/oasis-sdk/cli/wallet"
+	"github.com/oasisprotocol/cli/wallet"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/callformat"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"

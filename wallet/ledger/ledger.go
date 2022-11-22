@@ -10,7 +10,7 @@ import (
 
 	coreSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 
-	"github.com/oasisprotocol/oasis-sdk/cli/wallet"
+	"github.com/oasisprotocol/cli/wallet"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/ed25519"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"

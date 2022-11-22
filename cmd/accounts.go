@@ -16,14 +16,15 @@ import (
 	roothash "github.com/oasisprotocol/oasis-core/go/roothash/api"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 
-	"github.com/oasisprotocol/oasis-sdk/cli/cmd/common"
-	cliConfig "github.com/oasisprotocol/oasis-sdk/cli/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/accounts"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/consensusaccounts"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
+
+	"github.com/oasisprotocol/cli/cmd/common"
+	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
 var (

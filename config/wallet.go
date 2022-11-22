@@ -3,9 +3,10 @@ package config
 import (
 	"fmt"
 
-	"github.com/oasisprotocol/oasis-sdk/cli/wallet"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
+
+	"github.com/oasisprotocol/cli/wallet"
 )
 
 // Wallet contains the configuration of the wallet.

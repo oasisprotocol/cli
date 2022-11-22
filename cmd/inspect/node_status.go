@@ -6,9 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/oasisprotocol/oasis-sdk/cli/cmd/common"
-	cliConfig "github.com/oasisprotocol/oasis-sdk/cli/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
+
+	"github.com/oasisprotocol/cli/cmd/common"
+	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
 var nodeStatusCmd = &cobra.Command{

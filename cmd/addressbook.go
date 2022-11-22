@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/oasisprotocol/oasis-sdk/cli/config"
-	"github.com/oasisprotocol/oasis-sdk/cli/table"
+	"github.com/oasisprotocol/cli/config"
+	"github.com/oasisprotocol/cli/table"
 )
 
 var (

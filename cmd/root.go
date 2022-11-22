@@ -10,10 +10,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/oasisprotocol/oasis-sdk/cli/cmd/inspect"
-	"github.com/oasisprotocol/oasis-sdk/cli/config"
-	_ "github.com/oasisprotocol/oasis-sdk/cli/wallet/file"   // Register file wallet backend.
-	_ "github.com/oasisprotocol/oasis-sdk/cli/wallet/ledger" // Register ledger wallet backend.
+	"github.com/oasisprotocol/cli/cmd/inspect"
+	"github.com/oasisprotocol/cli/config"
+	_ "github.com/oasisprotocol/cli/wallet/file"   // Register file wallet backend.
+	_ "github.com/oasisprotocol/cli/wallet/ledger" // Register ledger wallet backend.
 )
 
 const (

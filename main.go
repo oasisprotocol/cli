@@ -1,6 +1,6 @@
 package main
 
-import "github.com/oasisprotocol/oasis-sdk/cli/cmd"
+import "github.com/oasisprotocol/cli/cmd"
 
 func main() {
 	_ = cmd.Execute()

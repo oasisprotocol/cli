@@ -17,7 +17,6 @@ import (
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	consensusTx "github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 
-	"github.com/oasisprotocol/oasis-sdk/cli/wallet"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/callformat"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
@@ -25,6 +24,8 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
+
+	"github.com/oasisprotocol/cli/wallet"
 )
 
 var (

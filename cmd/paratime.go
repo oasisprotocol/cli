@@ -7,9 +7,10 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 
-	cliConfig "github.com/oasisprotocol/oasis-sdk/cli/config"
-	"github.com/oasisprotocol/oasis-sdk/cli/table"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
+
+	cliConfig "github.com/oasisprotocol/cli/config"
+	"github.com/oasisprotocol/cli/table"
 )
 
 var (

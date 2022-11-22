@@ -3,7 +3,7 @@ package inspect
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/oasisprotocol/oasis-sdk/cli/cmd/common"
+	"github.com/oasisprotocol/cli/cmd/common"
 )
 
 // Cmd is the network inspection sub-command set root.

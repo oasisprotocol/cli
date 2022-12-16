@@ -300,6 +300,11 @@ var (
 				cobra.CheckErr(err)
 			}
 
+			// Check, if to address is known to be unspendable.
+			if toAddr != nil {
+				cobra.CheckErr(common.CheckAddressNotReserved(cfg, toAddr.String()))
+			}
+
 			// Parse amount.
 			// TODO: This should actually query the ParaTime (or config) to check what the consensus
 			//       layer denomination is in the ParaTime. Assume NATIVE for now.
@@ -402,6 +407,9 @@ var (
 
 			cobra.CheckErr(common.CheckLocalAccountIsConsensusCapable(cfg, addrToCheck))
 
+			// Check, if to address is known to be unspendable.
+			cobra.CheckErr(common.CheckAddressNotReserved(cfg, addrToCheck))
+
 			// Parse amount.
 			// TODO: This should actually query the ParaTime (or config) to check what the consensus
 			//       layer denomination is in the ParaTime. Assume NATIVE for now.
@@ -484,6 +492,9 @@ var (
 			// Resolve destination address.
 			toAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, to)
 			cobra.CheckErr(err)
+
+			// Check, if to address is known to be unspendable.
+			cobra.CheckErr(common.CheckAddressNotReserved(cfg, toAddr.String()))
 
 			acc := common.LoadAccount(cfg, npa.AccountName)
 

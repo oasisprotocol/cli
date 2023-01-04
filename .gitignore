@@ -1,0 +1,4 @@
+# Ignore Oasis CLI binary.
+oasis
+# Ignore Python cache directories.
+__pycache__/

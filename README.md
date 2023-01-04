@@ -9,19 +9,27 @@
 [github-ci-lint-link]: https://github.com/oasisprotocol/cli/actions?query=workflow:ci-lint+branch:master
 <!-- markdownlint-enable line-length -->
 
-This is the command-line interface for interacting with the Oasis Network, both
-the consensus layer and paratimes based on the ParaTime SDK.
+This is the official command-line interface (CLI) for interacting with the
+[Oasis Network], both the consensus layer and ParaTimes built with the
+[Oasis Runtime SDK].
+
+[Oasis Network]: https://docs.oasis.io/
+[Oasis Runtime SDK]:
+  https://github.com/oasisprotocol/oasis-sdk/tree/main/runtime-sdk
 
 ## Building
 
-To build the CLI run the following in this directory:
+To build the CLI, run the following:
 
 ```bash
 go build -o oasis
 ```
 
 This will generate a binary called `oasis` which you are free to put somewhere
-in your `$PATH` (the rest of the README assumes as much).
+in your `$PATH`.
+
+*NOTE: The rest of the README assumes the `oasis` binary is somewhere in your
+`$PATH`.*
 
 ## Running
 
@@ -35,8 +43,8 @@ oasis --help
 Each (sub)command has a help section that shows what commands and arguments are
 available.
 
-The Oasis CLI also comes with a default set of networks and paratimes
-configured, you can see a list by running:
+The Oasis CLI also comes with a default set of networks and ParaTimes
+configured. You can see the list by running:
 
 ```bash
 oasis network list
@@ -44,7 +52,7 @@ oasis paratime list
 ```
 
 Initial configuration currently defaults to `mainnet` and the `emerald`
-paratime but this can easily be changed using the corresponding `set-default`
+ParaTime but this can easily be changed using the corresponding `set-default`
 subcommand as follows:
 
 ```bash
@@ -54,8 +62,8 @@ oasis paratime set-default testnet emerald
 
 To be able to sign transactions you will need to first create or import an
 account into your wallet. File-based (storing keys in an encrypted file) and
-Ledger-based (storing keys on a Ledger device) backends are supported. To create
-a new file-backed account run:
+Ledger-based (storing keys on a Ledger device) backends are supported.
+To create a new file-backed account run:
 
 ```bash
 oasis wallet create myaccount
@@ -68,7 +76,7 @@ You can see a list of all accounts by running:
 oasis wallet list
 ```
 
-To show the account's balance on the default network/paratime, run:
+To show the account's balance on the default network/ParaTime, run:
 
 ```bash
 oasis accounts show

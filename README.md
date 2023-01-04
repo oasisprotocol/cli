@@ -1,7 +1,10 @@
 # Oasis CLI
 
+[![CI tests status][github-ci-tests-badge]][github-ci-tests-link]
 [![CI lint status][github-ci-lint-badge]][github-ci-lint-link]
 <!-- markdownlint-disable line-length -->
+[github-ci-tests-badge]: https://github.com/oasisprotocol/cli/workflows/ci-tests/badge.svg
+[github-ci-tests-link]: https://github.com/oasisprotocol/cli/actions?query=workflow:ci-tests+branch:master
 [github-ci-lint-badge]: https://github.com/oasisprotocol/cli/workflows/ci-lint/badge.svg
 [github-ci-lint-link]: https://github.com/oasisprotocol/cli/actions?query=workflow:ci-lint+branch:master
 <!-- markdownlint-enable line-length -->

@@ -1,0 +1,42 @@
+# NOTE: This name appears in GitHub's Checks API and in workflow's status badge.
+name: ci-tests
+
+# Trigger the workflow when:
+on:
+  # A push occurs to one of the matched branches.
+  push:
+    branches:
+      - master
+      - stable/*
+  # Or when a pull request event occurs for a pull request against one of the
+  # matched branches.
+  pull_request:
+    branches:
+      - master
+      - stable/*
+
+jobs:
+  tests:
+    # NOTE: This name appears in GitHub's Checks API.
+    name: tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Set up Go 1.17
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.17.x"
+      - name: Cache Go dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Build code
+        run: |
+          make build
+      - name: Run tests
+        run: |
+          make test

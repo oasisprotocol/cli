@@ -1,5 +1,11 @@
 # Oasis CLI
 
+[![CI lint status][github-ci-lint-badge]][github-ci-lint-link]
+<!-- markdownlint-disable line-length -->
+[github-ci-lint-badge]: https://github.com/oasisprotocol/cli/workflows/ci-lint/badge.svg
+[github-ci-lint-link]: https://github.com/oasisprotocol/cli/actions?query=workflow:ci-lint+branch:master
+<!-- markdownlint-enable line-length -->
+
 This is the command-line interface for interacting with the Oasis Network, both
 the consensus layer and paratimes based on the ParaTime SDK.
 

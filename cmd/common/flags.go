@@ -10,13 +10,22 @@ import (
 )
 
 var selectedHeight int64
+var force bool
 
 // HeightFlag is the flag for specifying block height.
 var HeightFlag *flag.FlagSet
 
+// ForceFlag is a force mode switch.
+var ForceFlag *flag.FlagSet
+
 // GetHeight returns the user-selected block height.
 func GetHeight() int64 {
 	return selectedHeight
+}
+
+// IsForce returns force mode.
+func IsForce() bool {
+	return force
 }
 
 // GetActualHeight returns the user-selected block height if explicitly
@@ -39,4 +48,7 @@ func GetActualHeight(
 func init() {
 	HeightFlag = flag.NewFlagSet("", flag.ContinueOnError)
 	HeightFlag.Int64Var(&selectedHeight, "height", consensus.HeightLatest, "explicitly set block height to use")
+
+	ForceFlag = flag.NewFlagSet("", flag.ContinueOnError)
+	ForceFlag.BoolVarP(&force, "force", "f", false, "treat safety check errors as warnings")
 }

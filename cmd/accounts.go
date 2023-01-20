@@ -300,6 +300,11 @@ var (
 				cobra.CheckErr(err)
 			}
 
+			// Check, if to address is known to be unspendable.
+			if toAddr != nil {
+				common.CheckForceErr(common.CheckAddressNotReserved(cfg, toAddr.String()))
+			}
+
 			// Parse amount.
 			// TODO: This should actually query the ParaTime (or config) to check what the consensus
 			//       layer denomination is in the ParaTime. Assume NATIVE for now.
@@ -402,6 +407,9 @@ var (
 
 			cobra.CheckErr(common.CheckLocalAccountIsConsensusCapable(cfg, addrToCheck))
 
+			// Check, if to address is known to be unspendable.
+			common.CheckForceErr(common.CheckAddressNotReserved(cfg, addrToCheck))
+
 			// Parse amount.
 			// TODO: This should actually query the ParaTime (or config) to check what the consensus
 			//       layer denomination is in the ParaTime. Assume NATIVE for now.
@@ -484,6 +492,9 @@ var (
 			// Resolve destination address.
 			toAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, to)
 			cobra.CheckErr(err)
+
+			// Check, if to address is known to be unspendable.
+			common.CheckForceErr(common.CheckAddressNotReserved(cfg, toAddr.String()))
 
 			acc := common.LoadAccount(cfg, npa.AccountName)
 
@@ -845,12 +856,15 @@ func init() {
 
 	accountsDepositCmd.Flags().AddFlagSet(common.SelectorFlags)
 	accountsDepositCmd.Flags().AddFlagSet(common.TransactionFlags)
+	accountsDepositCmd.Flags().AddFlagSet(common.ForceFlag)
 
 	accountsWithdrawCmd.Flags().AddFlagSet(common.SelectorFlags)
 	accountsWithdrawCmd.Flags().AddFlagSet(common.TransactionFlags)
+	accountsWithdrawCmd.Flags().AddFlagSet(common.ForceFlag)
 
 	accountsTransferCmd.Flags().AddFlagSet(common.SelectorFlags)
 	accountsTransferCmd.Flags().AddFlagSet(common.TransactionFlags)
+	accountsTransferCmd.Flags().AddFlagSet(common.ForceFlag)
 
 	accountsBurnCmd.Flags().AddFlagSet(common.SelectorFlags)
 	accountsBurnCmd.Flags().AddFlagSet(common.TransactionFlags)

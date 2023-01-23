@@ -58,7 +58,7 @@ var (
 			case *types.Transaction:
 				// Unsigned runtime transaction, sign first.
 				acc := common.LoadAccount(cfg, npa.AccountName)
-				sigTx, meta, err = common.SignParaTimeTransaction(ctx, npa, acc, conn, dtx)
+				sigTx, meta, err = common.SignParaTimeTransaction(ctx, npa, acc, conn, dtx, nil)
 				cobra.CheckErr(err)
 			}
 

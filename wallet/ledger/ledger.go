@@ -6,7 +6,9 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/mitchellh/mapstructure"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/secp256k1"
 	flag "github.com/spf13/pflag"
+	"golang.org/x/crypto/sha3"
 
 	coreSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 
@@ -14,6 +16,7 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/ed25519"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
+	"github.com/oasisprotocol/cli/config"
 	"github.com/oasisprotocol/cli/wallet"
 )
 
@@ -21,16 +24,13 @@ const (
 	// Kind is the account kind for the ledger-backed accounts.
 	Kind = "ledger"
 
-	derivationAdr8   = "adr8"
-	derivationLegacy = "legacy"
-
-	cfgDerivation = "ledger.derivation"
-	cfgNumber     = "ledger.number"
+	cfgAlgorithm = "ledger.algorithm"
+	cfgNumber    = "ledger.number"
 )
 
 type accountConfig struct {
-	Derivation string `mapstructure:"derivation,omitempty"`
-	Number     uint32 `mapstructure:"number,omitempty"`
+	Algorithm string `mapstructure:"algorithm"`
+	Number    uint32 `mapstructure:"number,omitempty"`
 }
 
 type ledgerAccountFactory struct {
@@ -47,12 +47,12 @@ func (af *ledgerAccountFactory) PrettyKind(rawCfg map[string]interface{}) string
 		return ""
 	}
 
-	// Show adr8, if derivation not set.
-	derivation := cfg.Derivation
-	if derivation == "" {
-		derivation = derivationAdr8
+	// Show legacy, if algorithm not set.
+	algorithm := cfg.Algorithm
+	if algorithm == "" {
+		algorithm = wallet.AlgorithmEd25519Adr8
 	}
-	return fmt.Sprintf("%s (%s:%d)", af.Kind(), derivation, cfg.Number)
+	return fmt.Sprintf("%s (%s:%d)", af.Kind(), algorithm, cfg.Number)
 }
 
 func (af *ledgerAccountFactory) Flags() *flag.FlagSet {
@@ -61,7 +61,7 @@ func (af *ledgerAccountFactory) Flags() *flag.FlagSet {
 
 func (af *ledgerAccountFactory) GetConfigFromFlags() (map[string]interface{}, error) {
 	cfg := make(map[string]interface{})
-	cfg["derivation"], _ = af.flags.GetString(cfgDerivation)
+	cfg["algorithm"], _ = af.flags.GetString(cfgAlgorithm)
 	cfg["number"], _ = af.flags.GetUint32(cfgNumber)
 	return cfg, nil
 }
@@ -87,12 +87,48 @@ func (af *ledgerAccountFactory) SupportedImportKinds() []wallet.ImportKind {
 }
 
 func (af *ledgerAccountFactory) HasConsensusSigner(rawCfg map[string]interface{}) bool {
-	return true
+	cfg, err := af.unmarshalConfig(rawCfg)
+	if err != nil {
+		return false
+	}
+
+	switch cfg.Algorithm {
+	case wallet.AlgorithmEd25519Legacy, wallet.AlgorithmEd25519Adr8:
+		return true
+	}
+	return false
+}
+
+// migrate migrates the given config ledger account entry to the latest version of the config and
+// returns true, if any changes were needed.
+func (af *ledgerAccountFactory) migrate(raw map[string]interface{}) bool {
+	var changed bool
+
+	// CONFIG MIGRATION 1 (add legacy derivation support): Set default derivation to ADR 8, if not set.
+	if raw["derivation"] == nil && raw["algorithm"] == nil {
+		raw["derivation"] = "adr8"
+
+		changed = true
+	}
+
+	// CONFIG MIGRATION 2 (convert derivation -> algorithm).
+	if val, ok := raw["derivation"]; ok {
+		raw["algorithm"] = fmt.Sprintf("ed25519-%s", val)
+		delete(raw, "derivation")
+
+		changed = true
+	}
+
+	return changed
 }
 
 func (af *ledgerAccountFactory) unmarshalConfig(raw map[string]interface{}) (*accountConfig, error) {
 	if raw == nil {
 		return nil, fmt.Errorf("missing configuration")
+	}
+
+	if changed := af.migrate(raw); changed {
+		config.Global().Save()
 	}
 
 	var cfg accountConfig
@@ -145,41 +181,57 @@ func newAccount(cfg *accountConfig) (wallet.Account, error) {
 		return nil, err
 	}
 
-	var path []uint32
-	switch cfg.Derivation {
-	case derivationAdr8, "":
-		path = getAdr0008Path(cfg.Number)
-	case derivationLegacy:
-		path = getLegacyPath(cfg.Number)
-	default:
-		return nil, fmt.Errorf("ledger: unsupported derivation scheme '%s'", cfg.Derivation)
-	}
-
 	// Retrieve public key.
-	rawPk, err := dev.GetPublicKeyEd25519(path, false)
-	if err != nil {
-		_ = dev.Close()
-		return nil, err
+	var path []uint32
+	var pk signature.PublicKey
+	var coreSigner *ledgerCoreSigner
+	switch cfg.Algorithm {
+	case wallet.AlgorithmEd25519Adr8, wallet.AlgorithmEd25519Legacy, "":
+		path = getAdr0008Path(cfg.Number)
+		if cfg.Algorithm == wallet.AlgorithmEd25519Legacy {
+			path = getLegacyPath(cfg.Number)
+		}
+		rawPk, err := dev.GetPublicKeyEd25519(path, false)
+		if err != nil {
+			_ = dev.Close()
+			return nil, err
+		}
+		// Create consensus layer signer.
+		coreSigner = &ledgerCoreSigner{
+			path: path,
+			dev:  dev,
+		}
+		if err = coreSigner.pk.UnmarshalBinary(rawPk); err != nil {
+			_ = dev.Close()
+			return nil, fmt.Errorf("ledger: got malformed public key: %w", err)
+		}
+		var ed25519pk ed25519.PublicKey
+		if err := ed25519pk.UnmarshalBinary(rawPk); err != nil {
+			return nil, err
+		}
+		pk = ed25519pk
+	case wallet.AlgorithmSecp256k1Bip44:
+		path = getBip44Path(cfg.Number)
+		rawPk, err := dev.GetPublicKeySecp256k1(path, false)
+		if err != nil {
+			_ = dev.Close()
+			return nil, err
+		}
+		var secp256k1pk secp256k1.PublicKey
+		if err := secp256k1pk.UnmarshalBinary(rawPk); err != nil {
+			return nil, err
+		}
+		pk = secp256k1pk
+	default:
+		return nil, fmt.Errorf("unsupported algorithm %s", cfg.Algorithm)
 	}
 
-	// Create consensus layer signer.
-	coreSigner := &ledgerCoreSigner{
-		path: path,
-		dev:  dev,
-	}
-	if err = coreSigner.pk.UnmarshalBinary(rawPk); err != nil {
-		_ = dev.Close()
-		return nil, fmt.Errorf("ledger: got malformed public key: %w", err)
-	}
-
-	// Create paratime layer signer.
-	// NOTE: Ledger currently doesn't support signing paratime transactions.
+	// Create runtime signer.
 	signer := &ledgerSigner{
-		dev: dev,
-	}
-	if err = signer.pk.UnmarshalBinary(rawPk); err != nil {
-		_ = dev.Close()
-		return nil, fmt.Errorf("ledger: got malformed public key: %w", err)
+		algorithm: cfg.Algorithm,
+		path:      path,
+		pk:        pk,
+		dev:       dev,
 	}
 
 	return &ledgerAccount{
@@ -202,21 +254,37 @@ func (a *ledgerAccount) Address() types.Address {
 }
 
 func (a *ledgerAccount) EthAddress() *ethCommon.Address {
-	// secp256k1 accounts are not supported by Ledger yet.
+	switch a.cfg.Algorithm {
+	case wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSecp256k1Raw:
+		h := sha3.NewLegacyKeccak256()
+		untaggedPk, _ := a.Signer().Public().(secp256k1.PublicKey).MarshalBinaryUncompressedUntagged()
+		h.Write(untaggedPk)
+		hash := h.Sum(nil)
+		addr := ethCommon.BytesToAddress(hash[32-20:])
+		return &addr
+	}
+
 	return nil
 }
 
 func (a *ledgerAccount) SignatureAddressSpec() types.SignatureAddressSpec {
-	return types.NewSignatureAddressSpecEd25519(a.signer.Public().(ed25519.PublicKey))
+	switch a.cfg.Algorithm {
+	case "", wallet.AlgorithmEd25519Legacy, wallet.AlgorithmEd25519Adr8, wallet.AlgorithmEd25519Raw:
+		return types.NewSignatureAddressSpecEd25519(a.Signer().Public().(ed25519.PublicKey))
+	case wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSecp256k1Raw:
+		return types.NewSignatureAddressSpecSecp256k1Eth(a.Signer().Public().(secp256k1.PublicKey))
+	}
+	return types.SignatureAddressSpec{}
 }
 
 func (a *ledgerAccount) UnsafeExport() string {
+	// Secret is stored on the device.
 	return ""
 }
 
 func init() {
 	flags := flag.NewFlagSet("", flag.ContinueOnError)
-	flags.String(cfgDerivation, derivationLegacy, "Derivation scheme to use [adr8, legacy]")
+	flags.String(cfgAlgorithm, wallet.AlgorithmEd25519Legacy, fmt.Sprintf("Cryptographic algorithm to use for this account [%s, %s, %s]", wallet.AlgorithmEd25519Legacy, wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44))
 	flags.Uint32(cfgNumber, 0, "Key number to use in the derivation scheme")
 
 	wallet.Register(&ledgerAccountFactory{

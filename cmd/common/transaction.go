@@ -147,6 +147,7 @@ func SignParaTimeTransaction(
 	wallet wallet.Account,
 	conn connection.Connection,
 	tx *types.Transaction,
+	txDetails *signature.TxDetails,
 ) (*types.UnverifiedTransaction, interface{}, error) {
 	// Default to passed values and do online estimation when possible.
 	nonce := txNonce
@@ -240,12 +241,16 @@ func SignParaTimeTransaction(
 	PrintTransactionBeforeSigning(npa, tx)
 
 	// Sign the transaction.
-	sigCtx := signature.DeriveChainContext(npa.ParaTime.Namespace(), npa.Network.ChainContext)
 	ts := tx.PrepareForSigning()
+	sigCtx := &signature.RichContext{
+		RuntimeID:    npa.ParaTime.Namespace(),
+		ChainContext: npa.Network.ChainContext,
+		Base:         types.SignatureContextBase,
+		TxDetails:    txDetails,
+	}
 	if err := ts.AppendSign(sigCtx, wallet.Signer()); err != nil {
 		return nil, nil, fmt.Errorf("failed to sign transaction: %w", err)
 	}
-
 	return ts.UnverifiedTransaction(), meta, nil
 }
 

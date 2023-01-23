@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
+	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
 
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
@@ -78,17 +79,18 @@ func LoadTestAccountConfig(name string) (*config.Account, error) {
 }
 
 // ResolveLocalAccountOrAddress resolves a string address into the corresponding account address.
-func ResolveLocalAccountOrAddress(net *configSdk.Network, address string) (*types.Address, error) {
+func ResolveLocalAccountOrAddress(net *configSdk.Network, address string) (*types.Address, *ethCommon.Address, error) {
 	// Check if address is the account name in the wallet.
 	if acc, ok := config.Global().Wallet.All[address]; ok {
 		addr := acc.GetAddress()
-		return &addr, nil
+		// TODO: Implement acc.GetEthAddress()
+		return &addr, nil, nil
 	}
 
 	// Check if address is the name of an address book entry.
 	if entry, ok := config.Global().AddressBook.All[address]; ok {
 		addr := entry.GetAddress()
-		return &addr, nil
+		return &addr, entry.GetEthAddress(), nil
 	}
 
 	return helpers.ResolveAddress(net, address)

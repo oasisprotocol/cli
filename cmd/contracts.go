@@ -270,7 +270,7 @@ otherwise as Base64.`,
 			})
 
 			acc := common.LoadAccount(cfg, npa.AccountName)
-			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx)
+			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
 			var result contracts.UploadResult
@@ -332,7 +332,7 @@ otherwise as Base64.`,
 			})
 
 			acc := common.LoadAccount(cfg, npa.AccountName)
-			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx)
+			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
 			var result contracts.InstantiateResult
@@ -389,7 +389,7 @@ otherwise as Base64.`,
 			})
 
 			acc := common.LoadAccount(cfg, npa.AccountName)
-			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx)
+			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
 			var result contracts.CallResult
@@ -452,7 +452,7 @@ otherwise as Base64.`,
 			})
 
 			acc := common.LoadAccount(cfg, npa.AccountName)
-			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx)
+			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
 			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil)
@@ -484,7 +484,7 @@ func parsePolicy(net *config.Network, wallet *cliConfig.Account, policy string) 
 		return &contracts.Policy{Address: &address}
 	case strings.HasPrefix(policy, "address:"):
 		policy = strings.TrimPrefix(policy, "address:")
-		address, err := common.ResolveLocalAccountOrAddress(net, policy)
+		address, _, err := common.ResolveLocalAccountOrAddress(net, policy)
 		if err != nil {
 			cobra.CheckErr(fmt.Errorf("malformed address in policy: %w", err))
 		}

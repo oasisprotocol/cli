@@ -16,11 +16,13 @@ import (
 var registeredFactories sync.Map
 
 const (
-	// AlgorithmEd25519Adr8 is the Ed25519 algorithm using the ADR-0008 derivation.
+	// AlgorithmEd25519Adr8 is the Ed25519 algorithm using the ADR-8 derivation path (ROSE coin type).
 	AlgorithmEd25519Adr8 = "ed25519-adr8"
 	// AlgorithmEd25519Raw is the Ed25519 algorithm using raw private keys.
 	AlgorithmEd25519Raw = "ed25519-raw"
-	// AlgorithmSecp256k1Bip44 is the Secp256k1 algorithm using BIP-44 derivation.
+	// AlgorithmEd25519Legacy is the Ed25519 algorithm using the Legacy derivation (ROSE coin type).
+	AlgorithmEd25519Legacy = "ed25519-legacy"
+	// AlgorithmSecp256k1Bip44 is the Secp256k1 algorithm using BIP-44 derivation with ETH coin type.
 	AlgorithmSecp256k1Bip44 = "secp256k1-bip44"
 	// AlgorithmSecp256k1Raw is the Secp256k1 algorithm using raw private keys.
 	AlgorithmSecp256k1Raw = "secp256k1-raw"

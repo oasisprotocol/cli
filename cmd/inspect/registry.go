@@ -193,7 +193,7 @@ func parseIdentifier(
 		return sel, nil
 	}
 
-	addr, err := helpers.ResolveAddress(npa.Network, s)
+	addr, _, err := helpers.ResolveAddress(npa.Network, s)
 	if err == nil {
 		return addr, nil
 	}

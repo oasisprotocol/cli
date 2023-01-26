@@ -9,8 +9,10 @@ import (
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 )
 
-var selectedHeight int64
-var force bool
+var (
+	selectedHeight int64
+	force          bool
+)
 
 // HeightFlag is the flag for specifying block height.
 var HeightFlag *flag.FlagSet

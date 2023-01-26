@@ -1,18 +1,23 @@
 include common.mk
 
+# Check if Go's linkers flags are set in common.mk and add them as extra flags.
+ifneq ($(GOLDFLAGS),)
+	GO_EXTRA_FLAGS += -ldflags $(GOLDFLAGS)
+endif
+
 # Set all target as the default target.
 all: build
 
 # Build.
 build:
 	@$(ECHO) "$(MAGENTA)*** Building Go code...$(OFF)"
-	@$(GO) build -v -o oasis
+	@$(GO) build -v -o oasis $(GOFLAGS) $(GO_EXTRA_FLAGS)
 
 # Format code.
 fmt:
 	@$(ECHO) "$(CYAN)*** Running Go formatters...$(OFF)"
-	@gofumpt -s -w .
-	@gofumports -w -local github.com/oasisprotocol/cli .
+	@gofumpt -w .
+	@goimports -w -local github.com/oasisprotocol/cli .
 
 # Lint code, commits and documentation.
 lint-targets := lint-go lint-docs lint-git lint-go-mod-tidy
@@ -35,6 +40,10 @@ lint-go-mod-tidy:
 	@$(CHECK_GO_MOD_TIDY)
 
 lint: $(lint-targets)
+
+# Release.
+release-build:
+	@goreleaser release --rm-dist
 
 # Test.
 test-targets := test-unit

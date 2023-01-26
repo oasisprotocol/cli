@@ -29,11 +29,40 @@ OASIS_CLI_GIT_ORIGIN_REMOTE ?= origin
 # Name of the branch where to tag the next release.
 RELEASE_BRANCH ?= master
 
+# Determine project's version from git.
+# NOTE: This computes the project's version from the latest version tag
+# reachable from current git commit and does not search for version
+# tags across the whole $(GIT_ORIGIN_REMOTE) repository.
+GIT_VERSION := $(subst v,,$(shell \
+	git describe --tags --match 'v*' --abbrev=0 2>/dev/null HEAD || \
+	echo undefined \
+))
+
+# Determine project's version.
+# If the current git commit is exactly a tag and it equals the Punch version,
+# then the project's version is that.
+# Else, the project version is the Punch version appended with git commit and
+# dirty state info.
+GIT_COMMIT_EXACT_TAG := $(shell \
+	git describe --tags --match 'v*' --exact-match &>/dev/null HEAD && echo YES || echo NO \
+)
+
 # Go binary to use for all Go commands.
-OASIS_GO ?= go
+export OASIS_GO ?= go
 
 # Go command prefix to use in all Go commands.
 GO := env -u GOPATH $(OASIS_GO)
+
+VERSION := $(or \
+	$(and $(call eq,$(GIT_COMMIT_EXACT_TAG),YES), $(GIT_VERSION)), \
+	$(shell git describe --tags --abbrev=0)-git$(shell git describe --always --match '' --dirty=+dirty 2>/dev/null) \
+)
+
+# Project's version as the linker's string value definition.
+export GOLDFLAGS_VERSION := -X github.com/oasisprotocol/cli/version.Software=$(VERSION)
+
+# Go's linker flags.
+export GOLDFLAGS ?= "$(GOLDFLAGS_VERSION)"
 
 # Helper that ensures the git workspace is clean.
 define ENSURE_GIT_CLEAN =

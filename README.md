@@ -22,7 +22,7 @@ This is the official command-line interface (CLI) for interacting with the
 To build the CLI, run the following:
 
 ```bash
-go build -o oasis
+make
 ```
 
 This will generate a binary called `oasis` which you are free to put somewhere

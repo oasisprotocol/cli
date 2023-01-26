@@ -12,6 +12,7 @@ import (
 
 	"github.com/oasisprotocol/cli/cmd/inspect"
 	"github.com/oasisprotocol/cli/config"
+	"github.com/oasisprotocol/cli/version"
 	_ "github.com/oasisprotocol/cli/wallet/file"   // Register file wallet backend.
 	_ "github.com/oasisprotocol/cli/wallet/ledger" // Register ledger wallet backend.
 )
@@ -26,13 +27,25 @@ var (
 	rootCmd = &cobra.Command{
 		Use:     "oasis",
 		Short:   "CLI for interacting with the Oasis network",
-		Version: "0.1.0",
+		Version: version.Software,
 	}
 )
 
 // Execute executes the root command.
 func Execute() error {
 	return rootCmd.Execute()
+}
+
+func initVersions() {
+	cobra.AddTemplateFunc("toolchain", func() interface{} { return version.Toolchain })
+	cobra.AddTemplateFunc("sdk", func() interface{} { return version.GetOasisSDKVersion() })
+	cobra.AddTemplateFunc("core", func() interface{} { return version.GetOasisCoreVersion() })
+
+	rootCmd.SetVersionTemplate(`Software version: {{.Version}}
+Oasis SDK version: {{ sdk }}
+Oasis Core version: {{ core }}
+Go toolchain version: {{ toolchain }}
+`)
 }
 
 func initConfig() {
@@ -73,6 +86,8 @@ func initConfig() {
 }
 
 func init() {
+	initVersions()
+
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file to use")

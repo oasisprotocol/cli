@@ -1,0 +1,64 @@
+project_name: Oasis CLI
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - binary: oasis
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -buildid=
+      - "{{.Env.GOLDFLAGS_VERSION}}"
+    goos:
+      - linux
+    goarch:
+      - amd64
+
+archives:
+  - name_template: "{{replace .ProjectName \" \" \"_\" | tolower}}_{{.Version}}_{{.Os}}_{{.Arch}}"
+    wrap_in_directory: true
+
+checksum:
+  name_template: SHA256SUMS-{{.Version}}.txt
+  algorithm: sha256
+
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+    - Merge pull request
+    - Merge remote-tracking branch
+    - Merge branch
+  groups:
+    - title: Breaking changes
+      regexp: "^.*breaks[(\\w)]*:+.*$"
+      order: 0
+    - title: New Features
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 5
+    - title: Bug fixes
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 10
+    - title: Dependencies updates
+      regexp: "^.*deps[(\\w)]*:+.*$"
+      order: 500
+    - title: Other changes
+      order: 999
+
+release:
+  name_template: "{{.ProjectName}} {{.Version}}"
+
+  # If set to auto, will mark the release as not ready for production
+  # in case there is an indicator for this in the tag e.g. v1.0.0-rc1.
+  prerelease: auto
+
+  footer: |
+    **Full Changelog**: https://github.com/oasisprotocol/cli/compare/{{ .PreviousTag }}...{{ .Tag }}

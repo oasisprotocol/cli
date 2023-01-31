@@ -1,0 +1,61 @@
+# golangci-lint configuration.
+
+# For more information, see:
+# https://golangci-lint.run/usage/configuration/.
+
+run:
+  timeout: 5m
+
+linters:
+  # Disable all linters except the ones explicitly listed below.
+  disable-all: true
+  enable:
+    - asciicheck
+    - bodyclose
+    - deadcode
+    - depguard
+    - dogsled
+    - dupl
+    - errcheck
+    - exhaustive
+    - exportloopref
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - gofumpt
+    - goheader
+    - goimports
+    - revive
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
+    - nakedret
+    - nestif
+    - noctx
+    - nolintlint
+    - prealloc
+    - rowserrcheck
+    - staticcheck
+    - structcheck
+    - stylecheck
+    - sqlclosecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - varcheck
+    - whitespace
+
+linters-settings:
+  exhaustive:
+    # Switch statements are to be considered exhaustive if a 'default' case is
+    # present, even if all enum members aren't listed in the switch.
+    default-signifies-exhaustive: true
+  govet:
+    # Enabled checking for shadowed variables.
+    check-shadowing: true

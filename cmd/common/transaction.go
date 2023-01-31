@@ -87,7 +87,7 @@ func SignConsensusTransaction(
 		}
 	}
 
-	if !txOffline { // nolint: nestif
+	if !txOffline { //nolint: nestif
 		// Query nonce if not specified.
 		if tx.Nonce == invalidNonce {
 			nonce, err := conn.Consensus().GetSignerNonce(ctx, &consensus.GetSignerNonceRequest{
@@ -176,7 +176,7 @@ func SignParaTimeTransaction(
 	// Prepare the transaction before (optional) gas estimation to ensure correct estimation.
 	tx.AppendAuthSignature(wallet.SignatureAddressSpec(), nonce)
 
-	if !txOffline { // nolint: nestif
+	if !txOffline { //nolint: nestif
 		// Gas estimation if not specified.
 		if tx.AuthInfo.Fee.Gas == invalidGasLimit {
 			var err error

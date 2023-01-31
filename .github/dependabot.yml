@@ -1,0 +1,16 @@
+version: 2
+updates:
+
+  # Manage Github Actions versions.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+    commit-message:
+      prefix: "ci:"
+
+  # Manage Go package versions.
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: daily

@@ -7,7 +7,7 @@ go 1.18
 replace github.com/spf13/cast => github.com/oasisprotocol/cast v0.0.0-20220606122631-eba453e69641
 
 require (
-	github.com/AlecAivazis/survey/v2 v2.3.5
+	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/adrg/xdg v0.4.0
 	github.com/ethereum/go-ethereum v1.10.19
 	github.com/miguelmota/go-ethereum-hdwallet v0.1.1

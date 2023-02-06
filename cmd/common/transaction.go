@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
+	"github.com/oasisprotocol/oasis-core/go/common"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	coreSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	consensusPretty "github.com/oasisprotocol/oasis-core/go/common/prettyprint"
@@ -55,6 +56,15 @@ func GetTransactionConfig() *TransactionConfig {
 	return &TransactionConfig{
 		Offline: txOffline,
 	}
+}
+
+// isRuntimeTx returns true, if given object is a signed or unsigned runtime transaction.
+func isRuntimeTx(tx interface{}) bool {
+	_, isRuntimeTx := tx.(*types.Transaction)
+	if !isRuntimeTx {
+		_, isRuntimeTx = tx.(*types.UnverifiedTransaction)
+	}
+	return isRuntimeTx
 }
 
 // SignConsensusTransaction signs a consensus transaction.
@@ -256,13 +266,24 @@ func SignParaTimeTransaction(
 
 // PrintTransaction prints the transaction which can be either signed or unsigned.
 func PrintTransaction(npa *NPASelection, tx interface{}) {
-	var isParaTimeTx bool
 	switch rtx := tx.(type) {
 	case consensusPretty.PrettyPrinter:
-		// Signed or unsigned consensus transaction.
+		// Signed or unsigned consensus or runtime transaction.
+		var ns common.Namespace
+		if npa.ParaTime != nil {
+			ns = npa.ParaTime.Namespace()
+		}
+		sigCtx := signature.RichContext{
+			RuntimeID:    ns,
+			ChainContext: npa.Network.ChainContext,
+			Base:         types.SignatureContextBase,
+		}
 		ctx := context.Background()
 		ctx = context.WithValue(ctx, consensusPretty.ContextKeyTokenSymbol, npa.Network.Denomination.Symbol)
 		ctx = context.WithValue(ctx, consensusPretty.ContextKeyTokenValueExponent, npa.Network.Denomination.Decimals)
+		ctx = context.WithValue(ctx, config.ContextKeyParaTimeCfg, npa.ParaTime)
+		ctx = context.WithValue(ctx, signature.ContextKeySigContext, &sigCtx)
+		ctx = context.WithValue(ctx, types.ContextKeyAccountNames, GenAccountNames())
 
 		// Set up chain context for signature verification during pretty-printing.
 		coreSignature.UnsafeResetChainContext()
@@ -279,7 +300,7 @@ func PrintTransaction(npa *NPASelection, tx interface{}) {
 	}
 
 	fmt.Println()
-	if isParaTimeTx && npa.ParaTime != nil {
+	if isRuntimeTx(tx) && npa.ParaTime != nil {
 		fmt.Printf("ParaTime: %s", npa.ParaTimeName)
 		if len(npa.ParaTime.Description) > 0 {
 			fmt.Printf(" (%s)", npa.ParaTime.Description)

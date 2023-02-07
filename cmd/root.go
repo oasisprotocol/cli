@@ -99,4 +99,5 @@ func init() {
 	rootCmd.AddCommand(addressBookCmd)
 	rootCmd.AddCommand(contractsCmd)
 	rootCmd.AddCommand(inspect.Cmd)
+	rootCmd.AddCommand(txCmd)
 }

@@ -20,8 +20,12 @@ var (
 	noParaTime bool
 )
 
-// SelectorFlags contains the common selector flags for network/paratime/wallet.
-var SelectorFlags *flag.FlagSet
+var (
+	// SelectorFlags contains the common selector flags for network/paratime/wallet.
+	SelectorFlags *flag.FlagSet
+	// SelectorNPFlags contains the common selector flags for network/paratime.
+	SelectorNPFlags *flag.FlagSet
+)
 
 // NPASelection contains the network/paratime/account selection.
 type NPASelection struct {
@@ -89,6 +93,11 @@ func init() {
 	SelectorFlags.StringVar(&selectedParaTime, "paratime", "", "explicitly set paratime to use")
 	SelectorFlags.BoolVar(&noParaTime, "no-paratime", false, "explicitly set that no paratime should be used")
 	SelectorFlags.StringVar(&selectedAccount, "account", "", "explicitly set account to use")
+
+	SelectorNPFlags = flag.NewFlagSet("", flag.ContinueOnError)
+	SelectorNPFlags.StringVar(&selectedNetwork, "network", "", "explicitly set network to use")
+	SelectorNPFlags.StringVar(&selectedParaTime, "paratime", "", "explicitly set paratime to use")
+	SelectorNPFlags.BoolVar(&noParaTime, "no-paratime", false, "explicitly set that no paratime should be used")
 
 	// Backward compatibility.
 	SelectorFlags.StringVar(&selectedAccount, "wallet", "", "explicitly set account to use. OBSOLETE, USE --account INSTEAD!")

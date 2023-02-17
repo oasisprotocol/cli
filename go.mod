@@ -24,7 +24,7 @@ require (
 	github.com/stretchr/testify v1.8.1
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/zondax/ledger-go v0.14.1
-	golang.org/x/crypto v0.1.0
+	golang.org/x/crypto v0.6.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -111,9 +111,9 @@ require (
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.23.0 // indirect
-	golang.org/x/net v0.4.0 // indirect
+	golang.org/x/net v0.6.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
-	golang.org/x/term v0.3.0 // indirect
+	golang.org/x/term v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	google.golang.org/genproto v0.0.0-20221227171554-f9683d7f8bef // indirect
 	google.golang.org/grpc v1.52.0 // indirect

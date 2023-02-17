@@ -249,44 +249,59 @@ func SignParaTimeTransaction(
 	return ts.UnverifiedTransaction(), meta, nil
 }
 
-// PrintTransactionBeforeSigning prints the transaction and asks the user for confirmation.
-func PrintTransactionBeforeSigning(npa *NPASelection, tx interface{}) {
-	fmt.Printf("You are about to sign the following transaction:\n")
-
+// PrintTransaction prints the transaction which can be either signed or unsigned.
+func PrintTransaction(npa *NPASelection, tx interface{}) {
+	var isParaTimeTx bool
 	switch rtx := tx.(type) {
-	case *consensusTx.Transaction:
-		// Consensus transaction.
+	case consensusPretty.PrettyPrinter:
+		// Signed or unsigned consensus transaction.
 		ctx := context.Background()
 		ctx = context.WithValue(ctx, consensusPretty.ContextKeyTokenSymbol, npa.Network.Denomination.Symbol)
 		ctx = context.WithValue(ctx, consensusPretty.ContextKeyTokenValueExponent, npa.Network.Denomination.Decimals)
+
+		// Set up chain context for signature verification during pretty-printing.
+		coreSignature.UnsafeResetChainContext()
+		coreSignature.SetChainContext(npa.Network.ChainContext)
 		rtx.PrettyPrint(ctx, "", os.Stdout)
-	default:
+	case *types.Transaction, *types.UnverifiedTransaction:
 		// TODO: Add pretty variant for paratime transactions.
 		formatted, err := json.MarshalIndent(tx, "", "  ")
 		cobra.CheckErr(err)
 		fmt.Println(string(formatted))
+		isParaTimeTx = true
+	default:
+		fmt.Printf("[unsupported transaction type: %T]\n", tx)
 	}
+
 	fmt.Println()
+	fmt.Printf("Network:  %s", npa.NetworkName)
+	if len(npa.Network.Description) > 0 {
+		fmt.Printf(" (%s)", npa.Network.Description)
+	}
+
+	fmt.Println()
+	if isParaTimeTx && npa.ParaTime != nil {
+		fmt.Printf("ParaTime: %s", npa.ParaTimeName)
+		if len(npa.ParaTime.Description) > 0 {
+			fmt.Printf(" (%s)", npa.ParaTime.Description)
+		}
+		fmt.Println()
+	} else {
+		fmt.Println("ParaTime: none (consensus layer)")
+	}
+}
+
+// PrintTransactionBeforeSigning prints the transaction and asks the user for confirmation.
+func PrintTransactionBeforeSigning(npa *NPASelection, tx interface{}) {
+	fmt.Printf("You are about to sign the following transaction:\n")
+
+	PrintTransaction(npa, tx)
 
 	fmt.Printf("Account:  %s", npa.AccountName)
 	if len(npa.Account.Description) > 0 {
 		fmt.Printf(" (%s)", npa.Account.Description)
 	}
 	fmt.Println()
-	fmt.Printf("Network:  %s", npa.NetworkName)
-	if len(npa.Network.Description) > 0 {
-		fmt.Printf(" (%s)", npa.Network.Description)
-	}
-	fmt.Println()
-	if _, isParaTimeTx := tx.(*types.Transaction); isParaTimeTx && npa.ParaTime != nil {
-		fmt.Printf("Paratime: %s", npa.ParaTimeName)
-		if len(npa.ParaTime.Description) > 0 {
-			fmt.Printf(" (%s)", npa.ParaTime.Description)
-		}
-		fmt.Println()
-	} else {
-		fmt.Println("Paratime: none (consensus layer)")
-	}
 
 	// Ask the user to confirm signing this transaction.
 	Confirm("Sign this transaction?", "signing aborted")

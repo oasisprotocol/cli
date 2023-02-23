@@ -16,7 +16,7 @@ require (
 	github.com/oasisprotocol/deoxysii v0.0.0-20220228165953-2091330c22b7
 	github.com/oasisprotocol/metadata-registry-tools v0.0.0-20220406100644-7e9a2b991920
 	github.com/oasisprotocol/oasis-core/go v0.2202.6
-	github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.2.1-0.20230109202221-19ae9e6f9539
+	github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.3.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5

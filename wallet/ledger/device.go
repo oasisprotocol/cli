@@ -2,10 +2,10 @@ package ledger
 
 import (
 	"fmt"
-	"math/big"
 	"time"
 
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	ledger_go "github.com/zondax/ledger-go"
 	"golang.org/x/crypto/sha3"
@@ -146,7 +146,7 @@ func (ld *ledgerDevice) GetPublicKeySecp256k1(path []uint32, requireConfirmation
 	rawPubkey := response[0:33]
 	rawAddr := string(response[33:])
 
-	pubkey, err := btcec.ParsePubKey(rawPubkey, btcec.S256())
+	pubkey, err := btcec.ParsePubKey(rawPubkey)
 	if err != nil {
 		return nil, fmt.Errorf("ledger: device returned malformed public key: %w", err)
 	}
@@ -265,14 +265,10 @@ func (ld *ledgerDevice) SignRtSecp256k1(bip44Path []uint32, sigCtx signature.Con
 	if len(rsvSig) < 64 {
 		return nil, fmt.Errorf("ledger: secp256k1 signature in RS format should be at least 64-bytes long")
 	}
-	var r, s big.Int
-	r.SetBytes(rsvSig[0:32])
-	s.SetBytes(rsvSig[32:64])
-	sig := btcec.Signature{
-		R: &r,
-		S: &s,
-	}
-	return sig.Serialize(), nil
+	var r, s btcec.ModNScalar
+	r.SetByteSlice(rsvSig[0:32])
+	s.SetByteSlice(rsvSig[32:64])
+	return ecdsa.NewSignature(&r, &s).Serialize(), nil
 }
 
 func (ld *ledgerDevice) signRt25519(path []uint32, sigCtx signature.Context, message []byte, ins byte) ([]byte, error) {

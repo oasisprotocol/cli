@@ -6,14 +6,13 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/mitchellh/mapstructure"
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/secp256k1"
 	flag "github.com/spf13/pflag"
 	"golang.org/x/crypto/sha3"
 
 	coreSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
-
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/ed25519"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/secp256k1"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
 	"github.com/oasisprotocol/cli/config"

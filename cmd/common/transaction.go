@@ -268,12 +268,6 @@ func PrintTransaction(npa *NPASelection, tx interface{}) {
 		coreSignature.UnsafeResetChainContext()
 		coreSignature.SetChainContext(npa.Network.ChainContext)
 		rtx.PrettyPrint(ctx, "", os.Stdout)
-	case *types.Transaction, *types.UnverifiedTransaction:
-		// TODO: Add pretty variant for paratime transactions.
-		formatted, err := json.MarshalIndent(tx, "", "  ")
-		cobra.CheckErr(err)
-		fmt.Println(string(formatted))
-		isParaTimeTx = true
 	default:
 		fmt.Printf("[unsupported transaction type: %T]\n", tx)
 	}

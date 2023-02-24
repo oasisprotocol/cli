@@ -9,6 +9,7 @@ replace github.com/spf13/cast => github.com/oasisprotocol/cast v0.0.0-2022060612
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/adrg/xdg v0.4.0
+	github.com/btcsuite/btcd/btcec/v2 v2.3.2
 	github.com/ethereum/go-ethereum v1.11.4
 	github.com/miguelmota/go-ethereum-hdwallet v0.1.1
 	github.com/mitchellh/mapstructure v1.5.0
@@ -16,7 +17,7 @@ require (
 	github.com/oasisprotocol/deoxysii v0.0.0-20220228165953-2091330c22b7
 	github.com/oasisprotocol/metadata-registry-tools v0.0.0-20220406100644-7e9a2b991920
 	github.com/oasisprotocol/oasis-core/go v0.2202.7
-	github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.3.0
+	github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.4.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
@@ -34,7 +35,6 @@ require (
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd v0.22.1 // indirect
-	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1 // indirect
 	github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
@@ -115,8 +115,8 @@ require (
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
-	google.golang.org/genproto v0.0.0-20221227171554-f9683d7f8bef // indirect
-	google.golang.org/grpc v1.52.0 // indirect
+	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
+	google.golang.org/grpc v1.53.0 // indirect
 	google.golang.org/grpc/security/advancedtls v0.0.0-20221004221323-12db695f1648 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect

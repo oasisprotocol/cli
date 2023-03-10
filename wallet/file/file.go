@@ -374,6 +374,11 @@ func (af *fileAccountFactory) Create(name string, passphrase string, rawCfg map[
 	return newAccount(state, cfg)
 }
 
+// Migrate migrates the given wallet config entry to the latest version and returns true, if any changes were needed.
+func (af *fileAccountFactory) Migrate(rawCfg map[string]interface{}) bool {
+	return false
+}
+
 func (af *fileAccountFactory) Load(name string, passphrase string, rawCfg map[string]interface{}) (wallet.Account, error) {
 	cfg, err := af.unmarshalConfig(rawCfg)
 	if err != nil {

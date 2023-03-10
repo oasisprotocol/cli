@@ -161,6 +161,16 @@ func (cfg *Config) Save() error {
 	return cfg.viper.WriteConfig()
 }
 
+// Migrate migrates the given wallet config entry to the latest version and returns true, if any changes were needed.
+func (cfg *Config) Migrate() (bool, error) {
+	changes, err := cfg.Wallet.Migrate()
+	if err != nil {
+		return false, fmt.Errorf("failed to migrate wallet configuration: %w", err)
+	}
+
+	return changes, nil
+}
+
 // Validate performs config validation.
 func (cfg *Config) Validate() error {
 	if err := cfg.Networks.Validate(); err != nil {

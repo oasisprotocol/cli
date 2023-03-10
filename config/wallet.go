@@ -18,6 +18,21 @@ type Wallet struct {
 	All map[string]*Account `mapstructure:",remain"`
 }
 
+// Migrate migrates configs of all accounts to the latest version and returns true, if any changes were needed.
+func (w *Wallet) Migrate() (bool, error) {
+	var changes bool
+	for _, acc := range w.All {
+		af, err := acc.LoadFactory()
+		if err != nil {
+			return false, err
+		}
+
+		changes = af.Migrate(acc.Config) || changes
+	}
+
+	return changes, nil
+}
+
 // Validate performs config validation.
 func (w *Wallet) Validate() error {
 	// Make sure the default account actually exists.
@@ -253,6 +268,11 @@ func (a *Account) Validate() error {
 	var address types.Address
 	if err := address.UnmarshalText([]byte(a.Address)); err != nil {
 		return fmt.Errorf("malformed address '%s': %w", a.Address, err)
+	}
+
+	// Check the algorithm is not empty.
+	if _, ok := a.Config["algorithm"]; !ok {
+		return fmt.Errorf("algorithm field not defined")
 	}
 
 	return nil

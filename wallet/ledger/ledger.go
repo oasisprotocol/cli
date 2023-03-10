@@ -15,7 +15,6 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/secp256k1"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
-	"github.com/oasisprotocol/cli/config"
 	"github.com/oasisprotocol/cli/wallet"
 )
 
@@ -98,22 +97,22 @@ func (af *ledgerAccountFactory) HasConsensusSigner(rawCfg map[string]interface{}
 	return false
 }
 
-// migrate migrates the given config ledger account entry to the latest version of the config and
+// Migrate migrates the given config ledger account entry to the latest version of the config and
 // returns true, if any changes were needed.
-func (af *ledgerAccountFactory) migrate(raw map[string]interface{}) bool {
+func (af *ledgerAccountFactory) Migrate(rawCfg map[string]interface{}) bool {
 	var changed bool
 
 	// CONFIG MIGRATION 1 (add legacy derivation support): Set default derivation to ADR 8, if not set.
-	if raw["derivation"] == nil && raw["algorithm"] == nil {
-		raw["derivation"] = "adr8"
+	if rawCfg["derivation"] == nil && rawCfg["algorithm"] == nil {
+		rawCfg["derivation"] = "adr8"
 
 		changed = true
 	}
 
 	// CONFIG MIGRATION 2 (convert derivation -> algorithm).
-	if val, ok := raw["derivation"]; ok {
-		raw["algorithm"] = fmt.Sprintf("ed25519-%s", val)
-		delete(raw, "derivation")
+	if val, ok := rawCfg["derivation"]; ok {
+		rawCfg["algorithm"] = fmt.Sprintf("ed25519-%s", val)
+		delete(rawCfg, "derivation")
 
 		changed = true
 	}
@@ -124,10 +123,6 @@ func (af *ledgerAccountFactory) migrate(raw map[string]interface{}) bool {
 func (af *ledgerAccountFactory) unmarshalConfig(raw map[string]interface{}) (*accountConfig, error) {
 	if raw == nil {
 		return nil, fmt.Errorf("missing configuration")
-	}
-
-	if changed := af.migrate(raw); changed {
-		config.Global().Save()
 	}
 
 	var cfg accountConfig

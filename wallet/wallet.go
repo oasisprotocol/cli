@@ -63,6 +63,9 @@ type Factory interface {
 	// Create creates a new account.
 	Create(name string, passphrase string, cfg map[string]interface{}) (Account, error)
 
+	// Migrate migrates the given wallet config entry to the latest version and returns true, if any changes were needed.
+	Migrate(rawCfg map[string]interface{}) bool
+
 	// Load loads an existing account.
 	Load(name string, passphrase string, cfg map[string]interface{}) (Account, error)
 

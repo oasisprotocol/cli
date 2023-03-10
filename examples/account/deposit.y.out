@@ -1,0 +1,17 @@
+You are about to sign the following transaction:
+Format: plain
+Method: consensus.Deposit
+Body:
+  To: Self
+  Amount: 10.0 TEST
+Authorized signer(s):
+  1. Bx6gOixnxy15tCs09ua5DcKyX9uo2Forb32O6Hyjoc8= (ed25519)
+     Nonce: 0
+Fee:
+  Amount: 0.0 TEST
+  Gas limit: 11285
+  (gas price: 0.0 TEST per gas unit)
+
+Network:  testnet
+ParaTime: sapphire
+Account:  oscar

@@ -1,0 +1,16 @@
+Unlock your account.
+? Passphrase:
+You are about to sign the following transaction:
+Method: governance.CastVote
+Body:
+  Proposal ID: 5
+  Vote:        yes
+Nonce:  7
+Fee:
+  Amount: 0.0 TEST
+  Gas limit: 1240
+  (gas price: 0.0 TEST per gas unit)
+
+Network:  testnet
+ParaTime: none (consensus layer)
+Account:  test

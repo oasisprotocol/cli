@@ -1,0 +1,602 @@
+{
+  "software_version": "22.2.8",
+  "identity": {
+    "node": "KzHeO03gpY/73myCANcPNnNPyH7OZIHpK6BQtk9WTj0=",
+    "p2p": "0j16hb76BSBV7lQwgjPpxWX0RTCaMIDf4uTwEVnO8Ac=",
+    "consensus": "ioX5hA28VJJgyFPHU16E7SML6pV9aX6km+ll23//Opk=",
+    "tls": [
+      "efMGmFw5YvJ4Ln2Ja559gs/uLQ1A86P/A/aKLGkOF+I=",
+      "mm724Lx2RydBJtsfxydqPTfXjqcJYnQS4JhOT8zlFHo="
+    ]
+  },
+  "consensus": {
+    "status": "ready",
+    "version": {
+      "major": 6
+    },
+    "backend": "tendermint",
+    "mode": "full",
+    "features": 3,
+    "node_peers": [
+      "bc655c4da35ba3b8a189abb4fa831e631f21a447@131.153.242.59:40410",
+      "097b640924c0a8e8080e21cd537df2b01415c202@95.217.85.213:36656",
+      "aa883b624f5e2bccbc14597f018654ee7482ab3f@131.153.200.7:26656",
+      "d4018c17cfacedb7e52df646594437a66753482b@65.108.6.54:30656",
+      "b7b1d46b26fae3bb37c8ae6c23086c9873b6a535@40.76.70.110:55070",
+      "f018d5d96c280ca888e4fd49df4494e68e80a2d9@65.108.215.176:26656",
+      "902e60d6d4ceee9691ef90df41843931c07a165e@84.234.96.78:26656",
+      "f9ae69d1bf77532cfe982a7bcd5cdacdefddb85f@65.109.27.142:26656",
+      "ab61c9197d6687c8b1a41fe1afcfe642e36ece82@168.62.244.111:56268",
+      "7539e4105002269bf176d78f97305e66a4f96d98@104.43.20.77:33032",
+      "676d5f8ae9c14a27a6de7cd6157f8e0523edec66@65.21.124.228:34052",
+      "73bc4e45d7d4bfc466e6f9a54d11d2d5d0ecd643@20.231.80.199:45828",
+      "3681297ed4504e9028c0f2b6fa4384de29b3d93b@131.153.158.101:43024",
+      "17c49d285903fc54390e37120feb3524db424c97@178.170.46.120:59898",
+      "6b767e05affde66a7d5c079b153cf59231d0e5af@95.217.118.121:36656",
+      "c504f34667643f7b2d5247d90c4564d1bf98a70b@213.239.215.145:40844",
+      "6303b863cbdd8ac06f2126e0cdf6f9c0efbcbded@80.64.208.170:26656",
+      "60e14c30fd2d48527e0ecaaccd55b334be988db5@65.108.204.252:52528",
+      "726a6823bd231dae0dbdab6f443d0b0c01c3439f@65.108.201.32:37890",
+      "4b3feafda8634130a1ad28da832746326fc71151@135.181.116.9:26656",
+      "d0025b64c336ece450d70a7beda190baae0f1a2b@66.85.144.106:26656",
+      "1076ecf9b338072fbbd017060d2ab3a1f4ecae90@95.216.247.36:43518",
+      "5a424d5e4130e18c3f8e5dbb60e5d31dec75006f@20.245.174.253:55300",
+      "dc1b0f926fc0e9ff660d12e90fa5d39f09d6f940@34.135.162.244:60846",
+      "661f73c5b760d25254156d341172f1d2a815c91c@23.109.30.84:63652",
+      "716c6f9047c2d4ec689e146044ad14757d399de7@95.217.77.154:50052",
+      "9f464b3d1f7d8ac14245f0d27b609f823554d0c9@185.132.133.99:46657",
+      "845e501768ce86822e75c1b2af72b0dce2db32f8@34.86.197.181:26656",
+      "8775adc61538840d465f20e37d36422d0a1ca31e@135.181.211.184:46184",
+      "dbbc6938b97f4ab168de1855c2ca49480a156752@148.251.246.233:47368",
+      "b9a3ef0d8eddc23829da35d12c0b20de57924d9a@66.85.140.10:49030",
+      "df5073625c1fdaef1e42d985baa922347b417e7c@65.108.127.220:35148",
+      "7bcb02a07d161b5b576bd7b9963f39e3dbe1bfe8@142.132.203.173:60750",
+      "4cf89deb5c40e4196e309b5cabbf4654700533aa@93.157.248.142:43824",
+      "a499f9bd11b54f82a2c778e1c091402dce17b2cb@65.109.52.165:47168",
+      "881c493ca3b1cf2a97df5392b2f297f7f1c9b599@91.90.179.51:45566",
+      "19a982acb7d9d761e600b86a57141b1851586901@135.181.1.160:36656",
+      "4490b4c1f5f3ee4c1ace07e663ff1cb6b63af535@194.195.212.183:47366",
+      "71504a0a83c25b48691ab708f45079248bab0c31@135.181.179.38:36656",
+      "404372701d0be0f79033ab52d50b8706d6d7fdef@85.15.140.73:38508",
+      "0cd411b2652030caec59f0d0753d430b7c765f0e@213.21.202.23:52146",
+      "ba4ae8667a9b41168481ceefc1d3340426ebcb4e@66.85.157.22:60568",
+      "83302fdfe703928e9ea250214fb1552f292b64c9@138.201.250.242:50512",
+      "b2f26729d87471814624f096b1fb7f3312e4e13a@65.108.159.229:26656",
+      "772d93cfb3c617b132b1accd9351d410b308dff6@20.188.123.73:47366",
+      "9182dd1d4f25fbdc0b560fa1bd3a833679df1673@144.137.17.159:36850",
+      "2ee22ae65efbdef3708782d5cb970fbf1f419196@66.85.147.254:52906",
+      "57b6225269abc5d0e6d5f49139b721b73d2d3d1d@178.63.93.41:37448",
+      "721d8282b15a59abee88662d40dd941106f45f68@35.193.14.105:40742",
+      "29d3fee2455c964d2b407918016ef21c4c2b1336@35.235.101.24:1285",
+      "8787650b568d2c3f58a672f54ad6277b1cd2255a@194.33.45.161:35838",
+      "8de09c821c83cc6dfe1c90727f8c8a2f425ea3f8@92.255.207.113:42180",
+      "509d0687f51759c3043bc2cdcd776234ab56c9ac@95.216.72.47:31656",
+      "6c89a15304567f97b5c415209f342b84bb6f1ea3@95.216.37.80:42678",
+      "f1bfe70d4a23b2b743ee9b5b5d805bde71eca673@52.178.10.10:56588",
+      "03ec0534396270bd6382bd94a60976770c066fdd@20.225.137.194:44372",
+      "b5e54f50e208d86fb33b481d950bc97b923bd55d@34.135.151.3:38740",
+      "ad5ba473f67735b29546415258a980d3f5d75caf@131.153.165.57:42464",
+      "8e3ebe98e3bc759b8fafa231a3d10e71744f4f75@193.201.82.230:37282",
+      "66fbd9c9a5f5cb8214b1d1e92b061ed2252b9bed@23.88.91.115:56724",
+      "2ea665e41bc3533738856d5b8cf100dd88f30335@65.108.248.54:26656",
+      "10f41e143df165752beb40ca3a7e4ad6be854c82@34.241.24.207:33086",
+      "ec05ab6d196eca890d4842a768698ea4dd891ac7@34.220.204.235:5402",
+      "230ff96d5466a59522cfedacafffb740a2d0d51e@20.232.215.170:45834",
+      "0b549cde019d483a354c794f86e4bf98610cf2c0@13.209.252.30:15445",
+      "d6f1a1b7fb6efe3be3bf954907ba41ee74449038@3.10.117.28:45042",
+      "461d702c386f857d6f40fd884f1ef9b81716a04d@66.85.156.102:41492",
+      "114aeb19a08cbec00d4673f8567e5d6e7647ca8c@80.64.208.20:26656",
+      "721536cee14d65b591f45cd05bedf3917d8170d3@142.132.204.126:57494",
+      "641517419eac9bc43124ab165dfcdd82d635d6a6@20.253.182.162:49680",
+      "d47dfcb8cdaf50d8332c84e44c09974deb7d51cb@20.225.233.113:45454",
+      "53572f689e5bacdd3c6527e6594ec49c8f3093f6@34.86.165.6:40050",
+      "5fd8d9e2e031c4f342ba7faccc5a009c37cc42e3@46.166.138.194:1571",
+      "7187d60bb22c553646d44319b697be2c5c69eaf4@131.153.47.62:37200",
+      "8d3f8e6984dba66e9445c75d99a96000d55e4e40@20.168.196.165:52492",
+      "3a17fbb5cf5dbc1e39406182baebdf71e7bd7063@135.181.112.38:26657",
+      "da4e9879404f6175096bf7debc4c9fd5618330e3@172.104.56.217:37908",
+      "49f568338f9137c734e5aa6c857e4ea79db6d663@65.52.244.40:26656",
+      "3fef173fe6042e72397f488769970513b4174656@44.240.166.110:30990",
+      "ab6047fff198a5c7974c70ba5b9afa6e336e4ec5@20.127.79.126:34286"
+    ],
+    "latest_height": 15772992,
+    "latest_hash": "e5718445525ecdb149685ff6b334e32197b53c11291ad82c6b4c666b9e8b436d",
+    "latest_time": "2023-06-07T13:36:34+02:00",
+    "latest_epoch": 26272,
+    "latest_state_root": {
+      "ns": "0000000000000000000000000000000000000000000000000000000000000000",
+      "version": 15772991,
+      "root_type": 1,
+      "hash": "ae6e36ae1d414e554952c3a951acf3acefe538b7151fe1f0ff91a7377d1f0072"
+    },
+    "genesis_height": 8535081,
+    "genesis_hash": "5864fda0248a1fa53e65d36d9288ee89578003f8980d1900f76638737b43d0ee",
+    "last_retained_height": 8535081,
+    "last_retained_hash": "5864fda0248a1fa53e65d36d9288ee89578003f8980d1900f76638737b43d0ee",
+    "chain_context": "50304f98ddb656620ea817cc1446c401752a05a249b36c9b90dba4616829977a",
+    "is_validator": false
+  },
+  "runtimes": {
+    "0000000000000000000000000000000000000000000000000000000000000000": {
+      "descriptor": {
+        "v": 3,
+        "id": "0000000000000000000000000000000000000000000000000000000000000000",
+        "entity_id": "4eM2SdjntkGGH0DqhloG8HJsPNSoEeYHFACuOV+9qbc=",
+        "genesis": {
+          "state_root": "c672b8d1ef56ed28ab87c3622c5114069bdd3ad7b8f9737498d0c01ecef0967a",
+          "round": 0
+        },
+        "kind": 1,
+        "tee_hardware": 1,
+        "key_manager": "4000000000000000000000000000000000000000000000004a1a53dff2ae482d",
+        "executor": {
+          "group_size": 3,
+          "group_backup_size": 5,
+          "allowed_stragglers": 1,
+          "round_timeout": 2,
+          "max_messages": 256
+        },
+        "txn_scheduler": {
+          "batch_flush_timeout": 1000000000,
+          "max_batch_size": 1000,
+          "max_batch_size_bytes": 10485760,
+          "propose_batch_timeout": 2
+        },
+        "storage": {
+          "checkpoint_interval": 10000,
+          "checkpoint_num_kept": 2,
+          "checkpoint_chunk_size": 8388608
+        },
+        "admission_policy": {
+          "any_node": {}
+        },
+        "constraints": {
+          "executor": {
+            "backup-worker": {
+              "max_nodes": {
+                "limit": 1
+              },
+              "min_pool_size": {
+                "limit": 5
+              }
+            },
+            "worker": {
+              "max_nodes": {
+                "limit": 1
+              },
+              "min_pool_size": {
+                "limit": 5
+              }
+            }
+          }
+        },
+        "staking": {
+          "min_in_message_fee": "0"
+        },
+        "governance_model": "entity",
+        "deployments": [
+          {
+            "version": {
+              "major": 2,
+              "minor": 6,
+              "patch": 1
+            },
+            "valid_from": 21574,
+            "tee": "oWhlbmNsYXZlc4GiaW1yX3NpZ25lclggQCXat+vaH77MTjY3YG4CEhTQ9BxtBCL9N4sqi4iBhFlqbXJfZW5jbGF2ZVgg+rF441O1/TtufRl4gK9f3R6mMQfF3MWJDgOTx3kGF6E="
+          },
+          {
+            "version": {
+              "major": 2,
+              "minor": 6,
+              "patch": 2
+            },
+            "valid_from": 22845,
+            "tee": "oWhlbmNsYXZlc4GiaW1yX3NpZ25lclggQCXat+vaH77MTjY3YG4CEhTQ9BxtBCL9N4sqi4iBhFlqbXJfZW5jbGF2ZVggm8bEEbu18UnK96qtYtt9XqHNOSeRrmCG4IYvBVAlia8="
+          }
+        ]
+      },
+      "latest_round": 1722387,
+      "latest_hash": "1c53179b80ac5ae004e0864291ee993d10a3b170ac9c401bdd8145b13c57738d",
+      "latest_time": "2023-06-07T13:26:23+02:00",
+      "latest_state_root": {
+        "ns": "0000000000000000000000000000000000000000000000000000000000000000",
+        "version": 1722387,
+        "root_type": 1,
+        "hash": "883af2896dfc0761e7bc22fc8966f8240aaa11e6c8dfabc53258f77a54851ede"
+      },
+      "genesis_round": 1675996,
+      "genesis_hash": "2286ec2a7d41e031af618e64bbfc5e531be4ed05d3bf73179ed9b51c9ae50bc8",
+      "last_retained_round": 1675996,
+      "last_retained_hash": "2286ec2a7d41e031af618e64bbfc5e531be4ed05d3bf73179ed9b51c9ae50bc8",
+      "committee": {
+        "status": "ready",
+        "active_version": {
+          "major": 2,
+          "minor": 6,
+          "patch": 2
+        },
+        "latest_round": 1722387,
+        "latest_height": 15772882,
+        "executor_roles": null,
+        "is_txn_scheduler": false,
+        "peers": [
+          "/ip4/66.85.140.10/tcp/30002/p2p/12D3KooWN93Yo85zQ5NgKcBSWTNkGX1SgVNoNCyExpPdj8Av6qW2",
+          "/ip4/131.153.242.59/tcp/30004/p2p/12D3KooWDBtUt3Yknwn7UEdK4iyuvJREVs2PJrwfjGAfrjyCEXAs",
+          "/ip4/66.85.156.101/tcp/31002/p2p/12D3KooWLpJ4ssESgun9yc1MmXUyF7EDYuZWfXpMq9s7BPFrZxaC",
+          "/ip4/131.153.165.57/tcp/56657/p2p/12D3KooWShtALnfo2R8hAYNk2ufLvif7J3iSSZY348hfTXXJbxPE",
+          "/ip4/66.85.157.22/tcp/50002/p2p/12D3KooWDeiujxENvSs9eQ8s3BrZdBDoFhppU3DJzC3adwaVWL2g",
+          "/ip4/65.52.244.40/tcp/30002/p2p/12D3KooWDoGEevYNQXyaLt2JcRYcp6Sns3iCcoHbBSrteSCy9QwT",
+          "/ip4/194.33.45.161/tcp/40004/p2p/12D3KooWMBv6UqfRwpPJqxgrwNSqnZhHh2BMX51QmXFFqUWXT6fe",
+          "/ip4/66.85.147.254/tcp/30003/p2p/12D3KooWPGE1dGobdJRGZcBbrSgFnj4DJZZdJsnzEMtEfN2EbaC3",
+          "/ip4/84.234.96.78/tcp/40002/p2p/12D3KooWRnWM8UBDsLUe56a3mLfNKR2VYSxzx8qmvWx7pTLsvVwr",
+          "/ip4/131.153.200.7/tcp/30002/p2p/12D3KooWQQTToZP6TL8MbEyFJMQ3H8y7YguJyGE97L4o74AqkUCj",
+          "/ip4/91.235.116.246/tcp/40002/p2p/12D3KooWGfFTqAMc2EvLGoFSMcMo4egSf8bBJSNt46ww2YtTjYAv",
+          "/ip4/93.157.248.142/tcp/3020/p2p/12D3KooWCSuscbixtspKpa9gw5wasEcwRBxbL3vfV4uvR69qZqsD",
+          "/ip4/213.21.202.23/tcp/30002/p2p/12D3KooWLL8KegpRcDxZznUCD9PsMwuDVWsdCWTgeLT1m8ub4sTF",
+          "/ip4/66.85.144.106/tcp/30002/p2p/12D3KooWFNb7BR734YfMyQZVexcg3Ai1Y8uWyxSqENnckMcpkhrT",
+          "/ip4/131.153.158.101/tcp/50002/p2p/12D3KooWBvcMkcyqskohCcUr8ZgieUoprYUrU2EZLNQ2mH4j4sm9",
+          "/ip4/131.153.47.62/tcp/30002/p2p/12D3KooWKc95HoDZtuYnqx5dttkyCK9BGeYx8DBE6o1k8nrjmrMW",
+          "/ip4/89.212.17.232/tcp/30002/p2p/12D3KooWEYtZz1pzwvFFUjMRKBckJ7qt6X63PjJVWFrFtezRqC4H",
+          "/ip4/35.193.14.105/tcp/9002/p2p/12D3KooWPJYHjNP5sHPuFQQ83Fa7pAz93oA6oqSWQ5dpbE8MuUQ5",
+          "/ip4/84.255.245.194/tcp/9200/p2p/12D3KooW9tZDg59zv5JA2yi7guggePUpR4mJnriELLKi3RqvC5Y6",
+          "/ip4/34.135.151.3/tcp/9002/p2p/12D3KooWEkXQtJ4oxKnWWFucvAp7oBedgCcPhFRwZsy6b1WaJUCU",
+          "/ip4/95.216.224.58/tcp/34648/p2p/12D3KooWGiJwU9ajppAA8R1tFsAezXatNC1fd18VxufnRG7veves",
+          "/ip4/34.94.197.191/tcp/3022/p2p/12D3KooWQ1pjpnq5yAkG3nyawShPwt9WvLjZ6xRxZr86zntztfwK"
+        ],
+        "host": {
+          "versions": [
+            {
+              "major": 2,
+              "minor": 6,
+              "patch": 2
+            },
+            {
+              "major": 2,
+              "minor": 6,
+              "patch": 1
+            }
+          ]
+        }
+      },
+      "storage": {
+        "last_finalized_round": 1722387
+      }
+    },
+    "00000000000000000000000000000000000000000000000072c8215e60d5bca7": {
+      "descriptor": {
+        "v": 3,
+        "id": "00000000000000000000000000000000000000000000000072c8215e60d5bca7",
+        "entity_id": "4eM2SdjntkGGH0DqhloG8HJsPNSoEeYHFACuOV+9qbc=",
+        "genesis": {
+          "state_root": "c672b8d1ef56ed28ab87c3622c5114069bdd3ad7b8f9737498d0c01ecef0967a",
+          "round": 0
+        },
+        "kind": 1,
+        "tee_hardware": 0,
+        "executor": {
+          "group_size": 5,
+          "group_backup_size": 9,
+          "allowed_stragglers": 1,
+          "round_timeout": 2,
+          "max_messages": 256,
+          "min_live_rounds_percent": 90,
+          "min_live_rounds_eval": 5,
+          "max_liveness_fails": 4
+        },
+        "txn_scheduler": {
+          "batch_flush_timeout": 1000000000,
+          "max_batch_size": 1000,
+          "max_batch_size_bytes": 10485760,
+          "propose_batch_timeout": 2
+        },
+        "storage": {
+          "checkpoint_interval": 1000,
+          "checkpoint_num_kept": 2,
+          "checkpoint_chunk_size": 8388608
+        },
+        "admission_policy": {
+          "any_node": {}
+        },
+        "constraints": {
+          "executor": {
+            "backup-worker": {
+              "max_nodes": {
+                "limit": 1
+              },
+              "min_pool_size": {
+                "limit": 10
+              }
+            },
+            "worker": {
+              "max_nodes": {
+                "limit": 1
+              },
+              "min_pool_size": {
+                "limit": 10
+              }
+            }
+          }
+        },
+        "staking": {
+          "min_in_message_fee": "0"
+        },
+        "governance_model": "entity",
+        "deployments": [
+          {
+            "version": {
+              "major": 9,
+              "patch": 1
+            },
+            "valid_from": 17225
+          },
+          {
+            "version": {
+              "major": 10
+            },
+            "valid_from": 22509
+          }
+        ]
+      },
+      "latest_round": 2209868,
+      "latest_hash": "ce6edf3ae764f247a263754cf6389518ffbbffa80250ed702219308a77cc3180",
+      "latest_time": "2023-06-07T13:35:39+02:00",
+      "latest_state_root": {
+        "ns": "00000000000000000000000000000000000000000000000072c8215e60d5bca7",
+        "version": 2209868,
+        "root_type": 1,
+        "hash": "e2c70cab88b7f46111bedc1f1506797b2f5c0fb8a80224adaa18b5c72a222c0d"
+      },
+      "genesis_round": 398623,
+      "genesis_hash": "c1b7a1fd55710e5c79424677af298c4ef2139b1230649bda4e6cf6e04df75bd5",
+      "last_retained_round": 398623,
+      "last_retained_hash": "c1b7a1fd55710e5c79424677af298c4ef2139b1230649bda4e6cf6e04df75bd5",
+      "committee": {
+        "status": "ready",
+        "active_version": {
+          "major": 10
+        },
+        "latest_round": 2209868,
+        "latest_height": 15772982,
+        "executor_roles": null,
+        "is_txn_scheduler": false,
+        "peers": [
+          "/ip4/66.85.140.10/tcp/30002/p2p/12D3KooWN93Yo85zQ5NgKcBSWTNkGX1SgVNoNCyExpPdj8Av6qW2",
+          "/ip4/23.88.91.115/tcp/50003/p2p/12D3KooWGsbKuGo9gLLLssLDngk8NJofDQxi8uPVqRwFtfAWUHKR",
+          "/ip4/65.108.201.32/tcp/29002/p2p/12D3KooWAJLCfsfREXULRABPNaaMEU2XtuhqnYJvJSEnH7JJdBha",
+          "/ip4/142.132.204.126/tcp/50002/p2p/12D3KooWCNXz8AU4D4aiirHp2qKJhuK5QL8DFimhxu9tYsWwvnFt",
+          "/ip4/185.132.133.99/tcp/30002/p2p/12D3KooWEN4UXFzoxCUvtP83hGefJDVvuEt4e3Eqhy1hy38rzgQW",
+          "/ip4/95.216.247.36/tcp/30002/p2p/12D3KooWKhGMFwNrT5mA4sMoAKMUX2YswwzJMTtrcKg917yyc1qa",
+          "/ip4/131.153.200.7/tcp/30002/p2p/12D3KooWQQTToZP6TL8MbEyFJMQ3H8y7YguJyGE97L4o74AqkUCj",
+          "/ip4/178.170.46.120/tcp/30002/p2p/12D3KooWFVBp2fnoDEA45C3pdkAwk3kFNDFKbhQCBLkv1ePwBPAL",
+          "/ip4/95.217.85.213/tcp/30002/p2p/12D3KooWQ1YBqaQnL2JumfxTsFp5TYEDDRgzy8j5mUAvUY1EUaex",
+          "/ip4/135.181.155.98/tcp/30002/p2p/12D3KooWRTp64wFccJy1S2dv9D61ruB6hGfb6w6y5L3kGawnxfh7",
+          "/ip4/65.108.204.252/tcp/40003/p2p/12D3KooW9tbj2yAo7A7UnKKZwqWiREVTbnJJjKYBhLJVLR7qQfor",
+          "/ip4/10.64.31.167/tcp/9200/p2p/12D3KooWDzDwvUPuN1vVWbYUaAJnJuh9Qfm1eZCaxsXRaxhvnnEe",
+          "/ip4/135.181.1.160/tcp/30002/p2p/12D3KooWFdKYxjzFKZmZG69LPvisfyjQiiyRv1N1MHPrf5jufFKR",
+          "/ip4/194.195.212.183/tcp/30002/p2p/12D3KooWD9vHKr1vCMf2RV558SbyaQehKtAsU74WSGfkmQWkGFxo",
+          "/ip4/95.217.118.121/tcp/30002/p2p/12D3KooWGuX2sHNUSvJ63dqrUTLXwkRwBU9gNFiMHhA3vkxFihj5",
+          "/ip4/95.217.77.154/tcp/30002/p2p/12D3KooWC9MRbrgJFFZGHy4JD8sN9dc7BEb4dLewKsEyE1SZrH8t",
+          "/ip4/178.63.93.41/tcp/23002/p2p/12D3KooWLXKzvKnushSWERyJzSgTghw7Yq9ETUFdzhsc8zSWykrU",
+          "/ip4/65.21.124.228/tcp/30002/p2p/12D3KooWSHZrQVJFkT9HhkZS5Rjz7GNR71gVdgaCihyRxt6c3tpi",
+          "/ip4/135.181.179.38/tcp/30002/p2p/12D3KooW9xxbWPzU71Wd8W96juBAW2q6XAwj1HEidKwCL5p6aQqe",
+          "/ip4/95.216.37.80/tcp/30002/p2p/12D3KooWRNWmsA3JXpG8TqNbvE9SqGCZTejtCZJVnn73KoC7tYhv",
+          "/ip4/10.64.180.120/tcp/9200/p2p/12D3KooWAq3pGLymxzGQjL1SEwgFsD8TTvPBfxnSUdu148c4hNGJ",
+          "/ip4/91.90.179.51/tcp/30002/p2p/12D3KooWFQdPUA6ojmH1JEGLq14oDzK1JjDSCkpxCKBvYnHdKc4A",
+          "/ip4/213.239.215.145/tcp/50003/p2p/12D3KooWRQvW91WN8hofPtkFfkg21PjhQJjnbMeYnvBWzifPt87b",
+          "/ip4/65.108.127.220/tcp/33002/p2p/12D3KooWHRgEYMcazqALiWjm5eAxGUeq5qsD2pgqvuqDi78TM7nn",
+          "/ip4/66.85.144.106/tcp/30002/p2p/12D3KooWFNb7BR734YfMyQZVexcg3Ai1Y8uWyxSqENnckMcpkhrT",
+          "/ip4/138.201.250.242/tcp/31002/p2p/12D3KooWHL7ijr2Moo1HMvvundEdbVeMhEpyPfgrKdUPeAVreoSX",
+          "/ip4/142.132.203.173/tcp/34002/p2p/12D3KooWNSQJJDYMnujYzJU8v2dtqNTbWprhcb8E4JPpRULc4saw",
+          "/ip4/65.109.52.165/tcp/33002/p2p/12D3KooWMpnvR6QVK81drJR9KQwqKTRvyanPWrpubMV25sqXDuL6",
+          "/ip4/84.234.96.78/tcp/40003/p2p/12D3KooWJA4TP3zPuJqFyzHWxBqF6rTSiekM5z2smgxGrXrmRY6M",
+          "/ip4/131.153.47.62/tcp/30002/p2p/12D3KooWKc95HoDZtuYnqx5dttkyCK9BGeYx8DBE6o1k8nrjmrMW",
+          "/ip4/85.15.140.73/tcp/40002/p2p/12D3KooWHPcQbvEb9jYuzGj3x92rjkD6nRWUJbPs6apWYCEKBs8w",
+          "/ip4/34.135.162.244/tcp/9002/p2p/12D3KooWDWjwVjZYitMpn8mpmvdFbpt9x9gQx9QBnv4s6rPAydVR",
+          "/ip4/35.193.14.105/tcp/9002/p2p/12D3KooWPJYHjNP5sHPuFQQ83Fa7pAz93oA6oqSWQ5dpbE8MuUQ5",
+          "/ip4/84.255.245.194/tcp/9200/p2p/12D3KooW9tZDg59zv5JA2yi7guggePUpR4mJnriELLKi3RqvC5Y6",
+          "/ip4/34.135.151.3/tcp/9002/p2p/12D3KooWEkXQtJ4oxKnWWFucvAp7oBedgCcPhFRwZsy6b1WaJUCU",
+          "/ip4/95.216.224.58/tcp/34648/p2p/12D3KooWGiJwU9ajppAA8R1tFsAezXatNC1fd18VxufnRG7veves",
+          "/ip4/34.94.197.191/tcp/3022/p2p/12D3KooWQ1pjpnq5yAkG3nyawShPwt9WvLjZ6xRxZr86zntztfwK",
+          "/ip4/89.212.17.232/tcp/30002/p2p/12D3KooWEYtZz1pzwvFFUjMRKBckJ7qt6X63PjJVWFrFtezRqC4H"
+        ],
+        "host": {
+          "versions": [
+            {
+              "major": 10
+            },
+            {
+              "major": 9,
+              "patch": 1
+            }
+          ]
+        }
+      },
+      "storage": {
+        "last_finalized_round": 2209868
+      }
+    },
+    "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c": {
+      "descriptor": {
+        "v": 3,
+        "id": "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c",
+        "entity_id": "4eM2SdjntkGGH0DqhloG8HJsPNSoEeYHFACuOV+9qbc=",
+        "genesis": {
+          "state_root": "c672b8d1ef56ed28ab87c3622c5114069bdd3ad7b8f9737498d0c01ecef0967a",
+          "round": 0
+        },
+        "kind": 1,
+        "tee_hardware": 1,
+        "key_manager": "4000000000000000000000000000000000000000000000004a1a53dff2ae482d",
+        "executor": {
+          "group_size": 5,
+          "group_backup_size": 5,
+          "allowed_stragglers": 1,
+          "round_timeout": 2,
+          "max_messages": 256,
+          "min_live_rounds_percent": 90,
+          "min_live_rounds_eval": 5,
+          "max_liveness_fails": 4
+        },
+        "txn_scheduler": {
+          "batch_flush_timeout": 1000000000,
+          "max_batch_size": 1000,
+          "max_batch_size_bytes": 10485760,
+          "propose_batch_timeout": 2
+        },
+        "storage": {
+          "checkpoint_interval": 10000,
+          "checkpoint_num_kept": 2,
+          "checkpoint_chunk_size": 8388608
+        },
+        "admission_policy": {
+          "entity_whitelist": {
+            "entities": {
+              "+fzk/Pi4DBmPhCzs8Gsw+jrbv9Z6HMfIdohb/hqWe7g=": {},
+              "/RupFkoz/Hep2Xm1eqtzwuLw+hS2AQNiKVgqQwnMalE=": {},
+              "4eM2SdjntkGGH0DqhloG8HJsPNSoEeYHFACuOV+9qbc=": {},
+              "EHvOdqDElP5ozbICSKy3UOXQlcsvqZr+9rQvAJHcf9k=": {},
+              "Efqu3z0lip+aDXkJUZqL9KfqpUIrgvISgGOdE/3OITw=": {},
+              "IDrC50ExgNOjHYJjzHYMttOR7X94rSa33yoYXCCkTtU=": {},
+              "IRvPVE480/nTZf6WqEaxVhkPxstagLuG8WVO8O8izBg=": {},
+              "Jq1iRZxhzEPXOtCtZiA/SktLGyyfN4oX4tJWVspEb7U=": {},
+              "L/xlgKf4Tx1XZogRBnuBmFS52NFoccW6QjMA8VS7g1g=": {},
+              "OJcLY+0jDg0fhmMy7HuPE8N92SXIaocO7xduo7khnlc=": {},
+              "RKCvE04I/BWb7VC6tzAetR3cLSlmPOrshElcoFLCjnk=": {},
+              "W/Fj1JlO2hAgVSohQZZ3OQDb39Yf9O/jXxcOeW5E6AQ=": {},
+              "W4mvWjUL27JnIbC3iQOlrKdpsIVFoQ8RDpt6wv1mocw=": {},
+              "WfLM2tJM1E586dI7myztwIEUQ2mFBoQa4lIbMNfDo+A=": {},
+              "Y1FLFDa4o7JbRnjHc53AwvHzUEEShwEicxREwaKkPks=": {},
+              "ZxJyyH+JPdGNfjy+ZPq+GpFY0fAJKm9VFXZIPwMcKm4=": {},
+              "dXBtIJ1+LMkIaydaSUS3quh4bHFgjf8kSJd6n666lk8=": {},
+              "efBR83hww44OezMuvJ0T9Ewu4uPSQkOlO7EQq79KSis=": {},
+              "fPCd+Ht/hfOfuvbtAE6+jwXpiETXRfqwEkw1TaUbk3M=": {},
+              "h+8UuA74MU55qKDosnQ+mcPkMEbAFfqXnpGBjZQur0Q=": {},
+              "np5ghSwh8QmA2CwtvgtbQ2p+BDspieZ5u9gu6pczHuo=": {},
+              "nt9VYeY++mGIwmjM9wYfnF7lqTqoxNof8MsIkECtLpE=": {},
+              "oLM78jZoGtkkx/0zN4CLGbucWCreI/N5JbIHP5UJO9k=": {},
+              "ofyDzh2lzf+vqI9BcM+0/JCAM0rQkzaDst84CLh646U=": {},
+              "pERaTagl7a57dXiVI3ZzoQbWskX3YmUHppeqcPdCVY8=": {},
+              "ucBShpGap3zSeKqkAo5XRcfeOZrvQYAK37CKUHrCK9A=": {},
+              "yOqwGZT2NMZdFgs01SAyDs30vaigDUwIsagTHBpEs8k=": {}
+            }
+          }
+        },
+        "constraints": {
+          "executor": {
+            "backup-worker": {
+              "max_nodes": {
+                "limit": 1
+              },
+              "min_pool_size": {
+                "limit": 5
+              }
+            },
+            "worker": {
+              "max_nodes": {
+                "limit": 1
+              },
+              "min_pool_size": {
+                "limit": 5
+              }
+            }
+          }
+        },
+        "staking": {
+          "min_in_message_fee": "0"
+        },
+        "governance_model": "entity",
+        "deployments": [
+          {
+            "version": {
+              "minor": 5,
+              "patch": 1
+            },
+            "valid_from": 24972,
+            "tee": "oWhlbmNsYXZlc4GiaW1yX3NpZ25lclggQCXat+vaH77MTjY3YG4CEhTQ9BxtBCL9N4sqi4iBhFlqbXJfZW5jbGF2ZVgg0zImD+/+Pxb7ZJa754pdbqsM8+Oz+L1kpV8dvM0iyjY="
+          },
+          {
+            "version": {
+              "minor": 5,
+              "patch": 2
+            },
+            "valid_from": 25747,
+            "tee": "oWhlbmNsYXZlc4GiaW1yX3NpZ25lclggQCXat+vaH77MTjY3YG4CEhTQ9BxtBCL9N4sqi4iBhFlqbXJfZW5jbGF2ZVggVZvrsFF6qV1Rl4r79g5UStNEGLxKACD9EmOVJVC33/k="
+          }
+        ]
+      },
+      "latest_round": 1481357,
+      "latest_hash": "a439b18202e8d6809fa273785a074f327b5b169a40c1579b8386aff397422d3c",
+      "latest_time": "2023-06-07T13:36:34+02:00",
+      "latest_state_root": {
+        "ns": "000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c",
+        "version": 1481357,
+        "root_type": 1,
+        "hash": "7b82bdb6afbb1d2c4a25178b061337a284b6ee5e9c942cb3e4a8eb01867e2ac7"
+      },
+      "genesis_round": 0,
+      "genesis_hash": "5888cd04413b7a3e5e04c74354533a833c75be4aed22d162059000f973995f15",
+      "last_retained_round": 0,
+      "last_retained_hash": "5888cd04413b7a3e5e04c74354533a833c75be4aed22d162059000f973995f15",
+      "committee": {
+        "status": "ready",
+        "active_version": {
+          "minor": 5,
+          "patch": 2
+        },
+        "latest_round": 1481357,
+        "latest_height": 15772992,
+        "executor_roles": null,
+        "is_txn_scheduler": false,
+        "peers": [
+          "/ip4/91.235.116.246/tcp/40002/p2p/12D3KooWGfFTqAMc2EvLGoFSMcMo4egSf8bBJSNt46ww2YtTjYAv",
+          "/ip4/66.85.157.18/tcp/41002/p2p/12D3KooWHqQ77Sd3auXYcYuAEyhzvAVqmMMgJ4gtQ7z49tMhgzps",
+          "/ip4/52.178.10.10/tcp/9002/p2p/12D3KooWLx9Fh5RkaumFv4xFYbz73DaTtNKerMXScbZ1acJrcnbg",
+          "/ip4/131.153.158.101/tcp/50003/p2p/12D3KooWF15eoo1VTTYZ7tzHohS38kPdywbAxdfh6QyADt5rXA7y",
+          "/ip4/66.85.147.250/tcp/30004/p2p/12D3KooWDo1H3WGT2VzcAx1NtzoK9iZdrANw8SADx3VaqaT1JjKo",
+          "/ip4/131.153.165.57/tcp/56659/p2p/12D3KooWLHS7beFWkeR36f1SB1Sg133FeDujEYWKPFtRphaV6kVe",
+          "/ip4/213.21.202.23/tcp/30002/p2p/12D3KooWLL8KegpRcDxZznUCD9PsMwuDVWsdCWTgeLT1m8ub4sTF",
+          "/ip4/66.85.144.110/tcp/30002/p2p/12D3KooWFNb7BR734YfMyQZVexcg3Ai1Y8uWyxSqENnckMcpkhrT",
+          "/ip4/168.62.244.111/tcp/30002/p2p/12D3KooWNiymyC95m17qzrYGsUXuRK7afVQDAzRLpMXaNt3kEzXs",
+          "/ip4/194.33.45.161/tcp/40005/p2p/12D3KooWC9jULB6ZiooKBZHJQHx281mVbPK4hVNXSTHehR37C243",
+          "/ip4/84.234.96.78/tcp/41002/p2p/12D3KooWAmfVFWnMdEiwwTXgKe9QLZH8WU7C9jvTcxoKPZRkY6Pr",
+          "/ip4/20.225.137.194/tcp/9002/p2p/12D3KooWFoVZmj99Z35ujpmWXfByFLzKdRMEtEA4svKJaKXH7ayM",
+          "/ip4/131.153.47.62/tcp/30002/p2p/12D3KooWKc95HoDZtuYnqx5dttkyCK9BGeYx8DBE6o1k8nrjmrMW",
+          "/ip4/131.153.242.59/tcp/30005/p2p/12D3KooWPqxbB3yW8nnzxqh3LkpAKRGt1YeUPfy8t7WhmYdej5R8",
+          "/ip4/66.85.140.10/tcp/30002/p2p/12D3KooWN93Yo85zQ5NgKcBSWTNkGX1SgVNoNCyExpPdj8Av6qW2",
+          "/ip4/66.85.156.101/tcp/31002/p2p/12D3KooWLpJ4ssESgun9yc1MmXUyF7EDYuZWfXpMq9s7BPFrZxaC",
+          "/ip4/131.153.200.7/tcp/30002/p2p/12D3KooWQQTToZP6TL8MbEyFJMQ3H8y7YguJyGE97L4o74AqkUCj",
+          "/ip4/20.245.174.253/tcp/9002/p2p/12D3KooWBmcgkuG2qRq4aD6BDyaytnknGqzZWyw7HZAY31L8rYvs",
+          "/ip4/20.168.196.165/tcp/9002/p2p/12D3KooWJtDiHMyU9Srwj2r5MQABdaErW51rwaJMMTxDZ4XXSNXS",
+          "/ip4/40.76.70.110/tcp/9002/p2p/12D3KooWQJJhtCwJqvQ1CHTW1xD6U9aXceCBmAJTR2GGXyTBsW1g",
+          "/ip4/95.216.224.58/tcp/34648/p2p/12D3KooWGiJwU9ajppAA8R1tFsAezXatNC1fd18VxufnRG7veves",
+          "/ip4/34.94.197.191/tcp/3022/p2p/12D3KooWQ1pjpnq5yAkG3nyawShPwt9WvLjZ6xRxZr86zntztfwK",
+          "/ip4/172.24.72.26/tcp/9200/p2p/12D3KooWQviEyxLL2Sg1r9g6HQzDm8WN8KUwpwL3gPJfieXpmFDL",
+          "/ip4/89.212.17.232/tcp/30002/p2p/12D3KooWEYtZz1pzwvFFUjMRKBckJ7qt6X63PjJVWFrFtezRqC4H",
+          "/ip4/35.193.14.105/tcp/9002/p2p/12D3KooWPJYHjNP5sHPuFQQ83Fa7pAz93oA6oqSWQ5dpbE8MuUQ5",
+          "/ip4/84.255.245.194/tcp/9200/p2p/12D3KooW9tZDg59zv5JA2yi7guggePUpR4mJnriELLKi3RqvC5Y6",
+          "/ip4/20.232.215.170/tcp/9002/p2p/12D3KooWH1cwh3xzGQDT2Dp22Qc3fGGWqn8vYTvm232wp27M71Ft",
+          "/ip4/34.135.151.3/tcp/9002/p2p/12D3KooWEkXQtJ4oxKnWWFucvAp7oBedgCcPhFRwZsy6b1WaJUCU",
+          "/ip4/127.0.0.1/tcp/9200/p2p/12D3KooWDLhy9p7CLK2srzqwFHYRQtrGtRVAe66nJuqyBB61FFbv"
+        ],
+        "host": {
+          "versions": [
+            {
+              "minor": 5,
+              "patch": 2
+            },
+            {
+              "minor": 5,
+              "patch": 1
+            }
+          ]
+        }
+      },
+      "storage": {
+        "last_finalized_round": 1481357
+      }
+    }
+  },
+  "registration": {
+    "last_registration": "0001-01-01T00:00:00Z"
+  }
+}

@@ -1,0 +1,27 @@
+Signing the entity descriptor...
+(In case you are using a hardware-based signer you may need to confirm on device.)
+You are about to sign the following transaction:
+Method: registry.RegisterEntity
+Body:
+  {
+    "untrusted_raw_value": {
+      "v": 2,
+      "id": "Bx6gOixnxy15tCs09ua5DcKyX9uo2Forb32O6Hyjoc8=",
+      "nodes": [
+        "nshzFvqLNNLN+HS0id5XmXrVMhIgFV456i4VQicWgjk="
+      ]
+    },
+    "signature": {
+      "public_key": "Bx6gOixnxy15tCs09ua5DcKyX9uo2Forb32O6Hyjoc8=",
+      "signature": "DAwn+N8hKmQMbZda/fFJSEgErDAAdebXLfIPOpqUkJowJLUAL+nfrUMz5SVkKc0TnqQOavoSAVFz1yoRJ3QuBA=="
+    }
+  }
+Nonce:  1
+Fee:
+  Amount: 0.0 TEST
+  Gas limit: 2471
+  (gas price: 0.0 TEST per gas unit)
+
+Network:  testnet
+ParaTime: none (consensus layer)
+Account:  oscar

@@ -1,0 +1,1 @@
+oasis transaction show testtx.json --network mainnet

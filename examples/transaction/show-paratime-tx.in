@@ -1,0 +1,1 @@
+oasis transaction show testtx2.json --network testnet --paratime sapphire

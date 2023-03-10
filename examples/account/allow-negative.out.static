@@ -1,0 +1,14 @@
+You are about to sign the following transaction:
+Method: staking.Allow
+Body:
+  Beneficiary:   oasis1qpl4axynedmdrrgrg7dpw3yxc4a8crevr5dkuksl
+  Amount change: -10.0 TEST
+Nonce:  0
+Fee:
+  Amount: 0.0 TEST
+  Gas limit: 1288
+  (gas price: 0.0 TEST per gas unit)
+
+Network:  testnet
+ParaTime: none (consensus layer)
+Account:  oscar

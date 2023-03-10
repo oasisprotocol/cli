@@ -1,0 +1,14 @@
+You are about to sign the following transaction:
+Method: staking.Transfer
+Body:
+  To:     oasis1qp87hflmelnpqhzcqcw8rhzakq4elj7jzv090p3e
+  Amount: 2.5 TEST
+Nonce:  0
+Fee:
+  Amount: 0.0 TEST
+  Gas limit: 1264
+  (gas price: 0.0 TEST per gas unit)
+
+Network:  testnet
+ParaTime: none (consensus layer)
+Account:  orlando

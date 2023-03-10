@@ -1,0 +1,27 @@
+{
+  "v": 2,
+  "id": "Kb6opWKGbJHL0LK2Lto+m5ROIAXLhIr1lxQz0/kAOUM=",
+  "entity_id": "xQN6ffLSdc51EfEQ2BzltK1iWYAw6Y1CkBAbFzlhhEQ=",
+  "expiration": 23482,
+  "tls": {
+    "pub_key": "SslsTv8Cq/UvKHPk8w1S/Ag/wwsscqSa05bqDAVOR1I=",
+    "next_pub_key": "js0fhS02f+G3kW7uu+N47lzcfxjbBEPkPibTfeQrJTA=",
+    "addresses": null
+  },
+  "p2p": {
+    "id": "e9fyvK+2FwU805dag81qOsrKHaO5b+nQnHyzEySi258=",
+    "addresses": null
+  },
+  "consensus": {
+    "id": "3K2Vx3gTop+/GoM9Zh+ZSGPwVb2BRTFtcAo6xPo4pb4=",
+    "addresses": [
+      "e9fyvK+2FwU805dag81qOsrKHaO5b+nQnHyzEySi258=@125.122.166.210:26656"
+    ]
+  },
+  "vrf": {
+    "id": "3z85R+Rdud27NUTMFf4gO4NBQbMEnWqnhHhI6AtNx74="
+  },
+  "runtimes": null,
+  "roles": "validator",
+  "software_version": "22.2.7"
+}

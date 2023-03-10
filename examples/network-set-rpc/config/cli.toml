@@ -1,0 +1,134 @@
+[networks]
+default = 'mainnet'
+
+[networks.mainnet]
+chain_context = 'b11b369e0da5bb230b220127f5e7b242d385ef8c6f54906243f30af63c815535'
+description = ''
+rpc = 'grpc.oasis.dev:443'
+
+[networks.mainnet.denomination]
+decimals = 9
+symbol = 'ROSE'
+
+[networks.mainnet.paratimes]
+default = 'emerald'
+
+[networks.mainnet.paratimes.cipher]
+description = ''
+id = '000000000000000000000000000000000000000000000000e199119c992377cb'
+
+[networks.mainnet.paratimes.cipher.denominations]
+[networks.mainnet.paratimes.cipher.denominations._]
+decimals = 9
+symbol = 'ROSE'
+
+[networks.mainnet.paratimes.emerald]
+description = ''
+id = '000000000000000000000000000000000000000000000000e2eaa99fc008f87f'
+
+[networks.mainnet.paratimes.emerald.denominations]
+[networks.mainnet.paratimes.emerald.denominations._]
+decimals = 18
+symbol = 'ROSE'
+
+[networks.mainnet.paratimes.sapphire]
+description = ''
+id = '000000000000000000000000000000000000000000000000f80306c9858e7279'
+
+[networks.mainnet.paratimes.sapphire.denominations]
+[networks.mainnet.paratimes.sapphire.denominations._]
+decimals = 18
+symbol = 'ROSE'
+
+[networks.testnet]
+chain_context = '50304f98ddb656620ea817cc1446c401752a05a249b36c9b90dba4616829977a'
+description = ''
+rpc = 'testnet.grpc.oasis.dev:443'
+
+[networks.testnet.denomination]
+decimals = 9
+symbol = 'TEST'
+
+[networks.testnet.paratimes]
+default = 'emerald'
+
+[networks.testnet.paratimes.cipher]
+description = ''
+id = '0000000000000000000000000000000000000000000000000000000000000000'
+
+[networks.testnet.paratimes.cipher.denominations]
+[networks.testnet.paratimes.cipher.denominations._]
+decimals = 9
+symbol = 'TEST'
+
+[networks.testnet.paratimes.emerald]
+description = ''
+id = '00000000000000000000000000000000000000000000000072c8215e60d5bca7'
+
+[networks.testnet.paratimes.emerald.denominations]
+[networks.testnet.paratimes.emerald.denominations._]
+decimals = 18
+symbol = 'TEST'
+
+[networks.testnet.paratimes.sapphire]
+description = ''
+id = '000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c'
+
+[networks.testnet.paratimes.sapphire.denominations]
+[networks.testnet.paratimes.sapphire.denominations._]
+decimals = 18
+symbol = 'TEST'
+
+[networks.testnet_alt]
+chain_context = '50304f98ddb656620ea817cc1446c401752a05a249b36c9b90dba4616829977a'
+description = 'Testnet alt'
+rpc = 'testnet2.grpc.oasis.dev:443'
+
+[networks.testnet_alt.denomination]
+decimals = 9
+symbol = 'TEST'
+
+[networks.testnet_alt.paratimes]
+default = ''
+
+[networks.mainnet_local]
+chain_context = 'b11b369e0da5bb230b220127f5e7b242d385ef8c6f54906243f30af63c815535'
+description = ''
+rpc = 'unix:/serverdir_mainnet/internal.sock'
+
+[networks.mainnet_local.denomination]
+decimals = 9
+symbol = 'ROSE'
+
+[networks.mainnet_local.paratimes]
+default = 'emerald'
+
+[networks.mainnet_local.paratimes.cipher]
+description = ''
+id = '000000000000000000000000000000000000000000000000e199119c992377cb'
+
+[networks.mainnet_local.paratimes.cipher.denominations]
+[networks.mainnet_local.paratimes.cipher.denominations._]
+decimals = 9
+symbol = 'ROSE'
+
+[networks.mainnet_local.paratimes.emerald]
+description = ''
+id = '000000000000000000000000000000000000000000000000e2eaa99fc008f87f'
+
+[networks.mainnet_local.paratimes.emerald.denominations]
+[networks.mainnet_local.paratimes.emerald.denominations._]
+decimals = 18
+symbol = 'ROSE'
+
+[networks.mainnet_local.paratimes.sapphire]
+description = ''
+id = '000000000000000000000000000000000000000000000000f80306c9858e7279'
+
+[networks.mainnet_local.paratimes.sapphire.denominations]
+[networks.mainnet_local.paratimes.sapphire.denominations._]
+decimals = 18
+symbol = 'ROSE'
+
+[wallets]
+default = ''

@@ -1,0 +1,17 @@
+Hash: bd312d0faf8b7399b8b92b07cb6b40b418995875551341fa8540503322c5b70a
+Signer: NcPzNW3YU2T+ugNUtUWtoQnRvbOL9dYSaBfbjHLP1pE=
+        (signature: k51gq/PyDHCjm2vEMMpePnnTOaFUddRadfrP8UmgzMz1G0JDr+1lRH9lsg04+2krpmMYs7TOgX55+RVJ5a+LDw==)
+        [INVALID SIGNATURE]
+Content:
+  Method: staking.Transfer
+  Body:
+    To:     oasis1qrydpazemvuwtnp3efm7vmfvg3tde044qg6cxwzx
+    Amount: 1.0 ROSE
+  Nonce:  1
+  Fee:
+    Amount: 0.0 ROSE
+    Gas limit: 1
+    (gas price: 0.0 ROSE per gas unit)
+
+Network:  mainnet
+ParaTime: none (consensus layer)

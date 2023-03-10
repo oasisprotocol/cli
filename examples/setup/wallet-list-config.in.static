@@ -1,0 +1,1 @@
+oasis wallet list --config ~/.config/oasis_dev/cli.toml

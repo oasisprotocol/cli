@@ -81,6 +81,12 @@ func initConfig() {
 	// Load and validate global configuration.
 	err := config.Load(v)
 	cobra.CheckErr(err)
+	changes, err := config.Global().Migrate()
+	cobra.CheckErr(err)
+	if changes {
+		err = config.Global().Save()
+		cobra.CheckErr(err)
+	}
 	err = config.Global().Validate()
 	cobra.CheckErr(err)
 }

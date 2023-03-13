@@ -5,7 +5,8 @@ import (
 
 	coreSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/ed25519"
+
+	"github.com/oasisprotocol/cli/wallet"
 )
 
 type ledgerCoreSigner struct {
@@ -32,7 +33,7 @@ func (ls *ledgerCoreSigner) ContextSign(context coreSignature.Context, message [
 }
 
 func (ls *ledgerCoreSigner) String() string {
-	return fmt.Sprintf("[ledger signer: %s]", ls.pk)
+	return fmt.Sprintf("[ledger consensus signer: %s]", ls.pk)
 }
 
 func (ls *ledgerCoreSigner) Reset() {
@@ -40,24 +41,34 @@ func (ls *ledgerCoreSigner) Reset() {
 }
 
 type ledgerSigner struct {
-	pk  ed25519.PublicKey
-	dev *ledgerDevice
+	algorithm string
+	path      []uint32
+	pk        signature.PublicKey
+	dev       *ledgerDevice
 }
 
-func (ls *ledgerSigner) Public() signature.PublicKey {
+func (ls *ledgerSigner) Public() (pk signature.PublicKey) {
 	return ls.pk
 }
 
-func (ls *ledgerSigner) ContextSign(context, message []byte) ([]byte, error) {
-	return nil, fmt.Errorf("ledger: signing paratime transactions not supported")
+func (ls *ledgerSigner) ContextSign(metadata signature.Context, message []byte) ([]byte, error) {
+	switch ls.algorithm {
+	case wallet.AlgorithmEd25519Adr8:
+	case wallet.AlgorithmEd25519Legacy:
+		return ls.dev.SignRtEd25519(ls.path, metadata, message)
+	case wallet.AlgorithmSecp256k1Bip44:
+		return ls.dev.SignRtSecp256k1(ls.path, metadata, message)
+	}
+
+	return nil, fmt.Errorf("ledger: algorithm %s not supported", ls.algorithm)
 }
 
 func (ls *ledgerSigner) Sign(message []byte) ([]byte, error) {
-	return nil, fmt.Errorf("ledger: signing paratime transactions not supported")
+	return nil, fmt.Errorf("ledger: signing without context not supported")
 }
 
 func (ls *ledgerSigner) String() string {
-	return fmt.Sprintf("[ledger signer: %s]", ls.pk)
+	return fmt.Sprintf("[ledger runtime signer: %s]", ls.pk)
 }
 
 func (ls *ledgerSigner) Reset() {

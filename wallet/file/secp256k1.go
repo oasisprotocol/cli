@@ -15,7 +15,7 @@ const (
 	// privateKeySize is the length of Secp256k1 private key (32 bytes).
 	privateKeySize = 32
 
-	// Bip44DerivationPath is the derivation path defined by BIP-44.
+	// Bip44DerivationPath is the derivation path defined by BIP-44 for ETH coin type.
 	Bip44DerivationPath = "m/44'/60'/0'/0/%d"
 )
 

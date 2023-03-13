@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"os"
 
+	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -15,9 +16,9 @@ import (
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	roothash "github.com/oasisprotocol/oasis-core/go/roothash/api"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
-
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
+	sdkSignature "github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/accounts"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/consensusaccounts"
@@ -66,7 +67,7 @@ var (
 			c, err := connection.Connect(ctx, npa.Network)
 			cobra.CheckErr(err)
 
-			addr, err := common.ResolveLocalAccountOrAddress(npa.Network, targetAddress)
+			addr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, targetAddress)
 			cobra.CheckErr(err)
 
 			height, err := common.GetActualHeight(
@@ -235,7 +236,7 @@ var (
 			}
 
 			// Resolve beneficiary address.
-			benAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, beneficiary)
+			benAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, beneficiary)
 			cobra.CheckErr(err)
 
 			// Parse amount.
@@ -294,9 +295,10 @@ var (
 
 			// Resolve destination address when specified.
 			var toAddr *types.Address
+			var toEthAddr *ethCommon.Address
 			if to != "" {
 				var err error
-				toAddr, err = common.ResolveLocalAccountOrAddress(npa.Network, to)
+				toAddr, toEthAddr, err = common.ResolveLocalAccountOrAddress(npa.Network, to)
 				cobra.CheckErr(err)
 			}
 
@@ -318,7 +320,8 @@ var (
 			})
 
 			acc := common.LoadAccount(cfg, npa.AccountName)
-			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx)
+			txDetails := sdkSignature.TxDetails{OrigTo: toEthAddr}
+			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, &txDetails)
 			cobra.CheckErr(err)
 
 			if txCfg.Offline {
@@ -395,12 +398,12 @@ var (
 			var addrToCheck string
 			if to != "" {
 				var err error
-				toAddr, err = common.ResolveLocalAccountOrAddress(npa.Network, to)
+				toAddr, _, err = common.ResolveLocalAccountOrAddress(npa.Network, to)
 				cobra.CheckErr(err)
 				addrToCheck = toAddr.String()
 			} else {
 				// Destination address is implicit, but obtain it for safety check below nonetheless.
-				addr, err := helpers.ResolveAddress(npa.Network, npa.Account.Address)
+				addr, _, err := helpers.ResolveAddress(npa.Network, npa.Account.Address)
 				cobra.CheckErr(err)
 				addrToCheck = addr.String()
 			}
@@ -423,7 +426,7 @@ var (
 			})
 
 			acc := common.LoadAccount(cfg, npa.AccountName)
-			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx)
+			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
 			if txCfg.Offline {
@@ -490,7 +493,7 @@ var (
 			}
 
 			// Resolve destination address.
-			toAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, to)
+			toAddr, toEthAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, to)
 			cobra.CheckErr(err)
 
 			// Check, if to address is known to be unspendable.
@@ -528,7 +531,8 @@ var (
 					Amount: *amountBaseUnits,
 				})
 
-				sigTx, meta, err = common.SignParaTimeTransaction(ctx, npa, acc, conn, tx)
+				txDetails := sdkSignature.TxDetails{OrigTo: toEthAddr}
+				sigTx, meta, err = common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, &txDetails)
 				cobra.CheckErr(err)
 			}
 
@@ -605,7 +609,7 @@ var (
 			}
 
 			// Resolve destination address.
-			toAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, to)
+			toAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, to)
 			cobra.CheckErr(err)
 
 			acc := common.LoadAccount(cfg, npa.AccountName)
@@ -658,7 +662,7 @@ var (
 			}
 
 			// Resolve destination address.
-			fromAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, from)
+			fromAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, from)
 			cobra.CheckErr(err)
 
 			acc := common.LoadAccount(cfg, npa.AccountName)
@@ -728,7 +732,7 @@ var (
 				now, err = conn.Consensus().Beacon().GetEpoch(ctx, height)
 				cobra.CheckErr(err)
 
-				addr, err := common.ResolveLocalAccountOrAddress(npa.Network, npa.Account.Address)
+				addr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, npa.Account.Address)
 				cobra.CheckErr(err)
 
 				stakingConn := conn.Consensus().Staking()

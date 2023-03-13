@@ -4,9 +4,16 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/btcsuite/btcd/btcec/v2/ecdsa"
+	ethCommon "github.com/ethereum/go-ethereum/common"
+	ledger_go "github.com/zondax/ledger-go"
+	"golang.org/x/crypto/sha3"
+
+	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	coreSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
-	ledger_go "github.com/zondax/ledger-go"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
 )
 
 // NOTE: Some of this is lifted from https://github.com/oasisprotocol/oasis-core-ledger but updated
@@ -17,9 +24,14 @@ const (
 
 	claConsumer = 0x05
 
-	insGetVersion     = 0
-	insGetAddrEd25519 = 1
-	insSignEd25519    = 2
+	insGetVersion       = 0
+	insGetAddrEd25519   = 1
+	insSignEd25519      = 2
+	insGetAddrSr25519   = 3
+	insGetAddrSecp256k1 = 4
+	insSignRtEd25519    = 5
+	insSignRtSr25519    = 6
+	insSignRtSecp256k1  = 7
 
 	payloadChunkInit = 0
 	payloadChunkAdd  = 1
@@ -65,29 +77,29 @@ func (ld *ledgerDevice) GetVersion() (*VersionInfo, error) {
 
 // GetPublicKeyEd25519 returns the Ed25519 public key associated with the given derivation path.
 // If the requireConfirmation flag is set, this will require confirmation from the user.
-func (ld *ledgerDevice) GetPublicKeyEd25519(bip44Path []uint32, requireConfirmation bool) ([]byte, error) {
-	pathBytes, err := getBip44bytes(bip44Path)
+func (ld *ledgerDevice) GetPublicKeyEd25519(path []uint32, requireConfirmation bool) ([]byte, error) {
+	return ld.getPublicKey25519(path, insGetAddrEd25519, requireConfirmation)
+}
+
+// GetPublicKeySr25519 returns the Sr25519 public key associated with the given derivation path.
+// If the requireConfirmation flag is set, this will require confirmation from the user.
+func (ld *ledgerDevice) GetPublicKeySr25519(path []uint32, requireConfirmation bool) ([]byte, error) {
+	return ld.getPublicKey25519(path, insGetAddrSr25519, requireConfirmation)
+}
+
+func (ld *ledgerDevice) getPublicKey25519(path []uint32, ins byte, requireConfirmation bool) ([]byte, error) {
+	pathBytes, err := getSerializedPath(path)
 	if err != nil {
-		return nil, fmt.Errorf("ledger: failed to get BIP44 bytes: %w", err)
+		return nil, fmt.Errorf("ledger: failed to get serialized path bytes: %w", err)
 	}
 
-	p1 := byte(0)
-	if requireConfirmation {
-		p1 = byte(1)
-	}
-
-	// Prepare message
-	header := []byte{claConsumer, insGetAddrEd25519, p1, 0, 0}
-	message := append([]byte{}, header...)
-	message = append(message, pathBytes...)
-	message[4] = byte(len(message) - len(header)) // update length
-
-	response, err := ld.raw.Exchange(message)
+	response, err := ld.getPublicKeyRaw(pathBytes, ins, requireConfirmation)
 	if err != nil {
-		return nil, fmt.Errorf("ledger: failed to request public key: %w", err)
+		return nil, err
 	}
-	if len(response) < 39 {
-		return nil, fmt.Errorf("ledger: truncated GetAddrEd25519 response")
+	// 32-byte public key + Bech32-encoded address.
+	if len(response) < 78 {
+		return nil, fmt.Errorf("ledger: truncated GetAddr*25519 response")
 	}
 
 	rawPubkey := response[0:32]
@@ -114,15 +126,76 @@ func (ld *ledgerDevice) GetPublicKeyEd25519(bip44Path []uint32, requireConfirmat
 	return rawPubkey, nil
 }
 
-// SignEd25519 asks the device to sign the given domain-separated message with the key derived from
-// the given derivation path.
-func (ld *ledgerDevice) SignEd25519(bip44Path []uint32, context, message []byte) ([]byte, error) {
-	pathBytes, err := getBip44bytes(bip44Path)
+// GetPublicKeySecp256k1 returns the Secp256k1 public key associated with the given derivation path.
+// If the requireConfirmation flag is set, this will require confirmation from the user.
+func (ld *ledgerDevice) GetPublicKeySecp256k1(path []uint32, requireConfirmation bool) ([]byte, error) {
+	pathBytes, err := getSerializedBip44Path(path)
 	if err != nil {
-		return nil, fmt.Errorf("ledger: failed to get BIP44 bytes: %w", err)
+		return nil, fmt.Errorf("ledger: failed to get serialized BIP44 path bytes: %w", err)
 	}
 
-	chunks, err := prepareChunks(pathBytes, context, message, userMessageChunkSize)
+	response, err := ld.getPublicKeyRaw(pathBytes, insGetAddrSecp256k1, requireConfirmation)
+	if err != nil {
+		return nil, err
+	}
+	// 33-byte public key + 20-byte address
+	if len(response) < 53 {
+		return nil, fmt.Errorf("ledger: truncated GetAddrSecp256k1 response")
+	}
+
+	rawPubkey := response[0:33]
+	rawAddr := string(response[33:])
+
+	pubkey, err := btcec.ParsePubKey(rawPubkey)
+	if err != nil {
+		return nil, fmt.Errorf("ledger: device returned malformed public key: %w", err)
+	}
+
+	addrFromDevice := ethCommon.HexToAddress(rawAddr)
+
+	h := sha3.NewLegacyKeccak256()
+	h.Write(pubkey.SerializeUncompressed()[1:])
+	hash := h.Sum(nil)
+	addrFromPubkey := ethCommon.BytesToAddress(hash[32-20:])
+	if addrFromDevice.String() != addrFromPubkey.String() {
+		return nil, fmt.Errorf(
+			"ledger: account address computed on device (%s) doesn't match internally computed account address (%s)",
+			addrFromDevice,
+			addrFromPubkey,
+		)
+	}
+
+	return rawPubkey, nil
+}
+
+func (ld *ledgerDevice) getPublicKeyRaw(pathBytes []byte, ins byte, requireConfirmation bool) ([]byte, error) {
+	p1 := byte(0)
+	if requireConfirmation {
+		p1 = byte(1)
+	}
+
+	// Prepare message
+	header := []byte{claConsumer, ins, p1, 0, 0}
+	message := append([]byte{}, header...)
+	message = append(message, pathBytes...)
+	message[4] = byte(len(message) - len(header)) // update length
+
+	response, err := ld.raw.Exchange(message)
+	if err != nil {
+		return nil, fmt.Errorf("ledger: failed to request public key: %w", err)
+	}
+	return response, nil
+}
+
+// SignEd25519 asks the device to sign the given domain-separated message with the key derived from
+// the given derivation path.
+func (ld *ledgerDevice) SignEd25519(path []uint32, context, message []byte) ([]byte, error) {
+	pathBytes, err := getSerializedPath(path)
+	if err != nil {
+		return nil, fmt.Errorf("ledger: failed to get serialized path bytes: %w", err)
+	}
+
+	chunks, err := prepareConsensusChunks(pathBytes, context, message, userMessageChunkSize)
 	if err != nil {
 		return nil, fmt.Errorf("ledger: failed to prepare chunks: %w", err)
 	}
@@ -142,6 +215,98 @@ func (ld *ledgerDevice) SignEd25519(bip44Path []uint32, context, message []byte)
 		}
 
 		message := []byte{claConsumer, insSignEd25519, payloadDesc, 0, payloadLen}
+		message = append(message, chunk...)
+
+		response, err := ld.raw.Exchange(message)
+		if err != nil {
+			switch err.Error() {
+			case errMsgInvalidParameters, errMsgInvalidated:
+				return nil, fmt.Errorf("ledger: failed to sign: %s", string(response))
+			case errMsgRejected:
+				return nil, fmt.Errorf("ledger: signing request rejected by user")
+			}
+			return nil, fmt.Errorf("ledger: failed to sign: %w", err)
+		}
+
+		finalResponse = response
+	}
+
+	// XXX: Work-around for Oasis App issue of currently not being capable of
+	// signing two transactions immediately one after another:
+	// https://github.com/Zondax/ledger-oasis/issues/68.
+	time.Sleep(100 * time.Millisecond)
+
+	return finalResponse, nil
+}
+
+// SignRtEd25519 asks the device to sign the given message and metadata with the Ed25519 key derived from
+// the given hardened path.
+func (ld *ledgerDevice) SignRtEd25519(path []uint32, sigCtx signature.Context, message []byte) ([]byte, error) {
+	return ld.signRt25519(path, sigCtx, message, insSignRtEd25519)
+}
+
+// SignRtSr25519 asks the device to sign the given message and metadata with the Sr25519 key derived from
+// the given hardened path.
+func (ld *ledgerDevice) SignRtSr25519(path []uint32, sigCtx signature.Context, message []byte) ([]byte, error) {
+	return ld.signRt25519(path, sigCtx, message, insSignRtSr25519)
+}
+
+// SignRtSecp256k1 asks the device to sign the given message and metadata with the Secp256k1 key derived from
+// the given BIP44 path.
+func (ld *ledgerDevice) SignRtSecp256k1(bip44Path []uint32, sigCtx signature.Context, message []byte) ([]byte, error) {
+	pathBytes, err := getSerializedBip44Path(bip44Path)
+	if err != nil {
+		return nil, fmt.Errorf("ledger: failed to get serialized BIP44 path bytes: %w", err)
+	}
+	rsvSig, err := ld.signRt(pathBytes, sigCtx, message, insSignRtSecp256k1)
+	if err != nil {
+		return nil, fmt.Errorf("ledger: failed to perform secp256k1 signature: %w", err)
+	}
+	if len(rsvSig) < 64 {
+		return nil, fmt.Errorf("ledger: secp256k1 signature in RS format should be at least 64-bytes long")
+	}
+	var r, s btcec.ModNScalar
+	r.SetByteSlice(rsvSig[0:32])
+	s.SetByteSlice(rsvSig[32:64])
+	return ecdsa.NewSignature(&r, &s).Serialize(), nil
+}
+
+func (ld *ledgerDevice) signRt25519(path []uint32, sigCtx signature.Context, message []byte, ins byte) ([]byte, error) {
+	pathBytes, err := getSerializedPath(path)
+	if err != nil {
+		return nil, fmt.Errorf("ledger: failed to get serialized path bytes: %w", err)
+	}
+	return ld.signRt(pathBytes, sigCtx, message, ins)
+}
+
+func (ld *ledgerDevice) signRt(pathBytes []byte, sigCtx signature.Context, message []byte, instruction byte) ([]byte, error) {
+	richSigCtx, ok := sigCtx.(*signature.RichContext)
+	if !ok {
+		return nil, fmt.Errorf("ledger: signature context is not RichContext")
+	}
+
+	meta := signature.NewHwContext(richSigCtx)
+	metadataBytes := cbor.Marshal(meta)
+	chunks, err := prepareRuntimeChunks(pathBytes, metadataBytes, message, userMessageChunkSize)
+	if err != nil {
+		return nil, fmt.Errorf("ledger: failed to prepare chunks: %w", err)
+	}
+
+	var finalResponse []byte
+	for idx, chunk := range chunks {
+		payloadLen := byte(len(chunk))
+
+		var payloadDesc byte
+		switch idx {
+		case 0:
+			payloadDesc = payloadChunkInit
+		case len(chunks) - 1:
+			payloadDesc = payloadChunkLast
+		default:
+			payloadDesc = payloadChunkAdd
+		}
+
+		message := []byte{claConsumer, instruction, payloadDesc, 0, payloadLen}
 		message = append(message, chunk...)
 
 		response, err := ld.raw.Exchange(message)

@@ -397,10 +397,14 @@ var (
 			var toAddr *types.Address
 			var addrToCheck string
 			if to != "" {
+				var ethAddr *ethCommon.Address
 				var err error
-				toAddr, _, err = common.ResolveLocalAccountOrAddress(npa.Network, to)
+				toAddr, ethAddr, err = common.ResolveLocalAccountOrAddress(npa.Network, to)
 				cobra.CheckErr(err)
 				addrToCheck = toAddr.String()
+				if ethAddr != nil {
+					addrToCheck = ethAddr.Hex()
+				}
 			} else {
 				// Destination address is implicit, but obtain it for safety check below nonetheless.
 				addr, _, err := helpers.ResolveAddress(npa.Network, npa.Account.Address)
@@ -408,9 +412,8 @@ var (
 				addrToCheck = addr.String()
 			}
 
-			cobra.CheckErr(common.CheckLocalAccountIsConsensusCapable(cfg, addrToCheck))
-
 			// Check, if to address is known to be unspendable.
+			common.CheckForceErr(common.CheckAddressIsConsensusCapable(cfg, addrToCheck))
 			common.CheckForceErr(common.CheckAddressNotReserved(cfg, addrToCheck))
 
 			// Parse amount.
@@ -504,7 +507,10 @@ var (
 			var sigTx, meta interface{}
 			switch npa.ParaTime {
 			case nil:
-				cobra.CheckErr(common.CheckLocalAccountIsConsensusCapable(cfg, toAddr.String()))
+				common.CheckForceErr(common.CheckAddressIsConsensusCapable(cfg, toAddr.String()))
+				if toEthAddr != nil {
+					common.CheckForceErr(common.CheckAddressIsConsensusCapable(cfg, toEthAddr.Hex()))
+				}
 
 				// Consensus layer transfer.
 				amount, err := helpers.ParseConsensusDenomination(npa.Network, amount)

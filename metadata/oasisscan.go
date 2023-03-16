@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -53,7 +53,7 @@ func EntitiesFromOasisscan(ctx context.Context) (map[types.Address]*Entity, erro
 	if resp != nil {
 		defer resp.Body.Close()
 	}
-	vals, err := ioutil.ReadAll(resp.Body)
+	vals, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}

@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -366,7 +365,7 @@ func (af *fileAccountFactory) Create(name string, passphrase string, rawCfg map[
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal envelope: %w", err)
 	}
-	if err := ioutil.WriteFile(getAccountFilename(name), raw, 0o600); err != nil {
+	if err := os.WriteFile(getAccountFilename(name), raw, 0o600); err != nil {
 		return nil, fmt.Errorf("failed to save state: %w", err)
 	}
 
@@ -386,7 +385,7 @@ func (af *fileAccountFactory) Load(name string, passphrase string, rawCfg map[st
 	}
 
 	// Load state from encrypted file.
-	raw, err := ioutil.ReadFile(getAccountFilename(name))
+	raw, err := os.ReadFile(getAccountFilename(name))
 	if err != nil {
 		return nil, fmt.Errorf("failed to load account state: %w", err)
 	}
@@ -457,7 +456,7 @@ func (af *fileAccountFactory) Import(name string, passphrase string, rawCfg map[
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal envelope: %w", err)
 	}
-	if err := ioutil.WriteFile(getAccountFilename(name), raw, 0o600); err != nil {
+	if err := os.WriteFile(getAccountFilename(name), raw, 0o600); err != nil {
 		return nil, fmt.Errorf("failed to save state: %w", err)
 	}
 	return acc, nil

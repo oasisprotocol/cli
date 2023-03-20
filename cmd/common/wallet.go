@@ -41,7 +41,7 @@ func LoadAccount(cfg *config.Config, name string) wallet.Account {
 	cobra.CheckErr(err)
 
 	var passphrase string
-	if af.RequiresPassphrase() {
+	if af.RequiresPassphrase() && !txYes {
 		// Ask for passphrase to decrypt the account.
 		fmt.Printf("Unlock your account.\n")
 

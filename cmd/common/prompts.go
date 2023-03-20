@@ -26,7 +26,10 @@ var (
 
 // Confirm asks the user for confirmation and aborts when rejected.
 func Confirm(msg, abortMsg string) {
-	// TODO: Support flag for skipping confirmations.
+	if txYes {
+		fmt.Printf("? %s Yes\n", msg)
+		return
+	}
 
 	var proceed bool
 	err := survey.AskOne(&survey.Confirm{Message: msg}, &proceed)

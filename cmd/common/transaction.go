@@ -35,6 +35,7 @@ var (
 	txGasLimit  uint64
 	txGasPrice  string
 	txEncrypted bool
+	txYes       bool
 )
 
 const (
@@ -458,4 +459,5 @@ func init() {
 	TransactionFlags.Uint64Var(&txGasLimit, "gas-limit", invalidGasLimit, "override gas limit to use (disable estimation)")
 	TransactionFlags.StringVar(&txGasPrice, "gas-price", "", "override gas price to use")
 	TransactionFlags.BoolVar(&txEncrypted, "encrypted", false, "encrypt transaction call data (requires online mode)")
+	TransactionFlags.BoolVarP(&txYes, "yes", "y", false, "answer yes to all questions")
 }

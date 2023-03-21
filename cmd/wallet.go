@@ -338,8 +338,8 @@ func (sf *accountEntitySignerFactory) EnsureRole(
 }
 
 func (sf *accountEntitySignerFactory) Generate(
-	role signature.SignerRole,
-	rng io.Reader,
+	_ signature.SignerRole,
+	_ io.Reader,
 ) (signature.Signer, error) {
 	// The remote signer should never require this.
 	return nil, fmt.Errorf("refusing to generate new signing keys")

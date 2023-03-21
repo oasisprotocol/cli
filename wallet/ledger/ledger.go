@@ -64,15 +64,15 @@ func (af *ledgerAccountFactory) GetConfigFromFlags() (map[string]interface{}, er
 	return cfg, nil
 }
 
-func (af *ledgerAccountFactory) GetConfigFromSurvey(kind *wallet.ImportKind) (map[string]interface{}, error) {
+func (af *ledgerAccountFactory) GetConfigFromSurvey(_ *wallet.ImportKind) (map[string]interface{}, error) {
 	return nil, fmt.Errorf("ledger: import not supported")
 }
 
-func (af *ledgerAccountFactory) DataPrompt(kind wallet.ImportKind, rawCfg map[string]interface{}) survey.Prompt {
+func (af *ledgerAccountFactory) DataPrompt(_ wallet.ImportKind, _ map[string]interface{}) survey.Prompt {
 	return nil
 }
 
-func (af *ledgerAccountFactory) DataValidator(kind wallet.ImportKind, rawCfg map[string]interface{}) survey.Validator {
+func (af *ledgerAccountFactory) DataValidator(_ wallet.ImportKind, _ map[string]interface{}) survey.Validator {
 	return nil
 }
 
@@ -132,7 +132,7 @@ func (af *ledgerAccountFactory) unmarshalConfig(raw map[string]interface{}) (*ac
 	return &cfg, nil
 }
 
-func (af *ledgerAccountFactory) Create(name string, passphrase string, rawCfg map[string]interface{}) (wallet.Account, error) {
+func (af *ledgerAccountFactory) Create(_ string, _ string, rawCfg map[string]interface{}) (wallet.Account, error) {
 	cfg, err := af.unmarshalConfig(rawCfg)
 	if err != nil {
 		return nil, err
@@ -141,7 +141,7 @@ func (af *ledgerAccountFactory) Create(name string, passphrase string, rawCfg ma
 	return newAccount(cfg)
 }
 
-func (af *ledgerAccountFactory) Load(name string, passphrase string, rawCfg map[string]interface{}) (wallet.Account, error) {
+func (af *ledgerAccountFactory) Load(_ string, _ string, rawCfg map[string]interface{}) (wallet.Account, error) {
 	cfg, err := af.unmarshalConfig(rawCfg)
 	if err != nil {
 		return nil, err
@@ -150,15 +150,15 @@ func (af *ledgerAccountFactory) Load(name string, passphrase string, rawCfg map[
 	return newAccount(cfg)
 }
 
-func (af *ledgerAccountFactory) Remove(name string, rawCfg map[string]interface{}) error {
+func (af *ledgerAccountFactory) Remove(_ string, _ map[string]interface{}) error {
 	return nil
 }
 
-func (af *ledgerAccountFactory) Rename(old, new string, rawCfg map[string]interface{}) error {
+func (af *ledgerAccountFactory) Rename(_, _ string, _ map[string]interface{}) error {
 	return nil
 }
 
-func (af *ledgerAccountFactory) Import(name string, passphrase string, rawCfg map[string]interface{}, src *wallet.ImportSource) (wallet.Account, error) {
+func (af *ledgerAccountFactory) Import(_ string, _ string, _ map[string]interface{}, _ *wallet.ImportSource) (wallet.Account, error) {
 	return nil, fmt.Errorf("ledger: import not supported")
 }
 

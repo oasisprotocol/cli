@@ -374,7 +374,7 @@ func (af *fileAccountFactory) Create(name string, passphrase string, rawCfg map[
 }
 
 // Migrate migrates the given wallet config entry to the latest version and returns true, if any changes were needed.
-func (af *fileAccountFactory) Migrate(rawCfg map[string]interface{}) bool {
+func (af *fileAccountFactory) Migrate(_ map[string]interface{}) bool {
 	return false
 }
 
@@ -403,11 +403,11 @@ func (af *fileAccountFactory) Load(name string, passphrase string, rawCfg map[st
 	return newAccount(state, cfg)
 }
 
-func (af *fileAccountFactory) Remove(name string, rawCfg map[string]interface{}) error {
+func (af *fileAccountFactory) Remove(name string, _ map[string]interface{}) error {
 	return os.Remove(getAccountFilename(name))
 }
 
-func (af *fileAccountFactory) Rename(old, new string, rawCfg map[string]interface{}) error {
+func (af *fileAccountFactory) Rename(old, new string, _ map[string]interface{}) error {
 	return os.Rename(getAccountFilename(old), getAccountFilename(new))
 }
 

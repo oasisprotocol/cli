@@ -63,7 +63,7 @@ func (ls *ledgerSigner) ContextSign(metadata signature.Context, message []byte) 
 	return nil, fmt.Errorf("ledger: algorithm %s not supported", ls.algorithm)
 }
 
-func (ls *ledgerSigner) Sign(message []byte) ([]byte, error) {
+func (ls *ledgerSigner) Sign(_ []byte) ([]byte, error) {
 	return nil, fmt.Errorf("ledger: signing without context not supported")
 }
 

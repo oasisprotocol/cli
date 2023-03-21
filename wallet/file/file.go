@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -366,7 +365,7 @@ func (af *fileAccountFactory) Create(name string, passphrase string, rawCfg map[
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal envelope: %w", err)
 	}
-	if err := ioutil.WriteFile(getAccountFilename(name), raw, 0o600); err != nil {
+	if err := os.WriteFile(getAccountFilename(name), raw, 0o600); err != nil {
 		return nil, fmt.Errorf("failed to save state: %w", err)
 	}
 
@@ -375,7 +374,7 @@ func (af *fileAccountFactory) Create(name string, passphrase string, rawCfg map[
 }
 
 // Migrate migrates the given wallet config entry to the latest version and returns true, if any changes were needed.
-func (af *fileAccountFactory) Migrate(rawCfg map[string]interface{}) bool {
+func (af *fileAccountFactory) Migrate(_ map[string]interface{}) bool {
 	return false
 }
 
@@ -386,7 +385,7 @@ func (af *fileAccountFactory) Load(name string, passphrase string, rawCfg map[st
 	}
 
 	// Load state from encrypted file.
-	raw, err := ioutil.ReadFile(getAccountFilename(name))
+	raw, err := os.ReadFile(getAccountFilename(name))
 	if err != nil {
 		return nil, fmt.Errorf("failed to load account state: %w", err)
 	}
@@ -404,11 +403,11 @@ func (af *fileAccountFactory) Load(name string, passphrase string, rawCfg map[st
 	return newAccount(state, cfg)
 }
 
-func (af *fileAccountFactory) Remove(name string, rawCfg map[string]interface{}) error {
+func (af *fileAccountFactory) Remove(name string, _ map[string]interface{}) error {
 	return os.Remove(getAccountFilename(name))
 }
 
-func (af *fileAccountFactory) Rename(old, new string, rawCfg map[string]interface{}) error {
+func (af *fileAccountFactory) Rename(old, new string, _ map[string]interface{}) error {
 	return os.Rename(getAccountFilename(old), getAccountFilename(new))
 }
 
@@ -457,7 +456,7 @@ func (af *fileAccountFactory) Import(name string, passphrase string, rawCfg map[
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal envelope: %w", err)
 	}
-	if err := ioutil.WriteFile(getAccountFilename(name), raw, 0o600); err != nil {
+	if err := os.WriteFile(getAccountFilename(name), raw, 0o600); err != nil {
 		return nil, fmt.Errorf("failed to save state: %w", err)
 	}
 	return acc, nil

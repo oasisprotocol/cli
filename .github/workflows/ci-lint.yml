@@ -38,10 +38,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Set up Go 1.18
+      - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.18.x'
+          go-version: '1.20.x'
       - name: Install gitlint
         run: |
           python -m pip install gitlint
@@ -62,8 +62,7 @@ jobs:
         # 'make lint-go'.
         uses: golangci/golangci-lint-action@v3.4.0
         with:
-          # NOTE: The version must be specified without the patch version.
-          version: v1.50
+          version: v1.52.0
         # Always run this step so that all linting errors can be seen at once.
         if: always()
       - name: Ensure a clean code checkout

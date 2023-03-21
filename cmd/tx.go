@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"reflect"
 
 	"github.com/spf13/cobra"
@@ -39,7 +39,7 @@ var (
 			conn, err := connection.Connect(ctx, npa.Network)
 			cobra.CheckErr(err)
 
-			rawTx, err := ioutil.ReadFile(filename)
+			rawTx, err := os.ReadFile(filename)
 			cobra.CheckErr(err)
 
 			tx, err := tryDecodeTx(rawTx)
@@ -76,7 +76,7 @@ var (
 			npa := common.GetNPASelection(cfg)
 			filename := args[0]
 
-			rawTx, err := ioutil.ReadFile(filename)
+			rawTx, err := os.ReadFile(filename)
 			cobra.CheckErr(err)
 
 			tx, err := tryDecodeTx(rawTx)

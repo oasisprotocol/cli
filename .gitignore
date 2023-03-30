@@ -2,3 +2,5 @@
 oasis
 # Ignore Python cache directories.
 __pycache__/
+# Ignore temporary files.
+*.swp

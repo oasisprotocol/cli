@@ -64,11 +64,11 @@ var (
 			acc := common.LoadAccount(cfg, npa.AccountName)
 			signer := acc.ConsensusSigner()
 			if signer == nil {
-				cobra.CheckErr("account does not support signing consensus transactions")
+				cobra.CheckErr(fmt.Errorf("account '%s' does not support signing consensus transactions", npa.AccountName))
 			}
 			if !signer.Public().Equal(descriptor.ID) {
-				cobra.CheckErr(fmt.Errorf("entity ID (%s) does not correspond to selected account (%s)",
-					descriptor.ID, signer.Public()))
+				cobra.CheckErr(fmt.Errorf("entity ID '%s' does not correspond to selected account '%s' (%s)",
+					descriptor.ID, npa.AccountName, signer.Public()))
 			}
 
 			// Sign entity descriptor.
@@ -408,7 +408,7 @@ func init() {
 	registryRuntimeRegisterCmd.Flags().AddFlagSet(common.SelectorFlags)
 	registryRuntimeRegisterCmd.Flags().AddFlagSet(common.TransactionFlags)
 
-	registryShowCmd.Flags().AddFlagSet(common.SelectorFlags)
+	registryShowCmd.Flags().AddFlagSet(common.SelectorNPFlags)
 	registryShowCmd.Flags().AddFlagSet(common.HeightFlag)
 
 	registryCmd.AddCommand(registryEntityRegisterCmd)

@@ -15,8 +15,8 @@ import (
 
 var global Config
 
-// Directory returns the path to the configuration directory.
-func Directory() string {
+// DefaultDirectory returns the path to the default configuration directory.
+func DefaultDirectory() string {
 	return filepath.Join(xdg.ConfigHome, "oasis")
 }
 
@@ -48,6 +48,15 @@ type Config struct {
 	Networks    config.Networks `mapstructure:"networks"`
 	Wallet      Wallet          `mapstructure:"wallets"`
 	AddressBook AddressBook     `mapstructure:"address_book"`
+}
+
+// Directory returns the path to the used configuration directory.
+func (cfg *Config) Directory() string {
+	cfgFile := cfg.viper.ConfigFileUsed()
+	if cfgFile == "" {
+		return DefaultDirectory()
+	}
+	return filepath.Dir(cfgFile)
 }
 
 // Load loads the configuration structure from viper.

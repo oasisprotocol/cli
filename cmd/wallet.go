@@ -33,8 +33,8 @@ var (
 	}
 
 	walletListCmd = &cobra.Command{
-		Use:     "list",
-		Aliases: []string{"ls"},
+		Use:     "ls",
+		Aliases: []string{"list"},
 		Short:   "List configured accounts",
 		Args:    cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -148,9 +148,10 @@ var (
 	}
 
 	walletRenameCmd = &cobra.Command{
-		Use:   "rename <old> <new>",
-		Short: "Rename an existing account",
-		Args:  cobra.ExactArgs(2),
+		Use:     "mv <old> <new>",
+		Short:   "Rename an existing account",
+		Aliases: []string{"rename"},
+		Args:    cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := config.Global()
 			oldName, newName := args[0], args[1]

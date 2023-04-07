@@ -56,7 +56,7 @@ func initConfig() {
 		v.SetConfigFile(cfgFile)
 	} else {
 		const configFilename = "cli.toml"
-		configDir := config.Directory()
+		configDir := config.DefaultDirectory()
 		configPath := filepath.Join(configDir, configFilename)
 
 		v.AddConfigPath(configDir)

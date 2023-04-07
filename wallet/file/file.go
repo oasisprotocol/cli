@@ -172,7 +172,7 @@ func (e *secretStateEnvelope) Open(passphrase string) (*secretState, error) {
 }
 
 func getAccountFilename(name string) string {
-	return filepath.Join(config.Directory(), fmt.Sprintf("%s.wallet", name))
+	return filepath.Join(config.Global().Directory(), fmt.Sprintf("%s.wallet", name))
 }
 
 type fileAccountFactory struct {

@@ -34,12 +34,13 @@ var (
 	commissionScheduleRates  []string
 	commissionScheduleBounds []string
 
-	accountsCmd = &cobra.Command{
-		Use:   "accounts",
-		Short: "Account operations",
+	accountCmd = &cobra.Command{
+		Use:     "account",
+		Short:   "Account operations",
+		Aliases: []string{"accounts"},
 	}
 
-	accountsShowCmd = &cobra.Command{
+	accountShowCmd = &cobra.Command{
 		Use:   "show [address]",
 		Short: "Show account information",
 		Args:  cobra.MaximumNArgs(1),
@@ -212,7 +213,7 @@ var (
 		},
 	}
 
-	accountsAllowCmd = &cobra.Command{
+	accountAllowCmd = &cobra.Command{
 		Use:   "allow <beneficiary> <amount>",
 		Short: "Configure beneficiary allowance for an account",
 		Args:  cobra.ExactArgs(2),
@@ -263,7 +264,7 @@ var (
 		},
 	}
 
-	accountsDepositCmd = &cobra.Command{
+	accountDepositCmd = &cobra.Command{
 		Use:   "deposit <amount> [to]",
 		Short: "Deposit given amount of tokens into an account in the ParaTime",
 		Args:  cobra.RangeArgs(1, 2),
@@ -363,7 +364,7 @@ var (
 		},
 	}
 
-	accountsWithdrawCmd = &cobra.Command{
+	accountWithdrawCmd = &cobra.Command{
 		Use:   "withdraw <amount> [to]",
 		Short: "Withdraw given amount of tokens into an account in the consensus layer",
 		Args:  cobra.RangeArgs(1, 2),
@@ -472,7 +473,7 @@ var (
 		},
 	}
 
-	accountsTransferCmd = &cobra.Command{
+	accountTransferCmd = &cobra.Command{
 		Use:   "transfer <amount> <to>",
 		Short: "Transfer given amount of tokens to a different account",
 		Args:  cobra.ExactArgs(2),
@@ -546,7 +547,7 @@ var (
 		},
 	}
 
-	accountsBurnCmd = &cobra.Command{
+	accountBurnCmd = &cobra.Command{
 		Use:   "burn <amount>",
 		Short: "Burn given amount of tokens",
 		Args:  cobra.ExactArgs(2),
@@ -591,7 +592,7 @@ var (
 		},
 	}
 
-	accountsDelegateCmd = &cobra.Command{
+	accountDelegateCmd = &cobra.Command{
 		Use:   "delegate <amount> <to>",
 		Short: "Delegate given amount of tokens to a specified account",
 		Args:  cobra.ExactArgs(2),
@@ -644,7 +645,7 @@ var (
 		},
 	}
 
-	accountsUndelegateCmd = &cobra.Command{
+	accountUndelegateCmd = &cobra.Command{
 		Use:   "undelegate <shares> <from>",
 		Short: "Undelegate given amount of shares from a specified account",
 		Args:  cobra.ExactArgs(2),
@@ -698,7 +699,7 @@ var (
 		},
 	}
 
-	accountsAmendCommissionScheduleCmd = &cobra.Command{
+	accountAmendCommissionScheduleCmd = &cobra.Command{
 		Use:   "amend-commission-schedule",
 		Short: "Amend the account's commission schedule",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -857,33 +858,33 @@ func scanBoundStep(
 func init() {
 	f := flag.NewFlagSet("", flag.ContinueOnError)
 	f.BoolVar(&showDelegations, "show-delegations", false, "show incoming and outgoing delegations")
-	accountsShowCmd.Flags().AddFlagSet(common.SelectorFlags)
-	accountsShowCmd.Flags().AddFlagSet(common.HeightFlag)
-	accountsShowCmd.Flags().AddFlagSet(f)
+	accountShowCmd.Flags().AddFlagSet(common.SelectorFlags)
+	accountShowCmd.Flags().AddFlagSet(common.HeightFlag)
+	accountShowCmd.Flags().AddFlagSet(f)
 
-	accountsAllowCmd.Flags().AddFlagSet(common.SelectorFlags)
-	accountsAllowCmd.Flags().AddFlagSet(common.TransactionFlags)
+	accountAllowCmd.Flags().AddFlagSet(common.SelectorFlags)
+	accountAllowCmd.Flags().AddFlagSet(common.TransactionFlags)
 
-	accountsDepositCmd.Flags().AddFlagSet(common.SelectorFlags)
-	accountsDepositCmd.Flags().AddFlagSet(common.TransactionFlags)
-	accountsDepositCmd.Flags().AddFlagSet(common.ForceFlag)
+	accountDepositCmd.Flags().AddFlagSet(common.SelectorFlags)
+	accountDepositCmd.Flags().AddFlagSet(common.TransactionFlags)
+	accountDepositCmd.Flags().AddFlagSet(common.ForceFlag)
 
-	accountsWithdrawCmd.Flags().AddFlagSet(common.SelectorFlags)
-	accountsWithdrawCmd.Flags().AddFlagSet(common.TransactionFlags)
-	accountsWithdrawCmd.Flags().AddFlagSet(common.ForceFlag)
+	accountWithdrawCmd.Flags().AddFlagSet(common.SelectorFlags)
+	accountWithdrawCmd.Flags().AddFlagSet(common.TransactionFlags)
+	accountWithdrawCmd.Flags().AddFlagSet(common.ForceFlag)
 
-	accountsTransferCmd.Flags().AddFlagSet(common.SelectorFlags)
-	accountsTransferCmd.Flags().AddFlagSet(common.TransactionFlags)
-	accountsTransferCmd.Flags().AddFlagSet(common.ForceFlag)
+	accountTransferCmd.Flags().AddFlagSet(common.SelectorFlags)
+	accountTransferCmd.Flags().AddFlagSet(common.TransactionFlags)
+	accountTransferCmd.Flags().AddFlagSet(common.ForceFlag)
 
-	accountsBurnCmd.Flags().AddFlagSet(common.SelectorFlags)
-	accountsBurnCmd.Flags().AddFlagSet(common.TransactionFlags)
+	accountBurnCmd.Flags().AddFlagSet(common.SelectorFlags)
+	accountBurnCmd.Flags().AddFlagSet(common.TransactionFlags)
 
-	accountsDelegateCmd.Flags().AddFlagSet(common.SelectorFlags)
-	accountsDelegateCmd.Flags().AddFlagSet(common.TransactionFlags)
+	accountDelegateCmd.Flags().AddFlagSet(common.SelectorFlags)
+	accountDelegateCmd.Flags().AddFlagSet(common.TransactionFlags)
 
-	accountsUndelegateCmd.Flags().AddFlagSet(common.SelectorFlags)
-	accountsUndelegateCmd.Flags().AddFlagSet(common.TransactionFlags)
+	accountUndelegateCmd.Flags().AddFlagSet(common.SelectorFlags)
+	accountUndelegateCmd.Flags().AddFlagSet(common.TransactionFlags)
 
 	f = flag.NewFlagSet("", flag.ContinueOnError)
 	f.StringSliceVar(&commissionScheduleRates, "rates", nil, fmt.Sprintf(
@@ -897,18 +898,18 @@ func init() {
 			"The minimum rate is rate_min_numerator divided by %v, and the maximum rate is "+
 			"rate_max_numerator divided by %v", staking.CommissionRateDenominator, staking.CommissionRateDenominator,
 	))
-	accountsAmendCommissionScheduleCmd.Flags().AddFlagSet(common.SelectorFlags)
-	accountsAmendCommissionScheduleCmd.Flags().AddFlagSet(common.TransactionFlags)
-	accountsAmendCommissionScheduleCmd.Flags().AddFlagSet(f)
+	accountAmendCommissionScheduleCmd.Flags().AddFlagSet(common.SelectorFlags)
+	accountAmendCommissionScheduleCmd.Flags().AddFlagSet(common.TransactionFlags)
+	accountAmendCommissionScheduleCmd.Flags().AddFlagSet(f)
 
-	accountsCmd.AddCommand(accountsShowCmd)
-	accountsCmd.AddCommand(accountsAllowCmd)
-	accountsCmd.AddCommand(accountsDepositCmd)
-	accountsCmd.AddCommand(accountsWithdrawCmd)
-	accountsCmd.AddCommand(accountsTransferCmd)
-	accountsCmd.AddCommand(accountsBurnCmd)
-	accountsCmd.AddCommand(accountsDelegateCmd)
-	accountsCmd.AddCommand(accountsUndelegateCmd)
-	accountsCmd.AddCommand(accountsAmendCommissionScheduleCmd)
-	accountsCmd.AddCommand(accountsFromPublicKeyCmd)
+	accountCmd.AddCommand(accountShowCmd)
+	accountCmd.AddCommand(accountAllowCmd)
+	accountCmd.AddCommand(accountDepositCmd)
+	accountCmd.AddCommand(accountWithdrawCmd)
+	accountCmd.AddCommand(accountTransferCmd)
+	accountCmd.AddCommand(accountBurnCmd)
+	accountCmd.AddCommand(accountDelegateCmd)
+	accountCmd.AddCommand(accountUndelegateCmd)
+	accountCmd.AddCommand(accountAmendCommissionScheduleCmd)
+	accountCmd.AddCommand(accountsFromPublicKeyCmd)
 }

@@ -25,19 +25,20 @@ import (
 )
 
 var (
-	contractsInstantiatePolicy string
-	contractsUpgradesPolicy    string
-	contractsTokens            []string
-	contractsStorageDumpKind   string
-	contractsStorageDumpLimit  uint64
-	contractsStorageDumpOffset uint64
+	contractInstantiatePolicy string
+	contractUpgradesPolicy    string
+	contractTokens            []string
+	contractStorageDumpKind   string
+	contractStorageDumpLimit  uint64
+	contractStorageDumpOffset uint64
 
-	contractsCmd = &cobra.Command{
-		Use:   "contracts",
-		Short: "WebAssembly smart contracts operations",
+	contractCmd = &cobra.Command{
+		Use:     "contract",
+		Short:   "WebAssembly smart contracts operations",
+		Aliases: []string{"contracts"},
 	}
 
-	contractsShowCmd = &cobra.Command{
+	contractShowCmd = &cobra.Command{
 		Use:   "show <instance-id>",
 		Short: "Show information about instantiated contract",
 		Args:  cobra.ExactArgs(1),
@@ -67,7 +68,7 @@ var (
 		},
 	}
 
-	contractsShowCodeCmd = &cobra.Command{
+	contractShowCodeCmd = &cobra.Command{
 		Use:   "show-code <code-id>",
 		Short: "Show information about uploaded contract code",
 		Args:  cobra.ExactArgs(1),
@@ -98,12 +99,12 @@ var (
 		},
 	}
 
-	contractsStorageCmd = &cobra.Command{
+	contractStorageCmd = &cobra.Command{
 		Use:   "storage",
 		Short: "WebAssembly smart contracts storage operations",
 	}
 
-	contractsStorageDumpCmd = &cobra.Command{
+	contractStorageDumpCmd = &cobra.Command{
 		Use:   "dump <instance-id>",
 		Short: "Dump contract store",
 		Long: `Dump public or confidential contract store in JSON. Valid UTF-8 keys in the result set will be
@@ -126,29 +127,29 @@ encoded as strings, or otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			var storeKind contracts.StoreKind
-			cobra.CheckErr(storeKind.UnmarshalText([]byte(contractsStorageDumpKind)))
+			cobra.CheckErr(storeKind.UnmarshalText([]byte(contractStorageDumpKind)))
 
 			res, err := conn.Runtime(npa.ParaTime).Contracts.InstanceRawStorage(
 				ctx,
 				client.RoundLatest,
 				contracts.InstanceID(instanceID),
 				storeKind,
-				contractsStorageDumpLimit,
-				contractsStorageDumpOffset,
+				contractStorageDumpLimit,
+				contractStorageDumpOffset,
 			)
 			cobra.CheckErr(err)
 
 			fmt.Printf(
 				"Showing %d %s record(s) of contract %d:\n",
 				len(res.Items),
-				contractsStorageDumpKind,
+				contractStorageDumpKind,
 				instanceID,
 			)
 			common.JSONPrintKeyValueTuple(res.Items)
 		},
 	}
 
-	contractsStorageGetCmd = &cobra.Command{
+	contractStorageGetCmd = &cobra.Command{
 		Use:   "get <instance-id> <key>",
 		Short: "Print value for given key in public contract store",
 		Long: `Print value for the given key in the public contract store in JSON format. The given key can be
@@ -197,7 +198,7 @@ otherwise as Base64.`,
 		},
 	}
 
-	contractsDumpCodeCmd = &cobra.Command{
+	contractDumpCodeCmd = &cobra.Command{
 		Use:   "dump-code <code-id>",
 		Short: "Dump WebAssembly smart contract code",
 		Args:  cobra.ExactArgs(1),
@@ -229,7 +230,7 @@ otherwise as Base64.`,
 		},
 	}
 
-	contractsUploadCmd = &cobra.Command{
+	contractUploadCmd = &cobra.Command{
 		Use:   "upload <contract.wasm> [--instantiate-policy POLICY]",
 		Short: "Upload WebAssembly smart contract",
 		Args:  cobra.ExactArgs(1),
@@ -260,7 +261,7 @@ otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			// Parse instantiation policy.
-			instantiatePolicy := parsePolicy(npa.Network, npa.Account, contractsInstantiatePolicy)
+			instantiatePolicy := parsePolicy(npa.Network, npa.Account, contractInstantiatePolicy)
 
 			// Prepare transaction.
 			tx := contracts.NewUploadTx(nil, &contracts.Upload{
@@ -284,7 +285,7 @@ otherwise as Base64.`,
 		},
 	}
 
-	contractsInstantiateCmd = &cobra.Command{
+	contractInstantiateCmd = &cobra.Command{
 		Use:     "instantiate <code-id> <data-yaml> [--tokens TOKENS] [--upgrades-policy POLICY]",
 		Aliases: []string{"inst"},
 		Short:   "Instantiate WebAssembly smart contract",
@@ -318,10 +319,10 @@ otherwise as Base64.`,
 			}
 
 			// Parse upgrades policy.
-			upgradesPolicy := parsePolicy(npa.Network, npa.Account, contractsUpgradesPolicy)
+			upgradesPolicy := parsePolicy(npa.Network, npa.Account, contractUpgradesPolicy)
 
 			// Parse tokens that should be sent to the contract.
-			tokens := parseTokens(npa.ParaTime, contractsTokens)
+			tokens := parseTokens(npa.ParaTime, contractTokens)
 
 			// Prepare transaction.
 			tx := contracts.NewInstantiateTx(nil, &contracts.Instantiate{
@@ -346,7 +347,7 @@ otherwise as Base64.`,
 		},
 	}
 
-	contractsCallCmd = &cobra.Command{
+	contractCallCmd = &cobra.Command{
 		Use:   "call <instance-id> <data-yaml> [--tokens TOKENS]",
 		Short: "Call WebAssembly smart contract",
 		Args:  cobra.ExactArgs(2),
@@ -379,7 +380,7 @@ otherwise as Base64.`,
 			}
 
 			// Parse tokens that should be sent to the contract.
-			tokens := parseTokens(npa.ParaTime, contractsTokens)
+			tokens := parseTokens(npa.ParaTime, contractTokens)
 
 			// Prepare transaction.
 			tx := contracts.NewCallTx(nil, &contracts.Call{
@@ -413,7 +414,7 @@ otherwise as Base64.`,
 		},
 	}
 
-	contractsChangeUpgradePolicyCmd = &cobra.Command{
+	contractChangeUpgradePolicyCmd = &cobra.Command{
 		Use:   "change-upgrade-policy <instance-id> <policy>",
 		Short: "Change WebAssembly smart contract upgrade policy",
 		Args:  cobra.ExactArgs(2),
@@ -518,59 +519,59 @@ func parseTokens(pt *config.ParaTime, tokens []string) []types.BaseUnits {
 }
 
 func init() {
-	contractsShowCmd.Flags().AddFlagSet(common.SelectorFlags)
-	contractsShowCodeCmd.Flags().AddFlagSet(common.SelectorFlags)
+	contractShowCmd.Flags().AddFlagSet(common.SelectorFlags)
+	contractShowCodeCmd.Flags().AddFlagSet(common.SelectorFlags)
 
-	contractsDumpCodeCmd.Flags().AddFlagSet(common.SelectorFlags)
+	contractDumpCodeCmd.Flags().AddFlagSet(common.SelectorFlags)
 
 	contractsUploadFlags := flag.NewFlagSet("", flag.ContinueOnError)
-	contractsUploadFlags.StringVar(&contractsInstantiatePolicy, "instantiate-policy", "everyone", "contract instantiation policy")
+	contractsUploadFlags.StringVar(&contractInstantiatePolicy, "instantiate-policy", "everyone", "contract instantiation policy")
 
-	contractsUploadCmd.Flags().AddFlagSet(common.SelectorFlags)
-	contractsUploadCmd.Flags().AddFlagSet(common.TransactionFlags)
-	contractsUploadCmd.Flags().AddFlagSet(contractsUploadFlags)
+	contractUploadCmd.Flags().AddFlagSet(common.SelectorFlags)
+	contractUploadCmd.Flags().AddFlagSet(common.TransactionFlags)
+	contractUploadCmd.Flags().AddFlagSet(contractsUploadFlags)
 
 	contractsCallFlags := flag.NewFlagSet("", flag.ContinueOnError)
-	contractsCallFlags.StringSliceVar(&contractsTokens, "tokens", []string{}, "token amounts to send to a contract")
+	contractsCallFlags.StringSliceVar(&contractTokens, "tokens", []string{}, "token amounts to send to a contract")
 
 	contractsInstantiateFlags := flag.NewFlagSet("", flag.ContinueOnError)
-	contractsInstantiateFlags.StringVar(&contractsUpgradesPolicy, "upgrades-policy", "owner", "contract upgrades policy")
+	contractsInstantiateFlags.StringVar(&contractUpgradesPolicy, "upgrades-policy", "owner", "contract upgrades policy")
 
-	contractsInstantiateCmd.Flags().AddFlagSet(common.SelectorFlags)
-	contractsInstantiateCmd.Flags().AddFlagSet(common.TransactionFlags)
-	contractsInstantiateCmd.Flags().AddFlagSet(contractsInstantiateFlags)
-	contractsInstantiateCmd.Flags().AddFlagSet(contractsCallFlags)
+	contractInstantiateCmd.Flags().AddFlagSet(common.SelectorFlags)
+	contractInstantiateCmd.Flags().AddFlagSet(common.TransactionFlags)
+	contractInstantiateCmd.Flags().AddFlagSet(contractsInstantiateFlags)
+	contractInstantiateCmd.Flags().AddFlagSet(contractsCallFlags)
 
-	contractsCallCmd.Flags().AddFlagSet(common.SelectorFlags)
-	contractsCallCmd.Flags().AddFlagSet(common.TransactionFlags)
-	contractsCallCmd.Flags().AddFlagSet(contractsCallFlags)
+	contractCallCmd.Flags().AddFlagSet(common.SelectorFlags)
+	contractCallCmd.Flags().AddFlagSet(common.TransactionFlags)
+	contractCallCmd.Flags().AddFlagSet(contractsCallFlags)
 
-	contractsChangeUpgradePolicyCmd.Flags().AddFlagSet(common.SelectorFlags)
-	contractsChangeUpgradePolicyCmd.Flags().AddFlagSet(common.TransactionFlags)
+	contractChangeUpgradePolicyCmd.Flags().AddFlagSet(common.SelectorFlags)
+	contractChangeUpgradePolicyCmd.Flags().AddFlagSet(common.TransactionFlags)
 
 	contractsStorageDumpCmdFlags := flag.NewFlagSet("", flag.ContinueOnError)
-	contractsStorageDumpCmdFlags.StringVar(&contractsStorageDumpKind, "kind", "public",
+	contractsStorageDumpCmdFlags.StringVar(&contractStorageDumpKind, "kind", "public",
 		fmt.Sprintf("store kind [%s]", strings.Join([]string{
 			contracts.StoreKindPublicName,
 			contracts.StoreKindConfidentialName,
 		}, ", ")),
 	)
-	contractsStorageDumpCmdFlags.Uint64Var(&contractsStorageDumpLimit, "limit", 0, "result set limit")
-	contractsStorageDumpCmdFlags.Uint64Var(&contractsStorageDumpOffset, "offset", 0, "result set offset")
-	contractsStorageDumpCmd.Flags().AddFlagSet(common.SelectorFlags)
-	contractsStorageDumpCmd.Flags().AddFlagSet(contractsStorageDumpCmdFlags)
+	contractsStorageDumpCmdFlags.Uint64Var(&contractStorageDumpLimit, "limit", 0, "result set limit")
+	contractsStorageDumpCmdFlags.Uint64Var(&contractStorageDumpOffset, "offset", 0, "result set offset")
+	contractStorageDumpCmd.Flags().AddFlagSet(common.SelectorFlags)
+	contractStorageDumpCmd.Flags().AddFlagSet(contractsStorageDumpCmdFlags)
 
-	contractsStorageGetCmd.Flags().AddFlagSet(common.SelectorFlags)
+	contractStorageGetCmd.Flags().AddFlagSet(common.SelectorFlags)
 
-	contractsStorageCmd.AddCommand(contractsStorageDumpCmd)
-	contractsStorageCmd.AddCommand(contractsStorageGetCmd)
+	contractStorageCmd.AddCommand(contractStorageDumpCmd)
+	contractStorageCmd.AddCommand(contractStorageGetCmd)
 
-	contractsCmd.AddCommand(contractsShowCmd)
-	contractsCmd.AddCommand(contractsShowCodeCmd)
-	contractsCmd.AddCommand(contractsStorageCmd)
-	contractsCmd.AddCommand(contractsDumpCodeCmd)
-	contractsCmd.AddCommand(contractsUploadCmd)
-	contractsCmd.AddCommand(contractsInstantiateCmd)
-	contractsCmd.AddCommand(contractsCallCmd)
-	contractsCmd.AddCommand(contractsChangeUpgradePolicyCmd)
+	contractCmd.AddCommand(contractShowCmd)
+	contractCmd.AddCommand(contractShowCodeCmd)
+	contractCmd.AddCommand(contractStorageCmd)
+	contractCmd.AddCommand(contractDumpCodeCmd)
+	contractCmd.AddCommand(contractUploadCmd)
+	contractCmd.AddCommand(contractInstantiateCmd)
+	contractCmd.AddCommand(contractCallCmd)
+	contractCmd.AddCommand(contractChangeUpgradePolicyCmd)
 }

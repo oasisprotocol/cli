@@ -437,6 +437,10 @@ func WaitForEvent(
 			case <-ctx.Done():
 				return
 			case bev := <-ch:
+				if bev == nil {
+					return
+				}
+
 				for _, ev := range bev.Events {
 					if result := mapFn(ev); result != nil {
 						resultCh <- result

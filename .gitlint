@@ -1,11 +1,15 @@
+# gitlint configuration.
+
+# For more information, see:
+# https://jorisroovers.com/gitlint/configuration/.
+
 [general]
 verbosity = 2
 ignore-merge-commits=true
 ignore-fixup-commits=false
 ignore-squash-commits=false
 ignore=body-is-missing
-# User Defined gitlint rules.
-extra-path=.gitlint-rules/
+contrib=contrib-disallow-cleanup-commits
 
 [title-max-length]
 line-length=72

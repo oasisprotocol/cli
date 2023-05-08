@@ -160,6 +160,10 @@ func SignParaTimeTransaction(
 	tx *types.Transaction,
 	txDetails *signature.TxDetails,
 ) (*types.UnverifiedTransaction, interface{}, error) {
+	if npa.ParaTime == nil {
+		return nil, nil, fmt.Errorf("no paratime configured for paratime transaction signing")
+	}
+
 	// Default to passed values and do online estimation when possible.
 	nonce := txNonce
 	tx.AuthInfo.Fee.Gas = txGasLimit
@@ -282,7 +286,9 @@ func PrintTransaction(npa *NPASelection, tx interface{}) {
 		ctx := context.Background()
 		ctx = context.WithValue(ctx, consensusPretty.ContextKeyTokenSymbol, npa.Network.Denomination.Symbol)
 		ctx = context.WithValue(ctx, consensusPretty.ContextKeyTokenValueExponent, npa.Network.Denomination.Decimals)
-		ctx = context.WithValue(ctx, config.ContextKeyParaTimeCfg, npa.ParaTime)
+		if npa.ParaTime != nil {
+			ctx = context.WithValue(ctx, config.ContextKeyParaTimeCfg, npa.ParaTime)
+		}
 		ctx = context.WithValue(ctx, signature.ContextKeySigContext, &sigCtx)
 		ctx = context.WithValue(ctx, types.ContextKeyAccountNames, GenAccountNames())
 
@@ -365,6 +371,10 @@ func BroadcastTransaction(
 		fmt.Printf("Transaction hash: %s\n", sigTx.Hash())
 	case *types.UnverifiedTransaction:
 		// ParaTime transaction.
+		if pt == nil {
+			cobra.CheckErr("no paratime configured for paratime transaction submission")
+		}
+
 		fmt.Printf("Broadcasting transaction...\n")
 		rawMeta, err := conn.Runtime(pt).SubmitTxRawMeta(ctx, sigTx)
 		cobra.CheckErr(err)

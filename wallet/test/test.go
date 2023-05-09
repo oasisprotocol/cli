@@ -47,10 +47,7 @@ func (a *testAccount) Address() types.Address {
 }
 
 func (a *testAccount) EthAddress() *ethCommon.Address {
-	if a.testKey.SigSpec.Secp256k1Eth != nil {
-		return &a.testKey.EthAddress
-	}
-	return nil
+	return a.testKey.EthAddress
 }
 
 func (a *testAccount) SignatureAddressSpec() types.SignatureAddressSpec {

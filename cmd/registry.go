@@ -83,7 +83,7 @@ var (
 			sigTx, err := common.SignConsensusTransaction(ctx, npa, acc, conn, tx)
 			cobra.CheckErr(err)
 
-			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
+			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
 		},
 	}
 
@@ -116,7 +116,7 @@ var (
 			sigTx, err := common.SignConsensusTransaction(ctx, npa, acc, conn, tx)
 			cobra.CheckErr(err)
 
-			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
+			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
 		},
 	}
 
@@ -157,7 +157,7 @@ var (
 			sigTx, err := common.SignConsensusTransaction(ctx, npa, acc, conn, tx)
 			cobra.CheckErr(err)
 
-			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
+			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
 		},
 	}
 
@@ -201,7 +201,7 @@ var (
 			sigTx, err := common.SignConsensusTransaction(ctx, npa, acc, conn, tx)
 			cobra.CheckErr(err)
 
-			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
+			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
 		},
 	}
 

@@ -275,7 +275,7 @@ otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			var result contracts.UploadResult
-			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result)
+			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result)
 
 			if txCfg.Offline {
 				return
@@ -337,7 +337,7 @@ otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			var result contracts.InstantiateResult
-			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result)
+			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result)
 
 			if txCfg.Offline {
 				return
@@ -394,7 +394,7 @@ otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			var result contracts.CallResult
-			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result)
+			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result)
 
 			if txCfg.Offline {
 				return
@@ -456,7 +456,7 @@ otherwise as Base64.`,
 			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
-			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil)
+			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil)
 		},
 	}
 )

@@ -260,7 +260,7 @@ var (
 			sigTx, err := common.SignConsensusTransaction(ctx, npa, acc, conn, tx)
 			cobra.CheckErr(err)
 
-			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
+			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
 		},
 	}
 
@@ -325,8 +325,8 @@ var (
 			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, &txDetails)
 			cobra.CheckErr(err)
 
-			if txCfg.Offline {
-				common.PrintSignedTransaction(sigTx)
+			if txCfg.Export {
+				common.ExportTransaction(sigTx)
 				return
 			}
 
@@ -433,8 +433,8 @@ var (
 			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
-			if txCfg.Offline {
-				common.PrintSignedTransaction(sigTx)
+			if txCfg.Export {
+				common.ExportTransaction(sigTx)
 				return
 			}
 
@@ -543,7 +543,7 @@ var (
 				cobra.CheckErr(err)
 			}
 
-			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil)
+			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil)
 		},
 	}
 
@@ -588,7 +588,7 @@ var (
 			sigTx, err := common.SignConsensusTransaction(ctx, npa, acc, conn, tx)
 			cobra.CheckErr(err)
 
-			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
+			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
 		},
 	}
 
@@ -641,7 +641,7 @@ var (
 				cobra.CheckErr("delegations within paratimes are not supported; use --no-paratime")
 			}
 
-			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
+			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
 		},
 	}
 
@@ -695,7 +695,7 @@ var (
 				cobra.CheckErr("delegations within paratimes are not supported; use --no-paratime")
 			}
 
-			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
+			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
 		},
 	}
 
@@ -794,7 +794,7 @@ var (
 			sigTx, err := common.SignConsensusTransaction(ctx, npa, acc, conn, tx)
 			cobra.CheckErr(err)
 
-			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
+			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
 		},
 	}
 

@@ -159,11 +159,11 @@ func (w *Wallet) Remove(name string) error {
 func (w *Wallet) Rename(old, new string) error {
 	cfg, exists := w.All[old]
 	if !exists {
-		return fmt.Errorf("account '%s' does not exist", old)
+		return fmt.Errorf("account '%s' does not exist in the wallet", old)
 	}
 
 	if _, exists = w.All[new]; exists {
-		return fmt.Errorf("account '%s' already exists", new)
+		return fmt.Errorf("account '%s' already exists in the wallet", new)
 	}
 
 	if err := config.ValidateIdentifier(old); err != nil {

@@ -12,8 +12,9 @@ import (
 
 var (
 	addressBookCmd = &cobra.Command{
-		Use:   "addressbook",
-		Short: "Manage addresses in the local address book",
+		Use:     "addressbook",
+		Aliases: []string{"ab"},
+		Short:   "Manage addresses in the local address book",
 	}
 
 	abListCmd = &cobra.Command{
@@ -57,6 +58,9 @@ var (
 			name := args[0]
 			address := args[1]
 
+			if _, exists := cfg.Wallet.All[name]; exists {
+				cobra.CheckErr(fmt.Errorf("account '%s' already exists in the wallet", name))
+			}
 			err := cfg.AddressBook.Add(name, address)
 			cobra.CheckErr(err)
 
@@ -85,8 +89,8 @@ var (
 	}
 
 	abRmCmd = &cobra.Command{
-		Use:     "rm <name>",
-		Aliases: []string{"remove"},
+		Use:     "remove <name>",
+		Aliases: []string{"rm"},
 		Short:   "Remove an address from address book",
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -102,13 +106,17 @@ var (
 	}
 
 	abRenameCmd = &cobra.Command{
-		Use:   "rename <old> <new>",
-		Short: "Rename address",
-		Args:  cobra.ExactArgs(2),
+		Use:     "rename <old> <new>",
+		Aliases: []string{"mv"},
+		Short:   "Rename address",
+		Args:    cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := config.Global()
 			oldName, newName := args[0], args[1]
 
+			if _, exists := cfg.Wallet.All[newName]; exists {
+				cobra.CheckErr(fmt.Errorf("account '%s' already exists in the wallet", newName))
+			}
 			err := cfg.AddressBook.Rename(oldName, newName)
 			cobra.CheckErr(err)
 

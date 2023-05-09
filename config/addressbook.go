@@ -52,11 +52,11 @@ func (ab *AddressBook) Remove(name string) error {
 func (ab *AddressBook) Rename(old, new string) error {
 	cfg, exists := ab.All[old]
 	if !exists {
-		return fmt.Errorf("address named '%s' does not exist", old)
+		return fmt.Errorf("address named '%s' does not exist in the address book", old)
 	}
 
 	if _, exists = ab.All[new]; exists {
-		return fmt.Errorf("address named '%s' already exists", new)
+		return fmt.Errorf("address named '%s' already exists in the address book", new)
 	}
 
 	if err := config.ValidateIdentifier(old); err != nil {

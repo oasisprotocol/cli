@@ -142,8 +142,8 @@ var (
 	}
 
 	networkRmCmd = &cobra.Command{
-		Use:     "rm <name>",
-		Aliases: []string{"remove"},
+		Use:     "remove <name>",
+		Aliases: []string{"rm"},
 		Short:   "Remove an existing network",
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {

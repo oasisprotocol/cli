@@ -270,7 +270,7 @@ func SignParaTimeTransaction(
 }
 
 // PrintTransaction prints the transaction which can be either signed or unsigned.
-func PrintTransaction(npa *NPASelection, tx interface{}) {
+func PrintTransactionRaw(npa *NPASelection, tx interface{}) {
 	switch rtx := tx.(type) {
 	case consensusPretty.PrettyPrinter:
 		// Signed or unsigned consensus or runtime transaction.
@@ -299,6 +299,12 @@ func PrintTransaction(npa *NPASelection, tx interface{}) {
 	default:
 		fmt.Printf("[unsupported transaction type: %T]\n", tx)
 	}
+}
+
+// PrintTransaction prints the transaction which can be either signed or unsigned together with
+// information about the selected network/paratime.
+func PrintTransaction(npa *NPASelection, tx interface{}) {
+	PrintTransactionRaw(npa, tx)
 
 	fmt.Println()
 	fmt.Printf("Network:  %s", npa.NetworkName)

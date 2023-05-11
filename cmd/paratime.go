@@ -125,8 +125,8 @@ var (
 	}
 
 	paratimeRmCmd = &cobra.Command{
-		Use:     "rm <network> <name>",
-		Aliases: []string{"remove"},
+		Use:     "remove <network> <name>",
+		Aliases: []string{"rm"},
 		Short:   "Remove an existing paratime",
 		Args:    cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {

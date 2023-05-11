@@ -21,8 +21,9 @@ import (
 
 var (
 	txCmd = &cobra.Command{
-		Use:   "tx",
-		Short: "Raw transaction operations",
+		Use:     "transaction",
+		Aliases: []string{"tx"},
+		Short:   "Raw transaction operations",
 	}
 
 	txSubmitCmd = &cobra.Command{

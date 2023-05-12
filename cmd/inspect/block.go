@@ -2,14 +2,15 @@ package inspect
 
 import (
 	"context"
-	"encoding/base64"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
@@ -168,7 +169,7 @@ var blockCmd = &cobra.Command{
 						fmt.Printf("Gas price: %s\n", ethTx.GasPrice())
 						fmt.Printf("Data:\n")
 						if len(ethTx.Data()) > 0 {
-							fmt.Printf("  %s\n", base64.StdEncoding.EncodeToString(ethTx.Data()))
+							fmt.Printf("  %s\n", hex.EncodeToString(ethTx.Data()))
 						} else {
 							fmt.Printf("  (none)\n")
 						}
@@ -194,11 +195,11 @@ var blockCmd = &cobra.Command{
 				case res.Ok != nil:
 					fmt.Printf("Status: ok\n")
 					fmt.Printf("Data:\n")
-					prettyPrintCBOR("  ", res.Ok)
+					prettyPrintCBOR("  ", "result", res.Ok)
 				case res.Unknown != nil:
 					fmt.Printf("Status: unknown\n")
 					fmt.Printf("Data:\n")
-					prettyPrintCBOR("  ", res.Unknown)
+					prettyPrintCBOR("  ", "result", res.Unknown)
 				default:
 					fmt.Printf("[unsupported result kind]\n")
 				}
@@ -222,27 +223,118 @@ var blockCmd = &cobra.Command{
 	},
 }
 
-func prettyPrintCBOR(indent string, data []byte) {
+func prettyPrintCBOR(indent string, kind string, data []byte) {
 	var body interface{}
 	if err := cbor.Unmarshal(data, &body); err != nil {
-		fmt.Printf("%s%s\n", indent, base64.StdEncoding.EncodeToString(data))
+		rawPrintData(indent, kind, data)
 		return
 	}
 
-	prettyPrintStruct(indent, data, body)
+	prettyPrintStruct(indent, kind, data, body)
 }
 
-func prettyPrintStruct(indent string, data []byte, body interface{}) {
+func convertPrettyStruct(in interface{}) (interface{}, error) {
+	v := reflect.ValueOf(in)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	switch v.Kind() {
+	case reflect.Slice:
+		// Walk slices.
+		if v.Type().Elem().Kind() == reflect.Uint8 {
+			// Encode to hex.
+			return hex.EncodeToString(v.Bytes()), nil
+		}
+
+		result := v
+		for i := 0; i < v.Len(); i++ {
+			elem := v.Index(i)
+			encoded, err := convertPrettyStruct(elem.Interface())
+			if err != nil {
+				return nil, err
+			}
+			encodedValue := reflect.ValueOf(encoded)
+			if encodedValue.Type() != elem.Type() {
+				if result == v {
+					// Assumption is that all elements are converted to the same type.
+					result = reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(encoded)), v.Len(), v.Cap())
+				}
+				elem = result.Index(i)
+			}
+			elem.Set(encodedValue)
+		}
+		return result.Interface(), nil
+	case reflect.Map:
+		// Convert maps to map[string]interface{}.
+		result := make(map[string]interface{})
+		iter := v.MapRange()
+		for iter.Next() {
+			k := iter.Key()
+			val := iter.Value()
+
+			keyStr, ok := k.Interface().(string)
+			if !ok {
+				return nil, fmt.Errorf("can only convert maps with string keys")
+			}
+
+			value, err := convertPrettyStruct(val.Interface())
+			if err != nil {
+				return nil, err
+			}
+			result[keyStr] = value
+		}
+		return result, nil
+	case reflect.Struct:
+		// Convert structs to map[string]interface{}.
+		result := make(map[string]interface{})
+		t := v.Type()
+		for i := 0; i < v.NumField(); i++ {
+			field := t.Field(i)
+			if field.PkgPath != "" {
+				// Skip unexported fields.
+				continue
+			}
+
+			key := field.Name
+			if tagValue := field.Tag.Get("json"); tagValue != "" {
+				attrs := strings.Split(tagValue, ",")
+				key = attrs[0]
+			}
+
+			value, err := convertPrettyStruct(v.Field(i).Interface())
+			if err != nil {
+				return nil, err
+			}
+			result[key] = value
+		}
+		return result, nil
+	default:
+		// Pass everything else unchanged.
+		return v.Interface(), nil
+	}
+}
+
+func rawPrintData(indent string, kind string, data []byte) {
+	fmt.Printf("%s[showing raw %s data]\n", indent, kind)
+	fmt.Printf("%s%s\n", indent, hex.EncodeToString(data))
+}
+
+func prettyPrintStruct(indent string, kind string, data []byte, body interface{}) {
 	// TODO: Support the pretty printer.
-	pretty, err := yaml.Marshal(body)
+	body, err := convertPrettyStruct(body)
 	if err != nil {
-		fmt.Printf("%s%s\n", indent, base64.StdEncoding.EncodeToString(data))
+		rawPrintData(indent, kind, data)
+		return
+	}
+
+	pretty, err := json.MarshalIndent(body, indent, "  ")
+	if err != nil {
+		rawPrintData(indent, kind, data)
 		return
 	}
 
 	output := string(pretty)
-	output = strings.ReplaceAll(output, "\n", "\n"+indent)
-	output = strings.TrimSpace(output)
 	fmt.Println(indent + output)
 }
 
@@ -258,10 +350,10 @@ func prettyPrintEvent(indent string, evIndex int, ev *types.Event, decoders []cl
 			continue
 		}
 		if decoded != nil {
-			prettyPrintStruct(indent+"  ", ev.Value, decoded)
+			prettyPrintStruct(indent+"  ", "event", ev.Value, decoded)
 			return
 		}
 	}
 
-	prettyPrintCBOR(indent+"  ", ev.Value)
+	prettyPrintCBOR(indent+"  ", "event", ev.Value)
 }

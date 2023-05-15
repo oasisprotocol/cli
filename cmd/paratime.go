@@ -9,6 +9,7 @@ import (
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 
+	"github.com/oasisprotocol/cli/cmd/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
 	"github.com/oasisprotocol/cli/table"
 )
@@ -34,7 +35,7 @@ var (
 				for ptName, pt := range net.ParaTimes.All {
 					displayPtName := ptName
 					if net.ParaTimes.Default == ptName {
-						displayPtName += defaultMarker
+						displayPtName += common.DefaultMarker
 					}
 
 					output = append(output, []string{

@@ -13,22 +13,12 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	governanceProposalCmd.Flags().AddFlagSet(common.SelectorFlags)
-	governanceProposalCmd.Flags().AddFlagSet(common.HeightFlag)
 
 	runtimeStatsCmd.Flags().AddFlagSet(common.SelectorFlags)
 	runtimeStatsCmd.Flags().AddFlagSet(csvFlags)
 
-	nativeTokenCmd.Flags().AddFlagSet(common.SelectorFlags)
-	nativeTokenCmd.Flags().AddFlagSet(common.HeightFlag)
-
-	nodeStatusCmd.Flags().AddFlagSet(common.SelectorFlags)
-
 	blockCmd.Flags().AddFlagSet(common.SelectorFlags)
 
-	Cmd.AddCommand(governanceProposalCmd)
 	Cmd.AddCommand(runtimeStatsCmd)
-	Cmd.AddCommand(nativeTokenCmd)
-	Cmd.AddCommand(nodeStatusCmd)
 	Cmd.AddCommand(blockCmd)
 }

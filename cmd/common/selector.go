@@ -12,6 +12,8 @@ import (
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
+const DefaultMarker = " (*)"
+
 var (
 	selectedNetwork  string
 	selectedParaTime string
@@ -25,6 +27,8 @@ var (
 	SelectorFlags *flag.FlagSet
 	// SelectorNPFlags contains the common selector flags for network/paratime.
 	SelectorNPFlags *flag.FlagSet
+	// SelectorNFlags contains the common selector flags for network.
+	SelectorNFlags *flag.FlagSet
 )
 
 // NPASelection contains the network/paratime/account selection.
@@ -98,6 +102,9 @@ func init() {
 	SelectorNPFlags.StringVar(&selectedNetwork, "network", "", "explicitly set network to use")
 	SelectorNPFlags.StringVar(&selectedParaTime, "paratime", "", "explicitly set paratime to use")
 	SelectorNPFlags.BoolVar(&noParaTime, "no-paratime", false, "explicitly set that no paratime should be used")
+
+	SelectorNFlags = flag.NewFlagSet("", flag.ContinueOnError)
+	SelectorNFlags.StringVar(&selectedNetwork, "network", "", "explicitly set network to use")
 
 	// Backward compatibility.
 	SelectorFlags.StringVar(&selectedAccount, "wallet", "", "explicitly set account to use. OBSOLETE, USE --account INSTEAD!")

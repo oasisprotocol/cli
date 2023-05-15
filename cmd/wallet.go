@@ -45,7 +45,7 @@ var (
 			var output [][]string
 			for name, acc := range cfg.Wallet.All {
 				if cfg.Wallet.Default == name {
-					name += defaultMarker
+					name += common.DefaultMarker
 				}
 				output = append(output, []string{
 					name,

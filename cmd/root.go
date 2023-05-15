@@ -11,14 +11,11 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/oasisprotocol/cli/cmd/inspect"
+	"github.com/oasisprotocol/cli/cmd/network"
 	"github.com/oasisprotocol/cli/config"
 	"github.com/oasisprotocol/cli/version"
 	_ "github.com/oasisprotocol/cli/wallet/file"   // Register file wallet backend.
 	_ "github.com/oasisprotocol/cli/wallet/ledger" // Register ledger wallet backend.
-)
-
-const (
-	defaultMarker = " (*)"
 )
 
 var (
@@ -98,7 +95,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file to use")
 
-	rootCmd.AddCommand(networkCmd)
+	rootCmd.AddCommand(network.Cmd)
 	rootCmd.AddCommand(paratimeCmd)
 	rootCmd.AddCommand(walletCmd)
 	rootCmd.AddCommand(accountCmd)

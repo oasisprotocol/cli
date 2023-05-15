@@ -1,4 +1,4 @@
-package inspect
+package network
 
 import (
 	"context"
@@ -14,7 +14,6 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	governance "github.com/oasisprotocol/oasis-core/go/governance/api"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
-
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
@@ -25,7 +24,7 @@ import (
 
 var governanceProposalCmd = &cobra.Command{
 	Use:   "governance-proposal <proposal-id>",
-	Short: "Show proposal status by id",
+	Short: "Show proposal status by ID",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
@@ -84,7 +83,7 @@ var governanceProposalCmd = &cobra.Command{
 		cobra.CheckErr(err)
 
 		// Retrieve all the node descriptors.
-		nodeLookup, err := newNodeLookup(
+		nodeLookup, err := common.NewNodeLookup(
 			ctx,
 			consensusConn,
 			registryConn,
@@ -291,3 +290,8 @@ type entityStakes []*entityStake
 func (p entityStakes) Len() int           { return len(p) }
 func (p entityStakes) Less(i, j int) bool { return p[i].Stake.Cmp(&p[j].Stake) < 0 }
 func (p entityStakes) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+func init() {
+	governanceProposalCmd.Flags().AddFlagSet(common.SelectorNFlags)
+	governanceProposalCmd.Flags().AddFlagSet(common.HeightFlag)
+}

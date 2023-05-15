@@ -264,7 +264,7 @@ var runtimeStatsCmd = &cobra.Command{
 		roothashConn := consensusConn.RootHash()
 		registryConn := consensusConn.Registry()
 
-		nl, err := newNodeLookup(ctx, consensusConn, registryConn, int64(startHeight))
+		nl, err := common.NewNodeLookup(ctx, consensusConn, registryConn, int64(startHeight))
 		cobra.CheckErr(err)
 
 		nodeToEntityMap := make(map[signature.PublicKey]signature.PublicKey)

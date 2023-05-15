@@ -29,6 +29,8 @@ var (
 	SelectorNPFlags *flag.FlagSet
 	// SelectorNFlags contains the common selector flags for network.
 	SelectorNFlags *flag.FlagSet
+	// SelectorNAFlags contains the common selector flags for network/account.
+	SelectorNAFlags *flag.FlagSet
 )
 
 // NPASelection contains the network/paratime/account selection.
@@ -102,6 +104,10 @@ func init() {
 	SelectorNPFlags.StringVar(&selectedNetwork, "network", "", "explicitly set network to use")
 	SelectorNPFlags.StringVar(&selectedParaTime, "paratime", "", "explicitly set paratime to use")
 	SelectorNPFlags.BoolVar(&noParaTime, "no-paratime", false, "explicitly set that no paratime should be used")
+
+	SelectorNAFlags = flag.NewFlagSet("", flag.ContinueOnError)
+	SelectorNAFlags.StringVar(&selectedNetwork, "network", "", "explicitly set network to use")
+	SelectorNAFlags.StringVar(&selectedAccount, "account", "", "explicitly set account to use")
 
 	SelectorNFlags = flag.NewFlagSet("", flag.ContinueOnError)
 	SelectorNFlags.StringVar(&selectedNetwork, "network", "", "explicitly set network to use")

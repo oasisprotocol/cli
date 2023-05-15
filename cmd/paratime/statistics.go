@@ -1,4 +1,4 @@
-package inspect
+package paratime
 
 import (
 	"context"
@@ -20,7 +20,6 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/roothash/api/block"
 	"github.com/oasisprotocol/oasis-core/go/roothash/api/commitment"
 	scheduler "github.com/oasisprotocol/oasis-core/go/scheduler/api"
-
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
@@ -101,92 +100,17 @@ type entityStats struct {
 	missedProposer uint64
 }
 
-func (s *runtimeStats) prepareEntitiesOutput(
-	metadataLookup map[types.Address]*metadata.Entity,
-) {
-	s.entitiesOutput = make([][]string, 0)
-
-	s.entitiesHeader = []string{
-		"Entity Addr",
-		"Entity Name",
-		"Elected",
-		"Primary",
-		"Backup",
-		"Proposer",
-		"Primary invoked",
-		"Primary Good commit",
-		"Prim Bad commmit",
-		"Bckp invoked",
-		"Bckp Good commit",
-		"Bckp Bad commit",
-		"Primary missed",
-		"Bckp missed",
-		"Proposer missed",
-		"Proposed timeout",
-	}
-
-	addrToName := func(addr types.Address) string {
-		if metadataLookup != nil {
-			if entry, ok := metadataLookup[addr]; ok {
-				return entry.Name
-			}
-		}
-		return ""
-	}
-
-	for entity, stats := range s.entities {
-		var line []string
-
-		entityAddr := types.NewAddressFromConsensusPublicKey(entity)
-
-		line = append(line,
-			entityAddr.String(),
-			addrToName(entityAddr),
-			strconv.FormatUint(stats.roundsElected, 10),
-			strconv.FormatUint(stats.roundsPrimary, 10),
-			strconv.FormatUint(stats.roundsBackup, 10),
-			strconv.FormatUint(stats.roundsProposer, 10),
-			strconv.FormatUint(stats.roundsPrimaryRequired, 10),
-			strconv.FormatUint(stats.committeedGoodBlocksPrimary, 10),
-			strconv.FormatUint(stats.committeedBadBlocksPrimary, 10),
-			strconv.FormatUint(stats.roundsBackupRequired, 10),
-			strconv.FormatUint(stats.committeedGoodBlocksBackup, 10),
-			strconv.FormatUint(stats.committeedBadBlocksBackup, 10),
-			strconv.FormatUint(stats.missedPrimary, 10),
-			strconv.FormatUint(stats.missedBackup, 10),
-			strconv.FormatUint(stats.missedProposer, 10),
-			strconv.FormatUint(stats.proposedTimeout, 10),
-		)
-		s.entitiesOutput = append(s.entitiesOutput, line)
-	}
-}
-
-func (s *runtimeStats) printStats() {
-	fmt.Printf("Runtime rounds: %d\n", s.rounds)
-	fmt.Printf("Successful rounds: %d\n", s.successfulRounds)
-	fmt.Printf("Epoch transition rounds: %d\n", s.epochTransitionRounds)
-	fmt.Printf("Proposer timeouted rounds: %d\n", s.proposerTimeoutedRounds)
-	fmt.Printf("Failed rounds: %d\n", s.failedRounds)
-	fmt.Printf("Discrepancies: %d\n", s.discrepancyDetected)
-	fmt.Printf("Discrepancies (timeout): %d\n", s.discrepancyDetectedTimeout)
-	fmt.Printf("Suspended: %d\n", s.suspendedRounds)
-
-	fmt.Println("Entity stats")
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
-	table.SetCenterSeparator("|")
-	table.SetHeader(s.entitiesHeader)
-	table.AppendBulk(s.entitiesOutput)
-	table.Render()
-}
-
-var runtimeStatsCmd = &cobra.Command{
-	Use:   "runtime-stats [<start-height> [<end-height>]]",
-	Short: "Show runtime statistics",
-	Args:  cobra.MaximumNArgs(2),
+var statsCmd = &cobra.Command{
+	Use:     "statistics [<start-height> [<end-height>]]",
+	Short:   "Show ParaTime statistics",
+	Aliases: []string{"stats"},
+	Args:    cobra.MaximumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
+		if npa.ParaTime == nil {
+			cobra.CheckErr("no ParaTimes configured")
+		}
 		runtimeID := npa.ParaTime.Namespace()
 
 		// Parse command line arguments
@@ -552,4 +476,88 @@ var runtimeStatsCmd = &cobra.Command{
 		err = w.WriteAll(stats.entitiesOutput)
 		cobra.CheckErr(err)
 	},
+}
+
+func (s *runtimeStats) prepareEntitiesOutput(
+	metadataLookup map[types.Address]*metadata.Entity,
+) {
+	s.entitiesOutput = make([][]string, 0)
+
+	s.entitiesHeader = []string{
+		"Entity Addr",
+		"Entity Name",
+		"Elected",
+		"Primary",
+		"Backup",
+		"Proposer",
+		"Primary invoked",
+		"Primary Good commit",
+		"Prim Bad commmit",
+		"Bckp invoked",
+		"Bckp Good commit",
+		"Bckp Bad commit",
+		"Primary missed",
+		"Bckp missed",
+		"Proposer missed",
+		"Proposed timeout",
+	}
+
+	addrToName := func(addr types.Address) string {
+		if metadataLookup != nil {
+			if entry, ok := metadataLookup[addr]; ok {
+				return entry.Name
+			}
+		}
+		return ""
+	}
+
+	for entity, stats := range s.entities {
+		var line []string
+
+		entityAddr := types.NewAddressFromConsensusPublicKey(entity)
+
+		line = append(line,
+			entityAddr.String(),
+			addrToName(entityAddr),
+			strconv.FormatUint(stats.roundsElected, 10),
+			strconv.FormatUint(stats.roundsPrimary, 10),
+			strconv.FormatUint(stats.roundsBackup, 10),
+			strconv.FormatUint(stats.roundsProposer, 10),
+			strconv.FormatUint(stats.roundsPrimaryRequired, 10),
+			strconv.FormatUint(stats.committeedGoodBlocksPrimary, 10),
+			strconv.FormatUint(stats.committeedBadBlocksPrimary, 10),
+			strconv.FormatUint(stats.roundsBackupRequired, 10),
+			strconv.FormatUint(stats.committeedGoodBlocksBackup, 10),
+			strconv.FormatUint(stats.committeedBadBlocksBackup, 10),
+			strconv.FormatUint(stats.missedPrimary, 10),
+			strconv.FormatUint(stats.missedBackup, 10),
+			strconv.FormatUint(stats.missedProposer, 10),
+			strconv.FormatUint(stats.proposedTimeout, 10),
+		)
+		s.entitiesOutput = append(s.entitiesOutput, line)
+	}
+}
+
+func (s *runtimeStats) printStats() {
+	fmt.Printf("ParaTime rounds: %d\n", s.rounds)
+	fmt.Printf("Successful rounds: %d\n", s.successfulRounds)
+	fmt.Printf("Epoch transition rounds: %d\n", s.epochTransitionRounds)
+	fmt.Printf("Proposer timeouted rounds: %d\n", s.proposerTimeoutedRounds)
+	fmt.Printf("Failed rounds: %d\n", s.failedRounds)
+	fmt.Printf("Discrepancies: %d\n", s.discrepancyDetected)
+	fmt.Printf("Discrepancies (timeout): %d\n", s.discrepancyDetectedTimeout)
+	fmt.Printf("Suspended: %d\n", s.suspendedRounds)
+
+	fmt.Println("\n=== ENTITY STATISTICS ===")
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
+	table.SetCenterSeparator("|")
+	table.SetHeader(s.entitiesHeader)
+	table.AppendBulk(s.entitiesOutput)
+	table.Render()
+}
+
+func init() {
+	statsCmd.Flags().AddFlagSet(common.SelectorNPFlags)
+	statsCmd.Flags().AddFlagSet(csvFlags)
 }

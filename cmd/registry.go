@@ -156,50 +156,6 @@ var (
 			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
 		},
 	}
-
-	registryRuntimeRegisterCmd = &cobra.Command{
-		Use:   "runtime-register <descriptor.json>",
-		Short: "Register a new runtime or update an existing one",
-		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			cfg := cliConfig.Global()
-			npa := common.GetNPASelection(cfg)
-			txCfg := common.GetTransactionConfig()
-			filename := args[0]
-
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
-
-			// When not in offline mode, connect to the given network endpoint.
-			ctx := context.Background()
-			var conn connection.Connection
-			if !txCfg.Offline {
-				var err error
-				conn, err = connection.Connect(ctx, npa.Network)
-				cobra.CheckErr(err)
-			}
-
-			// Load runtime descriptor.
-			rawDescriptor, err := os.ReadFile(filename)
-			cobra.CheckErr(err)
-
-			// Parse runtime descriptor.
-			var descriptor registry.Runtime
-			if err = json.Unmarshal(rawDescriptor, &descriptor); err != nil {
-				cobra.CheckErr(fmt.Errorf("malformed runtime descriptor: %w", err))
-			}
-
-			// Prepare transaction.
-			tx := registry.NewRegisterRuntimeTx(0, nil, &descriptor)
-
-			acc := common.LoadAccount(cfg, npa.AccountName)
-			sigTx, err := common.SignConsensusTransaction(ctx, npa, acc, conn, tx)
-			cobra.CheckErr(err)
-
-			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
-		},
-	}
 )
 
 func init() {
@@ -212,11 +168,7 @@ func init() {
 	registryNodeUnfreezeCmd.Flags().AddFlagSet(common.SelectorFlags)
 	registryNodeUnfreezeCmd.Flags().AddFlagSet(common.TransactionFlags)
 
-	registryRuntimeRegisterCmd.Flags().AddFlagSet(common.SelectorFlags)
-	registryRuntimeRegisterCmd.Flags().AddFlagSet(common.TransactionFlags)
-
 	registryCmd.AddCommand(registryEntityRegisterCmd)
 	registryCmd.AddCommand(registryEntityDeregisterCmd)
 	registryCmd.AddCommand(registryNodeUnfreezeCmd)
-	registryCmd.AddCommand(registryRuntimeRegisterCmd)
 }

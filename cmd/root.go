@@ -10,7 +10,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/oasisprotocol/cli/cmd/inspect"
+	"github.com/oasisprotocol/cli/cmd/paratime"
+
 	"github.com/oasisprotocol/cli/cmd/network"
 	"github.com/oasisprotocol/cli/config"
 	"github.com/oasisprotocol/cli/version"
@@ -96,12 +97,11 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file to use")
 
 	rootCmd.AddCommand(network.Cmd)
-	rootCmd.AddCommand(paratimeCmd)
+	rootCmd.AddCommand(paratime.Cmd)
 	rootCmd.AddCommand(walletCmd)
 	rootCmd.AddCommand(accountCmd)
 	rootCmd.AddCommand(addressBookCmd)
 	rootCmd.AddCommand(contractCmd)
-	rootCmd.AddCommand(inspect.Cmd)
 	rootCmd.AddCommand(txCmd)
 	rootCmd.AddCommand(registryCmd)
 }

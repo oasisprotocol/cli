@@ -30,17 +30,23 @@ import (
 )
 
 var (
-	txOffline   bool
-	txNonce     uint64
-	txGasLimit  uint64
-	txGasPrice  string
-	txEncrypted bool
-	txYes       bool
+	txOffline    bool
+	txNonce      uint64
+	txGasLimit   uint64
+	txGasPrice   string
+	txEncrypted  bool
+	txYes        bool
+	txUnsigned   bool
+	txFormat     string
+	txOutputFile string
 )
 
 const (
 	invalidNonce    = math.MaxUint64
 	invalidGasLimit = math.MaxUint64
+
+	formatJSON = "json"
+	formatCBOR = "cbor"
 )
 
 // TransactionFlags contains the common transaction flags.
@@ -50,13 +56,22 @@ var TransactionFlags *flag.FlagSet
 type TransactionConfig struct {
 	// Offline is a flag indicating that no online queries are allowed.
 	Offline bool
+
+	// Export is a flag indicating that the transaction should be exported instead of broadcast.
+	Export bool
 }
 
 // GetTransactionConfig returns the transaction-related configuration from flags.
 func GetTransactionConfig() *TransactionConfig {
 	return &TransactionConfig{
 		Offline: txOffline,
+		Export:  shouldExportTransaction(),
 	}
+}
+
+// shouldExportTransaction returns true if the transaction should be exported instead of broadcast.
+func shouldExportTransaction() bool {
+	return txOffline || txUnsigned || txOutputFile != ""
 }
 
 // isRuntimeTx returns true, if given object is a signed or unsigned runtime transaction.
@@ -75,7 +90,7 @@ func SignConsensusTransaction(
 	wallet wallet.Account,
 	conn connection.Connection,
 	tx *consensusTx.Transaction,
-) (*consensusTx.SignedTransaction, error) {
+) (interface{}, error) {
 	// Require consensus signer.
 	signer := wallet.ConsensusSigner()
 	if signer == nil {
@@ -135,6 +150,11 @@ func SignConsensusTransaction(
 	}
 	tx.Fee.Amount = *gasPrice
 
+	if txUnsigned {
+		// Return an unsigned transaction.
+		return tx, nil
+	}
+
 	PrintTransactionBeforeSigning(npa, tx)
 
 	// Sign the transaction.
@@ -155,18 +175,33 @@ func SignConsensusTransaction(
 func SignParaTimeTransaction(
 	ctx context.Context,
 	npa *NPASelection,
-	wallet wallet.Account,
+	account wallet.Account,
 	conn connection.Connection,
 	tx *types.Transaction,
 	txDetails *signature.TxDetails,
-) (*types.UnverifiedTransaction, interface{}, error) {
+) (interface{}, interface{}, error) {
 	if npa.ParaTime == nil {
 		return nil, nil, fmt.Errorf("no paratime configured for paratime transaction signing")
 	}
 
+	// Determine whether the signer information for a transaction has already been set.
+	var hasSignerInfo bool
+	accountAddressSpec := account.SignatureAddressSpec()
+	for _, si := range tx.AuthInfo.SignerInfo {
+		if si.AddressSpec.Signature == nil {
+			continue
+		}
+		if !si.AddressSpec.Signature.PublicKey().Equal(accountAddressSpec.PublicKey().PublicKey) {
+			continue
+		}
+		hasSignerInfo = true
+		break
+	}
+
 	// Default to passed values and do online estimation when possible.
-	nonce := txNonce
-	tx.AuthInfo.Fee.Gas = txGasLimit
+	if tx.AuthInfo.Fee.Gas == 0 {
+		tx.AuthInfo.Fee.Gas = txGasLimit
+	}
 
 	gasPrice := &types.BaseUnits{}
 	if txGasPrice != "" {
@@ -178,19 +213,25 @@ func SignParaTimeTransaction(
 		}
 	}
 
-	if !txOffline {
+	if !hasSignerInfo {
+		nonce := txNonce
+
 		// Query nonce if not specified.
-		if nonce == invalidNonce {
+		if !txOffline && nonce == invalidNonce {
 			var err error
-			nonce, err = conn.Runtime(npa.ParaTime).Accounts.Nonce(ctx, client.RoundLatest, wallet.Address())
+			nonce, err = conn.Runtime(npa.ParaTime).Accounts.Nonce(ctx, client.RoundLatest, account.Address())
 			if err != nil {
 				return nil, nil, fmt.Errorf("failed to query nonce: %w", err)
 			}
 		}
-	}
 
-	// Prepare the transaction before (optional) gas estimation to ensure correct estimation.
-	tx.AppendAuthSignature(wallet.SignatureAddressSpec(), nonce)
+		if nonce == invalidNonce {
+			return nil, nil, fmt.Errorf("nonce must be specified in offline mode")
+		}
+
+		// Prepare the transaction before (optional) gas estimation to ensure correct estimation.
+		tx.AppendAuthSignature(account.SignatureAddressSpec(), nonce)
+	}
 
 	if !txOffline { //nolint: nestif
 		// Gas estimation if not specified.
@@ -215,9 +256,9 @@ func SignParaTimeTransaction(
 		}
 	}
 
-	// If we are using offline mode and either nonce or gas limit is not specified, abort.
-	if nonce == invalidNonce || tx.AuthInfo.Fee.Gas == invalidGasLimit {
-		return nil, nil, fmt.Errorf("nonce and/or gas limit must be specified in offline mode")
+	// If we are using offline mode and gas limit is not specified, abort.
+	if tx.AuthInfo.Fee.Gas == invalidGasLimit {
+		return nil, nil, fmt.Errorf("gas limit must be specified in offline mode")
 	}
 
 	// Compute fee amount based on gas price.
@@ -253,6 +294,11 @@ func SignParaTimeTransaction(
 		tx.Call = *encCall
 	}
 
+	if txUnsigned {
+		// Return an unsigned transaction.
+		return tx, meta, nil
+	}
+
 	PrintTransactionBeforeSigning(npa, tx)
 
 	// Sign the transaction.
@@ -263,7 +309,7 @@ func SignParaTimeTransaction(
 		Base:         types.SignatureContextBase,
 		TxDetails:    txDetails,
 	}
-	if err := ts.AppendSign(sigCtx, wallet.Signer()); err != nil {
+	if err := ts.AppendSign(sigCtx, account.Signer()); err != nil {
 		return nil, nil, fmt.Errorf("failed to sign transaction: %w", err)
 	}
 	return ts.UnverifiedTransaction(), meta, nil
@@ -342,12 +388,55 @@ func PrintTransactionBeforeSigning(npa *NPASelection, tx interface{}) {
 	fmt.Println("(In case you are using a hardware-based signer you may need to confirm on device.)")
 }
 
-// PrintSignedTransaction prints a signed transaction.
-func PrintSignedTransaction(sigTx interface{}) {
-	// TODO: Add some options for controlling output.
-	formatted, err := json.MarshalIndent(sigTx, "", "  ")
-	cobra.CheckErr(err)
-	fmt.Println(string(formatted))
+// ExportTransaction exports a (signed) transaction based on configuration.
+func ExportTransaction(sigTx interface{}) {
+	// Determine output destination.
+	var err error
+	outputFile := os.Stdout
+	if txOutputFile != "" {
+		outputFile, err = os.Create(txOutputFile)
+		if err != nil {
+			cobra.CheckErr(fmt.Errorf("failed to open output file: %w", err))
+		}
+		defer outputFile.Close()
+	}
+
+	// Determine output format.
+	var data []byte
+	switch txFormat {
+	case formatJSON:
+		data, err = json.MarshalIndent(sigTx, "", "  ")
+		cobra.CheckErr(err)
+	case formatCBOR:
+		data = cbor.Marshal(sigTx)
+	default:
+		cobra.CheckErr(fmt.Errorf("unknown transaction format: %s", txFormat))
+	}
+
+	_, err = outputFile.Write(data)
+	if err != nil {
+		cobra.CheckErr(fmt.Errorf("failed to write output: %w", err))
+	}
+}
+
+// BroadcastOrExportTransaction broadcasts or exports a transaction based on configuration.
+//
+// When in offline or unsigned mode, it exports the transaction. Otherwise it broadcasts the
+// transaction.
+func BroadcastOrExportTransaction(
+	ctx context.Context,
+	pt *config.ParaTime,
+	conn connection.Connection,
+	tx interface{},
+	meta interface{},
+	result interface{},
+) {
+	if shouldExportTransaction() {
+		ExportTransaction(tx)
+		return
+	}
+
+	BroadcastTransaction(ctx, pt, conn, tx, meta, result)
 }
 
 // BroadcastTransaction broadcasts a transaction.
@@ -361,11 +450,6 @@ func BroadcastTransaction(
 	meta interface{},
 	result interface{},
 ) {
-	if txOffline {
-		PrintSignedTransaction(tx)
-		return
-	}
-
 	switch sigTx := tx.(type) {
 	case *consensusTx.SignedTransaction:
 		// Consensus transaction.
@@ -480,4 +564,7 @@ func init() {
 	TransactionFlags.StringVar(&txGasPrice, "gas-price", "", "override gas price to use")
 	TransactionFlags.BoolVar(&txEncrypted, "encrypted", false, "encrypt transaction call data (requires online mode)")
 	TransactionFlags.BoolVarP(&txYes, "yes", "y", false, "answer yes to all questions")
+	TransactionFlags.BoolVar(&txUnsigned, "unsigned", false, "do not sign transaction")
+	TransactionFlags.StringVar(&txFormat, "format", "json", "transaction output format (for offline/unsigned modes) [json, cbor]")
+	TransactionFlags.StringVarP(&txOutputFile, "output-file", "o", "", "output transaction into specified file instead of broadcasting")
 }

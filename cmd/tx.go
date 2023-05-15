@@ -68,6 +68,53 @@ var (
 		},
 	}
 
+	txSignCmd = &cobra.Command{
+		Use:   "sign <filename.json>",
+		Short: "Sign an unsigned transaction",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg := cliConfig.Global()
+			npa := common.GetNPASelection(cfg)
+			txCfg := common.GetTransactionConfig()
+			filename := args[0]
+
+			// When not in offline mode, connect to the given network endpoint.
+			ctx := context.Background()
+			var conn connection.Connection
+			if !txCfg.Offline {
+				var err error
+				conn, err = connection.Connect(ctx, npa.Network)
+				cobra.CheckErr(err)
+			}
+
+			rawTx, err := os.ReadFile(filename)
+			cobra.CheckErr(err)
+
+			tx, err := tryDecodeTx(rawTx)
+			cobra.CheckErr(err)
+
+			var sigTx interface{}
+			switch dtx := tx.(type) {
+			case *consensusTx.SignedTransaction, *types.UnverifiedTransaction:
+				// Signed transaction, just export.
+				sigTx = tx
+			case *consensusTx.Transaction:
+				// Unsigned consensus transaction, sign first.
+				acc := common.LoadAccount(cfg, npa.AccountName)
+				sigTx, err = common.SignConsensusTransaction(ctx, npa, acc, conn, dtx)
+				cobra.CheckErr(err)
+			case *types.Transaction:
+				// Unsigned runtime transaction, sign first.
+				acc := common.LoadAccount(cfg, npa.AccountName)
+				sigTx, _, err = common.SignParaTimeTransaction(ctx, npa, acc, conn, dtx, nil)
+				cobra.CheckErr(err)
+			}
+
+			// Export signed transaction.
+			common.ExportTransaction(sigTx)
+		},
+	}
+
 	txShowCmd = &cobra.Command{
 		Use:   "show <filename.json>",
 		Short: "Pretty print a transaction",
@@ -140,8 +187,13 @@ func tryDecodeTx(rawTx []byte) (any, error) {
 
 func init() {
 	txSubmitCmd.Flags().AddFlagSet(common.SelectorFlags)
+
+	txSignCmd.Flags().AddFlagSet(common.SelectorFlags)
+	txSignCmd.Flags().AddFlagSet(common.TransactionFlags)
+
 	txShowCmd.Flags().AddFlagSet(common.SelectorNPFlags)
 
 	txCmd.AddCommand(txSubmitCmd)
+	txCmd.AddCommand(txSignCmd)
 	txCmd.AddCommand(txShowCmd)
 }

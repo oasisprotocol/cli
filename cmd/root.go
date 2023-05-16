@@ -10,9 +10,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/oasisprotocol/cli/cmd/paratime"
-
+	"github.com/oasisprotocol/cli/cmd/account"
 	"github.com/oasisprotocol/cli/cmd/network"
+	"github.com/oasisprotocol/cli/cmd/paratime"
 	"github.com/oasisprotocol/cli/config"
 	"github.com/oasisprotocol/cli/version"
 	_ "github.com/oasisprotocol/cli/wallet/file"   // Register file wallet backend.
@@ -99,9 +99,8 @@ func init() {
 	rootCmd.AddCommand(network.Cmd)
 	rootCmd.AddCommand(paratime.Cmd)
 	rootCmd.AddCommand(walletCmd)
-	rootCmd.AddCommand(accountCmd)
+	rootCmd.AddCommand(account.Cmd)
 	rootCmd.AddCommand(addressBookCmd)
 	rootCmd.AddCommand(contractCmd)
 	rootCmd.AddCommand(txCmd)
-	rootCmd.AddCommand(registryCmd)
 }

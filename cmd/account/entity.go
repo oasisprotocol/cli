@@ -1,4 +1,4 @@
-package cmd
+package account
 
 import (
 	"context"
@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/spf13/cobra"
 
-	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/entity"
 	registry "github.com/oasisprotocol/oasis-core/go/registry/api"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
@@ -18,13 +18,13 @@ import (
 )
 
 var (
-	registryCmd = &cobra.Command{
-		Use:   "registry",
-		Short: "Registry operations",
+	entityCmd = &cobra.Command{
+		Use:   "entity",
+		Short: "Entity management in the network's registry",
 	}
 
-	registryEntityRegisterCmd = &cobra.Command{
-		Use:   "entity-register <entity.json>",
+	entityRegisterCmd = &cobra.Command{
+		Use:   "register <entity.json>",
 		Short: "Register a new entity or update an existing one",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -83,8 +83,8 @@ var (
 		},
 	}
 
-	registryEntityDeregisterCmd = &cobra.Command{
-		Use:   "entity-deregister",
+	entityDeregisterCmd = &cobra.Command{
+		Use:   "deregister",
 		Short: "Deregister an existing entity",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -116,7 +116,7 @@ var (
 		},
 	}
 
-	registryNodeUnfreezeCmd = &cobra.Command{
+	entityNodeUnfreezeCmd = &cobra.Command{
 		Use:   "node-unfreeze <node-id>",
 		Short: "Unfreeze a frozen node",
 		Args:  cobra.ExactArgs(1),
@@ -159,16 +159,16 @@ var (
 )
 
 func init() {
-	registryEntityRegisterCmd.Flags().AddFlagSet(common.SelectorFlags)
-	registryEntityRegisterCmd.Flags().AddFlagSet(common.TransactionFlags)
+	entityRegisterCmd.Flags().AddFlagSet(common.SelectorNAFlags)
+	entityRegisterCmd.Flags().AddFlagSet(common.TransactionFlags)
 
-	registryEntityDeregisterCmd.Flags().AddFlagSet(common.SelectorFlags)
-	registryEntityDeregisterCmd.Flags().AddFlagSet(common.TransactionFlags)
+	entityDeregisterCmd.Flags().AddFlagSet(common.SelectorNAFlags)
+	entityDeregisterCmd.Flags().AddFlagSet(common.TransactionFlags)
 
-	registryNodeUnfreezeCmd.Flags().AddFlagSet(common.SelectorFlags)
-	registryNodeUnfreezeCmd.Flags().AddFlagSet(common.TransactionFlags)
+	entityNodeUnfreezeCmd.Flags().AddFlagSet(common.SelectorNAFlags)
+	entityNodeUnfreezeCmd.Flags().AddFlagSet(common.TransactionFlags)
 
-	registryCmd.AddCommand(registryEntityRegisterCmd)
-	registryCmd.AddCommand(registryEntityDeregisterCmd)
-	registryCmd.AddCommand(registryNodeUnfreezeCmd)
+	entityCmd.AddCommand(entityRegisterCmd)
+	entityCmd.AddCommand(entityDeregisterCmd)
+	entityCmd.AddCommand(entityNodeUnfreezeCmd)
 }

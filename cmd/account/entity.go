@@ -24,7 +24,8 @@ var (
 
 	entityRegisterCmd = &cobra.Command{
 		Use:   "register <entity.json>",
-		Short: "Register a new entity or update an existing one",
+		Short: "Register or update account entity in registry",
+		Long:  "Register your account and nodes as entity in the network registry or update the existing entry.",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
@@ -84,7 +85,7 @@ var (
 
 	entityDeregisterCmd = &cobra.Command{
 		Use:   "deregister",
-		Short: "Deregister an existing entity",
+		Short: "Remove account entity from registry",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := cliConfig.Global()

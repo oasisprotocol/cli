@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-core/go/common/entity"
@@ -115,47 +114,6 @@ var (
 			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
 		},
 	}
-
-	entityNodeUnfreezeCmd = &cobra.Command{
-		Use:   "node-unfreeze <node-id>",
-		Short: "Unfreeze a frozen node",
-		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
-			cfg := cliConfig.Global()
-			npa := common.GetNPASelection(cfg)
-			txCfg := common.GetTransactionConfig()
-			rawNodeID := args[0]
-
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
-
-			// When not in offline mode, connect to the given network endpoint.
-			ctx := context.Background()
-			var conn connection.Connection
-			if !txCfg.Offline {
-				var err error
-				conn, err = connection.Connect(ctx, npa.Network)
-				cobra.CheckErr(err)
-			}
-
-			// Parse node identifier.
-			var nodeID signature.PublicKey
-			err := nodeID.UnmarshalText([]byte(rawNodeID))
-			cobra.CheckErr(err)
-
-			// Prepare transaction.
-			tx := registry.NewUnfreezeNodeTx(0, nil, &registry.UnfreezeNode{
-				NodeID: nodeID,
-			})
-
-			acc := common.LoadAccount(cfg, npa.AccountName)
-			sigTx, err := common.SignConsensusTransaction(ctx, npa, acc, conn, tx)
-			cobra.CheckErr(err)
-
-			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
-		},
-	}
 )
 
 func init() {
@@ -165,10 +123,6 @@ func init() {
 	entityDeregisterCmd.Flags().AddFlagSet(common.SelectorNAFlags)
 	entityDeregisterCmd.Flags().AddFlagSet(common.TransactionFlags)
 
-	entityNodeUnfreezeCmd.Flags().AddFlagSet(common.SelectorNAFlags)
-	entityNodeUnfreezeCmd.Flags().AddFlagSet(common.TransactionFlags)
-
 	entityCmd.AddCommand(entityRegisterCmd)
 	entityCmd.AddCommand(entityDeregisterCmd)
-	entityCmd.AddCommand(entityNodeUnfreezeCmd)
 }

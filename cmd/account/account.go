@@ -18,6 +18,7 @@ func init() {
 	Cmd.AddCommand(depositCmd)
 	Cmd.AddCommand(entityCmd)
 	Cmd.AddCommand(fromPublicKeyCmd)
+	Cmd.AddCommand(nodeUnfreezeCmd)
 	Cmd.AddCommand(showCmd)
 	Cmd.AddCommand(transferCmd)
 	Cmd.AddCommand(undelegateCmd)

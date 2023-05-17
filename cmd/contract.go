@@ -275,9 +275,7 @@ otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			var result contracts.UploadResult
-			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result)
-
-			if txCfg.Offline {
+			if !common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result) {
 				return
 			}
 
@@ -337,9 +335,7 @@ otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			var result contracts.InstantiateResult
-			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result)
-
-			if txCfg.Offline {
+			if !common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result) {
 				return
 			}
 
@@ -394,9 +390,7 @@ otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			var result contracts.CallResult
-			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result)
-
-			if txCfg.Offline {
+			if !common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result) {
 				return
 			}
 
@@ -528,7 +522,7 @@ func init() {
 	contractsUploadFlags.StringVar(&contractInstantiatePolicy, "instantiate-policy", "everyone", "contract instantiation policy")
 
 	contractUploadCmd.Flags().AddFlagSet(common.SelectorFlags)
-	contractUploadCmd.Flags().AddFlagSet(common.TransactionFlags)
+	contractUploadCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	contractUploadCmd.Flags().AddFlagSet(contractsUploadFlags)
 
 	contractsCallFlags := flag.NewFlagSet("", flag.ContinueOnError)
@@ -538,16 +532,16 @@ func init() {
 	contractsInstantiateFlags.StringVar(&contractUpgradesPolicy, "upgrades-policy", "owner", "contract upgrades policy")
 
 	contractInstantiateCmd.Flags().AddFlagSet(common.SelectorFlags)
-	contractInstantiateCmd.Flags().AddFlagSet(common.TransactionFlags)
+	contractInstantiateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	contractInstantiateCmd.Flags().AddFlagSet(contractsInstantiateFlags)
 	contractInstantiateCmd.Flags().AddFlagSet(contractsCallFlags)
 
 	contractCallCmd.Flags().AddFlagSet(common.SelectorFlags)
-	contractCallCmd.Flags().AddFlagSet(common.TransactionFlags)
+	contractCallCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	contractCallCmd.Flags().AddFlagSet(contractsCallFlags)
 
 	contractChangeUpgradePolicyCmd.Flags().AddFlagSet(common.SelectorFlags)
-	contractChangeUpgradePolicyCmd.Flags().AddFlagSet(common.TransactionFlags)
+	contractChangeUpgradePolicyCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 
 	contractsStorageDumpCmdFlags := flag.NewFlagSet("", flag.ContinueOnError)
 	contractsStorageDumpCmdFlags.StringVar(&contractStorageDumpKind, "kind", "public",

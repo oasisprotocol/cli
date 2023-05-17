@@ -189,7 +189,7 @@ func init() {
 	txSubmitCmd.Flags().AddFlagSet(common.SelectorFlags)
 
 	txSignCmd.Flags().AddFlagSet(common.SelectorFlags)
-	txSignCmd.Flags().AddFlagSet(common.TransactionFlags)
+	txSignCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 
 	txShowCmd.Flags().AddFlagSet(common.SelectorNPFlags)
 

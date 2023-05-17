@@ -120,6 +120,6 @@ var depositCmd = &cobra.Command{
 
 func init() {
 	depositCmd.Flags().AddFlagSet(common.SelectorFlags)
-	depositCmd.Flags().AddFlagSet(common.TransactionFlags)
+	depositCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	depositCmd.Flags().AddFlagSet(common.ForceFlag)
 }

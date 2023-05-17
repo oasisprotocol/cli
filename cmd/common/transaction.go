@@ -49,8 +49,13 @@ const (
 	formatCBOR = "cbor"
 )
 
-// TransactionFlags contains the common transaction flags.
-var TransactionFlags *flag.FlagSet
+var (
+	// TxFlags contains the common consensus transaction flags.
+	TxFlags *flag.FlagSet
+
+	// RuntimeTxFlags contains the common runtime transaction flags.
+	RuntimeTxFlags *flag.FlagSet
+)
 
 // TransactionConfig contains the transaction-related configuration from flags.
 type TransactionConfig struct {
@@ -95,6 +100,10 @@ func SignConsensusTransaction(
 	signer := wallet.ConsensusSigner()
 	if signer == nil {
 		return nil, fmt.Errorf("account does not support signing consensus transactions")
+	}
+
+	if txEncrypted {
+		return nil, fmt.Errorf("--encrypted not supported for consensus transactions")
 	}
 
 	// Default to passed values and do online estimation when possible.
@@ -421,8 +430,8 @@ func ExportTransaction(sigTx interface{}) {
 
 // BroadcastOrExportTransaction broadcasts or exports a transaction based on configuration.
 //
-// When in offline or unsigned mode, it exports the transaction. Otherwise it broadcasts the
-// transaction.
+// When in offline or unsigned mode, it exports the transaction and returns false. Otherwise
+// it broadcasts the transaction and returns true.
 func BroadcastOrExportTransaction(
 	ctx context.Context,
 	pt *config.ParaTime,
@@ -430,13 +439,14 @@ func BroadcastOrExportTransaction(
 	tx interface{},
 	meta interface{},
 	result interface{},
-) {
+) bool {
 	if shouldExportTransaction() {
 		ExportTransaction(tx)
-		return
+		return false
 	}
 
 	BroadcastTransaction(ctx, pt, conn, tx, meta, result)
+	return true
 }
 
 // BroadcastTransaction broadcasts a transaction.
@@ -557,14 +567,24 @@ func WaitForEvent(
 }
 
 func init() {
-	TransactionFlags = flag.NewFlagSet("", flag.ContinueOnError)
-	TransactionFlags.BoolVar(&txOffline, "offline", false, "do not perform any operations requiring network access")
-	TransactionFlags.Uint64Var(&txNonce, "nonce", invalidNonce, "override nonce to use")
-	TransactionFlags.Uint64Var(&txGasLimit, "gas-limit", invalidGasLimit, "override gas limit to use (disable estimation)")
-	TransactionFlags.StringVar(&txGasPrice, "gas-price", "", "override gas price to use")
-	TransactionFlags.BoolVar(&txEncrypted, "encrypted", false, "encrypt transaction call data (requires online mode)")
-	TransactionFlags.BoolVarP(&txYes, "yes", "y", false, "answer yes to all questions")
-	TransactionFlags.BoolVar(&txUnsigned, "unsigned", false, "do not sign transaction")
-	TransactionFlags.StringVar(&txFormat, "format", "json", "transaction output format (for offline/unsigned modes) [json, cbor]")
-	TransactionFlags.StringVarP(&txOutputFile, "output-file", "o", "", "output transaction into specified file instead of broadcasting")
+	RuntimeTxFlags = flag.NewFlagSet("", flag.ContinueOnError)
+	RuntimeTxFlags.BoolVar(&txOffline, "offline", false, "do not perform any operations requiring network access")
+	RuntimeTxFlags.Uint64Var(&txNonce, "nonce", invalidNonce, "override nonce to use")
+	RuntimeTxFlags.Uint64Var(&txGasLimit, "gas-limit", invalidGasLimit, "override gas limit to use (disable estimation)")
+	RuntimeTxFlags.StringVar(&txGasPrice, "gas-price", "", "override gas price to use")
+	RuntimeTxFlags.BoolVar(&txEncrypted, "encrypted", false, "encrypt transaction call data (requires online mode)")
+	RuntimeTxFlags.BoolVarP(&txYes, "yes", "y", false, "answer yes to all questions")
+	RuntimeTxFlags.BoolVar(&txUnsigned, "unsigned", false, "do not sign transaction")
+	RuntimeTxFlags.StringVar(&txFormat, "format", "json", "transaction output format (for offline/unsigned modes) [json, cbor]")
+	RuntimeTxFlags.StringVarP(&txOutputFile, "output-file", "o", "", "output transaction into specified file instead of broadcasting")
+
+	TxFlags = flag.NewFlagSet("", flag.ContinueOnError)
+	TxFlags.BoolVar(&txOffline, "offline", false, "do not perform any operations requiring network access")
+	TxFlags.Uint64Var(&txNonce, "nonce", invalidNonce, "override nonce to use")
+	TxFlags.Uint64Var(&txGasLimit, "gas-limit", invalidGasLimit, "override gas limit to use (disable estimation)")
+	TxFlags.StringVar(&txGasPrice, "gas-price", "", "override gas price to use")
+	TxFlags.BoolVarP(&txYes, "yes", "y", false, "answer yes to all questions")
+	TxFlags.BoolVar(&txUnsigned, "unsigned", false, "do not sign transaction")
+	TxFlags.StringVar(&txFormat, "format", "json", "transaction output format (for offline/unsigned modes) [json, cbor]")
+	TxFlags.StringVarP(&txOutputFile, "output-file", "o", "", "output transaction into specified file instead of broadcasting")
 }

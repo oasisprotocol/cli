@@ -119,10 +119,10 @@ var (
 
 func init() {
 	entityRegisterCmd.Flags().AddFlagSet(common.SelectorNAFlags)
-	entityRegisterCmd.Flags().AddFlagSet(common.TransactionFlags)
+	entityRegisterCmd.Flags().AddFlagSet(common.TxFlags)
 
 	entityDeregisterCmd.Flags().AddFlagSet(common.SelectorNAFlags)
-	entityDeregisterCmd.Flags().AddFlagSet(common.TransactionFlags)
+	entityDeregisterCmd.Flags().AddFlagSet(common.TxFlags)
 
 	entityCmd.AddCommand(entityRegisterCmd)
 	entityCmd.AddCommand(entityDeregisterCmd)

@@ -177,6 +177,6 @@ func init() {
 			"rate_max_numerator divided by %v", staking.CommissionRateDenominator, staking.CommissionRateDenominator,
 	))
 	amendCommissionScheduleCmd.Flags().AddFlagSet(common.SelectorNAFlags)
-	amendCommissionScheduleCmd.Flags().AddFlagSet(common.TransactionFlags)
+	amendCommissionScheduleCmd.Flags().AddFlagSet(common.TxFlags)
 	amendCommissionScheduleCmd.Flags().AddFlagSet(f)
 }

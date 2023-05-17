@@ -56,5 +56,5 @@ var nodeUnfreezeCmd = &cobra.Command{
 
 func init() {
 	nodeUnfreezeCmd.Flags().AddFlagSet(common.SelectorNAFlags)
-	nodeUnfreezeCmd.Flags().AddFlagSet(common.TransactionFlags)
+	nodeUnfreezeCmd.Flags().AddFlagSet(common.TxFlags)
 }

@@ -128,6 +128,6 @@ var withdrawCmd = &cobra.Command{
 
 func init() {
 	withdrawCmd.Flags().AddFlagSet(common.SelectorFlags)
-	withdrawCmd.Flags().AddFlagSet(common.TransactionFlags)
+	withdrawCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	withdrawCmd.Flags().AddFlagSet(common.ForceFlag)
 }

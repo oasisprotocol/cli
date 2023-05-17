@@ -93,6 +93,6 @@ var transferCmd = &cobra.Command{
 
 func init() {
 	transferCmd.Flags().AddFlagSet(common.SelectorFlags)
-	transferCmd.Flags().AddFlagSet(common.TransactionFlags)
+	transferCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	transferCmd.Flags().AddFlagSet(common.ForceFlag)
 }

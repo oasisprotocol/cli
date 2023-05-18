@@ -16,7 +16,7 @@ import (
 var registeredFactories sync.Map
 
 const (
-	// AlgorithmEd25519Adr8 is the Ed25519 algorithm using the ADR-8 derivation path (ROSE coin type).
+	// AlgorithmEd25519Adr8 is the Ed25519 algorithm using the ADR-8 derivation path.
 	AlgorithmEd25519Adr8 = "ed25519-adr8"
 	// AlgorithmEd25519Raw is the Ed25519 algorithm using raw private keys.
 	AlgorithmEd25519Raw = "ed25519-raw"
@@ -26,6 +26,10 @@ const (
 	AlgorithmSecp256k1Bip44 = "secp256k1-bip44"
 	// AlgorithmSecp256k1Raw is the Secp256k1 algorithm using raw private keys.
 	AlgorithmSecp256k1Raw = "secp256k1-raw"
+	// AlgorithmSr25519Adr8 is the Sr25519 algorithm using the ADR-8 derivation path.
+	AlgorithmSr25519Adr8 = "sr25519-adr8"
+	// AlgorithmSr25519Raw is the Sr25519 algorithm using raw private keys.
+	AlgorithmSr25519Raw = "sr25519-raw"
 )
 
 // Factory is a factory that supports accounts of a specific kind.

@@ -1,4 +1,4 @@
-package inspect
+package network
 
 import (
 	"context"
@@ -12,9 +12,9 @@ import (
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
-var nodeStatusCmd = &cobra.Command{
-	Use:   "node-status",
-	Short: "Show node status",
+var statusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Show the current status of the node and the network",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
@@ -35,4 +35,8 @@ var nodeStatusCmd = &cobra.Command{
 
 		fmt.Println(string(nodeStr))
 	},
+}
+
+func init() {
+	statusCmd.Flags().AddFlagSet(common.SelectorNFlags)
 }

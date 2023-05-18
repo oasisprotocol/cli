@@ -1,4 +1,4 @@
-package inspect
+package paratime
 
 import (
 	"context"
@@ -26,11 +26,12 @@ const (
 	blockLatest = "latest"
 )
 
-var blockCmd = &cobra.Command{
-	Use:   "block <number> [ <tx-index> | <tx-hash> ]",
-	Short: "Show information about a block and its transactions",
-	Long:  "Show information about a given block number and (optionally) its transactions. Use \"latest\" to use the last block.",
-	Args:  cobra.RangeArgs(1, 2),
+var showCmd = &cobra.Command{
+	Use:     "show <number> [ <tx-index> | <tx-hash> ]",
+	Short:   "Show information about a block and its transactions",
+	Long:    "Show information about a given block number and (optionally) its transactions. Use \"latest\" to use the last block.",
+	Aliases: []string{"s"},
+	Args:    cobra.RangeArgs(1, 2),
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
@@ -356,4 +357,8 @@ func prettyPrintEvent(indent string, evIndex int, ev *types.Event, decoders []cl
 	}
 
 	prettyPrintCBOR(indent+"  ", "event", ev.Value)
+}
+
+func init() {
+	showCmd.Flags().AddFlagSet(common.SelectorNPFlags)
 }

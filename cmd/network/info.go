@@ -1,4 +1,4 @@
-package inspect
+package network
 
 import (
 	"context"
@@ -10,16 +10,15 @@ import (
 	consensusPretty "github.com/oasisprotocol/oasis-core/go/common/prettyprint"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 	"github.com/oasisprotocol/oasis-core/go/staking/api/token"
-
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 
 	"github.com/oasisprotocol/cli/cmd/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
-var nativeTokenCmd = &cobra.Command{
-	Use:   "native-token",
-	Short: "Show native token information",
+var infoCmd = &cobra.Command{
+	Use:   "info",
+	Short: "Show native token information and other network parameters",
 	Args:  cobra.NoArgs,
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
@@ -49,6 +48,7 @@ var nativeTokenCmd = &cobra.Command{
 			tokenValueExponent,
 		)
 
+		fmt.Printf("Network: %s\n", npa.NetworkName)
 		fmt.Printf("Token's ticker symbol: %s\n", tokenSymbol)
 		fmt.Printf("Token's value base-10 exponent: %d\n", tokenValueExponent)
 
@@ -83,6 +83,13 @@ var nativeTokenCmd = &cobra.Command{
 		token.PrettyPrintAmount(ctx, *governanceDeposits, os.Stdout)
 		fmt.Println()
 
+		consensusParams, err := stakingConn.ConsensusParameters(ctx, height)
+		cobra.CheckErr(err)
+
+		fmt.Printf("Debonding interval: %d epoch(s)", consensusParams.DebondingInterval)
+		fmt.Println()
+
+		fmt.Println("\n=== STAKING THRESHOLDS ===")
 		thresholdsToQuery := []staking.ThresholdKind{
 			staking.KindEntity,
 			staking.KindNodeValidator,
@@ -100,9 +107,19 @@ var nativeTokenCmd = &cobra.Command{
 				},
 			)
 			cobra.CheckErr(err)
-			fmt.Printf("Staking threshold (%s): ", kind)
+			fmt.Printf("  %s: ", kind)
 			token.PrettyPrintAmount(ctx, *threshold, os.Stdout)
 			fmt.Println()
 		}
+
+		fmt.Println("\n=== GAS COSTS ===")
+		for kind, cost := range consensusParams.GasCosts {
+			fmt.Printf("  %s: %d\n", kind, cost)
+		}
 	},
+}
+
+func init() {
+	infoCmd.Flags().AddFlagSet(common.SelectorNFlags)
+	infoCmd.Flags().AddFlagSet(common.HeightFlag)
 }

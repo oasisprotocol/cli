@@ -1,4 +1,4 @@
-package inspect
+package common
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	registry "github.com/oasisprotocol/oasis-core/go/registry/api"
 )
 
-type nodeLookup struct {
+type NodeLookup struct {
 	consensus consensus.ClientBackend
 	registry  registry.Backend
 	nodeMap   map[signature.PublicKey]*node.Node
@@ -18,7 +18,7 @@ type nodeLookup struct {
 	haveAll bool
 }
 
-func (nl *nodeLookup) SetHeight(
+func (nl *NodeLookup) SetHeight(
 	ctx context.Context,
 	height int64,
 ) error {
@@ -52,7 +52,7 @@ func (nl *nodeLookup) SetHeight(
 	return nil
 }
 
-func (nl *nodeLookup) ByID(
+func (nl *NodeLookup) ByID(
 	ctx context.Context,
 	id signature.PublicKey,
 ) (*node.Node, error) {
@@ -78,13 +78,13 @@ func (nl *nodeLookup) ByID(
 	return node, err
 }
 
-func newNodeLookup(
+func NewNodeLookup(
 	ctx context.Context,
 	consensus consensus.ClientBackend,
 	registry registry.Backend,
 	height int64,
-) (*nodeLookup, error) {
-	nl := &nodeLookup{
+) (*NodeLookup, error) {
+	nl := &NodeLookup{
 		consensus: consensus,
 		registry:  registry,
 		nodeMap:   make(map[signature.PublicKey]*node.Node),

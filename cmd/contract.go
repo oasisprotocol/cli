@@ -35,7 +35,7 @@ var (
 	contractCmd = &cobra.Command{
 		Use:     "contract",
 		Short:   "WebAssembly smart contracts operations",
-		Aliases: []string{"contracts"},
+		Aliases: []string{"c", "contracts"},
 	}
 
 	contractShowCmd = &cobra.Command{
@@ -48,7 +48,7 @@ var (
 			strInstanceID := args[0]
 
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
@@ -78,7 +78,7 @@ var (
 			strCodeID := args[0]
 
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			codeID, err := strconv.ParseUint(strCodeID, 10, 64)
@@ -116,7 +116,7 @@ encoded as strings, or otherwise as Base64.`,
 			strInstanceID := args[0]
 
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
@@ -163,7 +163,7 @@ otherwise as Base64.`,
 			strKey := args[1]
 
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
@@ -208,7 +208,7 @@ otherwise as Base64.`,
 			strCodeID := args[0]
 
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			codeID, err := strconv.ParseUint(strCodeID, 10, 64)
@@ -244,7 +244,7 @@ otherwise as Base64.`,
 				cobra.CheckErr("no accounts configured in your wallet")
 			}
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			// When not in offline mode, connect to the given network endpoint.
@@ -275,9 +275,7 @@ otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			var result contracts.UploadResult
-			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result)
-
-			if txCfg.Offline {
+			if !common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result) {
 				return
 			}
 
@@ -301,7 +299,7 @@ otherwise as Base64.`,
 				cobra.CheckErr("no accounts configured in your wallet")
 			}
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			codeID, err := strconv.ParseUint(strCodeID, 10, 64)
@@ -337,9 +335,7 @@ otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			var result contracts.InstantiateResult
-			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result)
-
-			if txCfg.Offline {
+			if !common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result) {
 				return
 			}
 
@@ -362,7 +358,7 @@ otherwise as Base64.`,
 				cobra.CheckErr("no accounts configured in your wallet")
 			}
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
@@ -394,9 +390,7 @@ otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			var result contracts.CallResult
-			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result)
-
-			if txCfg.Offline {
+			if !common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result) {
 				return
 			}
 
@@ -429,7 +423,7 @@ otherwise as Base64.`,
 				cobra.CheckErr("no accounts configured in your wallet")
 			}
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
@@ -528,7 +522,7 @@ func init() {
 	contractsUploadFlags.StringVar(&contractInstantiatePolicy, "instantiate-policy", "everyone", "contract instantiation policy")
 
 	contractUploadCmd.Flags().AddFlagSet(common.SelectorFlags)
-	contractUploadCmd.Flags().AddFlagSet(common.TransactionFlags)
+	contractUploadCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	contractUploadCmd.Flags().AddFlagSet(contractsUploadFlags)
 
 	contractsCallFlags := flag.NewFlagSet("", flag.ContinueOnError)
@@ -538,16 +532,16 @@ func init() {
 	contractsInstantiateFlags.StringVar(&contractUpgradesPolicy, "upgrades-policy", "owner", "contract upgrades policy")
 
 	contractInstantiateCmd.Flags().AddFlagSet(common.SelectorFlags)
-	contractInstantiateCmd.Flags().AddFlagSet(common.TransactionFlags)
+	contractInstantiateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	contractInstantiateCmd.Flags().AddFlagSet(contractsInstantiateFlags)
 	contractInstantiateCmd.Flags().AddFlagSet(contractsCallFlags)
 
 	contractCallCmd.Flags().AddFlagSet(common.SelectorFlags)
-	contractCallCmd.Flags().AddFlagSet(common.TransactionFlags)
+	contractCallCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	contractCallCmd.Flags().AddFlagSet(contractsCallFlags)
 
 	contractChangeUpgradePolicyCmd.Flags().AddFlagSet(common.SelectorFlags)
-	contractChangeUpgradePolicyCmd.Flags().AddFlagSet(common.TransactionFlags)
+	contractChangeUpgradePolicyCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 
 	contractsStorageDumpCmdFlags := flag.NewFlagSet("", flag.ContinueOnError)
 	contractsStorageDumpCmdFlags.StringVar(&contractStorageDumpKind, "kind", "public",

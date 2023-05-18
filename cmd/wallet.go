@@ -28,8 +28,9 @@ var (
 	accKind string
 
 	walletCmd = &cobra.Command{
-		Use:   "wallet",
-		Short: "Manage accounts in the local wallet",
+		Use:     "wallet",
+		Short:   "Manage accounts in the local wallet",
+		Aliases: []string{"w"},
 	}
 
 	walletListCmd = &cobra.Command{
@@ -45,7 +46,7 @@ var (
 			var output [][]string
 			for name, acc := range cfg.Wallet.All {
 				if cfg.Wallet.Default == name {
-					name += defaultMarker
+					name += common.DefaultMarker
 				}
 				output = append(output, []string{
 					name,
@@ -99,9 +100,10 @@ var (
 	}
 
 	walletShowCmd = &cobra.Command{
-		Use:   "show <name>",
-		Short: "Show public account information",
-		Args:  cobra.ExactArgs(1),
+		Use:     "show <name>",
+		Short:   "Show public account information",
+		Aliases: []string{"s"},
+		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
 

@@ -79,7 +79,7 @@ oasis wallet list
 To show the account's balance on the default network/ParaTime, run:
 
 ```bash
-oasis accounts show
+oasis account show
 ```
 
 ## Configuration

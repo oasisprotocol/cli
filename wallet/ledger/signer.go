@@ -58,6 +58,8 @@ func (ls *ledgerSigner) ContextSign(metadata signature.Context, message []byte) 
 		return ls.dev.SignRtEd25519(ls.path, metadata, message)
 	case wallet.AlgorithmSecp256k1Bip44:
 		return ls.dev.SignRtSecp256k1(ls.path, metadata, message)
+	case wallet.AlgorithmSr25519Adr8:
+		return ls.dev.SignRtSr25519(ls.path, metadata, message)
 	}
 
 	return nil, fmt.Errorf("ledger: algorithm %s not supported", ls.algorithm)

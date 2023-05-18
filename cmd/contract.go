@@ -35,7 +35,7 @@ var (
 	contractCmd = &cobra.Command{
 		Use:     "contract",
 		Short:   "WebAssembly smart contracts operations",
-		Aliases: []string{"contracts"},
+		Aliases: []string{"c", "contracts"},
 	}
 
 	contractShowCmd = &cobra.Command{
@@ -48,7 +48,7 @@ var (
 			strInstanceID := args[0]
 
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
@@ -78,7 +78,7 @@ var (
 			strCodeID := args[0]
 
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			codeID, err := strconv.ParseUint(strCodeID, 10, 64)
@@ -116,7 +116,7 @@ encoded as strings, or otherwise as Base64.`,
 			strInstanceID := args[0]
 
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
@@ -163,7 +163,7 @@ otherwise as Base64.`,
 			strKey := args[1]
 
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
@@ -208,7 +208,7 @@ otherwise as Base64.`,
 			strCodeID := args[0]
 
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			codeID, err := strconv.ParseUint(strCodeID, 10, 64)
@@ -244,7 +244,7 @@ otherwise as Base64.`,
 				cobra.CheckErr("no accounts configured in your wallet")
 			}
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			// When not in offline mode, connect to the given network endpoint.
@@ -299,7 +299,7 @@ otherwise as Base64.`,
 				cobra.CheckErr("no accounts configured in your wallet")
 			}
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			codeID, err := strconv.ParseUint(strCodeID, 10, 64)
@@ -358,7 +358,7 @@ otherwise as Base64.`,
 				cobra.CheckErr("no accounts configured in your wallet")
 			}
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
@@ -423,7 +423,7 @@ otherwise as Base64.`,
 				cobra.CheckErr("no accounts configured in your wallet")
 			}
 			if npa.ParaTime == nil {
-				cobra.CheckErr("no paratimes configured")
+				cobra.CheckErr("no ParaTime configured")
 			}
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)

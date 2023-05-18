@@ -23,9 +23,9 @@ var (
 )
 
 var (
-	// SelectorFlags contains the common selector flags for network/paratime/wallet.
+	// SelectorFlags contains the common selector flags for network/ParaTime/wallet.
 	SelectorFlags *flag.FlagSet
-	// SelectorNPFlags contains the common selector flags for network/paratime.
+	// SelectorNPFlags contains the common selector flags for network/ParaTime.
 	SelectorNPFlags *flag.FlagSet
 	// SelectorNFlags contains the common selector flags for network.
 	SelectorNFlags *flag.FlagSet
@@ -33,7 +33,7 @@ var (
 	SelectorNAFlags *flag.FlagSet
 )
 
-// NPASelection contains the network/paratime/account selection.
+// NPASelection contains the network/ParaTime/account selection.
 type NPASelection struct {
 	NetworkName string
 	Network     *config.Network
@@ -45,7 +45,7 @@ type NPASelection struct {
 	Account     *cliConfig.Account
 }
 
-// GetNPASelection returns the user-selected network/paratime/account combination.
+// GetNPASelection returns the user-selected network/ParaTime/account combination.
 func GetNPASelection(cfg *cliConfig.Config) *NPASelection {
 	var s NPASelection
 	s.NetworkName = cfg.Networks.Default
@@ -68,7 +68,7 @@ func GetNPASelection(cfg *cliConfig.Config) *NPASelection {
 		if s.ParaTimeName != "" {
 			s.ParaTime = s.Network.ParaTimes.All[s.ParaTimeName]
 			if s.ParaTime == nil {
-				cobra.CheckErr(fmt.Errorf("paratime '%s' does not exist", s.ParaTimeName))
+				cobra.CheckErr(fmt.Errorf("ParaTime '%s' does not exist", s.ParaTimeName))
 			}
 		}
 	}
@@ -96,14 +96,14 @@ func GetNPASelection(cfg *cliConfig.Config) *NPASelection {
 func init() {
 	SelectorFlags = flag.NewFlagSet("", flag.ContinueOnError)
 	SelectorFlags.StringVar(&selectedNetwork, "network", "", "explicitly set network to use")
-	SelectorFlags.StringVar(&selectedParaTime, "paratime", "", "explicitly set paratime to use")
-	SelectorFlags.BoolVar(&noParaTime, "no-paratime", false, "explicitly set that no paratime should be used")
+	SelectorFlags.StringVar(&selectedParaTime, "paratime", "", "explicitly set ParaTime to use")
+	SelectorFlags.BoolVar(&noParaTime, "no-paratime", false, "explicitly set that no ParaTime should be used")
 	SelectorFlags.StringVar(&selectedAccount, "account", "", "explicitly set account to use")
 
 	SelectorNPFlags = flag.NewFlagSet("", flag.ContinueOnError)
 	SelectorNPFlags.StringVar(&selectedNetwork, "network", "", "explicitly set network to use")
-	SelectorNPFlags.StringVar(&selectedParaTime, "paratime", "", "explicitly set paratime to use")
-	SelectorNPFlags.BoolVar(&noParaTime, "no-paratime", false, "explicitly set that no paratime should be used")
+	SelectorNPFlags.StringVar(&selectedParaTime, "paratime", "", "explicitly set ParaTime to use")
+	SelectorNPFlags.BoolVar(&noParaTime, "no-paratime", false, "explicitly set that no ParaTime should be used")
 
 	SelectorNAFlags = flag.NewFlagSet("", flag.ContinueOnError)
 	SelectorNAFlags.StringVar(&selectedNetwork, "network", "", "explicitly set network to use")

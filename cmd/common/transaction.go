@@ -190,7 +190,7 @@ func SignParaTimeTransaction(
 	txDetails *signature.TxDetails,
 ) (interface{}, interface{}, error) {
 	if npa.ParaTime == nil {
-		return nil, nil, fmt.Errorf("no paratime configured for paratime transaction signing")
+		return nil, nil, fmt.Errorf("no ParaTime configured for ParaTime transaction signing")
 	}
 
 	// Determine whether the signer information for a transaction has already been set.
@@ -357,7 +357,7 @@ func PrintTransactionRaw(npa *NPASelection, tx interface{}) {
 }
 
 // PrintTransaction prints the transaction which can be either signed or unsigned together with
-// information about the selected network/paratime.
+// information about the selected network/ParaTime.
 func PrintTransaction(npa *NPASelection, tx interface{}) {
 	PrintTransactionRaw(npa, tx)
 
@@ -472,7 +472,7 @@ func BroadcastTransaction(
 	case *types.UnverifiedTransaction:
 		// ParaTime transaction.
 		if pt == nil {
-			cobra.CheckErr("no paratime configured for paratime transaction submission")
+			cobra.CheckErr("no ParaTime configured for ParaTime transaction submission")
 		}
 
 		fmt.Printf("Broadcasting transaction...\n")

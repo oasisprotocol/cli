@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -321,6 +322,7 @@ func SignParaTimeTransaction(
 	if err := ts.AppendSign(sigCtx, account.Signer()); err != nil {
 		return nil, nil, fmt.Errorf("failed to sign transaction: %w", err)
 	}
+	fmt.Printf("signature: %s\n", hex.EncodeToString(ts.UnverifiedTransaction().AuthProofs[0].Signature))
 	return ts.UnverifiedTransaction(), meta, nil
 }
 

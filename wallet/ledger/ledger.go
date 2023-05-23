@@ -6,6 +6,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/mitchellh/mapstructure"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/sr25519"
 	flag "github.com/spf13/pflag"
 	"golang.org/x/crypto/sha3"
 
@@ -216,6 +217,19 @@ func newAccount(cfg *accountConfig) (wallet.Account, error) {
 			return nil, err
 		}
 		pk = secp256k1pk
+	case wallet.AlgorithmSr25519Bip44:
+		path = getAdr0008Path(cfg.Number)
+		fmt.Println(path)
+		rawPk, err := dev.GetPublicKeySr25519(path, false)
+		if err != nil {
+			_ = dev.Close()
+			return nil, err
+		}
+		var sr25519pk sr25519.PublicKey
+		if err := sr25519pk.UnmarshalBinary(rawPk); err != nil {
+			return nil, err
+		}
+		pk = sr25519pk
 	default:
 		return nil, fmt.Errorf("unsupported algorithm %s", cfg.Algorithm)
 	}
@@ -249,7 +263,7 @@ func (a *ledgerAccount) Address() types.Address {
 
 func (a *ledgerAccount) EthAddress() *ethCommon.Address {
 	switch a.cfg.Algorithm {
-	case wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSecp256k1Raw:
+	case wallet.AlgorithmSecp256k1Bip44:
 		h := sha3.NewLegacyKeccak256()
 		untaggedPk, _ := a.Signer().Public().(secp256k1.PublicKey).MarshalBinaryUncompressedUntagged()
 		h.Write(untaggedPk)
@@ -263,10 +277,12 @@ func (a *ledgerAccount) EthAddress() *ethCommon.Address {
 
 func (a *ledgerAccount) SignatureAddressSpec() types.SignatureAddressSpec {
 	switch a.cfg.Algorithm {
-	case "", wallet.AlgorithmEd25519Legacy, wallet.AlgorithmEd25519Adr8, wallet.AlgorithmEd25519Raw:
+	case "", wallet.AlgorithmEd25519Legacy, wallet.AlgorithmEd25519Adr8:
 		return types.NewSignatureAddressSpecEd25519(a.Signer().Public().(ed25519.PublicKey))
-	case wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSecp256k1Raw:
+	case wallet.AlgorithmSecp256k1Bip44:
 		return types.NewSignatureAddressSpecSecp256k1Eth(a.Signer().Public().(secp256k1.PublicKey))
+	case wallet.AlgorithmSr25519Bip44:
+		return types.NewSignatureAddressSpecSr25519(a.Signer().Public().(sr25519.PublicKey))
 	}
 	return types.SignatureAddressSpec{}
 }
@@ -278,7 +294,7 @@ func (a *ledgerAccount) UnsafeExport() string {
 
 func init() {
 	flags := flag.NewFlagSet("", flag.ContinueOnError)
-	flags.String(cfgAlgorithm, wallet.AlgorithmEd25519Legacy, fmt.Sprintf("Cryptographic algorithm to use for this account [%s, %s, %s]", wallet.AlgorithmEd25519Legacy, wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44))
+	flags.String(cfgAlgorithm, wallet.AlgorithmEd25519Legacy, fmt.Sprintf("Cryptographic algorithm to use for this account [%s, %s, %s, %s]", wallet.AlgorithmEd25519Legacy, wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSr25519Bip44))
 	flags.Uint32(cfgNumber, 0, "Key number to use in the derivation scheme")
 
 	wallet.Register(&ledgerAccountFactory{

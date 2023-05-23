@@ -26,10 +26,9 @@ const (
 	AlgorithmSecp256k1Bip44 = "secp256k1-bip44"
 	// AlgorithmSecp256k1Raw is the Secp256k1 algorithm using raw private keys.
 	AlgorithmSecp256k1Raw = "secp256k1-raw"
-	// AlgorithmSr25519Adr8 is the Sr25519 algorithm using the ADR-8 derivation path.
-	AlgorithmSr25519Adr8 = "sr25519-adr8"
-	// AlgorithmSr25519Raw is the Sr25519 algorithm using raw private keys.
-	AlgorithmSr25519Raw = "sr25519-raw"
+	// AlgorithmSr25519Bip44 is the Sr25519 algorithm using the Polkadot's Ledger nano app-
+	// compatible BIP-44 derivation with DOT coin type.
+	AlgorithmSr25519Bip44 = "sr25519-bip44"
 )
 
 // Factory is a factory that supports accounts of a specific kind.

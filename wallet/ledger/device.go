@@ -1,6 +1,7 @@
 package ledger
 
 import (
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -93,6 +94,7 @@ func (ld *ledgerDevice) getPublicKey25519(path []uint32, ins byte, requireConfir
 		return nil, fmt.Errorf("ledger: failed to get serialized path bytes: %w", err)
 	}
 
+	fmt.Println(pathBytes, ins, requireConfirmation)
 	response, err := ld.getPublicKeyRaw(pathBytes, ins, requireConfirmation)
 	if err != nil {
 		return nil, err
@@ -309,6 +311,7 @@ func (ld *ledgerDevice) signRt(pathBytes []byte, sigCtx signature.Context, messa
 		message := []byte{claConsumer, instruction, payloadDesc, 0, payloadLen}
 		message = append(message, chunk...)
 
+		fmt.Printf("message sent: %s\n", hex.EncodeToString(message))
 		response, err := ld.raw.Exchange(message)
 		if err != nil {
 			switch err.Error() {

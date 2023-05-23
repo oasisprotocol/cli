@@ -19,6 +19,10 @@ func getBip44Path(number uint32) []uint32 {
 	return []uint32{44, 60, 0, 0, number}
 }
 
+func getPolkadotBip44Path(number uint32) []uint32 {
+	return []uint32{44, 354, number}
+}
+
 func getSerializedPath(path []uint32) ([]byte, error) {
 	message := make([]byte, 4*len(path))
 	switch len(path) {

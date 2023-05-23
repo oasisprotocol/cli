@@ -23,7 +23,6 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/ed25519"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/secp256k1"
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/sr25519"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
 	"github.com/oasisprotocol/cli/config"
@@ -45,14 +44,14 @@ const (
 // SupportedAlgorithmsForImport returns the algorithms supported by the given import kind.
 func SupportedAlgorithmsForImport(kind *wallet.ImportKind) []string {
 	if kind == nil {
-		return []string{wallet.AlgorithmEd25519Adr8, wallet.AlgorithmEd25519Raw, wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSecp256k1Raw, wallet.AlgorithmSr25519Adr8, wallet.AlgorithmSr25519Raw}
+		return []string{wallet.AlgorithmEd25519Adr8, wallet.AlgorithmEd25519Raw, wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSecp256k1Raw}
 	}
 
 	switch *kind {
 	case wallet.ImportKindMnemonic:
-		return []string{wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSr25519Adr8}
+		return []string{wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44}
 	case wallet.ImportKindPrivateKey:
-		return []string{wallet.AlgorithmEd25519Raw, wallet.AlgorithmSecp256k1Raw, wallet.AlgorithmSr25519Raw}
+		return []string{wallet.AlgorithmEd25519Raw, wallet.AlgorithmSecp256k1Raw}
 	default:
 		return []string{}
 	}
@@ -192,7 +191,7 @@ func (af *fileAccountFactory) PrettyKind(rawCfg map[string]interface{}) string {
 	// In case of ADR8 or BIP44 show the keypair number.
 	var number string
 	switch cfg.Algorithm {
-	case wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSr25519Adr8:
+	case wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44:
 		number = fmt.Sprintf(":%d", cfg.Number)
 	}
 	return fmt.Sprintf("%s (%s%s)", Kind, cfg.Algorithm, number)
@@ -258,8 +257,6 @@ func (af *fileAccountFactory) DataPrompt(kind wallet.ImportKind, rawCfg map[stri
 			return &survey.Multiline{Message: "Private key (base64-encoded):"}
 		case wallet.AlgorithmSecp256k1Raw:
 			return &survey.Multiline{Message: "Private key (hex-encoded):"}
-		case wallet.AlgorithmSr25519Raw:
-			return &survey.Multiline{Message: "Private key (base64-encoded):"}
 		default:
 			return nil
 		}
@@ -289,12 +286,6 @@ func (af *fileAccountFactory) DataValidator(kind wallet.ImportKind, rawCfg map[s
 				_, err := hex.DecodeString(ans.(string))
 				if err != nil {
 					return fmt.Errorf("private key must be hex-encoded (without leading 0x): %w", err)
-				}
-			case wallet.AlgorithmSr25519Raw:
-				// Ensure the private key is base64 encoded.
-				_, err := base64.StdEncoding.DecodeString(ans.(string))
-				if err != nil {
-					return fmt.Errorf("private key must be base64-encoded: %w", err)
 				}
 			default:
 				return fmt.Errorf("unsupported algorithm for %s: %s", wallet.ImportKindPrivateKey, cfg.Algorithm)
@@ -429,13 +420,13 @@ func (af *fileAccountFactory) Import(name string, passphrase string, rawCfg map[
 	switch src.Kind {
 	case wallet.ImportKindMnemonic:
 		switch cfg.Algorithm {
-		case wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSr25519Adr8:
+		case wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44:
 		default:
 			return nil, fmt.Errorf("algorithm '%s' does not support import from mnemonic", cfg.Algorithm)
 		}
 	case wallet.ImportKindPrivateKey:
 		switch cfg.Algorithm {
-		case wallet.AlgorithmEd25519Raw, wallet.AlgorithmSecp256k1Raw, wallet.AlgorithmSr25519Raw:
+		case wallet.AlgorithmEd25519Raw, wallet.AlgorithmSecp256k1Raw:
 		default:
 			return nil, fmt.Errorf("algorithm '%s' does not support import from private key", cfg.Algorithm)
 		}
@@ -525,34 +516,6 @@ func newAccount(state *secretState, cfg *accountConfig) (wallet.Account, error) 
 			state:  state,
 			signer: signer,
 		}, nil
-	case wallet.AlgorithmSr25519Adr8:
-		// For Sr25519 use the ADR 0008 derivation scheme.
-		signer, err := Sr25519FromMnemonic(state.Data, cfg.Number)
-		if err != nil {
-			return nil, fmt.Errorf("failed to initialize signer: %w", err)
-		}
-
-		return &fileAccount{
-			cfg:    cfg,
-			state:  state,
-			signer: signer,
-		}, nil
-	case wallet.AlgorithmSr25519Raw:
-		// For Sr25519-Raw use the raw private key.
-		dataRaw, err := base64.StdEncoding.DecodeString(state.Data)
-		if err != nil {
-			return nil, err
-		}
-		signer, err := sr25519.NewSigner(dataRaw)
-		if err != nil {
-			return nil, err
-		}
-
-		return &fileAccount{
-			cfg:    cfg,
-			state:  state,
-			signer: signer,
-		}, nil
 	default:
 		return nil, fmt.Errorf("algorithm '%s' not supported", state.Algorithm)
 	}
@@ -597,8 +560,6 @@ func (a *fileAccount) SignatureAddressSpec() types.SignatureAddressSpec {
 		return types.NewSignatureAddressSpecEd25519(a.Signer().Public().(ed25519.PublicKey))
 	case wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSecp256k1Raw:
 		return types.NewSignatureAddressSpecSecp256k1Eth(a.Signer().Public().(secp256k1.PublicKey))
-	case wallet.AlgorithmSr25519Adr8, wallet.AlgorithmSr25519Raw:
-		return types.NewSignatureAddressSpecSr25519(a.Signer().Public().(sr25519.PublicKey))
 	default:
 		return types.SignatureAddressSpec{}
 	}
@@ -610,7 +571,7 @@ func (a *fileAccount) UnsafeExport() string {
 
 func init() {
 	flags := flag.NewFlagSet("", flag.ContinueOnError)
-	flags.String(cfgAlgorithm, wallet.AlgorithmEd25519Adr8, fmt.Sprintf("Cryptographic algorithm to use for this account [%s, %s, %s]", wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSr25519Adr8))
+	flags.String(cfgAlgorithm, wallet.AlgorithmEd25519Adr8, fmt.Sprintf("Cryptographic algorithm to use for this account [%s, %s]", wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44))
 	flags.Uint32(cfgNumber, 0, "Key number to use in the key derivation scheme")
 
 	wallet.Register(&fileAccountFactory{

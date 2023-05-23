@@ -10,8 +10,19 @@ line-length:
   # Line length checking is not strict by default.
   strict: true
   line_length: 80
-  # Allow longer lines for code blocks.
-  code_block_line_length: 100
+  # Code blocks for examples are imported directly from the command output
+  # and do not have sensible max line length.
+  code_blocks: false
+
+# Front matter title (shown in the menu and doccards) may differ from the one
+# on the actual page.
+single-title:
+  front_matter_title: ""
+
+# Docusaurus uses custom {#some-title} syntax to define fragments (anchors), see:
+# https://docusaurus.io/docs/next/markdown-features/toc#heading-ids
+# Unfortunately, it is not compatible with the markdown linter yet.
+link-fragments: false
 
 # Do not always require language specifiers with fenced code blocks since they
 # are not part of the Markdown spec.

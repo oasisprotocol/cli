@@ -31,7 +31,7 @@ in your `$PATH`.
 *NOTE: The rest of the README assumes the `oasis` binary is somewhere in your
 `$PATH`.*
 
-## Running
+## Quickstart
 
 You can interact with the Oasis CLI by invoking it from the command line as
 follows:
@@ -57,7 +57,7 @@ subcommand as follows:
 
 ```bash
 oasis network set-default testnet
-oasis paratime set-default testnet emerald
+oasis paratime set-default testnet sapphire
 ```
 
 To be able to sign transactions you will need to first create or import an
@@ -82,7 +82,13 @@ To show the account's balance on the default network/ParaTime, run:
 oasis account show
 ```
 
+The `account` command also allows you to transfer tokens, deposit or withdraw to
+and from ParaTimes, delegate your assets to validators etc.
+
+Check out the complete User's guide in [docs/README.md] and example invocations
+of the CLI in `examples` folder to learn more.
+
 ## Configuration
 
-All configuration is stored in the `$XDG_CONFIG_HOME/oasis` directory (defaults
-to `$HOME/.config/oasis`).
+All configuration is stored in the `$XDG_CONFIG_HOME/oasis` directory (e.g.
+`$HOME/.config/oasis` on Linux).

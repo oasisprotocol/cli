@@ -12,7 +12,7 @@ Each example is stored inside its own folder. The folder contains:
 - input and output artifacts
 - `config` folder containing custom config file to be used for the scenario.
 
-## Invocation files
+## Invocation Files
 
 Invocation files have `.in` extension and they will be executed in
 alphabetic order. This is important, if you have destructive operations (e.g
@@ -59,7 +59,7 @@ as the corresponding invocation file, but having `.out` extension instead of
 Scenarios should be designed in a way that the output files remain equal unless
 a different behavior of the Oasis CLI is expected.
 
-## Static examples
+## Static Examples
 
 If you do not want the example to be executed, but you simply want to store
 Oasis CLI execution snippets for example to be included in the documentation,

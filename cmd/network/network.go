@@ -52,7 +52,6 @@ func init() {
 	Cmd.AddCommand(addLocalCmd)
 	Cmd.AddCommand(governanceProposalCmd)
 	Cmd.AddCommand(listCmd)
-	Cmd.AddCommand(infoCmd)
 	Cmd.AddCommand(rmCmd)
 	Cmd.AddCommand(setDefaultCmd)
 	Cmd.AddCommand(setRPCCmd)

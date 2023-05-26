@@ -362,10 +362,7 @@ func PrintTransaction(npa *NPASelection, tx interface{}) {
 	PrintTransactionRaw(npa, tx)
 
 	fmt.Println()
-	fmt.Printf("Network:  %s", npa.NetworkName)
-	if len(npa.Network.Description) > 0 {
-		fmt.Printf(" (%s)", npa.Network.Description)
-	}
+	fmt.Printf("Network:  %s", npa.PrettyPrintNetwork())
 
 	fmt.Println()
 	if isRuntimeTx(tx) && npa.ParaTime != nil {

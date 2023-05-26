@@ -4,13 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
+	consensusPretty "github.com/oasisprotocol/oasis-core/go/common/prettyprint"
 	registry "github.com/oasisprotocol/oasis-core/go/registry/api"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
+	"github.com/oasisprotocol/oasis-core/go/staking/api/token"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
@@ -19,20 +22,22 @@ import (
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
-type registrySelector int
+type propertySelector int
 
 const (
-	selInvalid registrySelector = iota
+	selInvalid propertySelector = iota
 	selEntities
 	selNodes
 	selRuntimes
 	selValidators
+	selNativeToken
+	selGasCosts
 )
 
 var showCmd = &cobra.Command{
-	Use:     "show { <id> | entities | nodes | runtimes | validators }",
-	Short:   "Show entry in the network's registry",
-	Long:    "Show entry in the network's registry by ID or all entries of a specified kind",
+	Use:     "show { <id> | entities | nodes | runtimes | validators | native-token | gas-costs }",
+	Short:   "Show network properties",
+	Long:    "Show network property stored in the registry, scheduler, genesis document or chain. Query by ID, hash or a specified kind.",
 	Args:    cobra.ExactArgs(1),
 	Aliases: []string{"s"},
 	Run: func(cmd *cobra.Command, args []string) {
@@ -123,7 +128,7 @@ var showCmd = &cobra.Command{
 			}
 
 			// Probably don't need to bother querying the runtimes by address.
-		case registrySelector:
+		case propertySelector:
 			switch v {
 			case selEntities:
 				entities, err := registryConn.GetEntities(ctx, height)
@@ -153,14 +158,28 @@ var showCmd = &cobra.Command{
 				}
 				return
 			case selValidators:
-				// Yes, this is a scheduler query, not a registry query
-				// but this also is a reasonable place for this.
 				schedulerConn := consensusConn.Scheduler()
 				validators, err := schedulerConn.GetValidators(ctx, height)
 				cobra.CheckErr(err)
 				for _, validator := range validators {
 					err = prettyPrint(validator)
 					cobra.CheckErr(err)
+				}
+				return
+			case selNativeToken:
+				stakingConn := consensusConn.Staking()
+				showNativeToken(ctx, height, npa, stakingConn)
+				return
+			case selGasCosts:
+				stakingConn := consensusConn.Staking()
+				consensusParams, err := stakingConn.ConsensusParameters(ctx, height)
+				cobra.CheckErr(err)
+
+				fmt.Printf("Gas costs for network %s:", npa.PrettyPrintNetwork())
+				fmt.Println()
+				for kind, cost := range consensusParams.GasCosts {
+					fmt.Printf("  - %-26s %d", kind+":", cost)
+					fmt.Println()
 				}
 				return
 			default:
@@ -196,7 +215,7 @@ func parseIdentifier(
 	return nil, fmt.Errorf("unrecognized id: '%s'", s)
 }
 
-func selectorFromString(s string) registrySelector {
+func selectorFromString(s string) propertySelector {
 	switch strings.ToLower(strings.TrimSpace(s)) {
 	case "entities":
 		return selEntities
@@ -206,11 +225,94 @@ func selectorFromString(s string) registrySelector {
 		return selRuntimes
 	case "validators":
 		return selValidators
+	case "native-token":
+		return selNativeToken
+	case "gas-costs":
+		return selGasCosts
 	}
 	return selInvalid
 }
 
+func showNativeToken(ctx context.Context, height int64, npa *common.NPASelection, stakingConn staking.Backend) {
+	fmt.Printf("%-25s %s", "Network:", npa.PrettyPrintNetwork())
+	fmt.Println()
+
+	tokenSymbol, err := stakingConn.TokenSymbol(ctx)
+	cobra.CheckErr(err)
+	tokenValueExponent, err := stakingConn.TokenValueExponent(ctx)
+	cobra.CheckErr(err)
+
+	ctx = context.WithValue(
+		ctx,
+		consensusPretty.ContextKeyTokenSymbol,
+		tokenSymbol,
+	)
+	ctx = context.WithValue(
+		ctx,
+		consensusPretty.ContextKeyTokenValueExponent,
+		tokenValueExponent,
+	)
+
+	fmt.Printf("%-25s %s", "Token's ticker symbol:", tokenSymbol)
+	fmt.Println()
+	fmt.Printf("%-25s %d", "Token's base-10 exponent:", tokenValueExponent)
+	fmt.Println()
+
+	totalSupply, err := stakingConn.TotalSupply(ctx, height)
+	cobra.CheckErr(err)
+	fmt.Printf("%-25s ", "Total supply:")
+	token.PrettyPrintAmount(ctx, *totalSupply, os.Stdout)
+	fmt.Println()
+
+	commonPool, err := stakingConn.CommonPool(ctx, height)
+	cobra.CheckErr(err)
+	fmt.Printf("%-25s ", "Common pool:")
+	token.PrettyPrintAmount(ctx, *commonPool, os.Stdout)
+	fmt.Println()
+
+	lastBlockFees, err := stakingConn.LastBlockFees(ctx, height)
+	cobra.CheckErr(err)
+	fmt.Printf("%-25s ", "Last block fees:")
+	token.PrettyPrintAmount(ctx, *lastBlockFees, os.Stdout)
+	fmt.Println()
+
+	governanceDeposits, err := stakingConn.GovernanceDeposits(ctx, height)
+	cobra.CheckErr(err)
+	fmt.Printf("%-25s ", "Governance deposits:")
+	token.PrettyPrintAmount(ctx, *governanceDeposits, os.Stdout)
+	fmt.Println()
+
+	consensusParams, err := stakingConn.ConsensusParameters(ctx, height)
+	cobra.CheckErr(err)
+
+	fmt.Printf("%-25s %d epoch(s)", "Debonding interval:", consensusParams.DebondingInterval)
+	fmt.Println()
+
+	fmt.Println("\n=== STAKING THRESHOLDS ===")
+	thresholdsToQuery := []staking.ThresholdKind{
+		staking.KindEntity,
+		staking.KindNodeValidator,
+		staking.KindNodeCompute,
+		staking.KindNodeKeyManager,
+		staking.KindRuntimeCompute,
+		staking.KindRuntimeKeyManager,
+	}
+	for _, kind := range thresholdsToQuery {
+		threshold, err := stakingConn.Threshold(
+			ctx,
+			&staking.ThresholdQuery{
+				Kind:   kind,
+				Height: height,
+			},
+		)
+		cobra.CheckErr(err)
+		fmt.Printf("  %-19s ", kind.String()+":")
+		token.PrettyPrintAmount(ctx, *threshold, os.Stdout)
+		fmt.Println()
+	}
+}
+
 func init() {
-	showCmd.Flags().AddFlagSet(common.SelectorNPFlags)
+	showCmd.Flags().AddFlagSet(common.SelectorNFlags)
 	showCmd.Flags().AddFlagSet(common.HeightFlag)
 }

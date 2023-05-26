@@ -93,6 +93,15 @@ func GetNPASelection(cfg *cliConfig.Config) *NPASelection {
 	return &s
 }
 
+// PrettyPrintNetwork formats the network name and description, if one exists.
+func (npa *NPASelection) PrettyPrintNetwork() (out string) {
+	out = npa.NetworkName
+	if len(npa.Network.Description) > 0 {
+		out += fmt.Sprintf(" (%s)", npa.Network.Description)
+	}
+	return
+}
+
 func init() {
 	SelectorFlags = flag.NewFlagSet("", flag.ContinueOnError)
 	SelectorFlags.StringVar(&selectedNetwork, "network", "", "explicitly set network to use")

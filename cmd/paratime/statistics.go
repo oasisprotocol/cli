@@ -9,7 +9,6 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
@@ -28,17 +27,7 @@ import (
 	"github.com/oasisprotocol/cli/metadata"
 )
 
-var (
-	writeCSV bool
-	fileCSV  string
-
-	csvFlags *flag.FlagSet = func() *flag.FlagSet {
-		fs := flag.NewFlagSet("", flag.ContinueOnError)
-		fs.BoolVar(&writeCSV, "write-csv", false, "write stats to CSV")
-		fs.StringVar(&fileCSV, "csv-file", "", "custom CSV file path")
-		return fs
-	}()
-)
+var fileCSV string
 
 type runtimeStats struct {
 	// Rounds.
@@ -464,14 +453,12 @@ var statsCmd = &cobra.Command{
 		stats.prepareEntitiesOutput(entityMetadataLookup)
 		stats.printStats()
 
-		if !writeCSV {
+		if fileCSV == "" {
+			stats.printEntityStats()
 			return
 		}
 
 		// Also save entity stats in a csv.
-		if fileCSV == "" {
-			fileCSV = fmt.Sprintf("runtime-%s-%d-%d-stats.csv", runtimeID, startHeight, endHeight)
-		}
 		fout, err := os.Create(fileCSV)
 		cobra.CheckErr(err)
 		defer fout.Close()
@@ -561,7 +548,9 @@ func (s *runtimeStats) printStats() {
 	fmt.Println()
 	fmt.Printf("%-26s %d", "Suspended:", s.suspendedRounds)
 	fmt.Println()
+}
 
+func (s *runtimeStats) printEntityStats() {
 	fmt.Println("\n=== ENTITY STATISTICS ===")
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
@@ -573,5 +562,5 @@ func (s *runtimeStats) printStats() {
 
 func init() {
 	statsCmd.Flags().AddFlagSet(common.SelectorNPFlags)
-	statsCmd.Flags().AddFlagSet(csvFlags)
+	statsCmd.Flags().StringVarP(&fileCSV, "output-file", "o", "", "output statistics into specified CSV file")
 }

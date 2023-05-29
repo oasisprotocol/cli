@@ -236,7 +236,12 @@ func newAccount(cfg *accountConfig) (wallet.Account, error) {
 }
 
 func (a *ledgerAccount) ConsensusSigner() coreSignature.Signer {
-	return a.coreSigner
+	switch a.cfg.Algorithm {
+	case wallet.AlgorithmEd25519Adr8, wallet.AlgorithmEd25519Legacy:
+		return a.coreSigner
+	}
+
+	return nil
 }
 
 func (a *ledgerAccount) Signer() signature.Signer {

@@ -68,6 +68,6 @@ var undelegateCmd = &cobra.Command{
 }
 
 func init() {
-	undelegateCmd.Flags().AddFlagSet(common.SelectorNAFlags)
+	undelegateCmd.Flags().AddFlagSet(common.SelectorFlags)
 	undelegateCmd.Flags().AddFlagSet(common.TxFlags)
 }

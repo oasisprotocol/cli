@@ -67,6 +67,6 @@ var delegateCmd = &cobra.Command{
 }
 
 func init() {
-	delegateCmd.Flags().AddFlagSet(common.SelectorNAFlags)
+	delegateCmd.Flags().AddFlagSet(common.SelectorFlags)
 	delegateCmd.Flags().AddFlagSet(common.TxFlags)
 }

@@ -16,7 +16,7 @@ import (
 var burnCmd = &cobra.Command{
 	Use:   "burn <amount>",
 	Short: "Burn given amount of tokens",
-	Args:  cobra.ExactArgs(2),
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
@@ -37,10 +37,6 @@ var burnCmd = &cobra.Command{
 		}
 
 		acc := common.LoadAccount(cfg, npa.AccountName)
-
-		if npa.ParaTime != nil {
-			cobra.CheckErr("burns within ParaTimes are not supported; use --no-paratime")
-		}
 
 		// Consensus layer transfer.
 		amount, err := helpers.ParseConsensusDenomination(npa.Network, amountStr)

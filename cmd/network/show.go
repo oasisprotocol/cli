@@ -35,7 +35,7 @@ const (
 )
 
 var showCmd = &cobra.Command{
-	Use:     "show { <id> | entities | nodes | runtimes | validators | native-token | gas-costs }",
+	Use:     "show { <id> | entities | nodes | paratimes | validators | native-token | gas-costs }",
 	Short:   "Show network properties",
 	Long:    "Show network property stored in the registry, scheduler, genesis document or chain. Query by ID, hash or a specified kind.",
 	Args:    cobra.ExactArgs(1),
@@ -221,7 +221,7 @@ func selectorFromString(s string) propertySelector {
 		return selEntities
 	case "nodes":
 		return selNodes
-	case "runtimes", "paratimes":
+	case "paratimes", "runtimes":
 		return selRuntimes
 	case "validators":
 		return selValidators

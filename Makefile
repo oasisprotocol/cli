@@ -10,12 +10,12 @@ all: build
 
 # Build.
 build:
-	@$(ECHO) "$(MAGENTA)*** Building Go code...$(OFF)"
+	@$(PRINT) "$(MAGENTA)*** Building Go code...$(OFF)\n"
 	@$(GO) build -v -o oasis $(GOFLAGS) $(GO_EXTRA_FLAGS)
 
 # Format code.
 fmt:
-	@$(ECHO) "$(CYAN)*** Running Go formatters...$(OFF)"
+	@$(PRINT) "$(CYAN)*** Running Go formatters...$(OFF)"
 	@gofumpt -w .
 	@goimports -w -local github.com/oasisprotocol/cli .
 
@@ -23,19 +23,19 @@ fmt:
 lint-targets := lint-go lint-docs lint-git lint-go-mod-tidy
 
 lint-go:
-	@$(ECHO) "$(CYAN)*** Running Go linters...$(OFF)"
+	@$(PRINT) "$(CYAN)*** Running Go linters...$(OFF)"
 	@env -u GOPATH golangci-lint run --verbose
 
 lint-git:
-	@$(ECHO) "$(CYAN)*** Running gitlint...$(OFF)"
+	@$(PRINT) "$(CYAN)*** Running gitlint...$(OFF)"
 	@$(CHECK_GITLINT)
 
 lint-docs:
-	@$(ECHO) "$(CYAN)*** Running markdownlint-cli...$(OFF)"
+	@$(PRINT) "$(CYAN)*** Running markdownlint-cli...$(OFF)"
 	@npx --yes markdownlint-cli '**/*.md'
 
 lint-go-mod-tidy:
-	@$(ECHO) "$(CYAN)*** Checking go mod tidy...$(OFF)"
+	@$(PRINT) "$(CYAN)*** Checking go mod tidy...$(OFF)"
 	@$(ENSURE_GIT_CLEAN)
 	@$(CHECK_GO_MOD_TIDY)
 
@@ -49,14 +49,14 @@ release-build:
 test-targets := test-unit
 
 test-unit:
-	@$(ECHO) "$(CYAN)*** Running unit tests...$(OFF)"
+	@$(PRINT) "$(CYAN)*** Running unit tests...$(OFF)"
 	@$(GO) test -v -race ./...
 
 test: $(test-targets)
 
 # Clean.
 clean:
-	@$(ECHO) "$(CYAN)*** Cleaning up ...$(OFF)"
+	@$(PRINT) "$(CYAN)*** Cleaning up ...$(OFF)"
 	@$(GO) clean -x
 	rm -f oasis
 	$(GO) clean -testcache

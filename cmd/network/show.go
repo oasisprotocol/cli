@@ -88,8 +88,13 @@ var showCmd = &cobra.Command{
 				return
 			}
 
-			if node, err := registryConn.GetNode(ctx, idQuery); err == nil {
-				err = prettyPrint(node)
+			if nodeStatus, err := registryConn.GetNodeStatus(ctx, idQuery); err == nil {
+				if node, err2 := registryConn.GetNode(ctx, idQuery); err2 == nil {
+					err = prettyPrint(node)
+					cobra.CheckErr(err)
+				}
+
+				err = prettyPrint(nodeStatus)
 				cobra.CheckErr(err)
 				return
 			}

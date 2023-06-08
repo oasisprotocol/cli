@@ -1,4 +1,4 @@
-package network
+package governance
 
 import (
 	"context"
@@ -22,8 +22,8 @@ import (
 	"github.com/oasisprotocol/cli/metadata"
 )
 
-var governanceProposalCmd = &cobra.Command{
-	Use:   "governance-proposal <proposal-id>",
+var govShowCmd = &cobra.Command{
+	Use:   "show <proposal-id>",
 	Short: "Show proposal status by ID",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
@@ -292,6 +292,6 @@ func (p entityStakes) Less(i, j int) bool { return p[i].Stake.Cmp(&p[j].Stake) <
 func (p entityStakes) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 func init() {
-	governanceProposalCmd.Flags().AddFlagSet(common.SelectorNFlags)
-	governanceProposalCmd.Flags().AddFlagSet(common.HeightFlag)
+	govShowCmd.Flags().AddFlagSet(common.SelectorNFlags)
+	govShowCmd.Flags().AddFlagSet(common.HeightFlag)
 }

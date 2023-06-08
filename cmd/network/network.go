@@ -50,7 +50,6 @@ func networkDetailsFromSurvey(net *config.Network) {
 func init() {
 	Cmd.AddCommand(addCmd)
 	Cmd.AddCommand(addLocalCmd)
-	Cmd.AddCommand(governanceProposalCmd)
 	Cmd.AddCommand(listCmd)
 	Cmd.AddCommand(rmCmd)
 	Cmd.AddCommand(setDefaultCmd)

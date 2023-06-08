@@ -10,17 +10,15 @@ ifdef ISATTY
 	RED := \e[0;31m
 	OFF := \e[0m
 	# Use external echo command since the built-in echo doesn't support '-e'.
-	ECHO_CMD := /bin/echo -e
 else
 	MAGENTA := ""
 	CYAN := ""
 	RED := ""
 	OFF := ""
-	ECHO_CMD := echo
 endif
 
 # Output messages to stderr instead stdout.
-ECHO := $(ECHO_CMD) 1>&2
+PRINT := printf 1>&2
 
 # Name of git remote pointing to the canonical upstream git repository, i.e.
 # git@github.com:oasisprotocol/cli.git.
@@ -67,7 +65,7 @@ export GOLDFLAGS ?= "$(GOLDFLAGS_VERSION)"
 # Helper that ensures the git workspace is clean.
 define ENSURE_GIT_CLEAN =
 	if [[ ! -z `git status --porcelain` ]]; then \
-		$(ECHO) "$(RED)Error: Git workspace is dirty.$(OFF)"; \
+		$(PRINT) "$(RED)Error: Git workspace is dirty.$(OFF)\n"; \
 		exit 1; \
 	fi
 endef
@@ -78,7 +76,7 @@ endef
 define CHECK_GO_MOD_TIDY =
     $(GO) mod tidy; \
     if [[ ! -z `git status --porcelain go.mod go.sum` ]]; then \
-        $(ECHO) "$(RED)Error: The following changes detected after running 'go mod tidy':$(OFF)"; \
+        $(PRINT) "$(RED)Error: The following changes detected after running 'go mod tidy':$(OFF)\n"; \
         git diff go.mod go.sum; \
         exit 1; \
     fi
@@ -91,6 +89,6 @@ endef
 define CHECK_GITLINT =
 	BRANCH=$(OASIS_CLI_GIT_ORIGIN_REMOTE)/$(RELEASE_BRANCH); \
 	COMMIT_SHA=`git rev-parse $$BRANCH` && \
-	$(ECHO) "$(CYAN)*** Running gitlint for commits from $$BRANCH ($${COMMIT_SHA:0:7})... $(OFF)"; \
+	$(PRINT) "$(CYAN)*** Running gitlint for commits from $$BRANCH ($${COMMIT_SHA:0:7})... $(OFF)\n"; \
 	gitlint --commits $$BRANCH..HEAD
 endef

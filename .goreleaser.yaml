@@ -4,6 +4,10 @@ before:
   hooks:
     - go mod tidy
 
+universal_binaries:
+  - replace: true
+    name_template: oasis
+
 builds:
   - binary: oasis
     flags:
@@ -11,10 +15,10 @@ builds:
     ldflags:
       - -buildid=
       - "{{.Env.GOLDFLAGS_VERSION}}"
-    goos:
-      - linux
-    goarch:
-      - amd64
+    targets:
+      - linux_amd64
+      - darwin_amd64
+      - darwin_arm64
 
 archives:
   - name_template: "{{replace .ProjectName \" \" \"_\" | tolower}}_{{.Version}}_{{.Os}}_{{.Arch}}"

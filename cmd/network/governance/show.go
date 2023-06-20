@@ -157,6 +157,15 @@ var govShowCmd = &cobra.Command{
 
 		// Display the high-level summary of the proposal status.
 
+		fmt.Printf("Network:     %s", npa.PrettyPrintNetwork())
+		fmt.Println()
+
+		fmt.Printf("Proposal ID: %d", proposalID)
+		fmt.Println()
+
+		fmt.Printf("Status:      %s", proposal.State)
+		fmt.Println()
+
 		switch proposal.State {
 		case governance.StateActive:
 			// Close the proposal to get simulated results.
@@ -174,19 +183,16 @@ var govShowCmd = &cobra.Command{
 			)
 			cobra.CheckErr(err)
 
-			fmt.Println(
-				"Proposal active, vote outcome if ended now:",
-				proposal.State,
-			)
-			fmt.Printf(
-				"Voting ends in %d epochs\n",
-				proposal.ClosesAt-epoch,
-			)
+			fmt.Printf("Vote outcome if ended now: %s", proposal.State)
+			fmt.Println()
+			fmt.Printf("Voting ends in %d epochs.", proposal.ClosesAt-epoch)
+			fmt.Println()
 		case governance.StatePassed, governance.StateFailed, governance.StateRejected:
-			fmt.Printf("Proposal %s, results: %v\n",
-				proposal.State,
-				proposal.Results,
-			)
+			fmt.Println("Results:")
+			for _, v := range []governance.Vote{governance.VoteYes, governance.VoteNo, governance.VoteAbstain} {
+				fmt.Printf("  - %s: %s", v, proposal.Results[v])
+				fmt.Println()
+			}
 		default:
 			cobra.CheckErr(fmt.Errorf("unexpected proposal state: %v", proposal.State))
 		}
@@ -198,12 +204,16 @@ var govShowCmd = &cobra.Command{
 		voteStakePercentage := new(big.Float).SetInt(votedStake.Clone().ToBigInt())
 		voteStakePercentage = voteStakePercentage.Mul(voteStakePercentage, new(big.Float).SetInt64(100))
 		voteStakePercentage = voteStakePercentage.Quo(voteStakePercentage, new(big.Float).SetInt(totalVotingStake.ToBigInt()))
+		fmt.Println()
+		fmt.Println("=== VOTED STAKE ===")
+		fmt.Printf("Total voting stake: %s", totalVotingStake)
+		fmt.Println()
 		fmt.Printf(
-			"\nVoted stake: %s (%.2f%%), total voting stake: %s\n",
+			"Voted stake:        %s (%.2f%%)",
 			votedStake,
 			voteStakePercentage,
-			totalVotingStake,
 		)
+		fmt.Println()
 
 		votedYes := proposal.Results[governance.VoteYes]
 		votedYesPercentage := new(big.Float).SetInt(votedYes.Clone().ToBigInt())
@@ -212,21 +222,29 @@ var govShowCmd = &cobra.Command{
 			votedYesPercentage = votedYesPercentage.Quo(votedYesPercentage, new(big.Float).SetInt(votedStake.ToBigInt()))
 		}
 		fmt.Printf(
-			"Voted yes stake: %s (%.2f%%), voted stake: %s, threshold: %d%%\n",
+			"Voted yes stake:    %s (%.2f%%)",
 			votedYes,
 			votedYesPercentage,
-			votedStake,
+		)
+		fmt.Println()
+		fmt.Printf(
+			"Threshold:          %d%%",
 			governanceParams.StakeThreshold,
 		)
+		fmt.Println()
 
 		// Try to figure out the human readable names for all the entities.
 		fromRegistry, err := metadata.EntitiesFromRegistry(ctx)
 		if err != nil {
-			fmt.Printf("\nWarning: failed to query metadata registry: %v\n", err)
+			fmt.Println()
+			fmt.Printf("Warning: failed to query metadata registry: %v", err)
+			fmt.Println()
 		}
 		fromOasisscan, err := metadata.EntitiesFromOasisscan(ctx)
 		if err != nil {
-			fmt.Printf("\nWarning: failed to query oasisscan: %v\n", err)
+			fmt.Println()
+			fmt.Printf("Warning: failed to query oasisscan: %v", err)
+			fmt.Println()
 		}
 
 		getName := func(addr staking.Address) string {
@@ -247,23 +265,28 @@ var govShowCmd = &cobra.Command{
 			return "<none>"
 		}
 
-		fmt.Println("\nValidators voted:")
+		fmt.Println()
+		fmt.Println("=== VALIDATORS VOTED ===")
 		votersList := entitiesByDescendingStake(voters)
-		for _, val := range votersList {
+		for i, val := range votersList {
 			name := getName(val.Address)
 			stakePercentage := new(big.Float).SetInt(val.Stake.Clone().ToBigInt())
 			stakePercentage = stakePercentage.Mul(stakePercentage, new(big.Float).SetInt64(100))
 			stakePercentage = stakePercentage.Quo(stakePercentage, new(big.Float).SetInt(totalVotingStake.ToBigInt()))
-			fmt.Printf("%s,%s,%s (%.2f%%)\n", val.Address, name, val.Stake, stakePercentage)
+			fmt.Printf("  %d. %s,%s,%s (%.2f%%)", i+1, val.Address, name, val.Stake, stakePercentage)
+			fmt.Println()
 		}
-		fmt.Println("\nValidators not voted:")
+
+		fmt.Println()
+		fmt.Println("=== VALIDATORS NOT VOTED ===")
 		nonVotersList := entitiesByDescendingStake(nonVoters)
-		for _, val := range nonVotersList {
+		for i, val := range nonVotersList {
 			name := getName(val.Address)
 			stakePercentage := new(big.Float).SetInt(val.Stake.Clone().ToBigInt())
 			stakePercentage = stakePercentage.Mul(stakePercentage, new(big.Float).SetInt64(100))
 			stakePercentage = stakePercentage.Quo(stakePercentage, new(big.Float).SetInt(totalVotingStake.ToBigInt()))
-			fmt.Printf("%s,%s,%s (%.2f%%)\n", val.Address, name, val.Stake, stakePercentage)
+			fmt.Printf("  %d. %s,%s,%s (%.2f%%)", i+1, val.Address, name, val.Stake, stakePercentage)
+			fmt.Println()
 		}
 	},
 }

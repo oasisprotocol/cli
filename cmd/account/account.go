@@ -2,8 +2,6 @@ package account
 
 import (
 	"github.com/spf13/cobra"
-
-	"github.com/oasisprotocol/cli/cmd/account/governance"
 )
 
 var Cmd = &cobra.Command{
@@ -25,5 +23,4 @@ func init() {
 	Cmd.AddCommand(transferCmd)
 	Cmd.AddCommand(undelegateCmd)
 	Cmd.AddCommand(withdrawCmd)
-	Cmd.AddCommand(governance.Cmd)
 }

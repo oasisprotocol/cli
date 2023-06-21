@@ -241,6 +241,8 @@ func convertPrettyStruct(in interface{}) (interface{}, error) {
 	}
 
 	switch v.Kind() {
+	case reflect.Invalid:
+		return nil, nil
 	case reflect.Slice:
 		// Walk slices.
 		if v.Type().Elem().Kind() == reflect.Uint8 {

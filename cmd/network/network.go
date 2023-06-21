@@ -5,6 +5,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
+
+	"github.com/oasisprotocol/cli/cmd/network/governance"
 )
 
 // Cmd is the network sub-command set root.
@@ -50,7 +52,7 @@ func networkDetailsFromSurvey(net *config.Network) {
 func init() {
 	Cmd.AddCommand(addCmd)
 	Cmd.AddCommand(addLocalCmd)
-	Cmd.AddCommand(governanceProposalCmd)
+	Cmd.AddCommand(governance.Cmd)
 	Cmd.AddCommand(listCmd)
 	Cmd.AddCommand(rmCmd)
 	Cmd.AddCommand(setDefaultCmd)

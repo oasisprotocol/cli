@@ -6,6 +6,8 @@ go 1.19
 // the maintainers merge the PR: https://github.com/spf13/cast/pull/144
 replace github.com/spf13/cast => github.com/oasisprotocol/cast v0.0.0-20220606122631-eba453e69641
 
+replace github.com/oasisprotocol/curve25519-voi => ../curve25519-voi
+
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/adrg/xdg v0.4.0

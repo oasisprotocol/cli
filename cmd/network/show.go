@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	consensusPretty "github.com/oasisprotocol/oasis-core/go/common/prettyprint"
+	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	registry "github.com/oasisprotocol/oasis-core/go/registry/api"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 	"github.com/oasisprotocol/oasis-core/go/staking/api/token"
@@ -182,8 +184,15 @@ var showCmd = &cobra.Command{
 
 				fmt.Printf("Gas costs for network %s:", npa.PrettyPrintNetwork())
 				fmt.Println()
-				for kind, cost := range consensusParams.GasCosts {
-					fmt.Printf("  - %-26s %d", kind+":", cost)
+
+				// Print costs ordered by kind.
+				kinds := make([]string, 0, len(consensusParams.GasCosts))
+				for k := range consensusParams.GasCosts {
+					kinds = append(kinds, string(k))
+				}
+				sort.Strings(kinds)
+				for _, k := range kinds {
+					fmt.Printf("  - %-26s %d", k+":", consensusParams.GasCosts[transaction.Op(k)])
 					fmt.Println()
 				}
 				return

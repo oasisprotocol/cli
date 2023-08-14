@@ -1,0 +1,132 @@
+[networks]
+default = 'testnet'
+
+[networks.mainnet]
+chain_context = 'b11b369e0da5bb230b220127f5e7b242d385ef8c6f54906243f30af63c815535'
+description = ''
+rpc = 'grpc.oasis.dev:443'
+
+[networks.mainnet.denomination]
+decimals = 9
+symbol = 'ROSE'
+
+[networks.mainnet.paratimes]
+default = 'emerald'
+
+[networks.mainnet.paratimes.cipher]
+description = ''
+id = '000000000000000000000000000000000000000000000000e199119c992377cb'
+
+[networks.mainnet.paratimes.cipher.denominations]
+[networks.mainnet.paratimes.cipher.denominations._]
+decimals = 9
+symbol = 'ROSE'
+
+[networks.mainnet.paratimes.emerald]
+description = ''
+id = '000000000000000000000000000000000000000000000000e2eaa99fc008f87f'
+
+[networks.mainnet.paratimes.emerald.denominations]
+[networks.mainnet.paratimes.emerald.denominations._]
+decimals = 18
+symbol = 'ROSE'
+
+[networks.mainnet.paratimes.sapphire]
+description = ''
+id = '000000000000000000000000000000000000000000000000f80306c9858e7279'
+
+[networks.mainnet.paratimes.sapphire.denominations]
+[networks.mainnet.paratimes.sapphire.denominations._]
+decimals = 18
+symbol = 'ROSE'
+
+[networks.testnet]
+chain_context = '50304f98ddb656620ea817cc1446c401752a05a249b36c9b90dba4616829977a'
+description = ''
+rpc = 'testnet.grpc.oasis.dev:443'
+
+[networks.testnet.denomination]
+decimals = 9
+symbol = 'TEST'
+
+[networks.testnet.paratimes]
+default = 'sapphire'
+
+[networks.testnet.paratimes.cipher]
+description = ''
+id = '0000000000000000000000000000000000000000000000000000000000000000'
+
+[networks.testnet.paratimes.cipher.denominations]
+[networks.testnet.paratimes.cipher.denominations._]
+decimals = 9
+symbol = 'TEST'
+
+[networks.testnet.paratimes.emerald]
+description = ''
+id = '00000000000000000000000000000000000000000000000072c8215e60d5bca7'
+
+[networks.testnet.paratimes.emerald.denominations]
+[networks.testnet.paratimes.emerald.denominations._]
+decimals = 18
+symbol = 'TEST'
+
+[networks.testnet.paratimes.sapphire]
+description = ''
+id = '000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c'
+
+[networks.testnet.paratimes.sapphire.denominations]
+[networks.testnet.paratimes.sapphire.denominations._]
+decimals = 18
+symbol = 'TEST'
+
+[wallets]
+default = 'oscar'
+
+[wallets.emma]
+address = 'oasis1qph93wnfw8shu04pqyarvtjy4lytz3hp0c7tqnqh'
+algorithm = 'secp256k1-raw'
+description = ''
+kind = 'file'
+number = 0
+
+[wallets.eric]
+address = 'oasis1qzplmfaeywvtc2qnylyhk0uzcxr4y5s3euhaug7q'
+algorithm = 'secp256k1-bip44'
+description = ''
+kind = 'file'
+number = 0
+
+[wallets.eugene]
+address = 'oasis1qrvzxld9rz83wv92lvnkpmr30c77kj2tvg0pednz'
+algorithm = 'secp256k1-bip44'
+description = ''
+kind = 'file'
+number = 0
+
+[wallets.lenny]
+address = 'oasis1qrmw4rhvp8ksj3yx6p2ftnkz864muc3re5jlgall'
+algorithm = 'secp256k1-bip44'
+description = ''
+kind = 'ledger'
+number = 3
+
+[wallets.logan]
+address = 'oasis1qpl4axynedmdrrgrg7dpw3yxc4a8crevr5dkuksl'
+algorithm = 'ed25519-legacy'
+description = ''
+kind = 'ledger'
+number = 0
+
+[wallets.orlando]
+address = 'oasis1qq84sc4q0shp5c5klwklqu59evz2mg59hveg7dqx'
+algorithm = 'ed25519-adr8'
+description = ''
+kind = 'file'
+number = 0
+
+[wallets.oscar]
+address = 'oasis1qp87hflmelnpqhzcqcw8rhzakq4elj7jzv090p3e'
+algorithm = 'ed25519-adr8'
+description = ''
+kind = 'file'
+number = 0

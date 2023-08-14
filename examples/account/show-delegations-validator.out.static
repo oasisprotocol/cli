@@ -1,0 +1,65 @@
+Address: oasis1qz8w4erh0kkwpmdtwd3dt9ueaz9hmzfpecjhd7t4
+Nonce: 17
+
+=== CONSENSUS LAYER (testnet) ===
+  Total: 1300.598418401 TEST
+  Available: 52.73923316 TEST
+
+  Active Delegations from this Account:
+    Total: 1247.859185241 TEST
+
+    Delegations:
+      - To:     oasis1qz8w4erh0kkwpmdtwd3dt9ueaz9hmzfpecjhd7t4 (self)
+        Amount: 1247.859185241 TEST (1167021437369 shares)
+
+  Active Delegations to this Account:
+    Total: 1833.451690691 TEST
+ (1714678589317 shares)
+
+    Delegations:
+      - From:   oasis1qz8w4erh0kkwpmdtwd3dt9ueaz9hmzfpecjhd7t4 (self)
+        Amount: 1247.859185241 TEST (1167021437369 shares)
+      - From:   oasis1qztnau4t75cf8wh3truwtl7awvnkwe4st5l25yfn
+        Amount: 148.289115949 TEST (138682777102 shares)
+      - From:   oasis1qrvguq055xh42yjl84yn2h5dhm59fkzg9st0mu90
+        Amount: 116.290596782 TEST (108757158672 shares)
+      - From:   oasis1qzhulmesqkcu23r0h5hfslwelud46mkm25zh7uqq
+        Amount: 111.30081746 TEST (104090622972 shares)
+      - From:   oasis1qq05qnywdzz3m45dzqxuek0p4a5dxr86rgxlxc58
+        Amount: 104.855987628 TEST (98063296601 shares)
+      - From:   oasis1qzpvsgt56jxz324dxjv5272mz4j6kfadd5ur7f98
+        Amount: 104.855987628 TEST (98063296601 shares)
+
+  Commission Schedule:
+    Rates:
+      (1) start: epoch 15883
+          rate:  7.0%
+      (2) start: epoch 15994
+          rate:  11.0%
+      (3) start: epoch 16000
+          rate:  14.0%
+      (4) start: epoch 16134
+          rate:  18.0%
+    Rate Bounds:
+      (1) start:        epoch 15883
+          minimum rate: 0.0%
+          maximum rate: 10.0%
+      (2) start:        epoch 15993
+          minimum rate: 0.0%
+          maximum rate: 20.0%
+
+  Stake Accumulator:
+    Claims:
+      - Name: registry.RegisterEntity
+        Staking Thresholds:
+          - Global: entity
+      - Name: registry.RegisterNode.LAdHWnCkjFR5NUkFHVpfGuKFfZW1Cqjzu6wTFY6v2JI=
+        Staking Thresholds:
+          - Global: node-validator
+      - Name: registry.RegisterNode.xk58fx5ys6CSO33ngMQkgOL5UUHSgOSt0QbqWGGuEF8=
+        Staking Thresholds:
+          - Global: node-compute
+        Staking Thresholds:
+          - Global: node-compute
+        Staking Thresholds:
+          - Global: node-compute

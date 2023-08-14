@@ -1,0 +1,16 @@
+Network:                  mainnet
+Token's ticker symbol:    ROSE
+Token's base-10 exponent: 9
+Total supply:             10000000000.0 ROSE
+Common pool:              853509298.875305407 ROSE
+Last block fees:          0.0 ROSE
+Governance deposits:      0.0 ROSE
+Debonding interval:       336 epoch(s)
+
+=== STAKING THRESHOLDS ===
+  entity:             100.0 ROSE
+  node-validator:     100.0 ROSE
+  node-compute:       100.0 ROSE
+  node-keymanager:    100.0 ROSE
+  runtime-compute:    50000.0 ROSE
+  runtime-keymanager: 50000.0 ROSE

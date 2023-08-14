@@ -1,0 +1,1 @@
+oasis transaction show testtx_unsigned.json --network testnet

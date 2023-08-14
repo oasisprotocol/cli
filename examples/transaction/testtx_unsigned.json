@@ -1,0 +1,9 @@
+{
+  "nonce": 32,
+  "fee": {
+    "amount": "0",
+    "gas": 1265
+  },
+  "method": "staking.Transfer",
+  "body": "omJ0b1UAyND0Wds45cwxynfmbSxEVty+tQJmYW1vdW50RDuaygA="
+}

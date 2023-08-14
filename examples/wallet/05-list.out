@@ -1,0 +1,6 @@
+ACCOUNT  	KIND                      	ADDRESS                                        
+emma     	file (secp256k1-raw)      	oasis1qph93wnfw8shu04pqyarvtjy4lytz3hp0c7tqnqh	
+eugene   	file (secp256k1-bip44:0)  	oasis1qrvzxld9rz83wv92lvnkpmr30c77kj2tvg0pednz	
+lenny (*)	ledger (secp256k1-bip44:3)	oasis1qrmw4rhvp8ksj3yx6p2ftnkz864muc3re5jlgall	
+logan    	ledger (ed25519-legacy:0) 	oasis1qpl4axynedmdrrgrg7dpw3yxc4a8crevr5dkuksl	
+oscar    	file (ed25519-adr8:0)     	oasis1qp87hflmelnpqhzcqcw8rhzakq4elj7jzv090p3e	

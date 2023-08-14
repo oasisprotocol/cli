@@ -1,0 +1,12 @@
+Method: staking.Transfer
+Body:
+  To:     oasis1qrydpazemvuwtnp3efm7vmfvg3tde044qg6cxwzx
+  Amount: 1.0 TEST
+Nonce:  32
+Fee:
+  Amount: 0.0 TEST
+  Gas limit: 1265
+  (gas price: 0.0 TEST per gas unit)
+
+Network:  testnet
+ParaTime: none (consensus layer)

@@ -1,0 +1,1 @@
+oasis transaction sign testtx_unsigned.json --network testnet --account test:alice

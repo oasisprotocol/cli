@@ -1,0 +1,22 @@
+CLI for interacting with the Oasis network
+
+Usage:
+  oasis [command]
+
+Available Commands:
+  account     Account operations
+  addressbook Manage addresses in the local address book
+  completion  Generate the autocompletion script for the specified shell
+  contract    WebAssembly smart contracts operations
+  help        Help about any command
+  network     Consensus layer operations
+  paratime    ParaTime layer operations
+  transaction Raw transaction operations
+  wallet      Manage accounts in the local wallet
+
+Flags:
+      --config string   config file to use
+  -h, --help            help for oasis
+  -v, --version         version for oasis
+
+Use "oasis [command] --help" for more information about a command.

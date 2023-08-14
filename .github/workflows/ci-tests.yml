@@ -43,3 +43,8 @@ jobs:
       - name: Run tests
         run: |
           make test
+      - name: Check examples
+        run: |
+          make clean-examples
+          make examples
+          git diff --exit-code examples

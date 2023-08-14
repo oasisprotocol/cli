@@ -1,0 +1,17 @@
+You are about to sign the following transaction:
+Format: plain
+Method: consensus.Withdraw
+Body:
+  To: oasis1qpxhsf7xnm007csw2acaa7mta2krzpwex5c90qu6
+  Amount: 10.0 TEST
+Authorized signer(s):
+  1. Bx6gOixnxy15tCs09ua5DcKyX9uo2Forb32O6Hyjoc8= (ed25519)
+     Nonce: 0
+Fee:
+  Amount: 0.0011311 TEST
+  Gas limit: 11311
+  (gas price: 0.0000001 TEST per gas unit)
+
+Network:  testnet
+ParaTime: sapphire
+Account:  oscar

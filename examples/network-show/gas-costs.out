@@ -1,0 +1,8 @@
+Gas costs for network mainnet:
+  - add_escrow:                1000
+  - allow:                     1000
+  - amend_commission_schedule: 1000
+  - burn:                      1000
+  - reclaim_escrow:            1000
+  - transfer:                  1000
+  - withdraw:                  1000

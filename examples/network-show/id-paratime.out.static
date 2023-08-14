@@ -1,0 +1,82 @@
+{
+  "v": 3,
+  "id": "000000000000000000000000000000000000000000000000f80306c9858e7279",
+  "entity_id": "TAv9qXjV4yBphnKLJcNkzois1TLoYUjaRPrMfY58Apo=",
+  "genesis": {
+    "state_root": "c672b8d1ef56ed28ab87c3622c5114069bdd3ad7b8f9737498d0c01ecef0967a",
+    "round": 0
+  },
+  "kind": 1,
+  "tee_hardware": 1,
+  "key_manager": "4000000000000000000000000000000000000000000000008c5ea5e49b4bc9ac",
+  "executor": {
+    "group_size": 5,
+    "group_backup_size": 7,
+    "allowed_stragglers": 1,
+    "round_timeout": 2,
+    "max_messages": 256,
+    "min_live_rounds_percent": 90,
+    "min_live_rounds_eval": 20,
+    "max_liveness_fails": 4
+  },
+  "txn_scheduler": {
+    "batch_flush_timeout": 1000000000,
+    "max_batch_size": 1000,
+    "max_batch_size_bytes": 1048576,
+    "propose_batch_timeout": 2
+  },
+  "storage": {
+    "checkpoint_interval": 100000,
+    "checkpoint_num_kept": 2,
+    "checkpoint_chunk_size": 8388608
+  },
+  "admission_policy": {
+    "any_node": {}
+  },
+  "constraints": {
+    "executor": {
+      "backup-worker": {
+        "validator_set": {},
+        "max_nodes": {
+          "limit": 1
+        },
+        "min_pool_size": {
+          "limit": 7
+        }
+      },
+      "worker": {
+        "validator_set": {},
+        "max_nodes": {
+          "limit": 1
+        },
+        "min_pool_size": {
+          "limit": 7
+        }
+      }
+    }
+  },
+  "staking": {
+    "thresholds": {
+      "node-compute": "5000000000000000"
+    },
+    "min_in_message_fee": "0"
+  },
+  "governance_model": "entity",
+  "deployments": [
+    {
+      "version": {
+        "minor": 4
+      },
+      "valid_from": 20944,
+      "tee": "oWhlbmNsYXZlc4GiaW1yX3NpZ25lclggQCXat+vaH77MTjY3YG4CEhTQ9BxtBCL9N4sqi4iBhFlqbXJfZW5jbGF2ZVgg3mqV02+CDfyth1fNyaR8jo3rVp024JOBkBGnjtLPypM="
+    },
+    {
+      "version": {
+        "minor": 5,
+        "patch": 2
+      },
+      "valid_from": 23476,
+      "tee": "oWhlbmNsYXZlc4GiaW1yX3NpZ25lclggQCXat+vaH77MTjY3YG4CEhTQ9BxtBCL9N4sqi4iBhFlqbXJfZW5jbGF2ZVggMBEUvUKRVLByqR+3a/KVNkkMjorOJLTw2Znb36baBQY="
+    }
+  ]
+}

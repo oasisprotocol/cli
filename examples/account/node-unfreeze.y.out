@@ -1,0 +1,15 @@
+You are about to sign the following transaction:
+Method: registry.UnfreezeNode
+Body:
+  {
+    "node_id": "fasTG3pMOwLfFA7JX3R8Kxw1zFflqeY6NP/cpjcFu5I="
+  }
+Nonce:  1
+Fee:
+  Amount: 0.0 TEST
+  Gas limit: 1274
+  (gas price: 0.0 TEST per gas unit)
+
+Network:  testnet
+ParaTime: none (consensus layer)
+Account:  oscar

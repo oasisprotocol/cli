@@ -1,0 +1,14 @@
+You are about to sign the following transaction:
+Method: staking.ReclaimEscrow
+Body:
+  From:   oasis1qpkl3vykn9mf4xcq9eevmey4ffrzf0ajtcpvd7sk
+  Shares: 20000000000
+Nonce:  1
+Fee:
+  Amount: 0.0 TEST
+  Gas limit: 1275
+  (gas price: 0.0 TEST per gas unit)
+
+Network:  testnet
+ParaTime: none (consensus layer)
+Account:  oscar

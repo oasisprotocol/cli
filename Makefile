@@ -1,5 +1,8 @@
 include common.mk
 
+# Each Oasis CLI example's input .in must have a corresponding output .out.
+EXAMPLES := $(patsubst %.in,%.out,$(wildcard examples/*/*.in))
+
 # Check if Go's linkers flags are set in common.mk and add them as extra flags.
 ifneq ($(GOLDFLAGS),)
 	GO_EXTRA_FLAGS += -ldflags $(GOLDFLAGS)
@@ -9,9 +12,19 @@ endif
 all: build
 
 # Build.
-build:
+build: oasis
+oasis: $(shell find . -name "*.go" -type f) go.sum go.mod
 	@$(PRINT) "$(MAGENTA)*** Building Go code...$(OFF)\n"
 	@$(GO) build -v -o oasis $(GOFLAGS) $(GO_EXTRA_FLAGS)
+
+examples: $(EXAMPLES)
+
+examples/%.out: examples/%.in oasis scripts/gen_example.sh
+	@rm -f $@
+	@scripts/gen_example.sh $< $@
+
+clean-examples:
+	@rm -f examples/*/*.out
 
 # Format code.
 fmt:
@@ -64,6 +77,8 @@ clean:
 # List of targets that are not actual files.
 .PHONY: \
 	all build \
+	examples \
+	clean-examples \
 	fmt \
 	$(lint-targets) lint \
 	$(test-targets) test \

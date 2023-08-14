@@ -1,0 +1,32 @@
+Address: oasis1qrec770vrek0a9a5lcrv0zvt22504k68svq7kzve
+Nonce: 33
+
+=== CONSENSUS LAYER (testnet) ===
+  Total: 972.898210067 TEST
+  Available: 951.169098086 TEST
+
+  Active Delegations from this Account:
+    Total: 16.296833986 TEST
+
+    Delegations:
+      - To:     oasis1qz2tg4hsatlxfaf8yut9gxgv8990ujaz4sldgmzx
+        Amount: 16.296833986 TEST (15000000000 shares)
+  Debonding Delegations from this Account:
+    Total: 5.432277995 TEST
+
+    Delegations:
+      - To:       oasis1qz2tg4hsatlxfaf8yut9gxgv8990ujaz4sldgmzx
+        Amount:   5.432277995 TEST (5432277995 shares)
+        End Time: epoch 26558
+
+  Allowances for this Account:
+    Total: 269.5000002 TEST
+    Allowances:
+      - Beneficiary: oasis1qqczuf3x6glkgjuf0xgtcpjjw95r3crf7y2323xd
+        Amount:      269.5 TEST
+      - Beneficiary: oasis1qrydpazemvuwtnp3efm7vmfvg3tde044qg6cxwzx
+        Amount:      0.0000002 TEST
+
+=== sapphire PARATIME ===
+Balances for all denominations:
+  6.9995378 TEST

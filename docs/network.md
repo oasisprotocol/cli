@@ -1,0 +1,306 @@
+---
+title: Network
+description: Managing Mainnet, Testnet or Localnet endpoints
+---
+
+# Manage Your Oasis Networks
+
+The `network` command is used to manage the Mainnet, Testnet or Localnet
+endpoints Oasis CLI will be connecting to.
+
+The `network` command is commonly used:
+
+- on network upgrades, because the chain domain separation context is changed
+  due to a new [genesis document],
+- when setting up a local `oasis-node` instance instead of relying on public
+  gRPC endpoints,
+- when running a private Localnet with `oasis-net-runner`,
+- when examining network properties such as the native token, the network
+  registry, the validator set and others.
+
+Oasis CLI supports both **remote endpoints via the secure gRPC protocol** and
+**local Unix socket endpoints**.
+
+:::tip
+
+When running the Oasis CLI for the first time, it will automatically configure
+the current Mainnet and Testnet endpoints.
+
+:::
+
+[genesis document]: https://github.com/oasisprotocol/oasis-core/blob/master/docs/consensus/genesis.md#genesis-documents-hash
+
+## Add a Network {#add}
+
+Invoke `network add <name> <chain-context> <rpc-endpoint>` to add a new
+endpoint with a specific chain domain separation context and a gRPC address.
+
+For TCP/IP endpoints, run:
+
+![code shell](../examples/network/add-tcpip.in.static)
+
+![code](../examples/network/add-tcpip.out.static)
+
+For Unix sockets, use:
+
+![code shell](../examples/network/add-unix.in.static)
+
+![code](../examples/network/add-unix.out.static)
+
+## Add a Local Network {#add-local}
+
+`network add-local <name> <rpc-endpoint>` command can be used if you are
+running a local instance of `oasis-node`. In this case, Oasis CLI will
+autodetect the native token symbol and decimal places, the chain domain
+separation context and registered ParaTimes.
+
+```
+oasis network add-local testnet_local unix:/serverdir_testnet/internal.sock
+```
+
+## List Networks {#list}
+
+Invoke `network list` to list all configured networks.
+
+![code shell](../examples/network/00-list.in)
+
+![code](../examples/network/00-list.out)
+
+The [default network](#set-default) is marked with the `(*)` sign.
+
+## Remove a Network {#remove}
+
+Use `network remove <name>` to remove the given network configuration including
+all dependant ParaTimes.
+
+![code shell](../examples/network/01-remove.in)
+
+## Set Default Network {#set-default}
+
+To change the default network for future Oasis CLI operations, use
+`network set-default <name>`.
+
+![code shell](../examples/network/02-list.in)
+
+![code](../examples/network/02-list.out)
+
+![code shell](../examples/network/03-set-default.in)
+
+![code shell](../examples/network/04-list.in)
+
+![code](../examples/network/04-list.out)
+
+## Change a Network's RPC Endpoint {#set-rpc}
+
+To change the RPC address of the already configured network, run
+`network set-rpc <name> <new_endpoint>`:
+
+![code shell](../examples/network-set-rpc/00-list.in)
+
+![code](../examples/network-set-rpc/00-list.out)
+
+![code shell](../examples/network-set-rpc/01-set-rpc.in)
+
+![code shell](../examples/network-set-rpc/02-list.in)
+
+![code](../examples/network-set-rpc/02-list.out)
+
+## Advanced
+
+### Governance Operations {#governance}
+
+`network governance` command is aimed towards validators for proposing
+or voting on-chain for network upgrades or changes to other crucial network
+parameters.
+
+#### `list` {#governance-list}
+
+Use `network list` to view all past and still active governance proposals.
+Each proposal has its unique subsequent ID, a submitter, an epoch when the
+proposal was created and when it closes and a state.
+
+![code shell](../examples/network-governance/list.in)
+
+![code](../examples/network-governance/list.out)
+
+#### `show` {#governance-show}
+
+`network governance show <proposal-id>` shows detailed information on
+past or opened governance proposals on the consensus layer.
+
+![code shell](../examples/network-governance/show.in.static)
+
+![code](../examples/network-governance/show.out.static)
+
+:::info
+
+Governance proposals are not indexed and an endpoint may take some time to
+respond. If you encounter timeouts, consider setting up your own gRPC endpoint!
+
+:::
+
+#### `cast-vote` {#governance-cast-vote}
+
+`network governance cast-vote <proposal-id> { yes | no | abstain }` is used
+to submit your vote on the governance proposal. The vote can either be `yes`,
+`no` or `abstein`.
+
+![code shell](../examples/network-governance/cast-vote.in.static)
+
+![code](../examples/network-governance/cast-vote.out.static)
+
+#### `create-proposal` {#governance-create-proposal}
+
+To submit a new governance proposal use `network governance create-proposal`.
+The following proposal types are currently supported:
+
+- `upgrade <descriptor.json>`: Network upgrade proposal. Provide a JSON file
+  containing the upgrade descriptor.
+- `cancel-upgrade <proposal-id>`: Cancel network proposed upgrade. Provide the
+  ID of the network upgrade proposal you wish to cancel.
+
+### Show Network Properties {#show}
+
+`network show` shows the network property stored in the registry, scheduler,
+genesis document or on chain.
+
+By passing `--height <block_number>` with a block number, you can obtain a
+historic value of the property.
+
+The command expects one of the following parameters:
+
+#### `entities` {#show-entities}
+
+Shows all registered entities in the network registry. See the
+[`account entity`] command, if you want to register or update your own entity.
+
+[`account entity`]: ./account.md#entity
+
+:::info
+
+This call is not enabled on public Oasis gRPC endpoints. You will have to run
+your own client node to enable this functionality.
+
+:::
+
+#### `nodes` {#show-nodes}
+
+Shows all registered nodes in the network registry. See the [`account entity`],
+to add a node to your entity.
+
+:::info
+
+This call is not enabled on public Oasis gRPC endpoints. You will have to run
+your own client node to enable this functionality.
+
+:::
+
+#### `paratimes` {#show-paratimes}
+
+Shows all registered ParaTimes in the network registry.
+
+#### `validators` {#show-validators}
+
+Shows all IDs of the nodes in the validator set.
+
+#### `native-token` {#show-native-token}
+
+Shows information of the network's native tokens such as its symbol, the number
+of decimal points, total supply, debonding period and staking thresholds.
+
+![code shell](../examples/network-show/native-token.in.static)
+
+![code](../examples/network-show/native-token.out.static)
+
+We can see that the token's name is ROSE and that 1 token corresponds to 10^9
+(i.e. one billion) base units.
+
+Next, we can observe that the **total supply** is 10 billion tokens and that
+about 1.3 billion tokens are in the **common pool**.
+
+**Staking thresholds** are important for the network validators. They show
+the minimum staked amount required to become an active validator for the entity
+and all node kinds (validator, compute, key manager nodes). At time of writing,
+this was 100 tokens. For example, if you wanted to register an entity running a
+validator and a compute node, you would need to stake (i.e. *escrow*) at least
+300 tokens.
+
+:::info
+
+Each runtime may also require a **minimum ParaTime-specific escrow** for
+running a compute node. Use the [`network show id`](#show-id)
+command and pass a corresponding Paratime ID to see it.
+
+:::
+
+The `runtime-` fields show you the required staked amount for
+[**registering a new ParaTime**](./paratime.md#register) of any kind (compute,
+key manager) was 50,000 tokens at time of writing.
+
+#### `gas-costs` {#show-gas-costs}
+
+Shows minimum gas costs for each consensus transaction.
+
+![code shell](../examples/network-show/gas-costs.in)
+
+![code](../examples/network-show/gas-costs.out)
+
+Above, we can see that the [maximum amount of gas](./network.md#gas-limit) our
+transaction can spend must be set to at least 1000 **gas units**, otherwise it
+will be rejected by the network.
+
+#### `<id>` {#show-id}
+
+The provided ID can be one of the following:
+
+- If the [ParaTime ID] is provided, Oasis CLI shows ParaTime information stored
+  in the network's registry.
+  
+  For example, at time of writing information on Sapphire stored in the Mainnet
+  registry were as follows:
+
+  ![code shell](../examples/network-show/id-paratime.in.static)
+
+  ![code json](../examples/network-show/id-paratime.out.static)
+
+  Network validators may be interested in the **ParaTime staking threshold**
+  stored inside the `thresholds` field. In the example above, the amount to run
+  a Sapphire compute node on the Mainnet is 5,000,000 tokens and should be
+  considered on top of the consensus-layer validator staking thresholds
+  obtained by the [`network show native-token`](#show-native-token) command.
+
+- If the entity ID is provided, Oasis CLI shows information on the entity and
+  its corresponding nodes in the network registry. For example:
+
+  ![code shell](../examples/network-show/id-entity.in)
+
+  ![code json](../examples/network-show/id-entity.out)
+
+- If the node ID is provided, Oasis CLI shows detailed information of the node
+  such as the Oasis Core software version, the node's role, supported
+  ParaTimes, trusted execution environment support and more. For example:
+
+  ![code shell](../examples/network-show/id-node.in.static)
+  
+  ![code json](../examples/network-show/id-node.out.static)
+
+[ParaTime ID]: https://github.com/oasisprotocol/oasis-core/blob/master/docs/runtime/identifiers.md
+
+### Status of the Network's Endpoint {#status}
+
+`network status` will connect to the gRPC endpoint and request extensive status
+report from the Oasis Core node. Node operators will find important information
+in the report such as:
+
+- the last proposed consensus block,
+- whether the node's storage is synchronized with the network,
+- the Oasis Core software version,
+- connected peers,
+- similar information as above for each ParaTime, if the node is running it.
+
+At time of writing, the following status of the official gRPC endpoint for
+Mainnet was reported:
+
+![code shell](../examples/network/status.in.static)
+
+![code json](../examples/network/status.out.static)

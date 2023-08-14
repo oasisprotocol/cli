@@ -1,0 +1,20 @@
+Hash: 3013be1ba6e1ef17921382f01b53f519174b2f35753d1fc37ad11bfc382f51f5
+Signer(s):
+  1. NcPzNW3YU2T+ugNUtUWtoQnRvbOL9dYSaBfbjHLP1pE=
+     (signature: mxOARaaRkHrHiUObGO2KbUXZhmbIS2h3hsRM+3Y/DzvMtbVdwcZm2EZ7oP7dR5XHKkrQnjMwZnkT0mdZUsLIBw==)
+Content:
+  Format: plain
+  Method: accounts.Transfer
+  Body:
+    To: test:bob (oasis1qrydpazemvuwtnp3efm7vmfvg3tde044qg6cxwzx)
+    Amount: 1.0 TEST
+  Authorized signer(s):
+    1. NcPzNW3YU2T+ugNUtUWtoQnRvbOL9dYSaBfbjHLP1pE= (ed25519)
+       Nonce: 1
+  Fee:
+    Amount: 0.0 TEST
+    Gas limit: 1
+    (gas price: 0.0 TEST per gas unit)
+
+Network:  testnet
+ParaTime: sapphire

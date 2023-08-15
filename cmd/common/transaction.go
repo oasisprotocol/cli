@@ -200,7 +200,7 @@ func SignParaTimeTransaction(
 		if si.AddressSpec.Signature == nil {
 			continue
 		}
-		if !si.AddressSpec.Signature.PublicKey().Equal(accountAddressSpec.PublicKey().PublicKey) {
+		if !si.AddressSpec.Signature.PublicKey().Equal(accountAddressSpec.PublicKey()) {
 			continue
 		}
 		hasSignerInfo = true

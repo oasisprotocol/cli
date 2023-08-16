@@ -121,24 +121,24 @@ For example, to set the Cipher ParaTime default on the Testnet, run:
 Use `paratime show <block>` providing the block round to print its header and
 other information.
 
-![code shell](../examples/paratime-show/show.in)
+![code shell](../examples/paratime-show/show.in.static)
 
-![code](../examples/paratime-show/show.out)
+![code](../examples/paratime-show/show.out.static)
 
 To show the details of the transaction stored inside the block including the
 transaction status and any emitted events, pass the transaction index in the
 block or its hash:
 
-![code shell](../examples/paratime-show/show-tx.in)
+![code shell](../examples/paratime-show/show-tx.in.static)
 
-![code](../examples/paratime-show/show-tx.out)
+![code](../examples/paratime-show/show-tx.out.static)
 
 Encrypted transactions can also be examined, although the data chunk will be
 encrypted:
 
-![code shell](../examples/paratime-show/show-tx-encrypted.in)
+![code shell](../examples/paratime-show/show-tx-encrypted.in.static)
 
-![code](../examples/paratime-show/show-tx-encrypted.out)
+![code](../examples/paratime-show/show-tx-encrypted.out.static)
 
 ## Advanced
 

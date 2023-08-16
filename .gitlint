@@ -10,6 +10,7 @@ ignore-fixup-commits=false
 ignore-squash-commits=false
 ignore=body-is-missing
 contrib=contrib-disallow-cleanup-commits
+extra-path=.gitlint-rules
 
 [title-max-length]
 line-length=72

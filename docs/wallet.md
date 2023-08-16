@@ -24,7 +24,7 @@ Oasis CLI for your accounts:
   path. This is the preferred setting for Oasis accounts stored on a hardware
   wallet like Ledger. It is called legacy, because it was first implemented
   before the [ADR-8] was standardized.
-- `sr25510-adr8`: [Sr25519] keypair using the [ADR-8] derivation path. This is
+- `sr25519-adr8`: [Sr25519] keypair using the [ADR-8] derivation path. This is
   an alternative signature scheme for signing ParaTime transactions.
 - `ed25519-raw`, `secp256k1-raw` and `sr25519-raw`: Respective Ed25519,
   Secp256k1 and Sr25519 keypairs imported directly from Base32 or Hex-encoded

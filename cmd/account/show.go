@@ -4,16 +4,19 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
+	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	roothash "github.com/oasisprotocol/oasis-core/go/roothash/api"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/consensusaccounts"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
 	"github.com/oasisprotocol/cli/cmd/common"
@@ -73,9 +76,10 @@ var (
 			cobra.CheckErr(err)
 
 			fmt.Printf("Address: %s\n", addr)
-			fmt.Printf("Nonce: %d\n", consensusAccount.General.Nonce)
 			fmt.Println()
 			fmt.Printf("=== CONSENSUS LAYER (%s) ===\n", npa.NetworkName)
+			fmt.Printf("  Nonce: %d\n", consensusAccount.General.Nonce)
+			fmt.Println()
 
 			var (
 				outgoingDelegations          map[staking.Address]*staking.DelegationInfo
@@ -108,7 +112,6 @@ var (
 					"    ",
 					os.Stdout,
 				)
-				fmt.Println()
 			}
 
 			if showDelegations {
@@ -184,19 +187,95 @@ var (
 						break
 					}
 				}
-				if hasNonZeroBalance {
+
+				nonce, err := c.Runtime(npa.ParaTime).Accounts.Nonce(ctx, round, *addr)
+				cobra.CheckErr(err)
+				hasNonZeroNonce := nonce > 0
+
+				if hasNonZeroBalance || hasNonZeroNonce {
 					fmt.Println()
 					fmt.Printf("=== %s PARATIME ===\n", npa.ParaTimeName)
+					fmt.Printf("  Nonce: %d\n", nonce)
+					fmt.Println()
 
-					fmt.Printf("Balances for all denominations:\n")
-					for denom, balance := range rtBalances.Balances {
-						fmt.Printf("  %s\n", helpers.FormatParaTimeDenomination(npa.ParaTime, types.NewBaseUnits(balance, denom)))
+					if hasNonZeroBalance {
+						fmt.Printf("  Balances for all denominations:\n")
+						for denom, balance := range rtBalances.Balances {
+							fmtAmnt := helpers.FormatParaTimeDenomination(npa.ParaTime, types.NewBaseUnits(balance, denom))
+							amnt, symbol, _ := strings.Cut(fmtAmnt, " ")
+
+							fmt.Printf("  - Amount: %s\n", amnt)
+							fmt.Printf("    Symbol: %s\n", symbol)
+						}
+
+						fmt.Println()
+					}
+
+					if showDelegations {
+						rtDelegations, err := c.Runtime(npa.ParaTime).ConsensusAccounts.Delegations(
+							ctx,
+							round,
+							&consensusaccounts.DelegationsQuery{
+								From: *addr,
+							},
+						)
+						if err == nil && len(rtDelegations) > 0 {
+							showParaTimeDelegations(ctx, c, height, npa, rtDelegations)
+							fmt.Println()
+						}
 					}
 				}
 			}
 		},
 	}
 )
+
+func showParaTimeDelegations(
+	ctx context.Context,
+	c connection.Connection,
+	height int64,
+	npa *common.NPASelection,
+	rtDelegations []*consensusaccounts.ExtendedDelegationInfo,
+) {
+	type extendedDelegationInfo struct {
+		to     types.Address
+		amount quantity.Quantity
+		shares quantity.Quantity
+	}
+
+	var (
+		total       quantity.Quantity
+		delegations []extendedDelegationInfo
+	)
+	for _, di := range rtDelegations {
+		// For each destination we need to fetch the pool.
+		destAccount, err := c.Consensus().Staking().Account(ctx, &staking.OwnerQuery{
+			Owner:  di.To.ConsensusAddress(),
+			Height: height,
+		})
+		cobra.CheckErr(err)
+
+		// Then we can compute the current amount.
+		amount, _ := destAccount.Escrow.Active.StakeForShares(&di.Shares)
+		_ = total.Add(amount)
+
+		delegations = append(delegations, extendedDelegationInfo{
+			to:     di.To,
+			amount: *amount,
+			shares: di.Shares,
+		})
+	}
+
+	fmt.Printf("  Active delegations from this Account:\n")
+	fmt.Printf("    Total: %s\n", helpers.FormatConsensusDenomination(npa.Network, total))
+	fmt.Println()
+
+	fmt.Printf("    Delegations:\n")
+	for _, di := range delegations {
+		fmt.Printf("    - To:     %s\n", di.to)
+		fmt.Printf("      Amount: %s (%s shares)\n", helpers.FormatConsensusDenomination(npa.Network, di.amount), di.shares)
+	}
+}
 
 func init() {
 	f := flag.NewFlagSet("", flag.ContinueOnError)

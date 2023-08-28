@@ -1,4 +1,4 @@
-package account
+package show
 
 import (
 	"context"
@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
-	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	roothash "github.com/oasisprotocol/oasis-core/go/roothash/api"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
@@ -26,7 +25,7 @@ import (
 var (
 	showDelegations bool
 
-	showCmd = &cobra.Command{
+	Cmd = &cobra.Command{
 		Use:     "show [address]",
 		Short:   "Show balance and other information",
 		Aliases: []string{"s"},
@@ -92,7 +91,7 @@ var (
 				cobra.CheckErr(err)
 			}
 
-			helpers.PrettyPrintAccountBalanceAndDelegationsFrom(
+			prettyPrintAccountBalanceAndDelegationsFrom(
 				npa.Network,
 				addr,
 				consensusAccount.General,
@@ -101,11 +100,10 @@ var (
 				"  ",
 				os.Stdout,
 			)
-			fmt.Println()
 
 			if len(consensusAccount.General.Allowances) > 0 {
 				fmt.Println("  Allowances for this Account:")
-				helpers.PrettyPrintAllowances(
+				prettyPrintAllowances(
 					npa.Network,
 					addr,
 					consensusAccount.General.Allowances,
@@ -122,7 +120,7 @@ var (
 
 				if len(incomingDelegations) > 0 {
 					fmt.Println("  Active Delegations to this Account:")
-					helpers.PrettyPrintDelegationsTo(
+					prettyPrintDelegationsTo(
 						npa.Network,
 						addr,
 						consensusAccount.Escrow.Active,
@@ -134,7 +132,7 @@ var (
 				}
 				if len(incomingDebondingDelegations) > 0 {
 					fmt.Println("  Debonding Delegations to this Account:")
-					helpers.PrettyPrintDelegationsTo(
+					prettyPrintDelegationsTo(
 						npa.Network,
 						addr,
 						consensusAccount.Escrow.Debonding,
@@ -220,7 +218,7 @@ var (
 							},
 						)
 						if err == nil && len(rtDelegations) > 0 {
-							showParaTimeDelegations(ctx, c, height, npa, rtDelegations)
+							prettyPrintParaTimeDelegations(ctx, c, height, npa, rtDelegations)
 							fmt.Println()
 						}
 					}
@@ -230,57 +228,10 @@ var (
 	}
 )
 
-func showParaTimeDelegations(
-	ctx context.Context,
-	c connection.Connection,
-	height int64,
-	npa *common.NPASelection,
-	rtDelegations []*consensusaccounts.ExtendedDelegationInfo,
-) {
-	type extendedDelegationInfo struct {
-		to     types.Address
-		amount quantity.Quantity
-		shares quantity.Quantity
-	}
-
-	var (
-		total       quantity.Quantity
-		delegations []extendedDelegationInfo
-	)
-	for _, di := range rtDelegations {
-		// For each destination we need to fetch the pool.
-		destAccount, err := c.Consensus().Staking().Account(ctx, &staking.OwnerQuery{
-			Owner:  di.To.ConsensusAddress(),
-			Height: height,
-		})
-		cobra.CheckErr(err)
-
-		// Then we can compute the current amount.
-		amount, _ := destAccount.Escrow.Active.StakeForShares(&di.Shares)
-		_ = total.Add(amount)
-
-		delegations = append(delegations, extendedDelegationInfo{
-			to:     di.To,
-			amount: *amount,
-			shares: di.Shares,
-		})
-	}
-
-	fmt.Printf("  Active delegations from this Account:\n")
-	fmt.Printf("    Total: %s\n", helpers.FormatConsensusDenomination(npa.Network, total))
-	fmt.Println()
-
-	fmt.Printf("    Delegations:\n")
-	for _, di := range delegations {
-		fmt.Printf("    - To:     %s\n", di.to)
-		fmt.Printf("      Amount: %s (%s shares)\n", helpers.FormatConsensusDenomination(npa.Network, di.amount), di.shares)
-	}
-}
-
 func init() {
 	f := flag.NewFlagSet("", flag.ContinueOnError)
 	f.BoolVar(&showDelegations, "show-delegations", false, "show incoming and outgoing delegations")
-	showCmd.Flags().AddFlagSet(common.SelectorFlags)
-	showCmd.Flags().AddFlagSet(common.HeightFlag)
-	showCmd.Flags().AddFlagSet(f)
+	Cmd.Flags().AddFlagSet(common.SelectorFlags)
+	Cmd.Flags().AddFlagSet(common.HeightFlag)
+	Cmd.Flags().AddFlagSet(f)
 }

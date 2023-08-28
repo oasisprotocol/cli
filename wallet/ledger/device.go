@@ -11,9 +11,12 @@ import (
 	"golang.org/x/crypto/sha3"
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
-	coreSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
-	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/ed25519"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/sr25519"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
+
+	"github.com/oasisprotocol/cli/wallet"
 )
 
 // NOTE: Some of this is lifted from https://github.com/oasisprotocol/oasis-core-ledger but updated
@@ -75,22 +78,22 @@ func (ld *ledgerDevice) GetVersion() (*VersionInfo, error) {
 	}, nil
 }
 
-// GetPublicKeyEd25519 returns the Ed25519 public key associated with the given derivation path.
+// GetPublicKey25519 returns the Ed25519 or Sr25519 public key associated with the given derivation path.
 // If the requireConfirmation flag is set, this will require confirmation from the user.
-func (ld *ledgerDevice) GetPublicKeyEd25519(path []uint32, requireConfirmation bool) ([]byte, error) {
-	return ld.getPublicKey25519(path, insGetAddrEd25519, requireConfirmation)
-}
-
-// GetPublicKeySr25519 returns the Sr25519 public key associated with the given derivation path.
-// If the requireConfirmation flag is set, this will require confirmation from the user.
-func (ld *ledgerDevice) GetPublicKeySr25519(path []uint32, requireConfirmation bool) ([]byte, error) {
-	return ld.getPublicKey25519(path, insGetAddrSr25519, requireConfirmation)
-}
-
-func (ld *ledgerDevice) getPublicKey25519(path []uint32, ins byte, requireConfirmation bool) ([]byte, error) {
+func (ld *ledgerDevice) GetPublicKey25519(path []uint32, algorithm string, requireConfirmation bool) ([]byte, error) {
 	pathBytes, err := getSerializedPath(path)
 	if err != nil {
 		return nil, fmt.Errorf("ledger: failed to get serialized path bytes: %w", err)
+	}
+
+	var ins byte
+	switch algorithm {
+	case wallet.AlgorithmEd25519Adr8:
+		ins = insGetAddrEd25519
+	case wallet.AlgorithmSr25519Adr8:
+		ins = insGetAddrSr25519
+	default:
+		return nil, fmt.Errorf("ledger: unknown provided algorithm %s", algorithm)
 	}
 
 	response, err := ld.getPublicKeyRaw(pathBytes, ins, requireConfirmation)
@@ -105,16 +108,28 @@ func (ld *ledgerDevice) getPublicKey25519(path []uint32, ins byte, requireConfir
 	rawPubkey := response[0:32]
 	rawAddr := string(response[32:])
 
-	var pubkey coreSignature.PublicKey
-	if err = pubkey.UnmarshalBinary(rawPubkey); err != nil {
-		return nil, fmt.Errorf("ledger: device returned malformed public key: %w", err)
+	// Sanity check, if the public key matches the expected address shown on Ledger.
+	var addrSpec types.SignatureAddressSpec
+	switch algorithm {
+	case wallet.AlgorithmEd25519Adr8:
+		addrSpec.Ed25519 = &ed25519.PublicKey{}
+		if err = addrSpec.Ed25519.UnmarshalBinary(rawPubkey); err != nil {
+			return nil, fmt.Errorf("ledger: device returned malformed public key: %w", err)
+		}
+	case wallet.AlgorithmSr25519Adr8:
+		addrSpec.Sr25519 = &sr25519.PublicKey{}
+		if err = addrSpec.Sr25519.UnmarshalBinary(rawPubkey); err != nil {
+			return nil, fmt.Errorf("ledger: device returned malformed public key: %w", err)
+		}
+	default:
+		return nil, fmt.Errorf("ledger: unknown provided algorithm %s", algorithm)
 	}
 
-	var addrFromDevice staking.Address
+	var addrFromDevice types.Address
 	if err = addrFromDevice.UnmarshalText([]byte(rawAddr)); err != nil {
 		return nil, fmt.Errorf("ledger: device returned malformed account address: %w", err)
 	}
-	addrFromPubkey := staking.NewAddress(pubkey)
+	addrFromPubkey := types.NewAddress(addrSpec)
 	if !addrFromDevice.Equal(addrFromPubkey) {
 		return nil, fmt.Errorf(
 			"ledger: account address computed on device (%s) doesn't match internally computed account address (%s)",

@@ -1,9 +1,10 @@
-package account
+package show
 
 import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -14,6 +15,7 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/consensusaccounts"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
 	"github.com/oasisprotocol/cli/cmd/common"
@@ -23,7 +25,7 @@ import (
 var (
 	showDelegations bool
 
-	showCmd = &cobra.Command{
+	Cmd = &cobra.Command{
 		Use:     "show [address]",
 		Short:   "Show balance and other information",
 		Aliases: []string{"s"},
@@ -73,9 +75,10 @@ var (
 			cobra.CheckErr(err)
 
 			fmt.Printf("Address: %s\n", addr)
-			fmt.Printf("Nonce: %d\n", consensusAccount.General.Nonce)
 			fmt.Println()
 			fmt.Printf("=== CONSENSUS LAYER (%s) ===\n", npa.NetworkName)
+			fmt.Printf("  Nonce: %d\n", consensusAccount.General.Nonce)
+			fmt.Println()
 
 			var (
 				outgoingDelegations          map[staking.Address]*staking.DelegationInfo
@@ -88,7 +91,7 @@ var (
 				cobra.CheckErr(err)
 			}
 
-			helpers.PrettyPrintAccountBalanceAndDelegationsFrom(
+			prettyPrintAccountBalanceAndDelegationsFrom(
 				npa.Network,
 				addr,
 				consensusAccount.General,
@@ -97,18 +100,16 @@ var (
 				"  ",
 				os.Stdout,
 			)
-			fmt.Println()
 
 			if len(consensusAccount.General.Allowances) > 0 {
 				fmt.Println("  Allowances for this Account:")
-				helpers.PrettyPrintAllowances(
+				prettyPrintAllowances(
 					npa.Network,
 					addr,
 					consensusAccount.General.Allowances,
 					"    ",
 					os.Stdout,
 				)
-				fmt.Println()
 			}
 
 			if showDelegations {
@@ -119,7 +120,7 @@ var (
 
 				if len(incomingDelegations) > 0 {
 					fmt.Println("  Active Delegations to this Account:")
-					helpers.PrettyPrintDelegationsTo(
+					prettyPrintDelegationsTo(
 						npa.Network,
 						addr,
 						consensusAccount.Escrow.Active,
@@ -131,7 +132,7 @@ var (
 				}
 				if len(incomingDebondingDelegations) > 0 {
 					fmt.Println("  Debonding Delegations to this Account:")
-					helpers.PrettyPrintDelegationsTo(
+					prettyPrintDelegationsTo(
 						npa.Network,
 						addr,
 						consensusAccount.Escrow.Debonding,
@@ -184,13 +185,42 @@ var (
 						break
 					}
 				}
-				if hasNonZeroBalance {
+
+				nonce, err := c.Runtime(npa.ParaTime).Accounts.Nonce(ctx, round, *addr)
+				cobra.CheckErr(err)
+				hasNonZeroNonce := nonce > 0
+
+				if hasNonZeroBalance || hasNonZeroNonce {
 					fmt.Println()
 					fmt.Printf("=== %s PARATIME ===\n", npa.ParaTimeName)
+					fmt.Printf("  Nonce: %d\n", nonce)
+					fmt.Println()
 
-					fmt.Printf("Balances for all denominations:\n")
-					for denom, balance := range rtBalances.Balances {
-						fmt.Printf("  %s\n", helpers.FormatParaTimeDenomination(npa.ParaTime, types.NewBaseUnits(balance, denom)))
+					if hasNonZeroBalance {
+						fmt.Printf("  Balances for all denominations:\n")
+						for denom, balance := range rtBalances.Balances {
+							fmtAmnt := helpers.FormatParaTimeDenomination(npa.ParaTime, types.NewBaseUnits(balance, denom))
+							amnt, symbol, _ := strings.Cut(fmtAmnt, " ")
+
+							fmt.Printf("  - Amount: %s\n", amnt)
+							fmt.Printf("    Symbol: %s\n", symbol)
+						}
+
+						fmt.Println()
+					}
+
+					if showDelegations {
+						rtDelegations, err := c.Runtime(npa.ParaTime).ConsensusAccounts.Delegations(
+							ctx,
+							round,
+							&consensusaccounts.DelegationsQuery{
+								From: *addr,
+							},
+						)
+						if err == nil && len(rtDelegations) > 0 {
+							prettyPrintParaTimeDelegations(ctx, c, height, npa, rtDelegations)
+							fmt.Println()
+						}
 					}
 				}
 			}
@@ -201,7 +231,7 @@ var (
 func init() {
 	f := flag.NewFlagSet("", flag.ContinueOnError)
 	f.BoolVar(&showDelegations, "show-delegations", false, "show incoming and outgoing delegations")
-	showCmd.Flags().AddFlagSet(common.SelectorFlags)
-	showCmd.Flags().AddFlagSet(common.HeightFlag)
-	showCmd.Flags().AddFlagSet(f)
+	Cmd.Flags().AddFlagSet(common.SelectorFlags)
+	Cmd.Flags().AddFlagSet(common.HeightFlag)
+	Cmd.Flags().AddFlagSet(f)
 }

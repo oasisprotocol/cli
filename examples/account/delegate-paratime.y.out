@@ -1,0 +1,17 @@
+You are about to sign the following transaction:
+Format: plain
+Method: consensus.Delegate
+Body:
+  To: oasis1qpkl3vykn9mf4xcq9eevmey4ffrzf0ajtcpvd7sk
+  Amount: 20.0 TEST
+Authorized signer(s):
+  1. Bx6gOixnxy15tCs09ua5DcKyX9uo2Forb32O6Hyjoc8= (ed25519)
+     Nonce: 0
+Fee:
+  Amount: 0.0011312 TEST
+  Gas limit: 11312
+  (gas price: 0.0000001 TEST per gas unit)
+
+Network:  testnet
+ParaTime: sapphire
+Account:  oscar

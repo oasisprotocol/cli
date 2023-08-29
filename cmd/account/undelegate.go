@@ -2,12 +2,16 @@ package account
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
+	sdkSignature "github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/consensusaccounts"
 
 	"github.com/oasisprotocol/cli/cmd/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
@@ -15,7 +19,7 @@ import (
 
 var undelegateCmd = &cobra.Command{
 	Use:   "undelegate <shares> <from>",
-	Short: "Undelegate given amount of shares from a validator",
+	Short: "Undelegate given amount of shares from an entity",
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
@@ -37,20 +41,22 @@ var undelegateCmd = &cobra.Command{
 		}
 
 		// Resolve destination address.
-		fromAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, from)
+		fromAddr, toEthAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, from)
 		cobra.CheckErr(err)
 
 		acc := common.LoadAccount(cfg, npa.AccountName)
 
-		var sigTx interface{}
+		var shares quantity.Quantity
+		err = shares.UnmarshalText([]byte(amount))
+		cobra.CheckErr(err)
+
+		var (
+			sigTx, meta interface{}
+			waitCh      <-chan interface{}
+		)
 		switch npa.ParaTime {
 		case nil:
 			// Consensus layer delegation.
-			var shares quantity.Quantity
-			err = shares.UnmarshalText([]byte(amount))
-			cobra.CheckErr(err)
-
-			// Prepare transaction.
 			tx := staking.NewReclaimEscrowTx(0, nil, &staking.ReclaimEscrow{
 				Account: fromAddr.ConsensusAddress(),
 				Shares:  shares,
@@ -60,14 +66,60 @@ var undelegateCmd = &cobra.Command{
 			cobra.CheckErr(err)
 		default:
 			// ParaTime delegation.
-			cobra.CheckErr("delegations within ParaTimes are not supported; use --no-paratime")
+			tx := consensusaccounts.NewUndelegateTx(nil, &consensusaccounts.Undelegate{
+				From:   *fromAddr,
+				Shares: shares,
+			})
+
+			txDetails := sdkSignature.TxDetails{OrigTo: toEthAddr}
+			sigTx, meta, err = common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, &txDetails)
+			cobra.CheckErr(err)
+
+			if !txCfg.Offline {
+				decoder := conn.Runtime(npa.ParaTime).ConsensusAccounts
+				waitCh = common.WaitForEvent(ctx, npa.ParaTime, conn, decoder, func(ev client.DecodedEvent) interface{} {
+					ce, ok := ev.(*consensusaccounts.Event)
+					if !ok || ce.UndelegateStart == nil {
+						return nil
+					}
+					if !ce.UndelegateStart.To.Equal(acc.Address()) || ce.UndelegateStart.Nonce != tx.AuthInfo.SignerInfo[0].Nonce {
+						return nil
+					}
+					return ce.UndelegateStart
+				})
+			}
 		}
 
-		common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
+		if !common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil) {
+			return
+		}
+
+		// Wait for undelegation start in case this was an undelegation from a paratime.
+		if waitCh == nil {
+			return
+		}
+
+		fmt.Printf("Waiting for undelegation result...\n")
+
+		ev := <-waitCh
+		if ev == nil {
+			cobra.CheckErr("Failed to wait for event.")
+		}
+
+		// Check for result.
+		switch we := ev.(*consensusaccounts.UndelegateStartEvent); we.IsSuccess() {
+		case true:
+			fmt.Printf("Undelegation started.\n")
+		case false:
+			cobra.CheckErr(fmt.Errorf("undelegation failed with error code %d from module %s",
+				we.Error.Code,
+				we.Error.Module,
+			))
+		}
 	},
 }
 
 func init() {
 	undelegateCmd.Flags().AddFlagSet(common.SelectorFlags)
-	undelegateCmd.Flags().AddFlagSet(common.TxFlags)
+	undelegateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 }

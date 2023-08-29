@@ -366,9 +366,17 @@ To stake your tokens on the consensus layer, run
 `account delegate <amount> <to>`. This will delegate the specified amount of
 tokens to a validator.
 
+You can either delegate directly on the consensus layer:
+
 ![code shell](../examples/account/delegate.y.in)
 
 ![code](../examples/account/delegate.y.out)
+
+Or you can delegate from inside a ParaTime that supports delegations:
+
+![code shell](../examples/account/delegate-paratime.y.in)
+
+![code](../examples/account/delegate-paratime.y.out)
 
 Once your tokens are staked, they are converted into *shares* since the number
 of tokens may change over time based on the
@@ -379,7 +387,7 @@ usually a rational number and may lead to rounding errors when managing your
 delegations.
 
 To find out how many shares did you delegate, run [`account show`](#show) and
-look for the `shares` under the active delegations section:
+look for the `shares` under the active delegations section.
 
 :::info
 
@@ -397,9 +405,18 @@ To reclaim your delegated assets, use `account undelegate <shares> <from>`. You
 will need to specify the **number of shares instead of tokens** and the
 validator address you want to reclaim your assets from.
 
+Depending on where the tokens have been delegated from, you can either reclaim
+delegated tokens directly on the consensus layer:
+
 ![code shell](../examples/account/undelegate.y.in)
 
 ![code](../examples/account/undelegate.y.out)
+
+Or you can reclaim from inside a ParaTime that supports delegations:
+
+![code shell](../examples/account/undelegate-paratime.y.in)
+
+![code](../examples/account/undelegate-paratime.y.out)
 
 After submitting the transaction, a [debonding period] will
 commence. After the period has passed, the network will automatically move your

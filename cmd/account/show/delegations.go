@@ -260,16 +260,14 @@ func prettyPrintParaTimeDelegations(
 	c connection.Connection,
 	height int64,
 	npa *common.NPASelection,
+	addr *types.Address,
 	rtDelegations []*consensusaccounts.ExtendedDelegationInfo,
+	rtUndelegations []*consensusaccounts.UndelegationInfo,
+	prefix string,
+	w io.Writer,
 ) {
-	type extendedDelegationInfo struct {
-		to     types.Address
-		amount quantity.Quantity
-		shares quantity.Quantity
-	}
-
-	var total quantity.Quantity
-	delegations := make([]extendedDelegationInfo, 0, len(rtDelegations))
+	var totalDeg quantity.Quantity
+	delegations := make([]delegationDescription, 0, len(rtDelegations))
 	for _, di := range rtDelegations {
 		// For each destination we need to fetch the pool.
 		destAccount, err := c.Consensus().Staking().Account(ctx, &staking.OwnerQuery{
@@ -280,22 +278,59 @@ func prettyPrintParaTimeDelegations(
 
 		// Then we can compute the current amount.
 		amount, _ := destAccount.Escrow.Active.StakeForShares(&di.Shares)
-		_ = total.Add(amount)
+		_ = totalDeg.Add(amount)
 
-		delegations = append(delegations, extendedDelegationInfo{
-			to:     di.To,
-			amount: *amount,
-			shares: di.Shares,
+		delegations = append(delegations, delegationDescription{
+			address: di.To.ConsensusAddress(),
+			self:    di.To.Equal(*addr),
+			amount:  *amount,
+			shares:  di.Shares,
+			endTime: beacon.EpochInvalid,
 		})
 	}
 
-	fmt.Printf("  Active delegations from this Account:\n")
-	fmt.Printf("    Total: %s\n", helpers.FormatConsensusDenomination(npa.Network, total))
-	fmt.Println()
+	var totalUndeg quantity.Quantity
+	undelegations := make([]delegationDescription, 0, len(rtUndelegations))
+	for _, udi := range rtUndelegations {
+		// For each destination we need to fetch the pool.
+		destAccount, err := c.Consensus().Staking().Account(ctx, &staking.OwnerQuery{
+			Owner:  udi.From.ConsensusAddress(),
+			Height: height,
+		})
+		cobra.CheckErr(err)
 
-	fmt.Printf("    Delegations:\n")
-	for _, di := range delegations {
-		fmt.Printf("    - To:     %s\n", di.to)
-		fmt.Printf("      Amount: %s (%s shares)\n", helpers.FormatConsensusDenomination(npa.Network, di.amount), di.shares)
+		// Then we can compute the current amount.
+		amount, _ := destAccount.Escrow.Debonding.StakeForShares(&udi.Shares)
+		_ = totalUndeg.Add(amount)
+
+		undelegations = append(undelegations, delegationDescription{
+			address: udi.From.ConsensusAddress(),
+			self:    udi.From.Equal(*addr),
+			amount:  *amount,
+			shares:  udi.Shares,
+			endTime: udi.Epoch,
+		})
+	}
+
+	innerPrefix := prefix + "  "
+
+	if len(delegations) > 0 {
+		fmt.Fprintf(w, "%sActive Delegations from this Account:\n", prefix)
+		fmt.Fprintf(w, "%sTotal: %s\n", innerPrefix, helpers.FormatConsensusDenomination(npa.Network, totalDeg))
+		fmt.Fprintln(w)
+
+		sort.Sort(byEndTimeAmountAddress(delegations))
+		prettyPrintDelegationDescriptions(npa.Network, delegations, "To:", innerPrefix, w)
+		fmt.Fprintln(w)
+	}
+
+	if len(undelegations) > 0 {
+		fmt.Fprintf(w, "%sDebonding Delegations from this Account:\n", prefix)
+		fmt.Fprintf(w, "%sTotal: %s\n", innerPrefix, helpers.FormatConsensusDenomination(npa.Network, totalUndeg))
+		fmt.Fprintln(w)
+
+		sort.Sort(byEndTimeAmountAddress(undelegations))
+		prettyPrintDelegationDescriptions(npa.Network, undelegations, "To:", innerPrefix, w)
+		fmt.Fprintln(w)
 	}
 }

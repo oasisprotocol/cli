@@ -53,8 +53,7 @@ func (ls *ledgerSigner) Public() (pk signature.PublicKey) {
 
 func (ls *ledgerSigner) ContextSign(metadata signature.Context, message []byte) ([]byte, error) {
 	switch ls.algorithm {
-	case wallet.AlgorithmEd25519Adr8:
-	case wallet.AlgorithmEd25519Legacy:
+	case wallet.AlgorithmEd25519Adr8, wallet.AlgorithmEd25519Legacy:
 		return ls.dev.SignRtEd25519(ls.path, metadata, message)
 	case wallet.AlgorithmSecp256k1Bip44:
 		return ls.dev.SignRtSecp256k1(ls.path, metadata, message)

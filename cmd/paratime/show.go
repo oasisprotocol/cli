@@ -14,6 +14,7 @@ import (
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
+	runtimeTx "github.com/oasisprotocol/oasis-core/go/runtime/transaction"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
@@ -120,6 +121,29 @@ var showCmd = &cobra.Command{
 			cobra.CheckErr(err)
 
 			fmt.Printf("Transactions:   %d\n", len(txs))
+
+			evs, err := rt.GetEventsRaw(ctx, blkNum)
+			cobra.CheckErr(err)
+			if len(evs) > 0 {
+				// Check if there were any block events emitted.
+				var blockEvs []*types.Event
+				for _, ev := range evs {
+					if ev.TxHash.Equal(&runtimeTx.TagBlockTxHash) {
+						blockEvs = append(blockEvs, ev)
+					}
+				}
+
+				if numEvents := len(blockEvs); numEvents > 0 {
+					fmt.Printf("=== Block events ===\n")
+					fmt.Printf("Events: %d\n", numEvents)
+					fmt.Println()
+
+					for evIndex, ev := range blockEvs {
+						prettyPrintEvent("  ", evIndex, ev, evDecoders)
+						fmt.Println()
+					}
+				}
+			}
 
 			if len(args) >= 2 {
 				fmt.Println()

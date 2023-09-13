@@ -110,6 +110,7 @@ var (
 					"    ",
 					os.Stdout,
 				)
+				fmt.Println()
 			}
 
 			if showDelegations {
@@ -191,7 +192,6 @@ var (
 				hasNonZeroNonce := nonce > 0
 
 				if hasNonZeroBalance || hasNonZeroNonce {
-					fmt.Println()
 					fmt.Printf("=== %s PARATIME ===\n", npa.ParaTimeName)
 					fmt.Printf("  Nonce: %d\n", nonce)
 					fmt.Println()
@@ -210,17 +210,21 @@ var (
 					}
 
 					if showDelegations {
-						rtDelegations, err := c.Runtime(npa.ParaTime).ConsensusAccounts.Delegations(
+						rtDelegations, _ := c.Runtime(npa.ParaTime).ConsensusAccounts.Delegations(
 							ctx,
 							round,
 							&consensusaccounts.DelegationsQuery{
 								From: *addr,
 							},
 						)
-						if err == nil && len(rtDelegations) > 0 {
-							prettyPrintParaTimeDelegations(ctx, c, height, npa, rtDelegations)
-							fmt.Println()
-						}
+						rtUndelegations, _ := c.Runtime(npa.ParaTime).ConsensusAccounts.Undelegations(
+							ctx,
+							round,
+							&consensusaccounts.UndelegationsQuery{
+								To: *addr,
+							},
+						)
+						prettyPrintParaTimeDelegations(ctx, c, height, npa, addr, rtDelegations, rtUndelegations, "  ", os.Stdout)
 					}
 				}
 			}

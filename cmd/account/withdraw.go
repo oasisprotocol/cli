@@ -61,7 +61,7 @@ var withdrawCmd = &cobra.Command{
 			}
 		} else {
 			// Destination address is implicit, but obtain it for safety check below nonetheless.
-			addr, _, err := helpers.ResolveAddress(npa.Network, npa.Account.Address)
+			addr, _, err := common.ResolveAddress(npa.Network, npa.Account.Address)
 			cobra.CheckErr(err)
 			addrToCheck = addr.String()
 		}

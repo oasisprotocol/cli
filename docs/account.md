@@ -92,12 +92,16 @@ of your default account on the default network and ParaTime:
 
 ![code](../examples/account/show.out)
 
-You can also pass the name of the account in your wallet or the name stored in
-your address book:
+You can also pass the name of the account in your wallet or address book, or one
+of the [built-in named addresses](#reserved-addresses):
 
 ![code shell](../examples/account/show-named.in)
 
 ![code](../examples/account/show-named.out)
+
+![code shell](../examples/account/show-named-pool.in)
+
+![code](../examples/account/show-named-pool.out)
 
 Or, you can check the balance of an arbitrary account address by passing the
 native or Ethereum-compatible addresses.
@@ -648,3 +652,23 @@ assets anymore, but will also permanently remove the tokens from circulation.
 command.
 
 :::
+
+### Pools and Reserved Addresses {#reserved-addresses}
+
+The following literals are used in the Oasis CLI to denote special reserved
+addresses which cannot be directly used in the ledger:
+
+#### Consensus layer
+
+- `pool:consensus:burn`: The token burn address.
+- `pool:consensus:common`: The common pool address.
+- `pool:consensus:fee-accumulator`: The per-block fee accumulator address.
+- `pool:consensus:governance-deposits`: The governance deposits address.
+
+#### ParaTime layer
+
+- `pool:paratime:common`: The common pool address.
+- `pool:paratime:fee-accumulator`: The per-block fee accumulator address.
+- `pool:paratime:pending-withdrawal`: The internal pending withdrawal address.
+- `pool:paratime:pending-delegation`: The internal pending delegation address.
+- `pool:paratime:rewards`: The reward pool address.

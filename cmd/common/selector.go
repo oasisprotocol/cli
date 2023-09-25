@@ -7,7 +7,6 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
@@ -80,16 +79,9 @@ func GetNPASelection(cfg *cliConfig.Config) *NPASelection {
 		s.AccountName = selectedAccount
 	}
 	if s.AccountName != "" {
-		if testName := helpers.ParseTestAccountAddress(s.AccountName); testName != "" {
-			testAcc, err := LoadTestAccountConfig(testName)
-			cobra.CheckErr(err)
-			s.Account = testAcc
-		} else {
-			s.Account = cfg.Wallet.All[s.AccountName]
-			if s.Account == nil {
-				cobra.CheckErr(fmt.Errorf("account '%s' does not exist in the wallet", s.AccountName))
-			}
-		}
+		accCfg, err := LoadAccountConfig(cfg, s.AccountName)
+		cobra.CheckErr(err)
+		s.Account = accCfg
 	}
 
 	return &s

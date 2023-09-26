@@ -3,19 +3,19 @@ Method: staking.AmendCommissionSchedule
 Body:
   Amendment:
     Rates:
-      (1) start: epoch 29000
+      (1) start: epoch 329000
           rate:  1.5%
     Rate Bounds:
-      (1) start:        epoch 29000
+      (1) start:        epoch 329000
           minimum rate: 1.0%
           maximum rate: 2.0%
-      (2) start:        epoch 35000
+      (2) start:        epoch 335000
           minimum rate: 0.9%
           maximum rate: 1.9%
 Nonce:  1
 Fee:
   Amount: 0.0 TEST
-  Gas limit: 1355
+  Gas limit: 1361
   (gas price: 0.0 TEST per gas unit)
 
 Network:  testnet

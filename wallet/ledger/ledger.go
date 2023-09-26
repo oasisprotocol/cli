@@ -186,7 +186,7 @@ func newAccount(cfg *accountConfig) (wallet.Account, error) {
 		if cfg.Algorithm == wallet.AlgorithmEd25519Legacy {
 			path = getLegacyPath(cfg.Number)
 		}
-		rawPk, err := dev.GetPublicKeyEd25519(path, false)
+		rawPk, err := dev.GetPublicKey25519(path, wallet.AlgorithmEd25519Adr8, false)
 		if err != nil {
 			_ = dev.Close()
 			return nil, err
@@ -219,7 +219,7 @@ func newAccount(cfg *accountConfig) (wallet.Account, error) {
 		pk = secp256k1pk
 	case wallet.AlgorithmSr25519Adr8:
 		path = getAdr0008Path(cfg.Number)
-		rawPk, err := dev.GetPublicKeySr25519(path, false)
+		rawPk, err := dev.GetPublicKey25519(path, wallet.AlgorithmSr25519Adr8, false)
 		if err != nil {
 			_ = dev.Close()
 			return nil, err

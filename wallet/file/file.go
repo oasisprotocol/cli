@@ -45,12 +45,12 @@ const (
 // SupportedAlgorithmsForImport returns the algorithms supported by the given import kind.
 func SupportedAlgorithmsForImport(kind *wallet.ImportKind) []string {
 	if kind == nil {
-		return []string{wallet.AlgorithmEd25519Adr8, wallet.AlgorithmEd25519Raw, wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSecp256k1Raw, wallet.AlgorithmSr25519Raw}
+		return []string{wallet.AlgorithmEd25519Adr8, wallet.AlgorithmEd25519Raw, wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSecp256k1Raw, wallet.AlgorithmSr25519Adr8, wallet.AlgorithmSr25519Raw}
 	}
 
 	switch *kind {
 	case wallet.ImportKindMnemonic:
-		return []string{wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44}
+		return []string{wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSr25519Adr8}
 	case wallet.ImportKindPrivateKey:
 		return []string{wallet.AlgorithmEd25519Raw, wallet.AlgorithmSecp256k1Raw, wallet.AlgorithmSr25519Raw}
 	default:
@@ -192,7 +192,7 @@ func (af *fileAccountFactory) PrettyKind(rawCfg map[string]interface{}) string {
 	// In case of ADR8 or BIP44 show the keypair number.
 	var number string
 	switch cfg.Algorithm {
-	case wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44:
+	case wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSr25519Adr8:
 		number = fmt.Sprintf(":%d", cfg.Number)
 	}
 	return fmt.Sprintf("%s (%s%s)", Kind, cfg.Algorithm, number)
@@ -429,7 +429,7 @@ func (af *fileAccountFactory) Import(name string, passphrase string, rawCfg map[
 	switch src.Kind {
 	case wallet.ImportKindMnemonic:
 		switch cfg.Algorithm {
-		case wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44:
+		case wallet.AlgorithmEd25519Adr8, wallet.AlgorithmSecp256k1Bip44, wallet.AlgorithmSr25519Adr8:
 		default:
 			return nil, fmt.Errorf("algorithm '%s' does not support import from mnemonic", cfg.Algorithm)
 		}
@@ -516,6 +516,18 @@ func newAccount(state *secretState, cfg *accountConfig) (wallet.Account, error) 
 	case wallet.AlgorithmSecp256k1Raw:
 		// For Secp256k1-Raw use the raw private key.
 		signer, err := Secp256k1FromHex(state.Data)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize signer: %w", err)
+		}
+
+		return &fileAccount{
+			cfg:    cfg,
+			state:  state,
+			signer: signer,
+		}, nil
+	case wallet.AlgorithmSr25519Adr8:
+		// For Sr25519 use the ADR 0008 derivation scheme.
+		signer, err := Sr25519FromMnemonic(state.Data, cfg.Number)
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize signer: %w", err)
 		}

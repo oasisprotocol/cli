@@ -8,8 +8,8 @@ Authorized signer(s):
   1. Bx6gOixnxy15tCs09ua5DcKyX9uo2Forb32O6Hyjoc8= (ed25519)
      Nonce: 0
 Fee:
-  Amount: 0.003131 TEST
-  Gas limit: 31310
+  Amount: 0.012131 TEST
+  Gas limit: 121310
   (gas price: 0.0000001 TEST per gas unit)
 
 Network:  testnet

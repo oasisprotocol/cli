@@ -18,9 +18,9 @@ import (
 )
 
 // Sr25519FromMnemonic derives a signer using ADR-8 from given mnemonic.
-func Sr25519FromMnemonic(mnemonic string, number uint32) (sdkSignature.Signer, error) {
+func Sr25519FromMnemonic(mnemonic string, number uint32) (sdkSignature.Signer, []byte, error) {
 	if number > sakg.MaxAccountKeyNumber {
-		return nil, fmt.Errorf(
+		return nil, nil, fmt.Errorf(
 			"sakg: invalid key number: %d (maximum: %d)",
 			number,
 			sakg.MaxAccountKeyNumber,
@@ -28,37 +28,37 @@ func Sr25519FromMnemonic(mnemonic string, number uint32) (sdkSignature.Signer, e
 	}
 
 	if !bip39.IsMnemonicValid(mnemonic) {
-		return nil, fmt.Errorf("sakg: invalid mnemonic")
+		return nil, nil, fmt.Errorf("sakg: invalid mnemonic")
 	}
 
 	seed := bip39.NewSeed(mnemonic, "")
 
-	_, chainCode, skBinary, err := newMasterKey(seed)
+	_, chainCode, skBinary, skCanBinary, err := newMasterKey(seed)
 	if err != nil {
-		return nil, fmt.Errorf("sakg: error deriving master key: %w", err)
+		return nil, nil, fmt.Errorf("sakg: error deriving master key: %w", err)
 	}
 
 	pathStr := fmt.Sprintf("%s/%d'", sakg.BIP32PathPrefix, number)
 	path, err := sakg.NewBIP32Path(pathStr)
 	if err != nil {
-		return nil, fmt.Errorf("sakg: error creating BIP-0032 path %s: %w", pathStr, err)
+		return nil, nil, fmt.Errorf("sakg: error creating BIP-0032 path %s: %w", pathStr, err)
 	}
 
 	var signer sdkSignature.Signer
 	for _, index := range path {
-		signer, chainCode, skBinary, err = newChildKey(skBinary, chainCode, index)
+		signer, chainCode, skBinary, skCanBinary, err = newChildKey(skBinary, chainCode, index)
 		if err != nil {
-			return nil, fmt.Errorf("sakg: error deriving child key: %w", err)
+			return nil, nil, fmt.Errorf("sakg: error deriving child key: %w", err)
 		}
 	}
 
-	return signer, nil
+	return signer, skCanBinary, nil
 }
 
-func newMasterKey(seed []byte) (sdkSignature.Signer, slip10.ChainCode, []byte, error) {
+func newMasterKey(seed []byte) (sdkSignature.Signer, slip10.ChainCode, []byte, []byte, error) {
 	// Let S be a seed byte sequence of 128 to 512 bits in length.
 	if sLen := len(seed); sLen < slip10.SeedMinSize || sLen > slip10.SeedMaxSize {
-		return nil, slip10.ChainCode{}, nil, fmt.Errorf("slip10: invalid seed")
+		return nil, slip10.ChainCode{}, nil, nil, fmt.Errorf("slip10: invalid seed")
 	}
 
 	// 1. Calculate I = HMAC-SHA512(Key = Curve, Data = S)
@@ -71,16 +71,16 @@ func newMasterKey(seed []byte) (sdkSignature.Signer, slip10.ChainCode, []byte, e
 	return splitDigest(I)
 }
 
-func newChildKey(kPar []byte, cPar slip10.ChainCode, index uint32) (sdkSignature.Signer, slip10.ChainCode, []byte, error) {
+func newChildKey(kPar []byte, cPar slip10.ChainCode, index uint32) (sdkSignature.Signer, slip10.ChainCode, []byte, []byte, error) {
 	if len(kPar) < memory.SeedSize {
-		return nil, slip10.ChainCode{}, nil, fmt.Errorf("slip10: invalid parent key")
+		return nil, slip10.ChainCode{}, nil, nil, fmt.Errorf("slip10: invalid parent key")
 	}
 
 	// 1. Check whether i >= 2^31 (whether the child is a hardened key).
 	if index < 1<<31 {
 		// If not (normal child):
 		// If curve is ed25519: return failure.
-		return nil, slip10.ChainCode{}, nil, fmt.Errorf("slip10: non-hardened keys not supported")
+		return nil, slip10.ChainCode{}, nil, nil, fmt.Errorf("slip10: non-hardened keys not supported")
 	}
 
 	// If so (hardened child):
@@ -100,7 +100,7 @@ func newChildKey(kPar []byte, cPar slip10.ChainCode, index uint32) (sdkSignature
 	return splitDigest(I)
 }
 
-func splitDigest(digest []byte) (sdkSignature.Signer, slip10.ChainCode, []byte, error) {
+func splitDigest(digest []byte) (sdkSignature.Signer, slip10.ChainCode, []byte, []byte, error) {
 	IL, IR := digest[:32], digest[32:]
 
 	var chainCode slip10.ChainCode
@@ -108,12 +108,17 @@ func splitDigest(digest []byte) (sdkSignature.Signer, slip10.ChainCode, []byte, 
 	edSk := ed25519.NewKeyFromSeed(IL) // Needed for the SLIP10 scheme.
 	msk, err := sr25519.NewMiniSecretKeyFromBytes(IL)
 	if err != nil {
-		return nil, chainCode, nil, err
+		return nil, chainCode, nil, nil, err
 	}
 	sk := msk.ExpandUniform()
 
 	signer := sdkSr25519.NewSignerFromKeyPair(sk.KeyPair())
 	copy(chainCode[:], IR)
 
-	return signer, chainCode, edSk[:], nil
+	skCanBinary, err := sk.MarshalBinary()
+	if err != nil {
+		return nil, chainCode, nil, nil, err
+	}
+
+	return signer, chainCode, edSk[:], skCanBinary, nil
 }

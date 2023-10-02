@@ -6,6 +6,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	ethCommon "github.com/ethereum/go-ethereum/common"
+	"github.com/mitchellh/mapstructure"
 	flag "github.com/spf13/pflag"
 
 	coreSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
@@ -31,6 +32,25 @@ const (
 	// AlgorithmSr25519Raw is the Sr25519 algorithm using raw private keys.
 	AlgorithmSr25519Raw = "sr25519-raw"
 )
+
+// AccountConfig is an in-memory version of the account config stored in Oasis
+// CLI config file.
+type AccountConfig struct {
+	Algorithm string `mapstructure:"algorithm"`
+	Number    uint32 `mapstructure:"number,omitempty"`
+}
+
+// UnmarshalMap imports the config map to AccountConfig.
+func (af *AccountConfig) UnmarshalMap(raw map[string]interface{}) error {
+	if raw == nil {
+		return fmt.Errorf("missing configuration")
+	}
+
+	if err := mapstructure.Decode(raw, &af); err != nil {
+		return err
+	}
+	return nil
+}
 
 // Factory is a factory that supports accounts of a specific kind.
 type Factory interface {
@@ -130,8 +150,8 @@ type Account interface {
 	// SignatureAddressSpec returns the signature address specification associated with the account.
 	SignatureAddressSpec() types.SignatureAddressSpec
 
-	// UnsafeExport exports the account's secret state.
-	UnsafeExport() string
+	// UnsafeExport returns the account's private key and mnemonic.
+	UnsafeExport() (string, string)
 }
 
 // Register registers a new account type.

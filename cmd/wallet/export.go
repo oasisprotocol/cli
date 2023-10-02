@@ -18,10 +18,22 @@ var exportCmd = &cobra.Command{
 
 		fmt.Printf("WARNING: Exporting the account will expose secret key material!\n")
 		acc := common.LoadAccount(config.Global(), name)
+		accCfg, _ := common.LoadAccountConfig(config.Global(), name)
 
-		showPublicWalletInfo(name, acc)
+		showPublicWalletInfo(name, acc, accCfg)
 
-		fmt.Printf("Export:\n")
-		fmt.Println(acc.UnsafeExport())
+		key, mnemonic := acc.UnsafeExport()
+		if mnemonic != "" {
+			fmt.Printf("Secret mnemonic:\n")
+			fmt.Println(mnemonic)
+			if key != "" {
+				fmt.Printf("Derived secret key for account number %d:\n", accCfg.Config["number"])
+				fmt.Println(key)
+			}
+		}
+		if mnemonic == "" && key != "" {
+			fmt.Printf("Secret key:\n")
+			fmt.Println(key)
+		}
 	},
 }

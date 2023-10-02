@@ -19,12 +19,19 @@ var showCmd = &cobra.Command{
 		name := args[0]
 
 		acc := common.LoadAccount(config.Global(), name)
-		showPublicWalletInfo(name, acc)
+		accCfg, _ := common.LoadAccountConfig(config.Global(), name)
+		showPublicWalletInfo(name, acc, accCfg)
 	},
 }
 
-func showPublicWalletInfo(name string, wallet wallet.Account) {
+func showPublicWalletInfo(name string, wallet wallet.Account, accCfg *config.Account) {
+	kind := "<unknown>"
+	if accCfg != nil {
+		kind = accCfg.PrettyKind()
+	}
+
 	fmt.Printf("Name:             %s\n", name)
+	fmt.Printf("Kind:             %s\n", kind)
 	if signer := wallet.Signer(); signer != nil {
 		fmt.Printf("Public Key:       %s\n", signer.Public())
 	}

@@ -20,21 +20,21 @@ const (
 )
 
 // Secp256k1FromMnemonic derives a signer using BIP-44 from given mnemonic.
-func Secp256k1FromMnemonic(mnemonic string, number uint32) (sdkSignature.Signer, error) {
+func Secp256k1FromMnemonic(mnemonic string, number uint32) (sdkSignature.Signer, []byte, error) {
 	wallet, err := hdwallet.NewFromMnemonic(mnemonic)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse mnemonic: %w", err)
+		return nil, nil, fmt.Errorf("failed to parse mnemonic: %w", err)
 	}
 	path := hdwallet.MustParseDerivationPath(fmt.Sprintf(Bip44DerivationPath, number))
 	account, err := wallet.Derive(path, false)
 	if err != nil {
-		return nil, fmt.Errorf("failed to derive key from mnemonic: %w", err)
+		return nil, nil, fmt.Errorf("failed to derive key from mnemonic: %w", err)
 	}
-	pk, err := wallet.PrivateKeyBytes(account)
+	sk, err := wallet.PrivateKeyBytes(account)
 	if err != nil {
-		return nil, fmt.Errorf("failed to obtain generated private key: %w", err)
+		return nil, nil, fmt.Errorf("failed to obtain generated private key: %w", err)
 	}
-	return secp256k1.NewSigner(pk), nil
+	return secp256k1.NewSigner(sk), sk, nil
 }
 
 // Secp256k1FromHex creates a signer from given hex-encoded private key.

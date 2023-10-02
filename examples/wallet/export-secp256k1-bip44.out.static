@@ -2,8 +2,11 @@ WARNING: Exporting the account will expose secret key material!
 Unlock your account.
 ? Passphrase:
 Name:             eugene
+Kind:             file (secp256k1-bip44:0)
 Public Key:       ArEjDxsPfDvfeLlity4mjGzy8E/nI4umiC8vYQh+eh/c
 Ethereum address: 0xBd16C6bF701a01DF1B5C11B14860b6bDbE776669
 Native address:   oasis1qrvzxld9rz83wv92lvnkpmr30c77kj2tvg0pednz
-Export:
+Secret mnemonic:
 man ankle mystery favorite tone number ice west spare marriage control lucky life together neither
+Derived secret key for account number 0:
+c559cad1e71e0db1b3a657f47ca7a618bfb6a51a7294df72bcfca57aded5377e

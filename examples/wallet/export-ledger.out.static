@@ -1,6 +1,6 @@
 WARNING: Exporting the account will expose secret key material!
 Name:             lenny
+Kind:             ledger (secp256k1-bip44:3)
 Public Key:       AhhT2TUkEZ7rMasLBvHcsGj4SUO7Iw36ELEpL0evZDV1
 Ethereum address: 0x95e5e3C1BDD92cd4A0c14c62480DB5867946281D
 Native address:   oasis1qrmw4rhvp8ksj3yx6p2ftnkz864muc3re5jlgall
-Export:

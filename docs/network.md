@@ -75,6 +75,21 @@ all dependant ParaTimes.
 
 ![code shell](../examples/network/01-remove.in)
 
+## Set Network Chain Context {#set-chain-context}
+
+To change the chain context of a network, use
+`network set-chain-context <name> <chain-context>`.
+
+:::caution
+
+Chain contexts represent a root of trust in the network, so before changing them
+for production networks make sure you have verified them against a trusted
+source like the official Oasis documentation.
+
+:::
+
+![code shell](../examples/network/05-set-chain-context.in)
+
 ## Set Default Network {#set-default}
 
 To change the default network for future Oasis CLI operations, use

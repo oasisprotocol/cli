@@ -55,6 +55,7 @@ func init() {
 	Cmd.AddCommand(governance.Cmd)
 	Cmd.AddCommand(listCmd)
 	Cmd.AddCommand(rmCmd)
+	Cmd.AddCommand(setChainContextCmd)
 	Cmd.AddCommand(setDefaultCmd)
 	Cmd.AddCommand(setRPCCmd)
 	Cmd.AddCommand(showCmd)

@@ -10,14 +10,11 @@ import (
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 
-	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/node"
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
-	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	roothash "github.com/oasisprotocol/oasis-core/go/roothash/api"
 	"github.com/oasisprotocol/oasis-core/go/roothash/api/block"
-	"github.com/oasisprotocol/oasis-core/go/roothash/api/commitment"
 	scheduler "github.com/oasisprotocol/oasis-core/go/scheduler/api"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
@@ -69,24 +66,19 @@ type entityStats struct {
 	// Rounds entity node was a proposer.
 	roundsProposer uint64
 
-	// How many times entity node proposed a timeout.
-	proposedTimeout uint64
-
 	// How many good blocks committed while being primary worker.
-	committeedGoodBlocksPrimary uint64
+	committedGoodBlocksPrimary uint64
 	// How many bad blocs committed while being primary worker.
-	committeedBadBlocksPrimary uint64
+	committedBadBlocksPrimary uint64
 	// How many good blocks committed while being backup worker.
-	committeedGoodBlocksBackup uint64
+	committedGoodBlocksBackup uint64
 	// How many bad blocks committed while being backup worker.
-	committeedBadBlocksBackup uint64
+	committedBadBlocksBackup uint64
 
 	// How many rounds missed committing a block while being a primary worker.
 	missedPrimary uint64
 	// How many rounds missed committing a block while being a backup worker (and discrepancy detection was invoked).
 	missedBackup uint64
-	// How many rounds proposer timeout was triggered while being the proposer.
-	missedProposer uint64
 }
 
 var statsCmd = &cobra.Command{
@@ -229,43 +221,6 @@ var statsCmd = &cobra.Command{
 			evs, err = roothashConn.GetEvents(ctx, height)
 			cobra.CheckErr(err)
 
-			var proposerTimeout bool
-			if currentRound != blk.Header.Round && currentCommittee != nil {
-				// If new round, check for proposer timeout.
-				// Need to look at submitted transactions if round failure was caused by a proposer timeout.
-				var rsp *consensus.TransactionsWithResults
-				rsp, err = consensusConn.GetTransactionsWithResults(ctx, height)
-				cobra.CheckErr(err)
-				for i := 0; i < len(rsp.Transactions); i++ {
-					// Ignore failed txs.
-					if !rsp.Results[i].IsSuccess() {
-						continue
-					}
-					var sigTx transaction.SignedTransaction
-					err = cbor.Unmarshal(rsp.Transactions[i], &sigTx)
-					cobra.CheckErr(err)
-					var tx transaction.Transaction
-					err = sigTx.Open(&tx)
-					cobra.CheckErr(err)
-					// Ignore non proposer timeout txs.
-					if tx.Method != roothash.MethodExecutorProposerTimeout {
-						continue
-					}
-					var xc roothash.ExecutorProposerTimeoutRequest
-					err = cbor.Unmarshal(tx.Body, &xc)
-					cobra.CheckErr(err)
-					// Ignore txs of other runtimes.
-					if xc.ID != runtimeID {
-						continue
-					}
-					// Proposer timeout triggered the round failure, update stats.
-					stats.entities[nodeToEntity(sigTx.Signature.PublicKey)].proposedTimeout++
-					stats.entities[nodeToEntity(currentScheduler.PublicKey)].missedProposer++
-					proposerTimeout = true
-					break
-				}
-			}
-
 			// Go over events before updating potential new round committee info.
 			// Even if round transition happened at this height, all events emitted
 			// at this height belong to the previous round.
@@ -302,10 +257,6 @@ var statsCmd = &cobra.Command{
 					if blk.Header.HeaderType == block.EpochTransition || blk.Header.HeaderType == block.Suspended {
 						continue
 					}
-					// Skip if proposer timeout.
-					if proposerTimeout {
-						continue
-					}
 
 					// Update stats.
 				OUTER:
@@ -328,11 +279,11 @@ var statsCmd = &cobra.Command{
 							}
 							switch member.Role {
 							case scheduler.RoleWorker:
-								stats.entities[entity].committeedGoodBlocksPrimary++
+								stats.entities[entity].committedGoodBlocksPrimary++
 								continue OUTER
 							case scheduler.RoleBackupWorker:
 								if roundDiscrepancy {
-									stats.entities[entity].committeedGoodBlocksBackup++
+									stats.entities[entity].committedGoodBlocksBackup++
 									continue OUTER
 								}
 							case scheduler.RoleInvalid:
@@ -346,11 +297,11 @@ var statsCmd = &cobra.Command{
 							}
 							switch member.Role {
 							case scheduler.RoleWorker:
-								stats.entities[entity].committeedBadBlocksPrimary++
+								stats.entities[entity].committedBadBlocksPrimary++
 								continue OUTER
 							case scheduler.RoleBackupWorker:
 								if roundDiscrepancy {
-									stats.entities[entity].committeedBadBlocksBackup++
+									stats.entities[entity].committedBadBlocksBackup++
 									continue OUTER
 								}
 							case scheduler.RoleInvalid:
@@ -379,11 +330,7 @@ var statsCmd = &cobra.Command{
 				case block.EpochTransition:
 					stats.epochTransitionRounds++
 				case block.RoundFailed:
-					if proposerTimeout {
-						stats.proposerTimeoutedRounds++
-					} else {
-						stats.failedRounds++
-					}
+					stats.failedRounds++
 				case block.Suspended:
 					stats.suspendedRounds++
 					currentCommittee = nil
@@ -401,7 +348,7 @@ var statsCmd = &cobra.Command{
 				var state *roothash.RuntimeState
 				state, err = roothashConn.GetRuntimeState(ctx, rtRequest)
 				cobra.CheckErr(err)
-				if state.ExecutorPool == nil {
+				if state.Committee == nil || state.CommitmentPool == nil {
 					// No committee - election failed(?)
 					fmt.Printf("\nWarning: unexpected or missing committee for runtime: height: %d\n", height)
 					currentCommittee = nil
@@ -409,9 +356,12 @@ var statsCmd = &cobra.Command{
 					continue
 				}
 				// Set committee info.
-				currentCommittee = state.ExecutorPool.Committee
-				currentScheduler, err = commitment.GetTransactionScheduler(currentCommittee, currentRound)
-				cobra.CheckErr(err)
+				var ok bool
+				currentCommittee = state.Committee
+				currentScheduler, ok = currentCommittee.Scheduler(currentRound, 0)
+				if !ok {
+					cobra.CheckErr("failed to query primary scheduler, no workers in committee")
+				}
 				roundDiscrepancy = false
 
 				// Update election stats.
@@ -491,8 +441,6 @@ func (s *runtimeStats) prepareEntitiesOutput(
 		"Bckp Bad commit",
 		"Primary missed",
 		"Bckp missed",
-		"Proposer missed",
-		"Proposed timeout",
 	}
 
 	addrToName := func(addr types.Address) string {
@@ -517,15 +465,13 @@ func (s *runtimeStats) prepareEntitiesOutput(
 			strconv.FormatUint(stats.roundsBackup, 10),
 			strconv.FormatUint(stats.roundsProposer, 10),
 			strconv.FormatUint(stats.roundsPrimaryRequired, 10),
-			strconv.FormatUint(stats.committeedGoodBlocksPrimary, 10),
-			strconv.FormatUint(stats.committeedBadBlocksPrimary, 10),
+			strconv.FormatUint(stats.committedGoodBlocksPrimary, 10),
+			strconv.FormatUint(stats.committedBadBlocksPrimary, 10),
 			strconv.FormatUint(stats.roundsBackupRequired, 10),
-			strconv.FormatUint(stats.committeedGoodBlocksBackup, 10),
-			strconv.FormatUint(stats.committeedBadBlocksBackup, 10),
+			strconv.FormatUint(stats.committedGoodBlocksBackup, 10),
+			strconv.FormatUint(stats.committedBadBlocksBackup, 10),
 			strconv.FormatUint(stats.missedPrimary, 10),
 			strconv.FormatUint(stats.missedBackup, 10),
-			strconv.FormatUint(stats.missedProposer, 10),
-			strconv.FormatUint(stats.proposedTimeout, 10),
 		)
 		s.entitiesOutput = append(s.entitiesOutput, line)
 	}

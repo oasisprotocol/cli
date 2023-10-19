@@ -170,14 +170,44 @@ func (cfg *Config) Save() error {
 	return cfg.viper.WriteConfig()
 }
 
-// Migrate migrates the given wallet config entry to the latest version and returns true, if any changes were needed.
+// Migrate migrates the given wallet config entry to the latest version and returns true, if any
+// changes were needed.
 func (cfg *Config) Migrate() (bool, error) {
-	changes, err := cfg.Wallet.Migrate()
+	var changes bool
+
+	// Networks.
+	changes = changes || cfg.migrateNetworks()
+
+	// Wallets.
+	walletChanges, err := cfg.Wallet.Migrate()
 	if err != nil {
 		return false, fmt.Errorf("failed to migrate wallet configuration: %w", err)
 	}
+	changes = changes || walletChanges
 
 	return changes, nil
+}
+
+func (cfg *Config) migrateNetworks() bool {
+	var changes bool
+	for name, net := range cfg.Networks.All {
+		defaultCfg, knownDefault := Default.Networks.All[name]
+		oldChainContexts, knownOld := OldNetworks[name]
+		if !knownDefault || !knownOld {
+			continue
+		}
+
+		for _, oldChainContext := range oldChainContexts {
+			if net.ChainContext == oldChainContext {
+				// If old chain context is known, replace with default.
+				net.ChainContext = defaultCfg.ChainContext
+				changes = true
+				break
+			}
+		}
+	}
+
+	return changes
 }
 
 // Validate performs config validation.

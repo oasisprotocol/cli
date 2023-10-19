@@ -53,6 +53,7 @@ func init() {
 	Cmd.AddCommand(renameCmd)
 	Cmd.AddCommand(setDefaultCmd)
 	Cmd.AddCommand(importCmd)
+	Cmd.AddCommand(importFileCmd)
 	Cmd.AddCommand(exportCmd)
 	Cmd.AddCommand(remoteSignerCmd)
 }

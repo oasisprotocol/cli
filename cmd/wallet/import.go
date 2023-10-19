@@ -1,8 +1,6 @@
 package wallet
 
 import (
-	"fmt"
-
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 
@@ -20,12 +18,7 @@ var importCmd = &cobra.Command{
 		cfg := config.Global()
 		name := args[0]
 
-		if _, exists := cfg.Wallet.All[name]; exists {
-			cobra.CheckErr(fmt.Errorf("account '%s' already exists in the wallet", name))
-		}
-		if _, exists := cfg.AddressBook.All[name]; exists {
-			cobra.CheckErr(fmt.Errorf("address named '%s' already exists in the address book", name))
-		}
+		checkAccountExists(cfg, name)
 
 		// NOTE: We only support importing into the file-based wallet for now.
 		af, err := wallet.Load(walletFile.Kind)

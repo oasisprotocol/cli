@@ -22,6 +22,8 @@ var createCmd = &cobra.Command{
 		cfg := config.Global()
 		name := args[0]
 
+		checkAccountExists(cfg, name)
+
 		af, err := wallet.Load(accKind)
 		cobra.CheckErr(err)
 
@@ -37,15 +39,21 @@ var createCmd = &cobra.Command{
 		err = accCfg.SetConfigFromFlags()
 		cobra.CheckErr(err)
 
-		if _, exists := cfg.AddressBook.All[name]; exists {
-			cobra.CheckErr(fmt.Errorf("address named '%s' already exists in address book", name))
-		}
 		err = cfg.Wallet.Create(name, passphrase, accCfg)
 		cobra.CheckErr(err)
 
 		err = cfg.Save()
 		cobra.CheckErr(err)
 	},
+}
+
+func checkAccountExists(cfg *config.Config, name string) {
+	if _, exists := cfg.Wallet.All[name]; exists {
+		cobra.CheckErr(fmt.Errorf("account '%s' already exists in the wallet", name))
+	}
+	if _, exists := cfg.AddressBook.All[name]; exists {
+		cobra.CheckErr(fmt.Errorf("address named '%s' already exists in the address book", name))
+	}
 }
 
 func init() {

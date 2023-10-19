@@ -20,15 +20,19 @@ Oasis CLI for your accounts:
   used for accounts living on EVM-compatible ParaTimes such as Sapphire or
   Emerald. The same account can be imported into Metamask and other Ethereum
   wallets.
+- `ed25519-raw`: [Ed25519] keypair imported directly from the Base64-encoded
+  private key. No key derivation is involved. This setting is primarily used by
+  the network validators to sign the governance and other consensus-layer
+  transactions.
 - `ed25519-legacy`: [Ed25519] keypair using a legacy 5-component derivation
   path. This is the preferred setting for Oasis accounts stored on a hardware
   wallet like Ledger. It is called legacy, because it was first implemented
   before the [ADR-8] was standardized.
 - `sr25519-adr8`: [Sr25519] keypair using the [ADR-8] derivation path. This is
   an alternative signature scheme for signing ParaTime transactions.
-- `ed25519-raw`, `secp256k1-raw` and `sr25519-raw`: Respective Ed25519,
-  Secp256k1 and Sr25519 keypairs imported directly from Base32 or Hex-encoded
-  private keys. No key derivation is involved.
+- `secp256k1-raw` and `sr25519-raw`: Respective Secp256k1 and Sr25519 keypairs
+  imported directly from the Hex- or Base64-encoded private key. No key
+  derivation is involved.
 
 :::tip
 
@@ -357,6 +361,34 @@ name of the desired default account.
 ![code](../examples/wallet/05-list.out)
 
 ## Advanced
+
+### Import an Existing Keypair from PEM file {#import-file}
+
+Existing node operators may already use their Ed25519 private key for running
+their nodes stored in a PEM-encoded file typically named `entity.pem`. In order
+to submit their governance transaction, for example to vote on the network
+upgrade using the Oasis CLI, they need to import the key into the Oasis CLI
+wallet:
+
+```shell
+oasis wallet import-file my_entity entity.pem
+```
+
+```
+? Choose a new passphrase: 
+? Repeat passphrase:
+```
+
+The key is now safely stored and encrypted inside the Oasis CLI.
+
+```shell
+oasis wallet list
+```
+
+```
+ACCOUNT                         KIND                            ADDRESS                                        
+my_entity                       file (ed25519-raw)              oasis1qpe0vnm0ahczgc353vytvtz9r829le4pjux8lc5z
+```
 
 ### Remote Signer for `oasis-node` {#remote-signer}
 

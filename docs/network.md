@@ -138,6 +138,13 @@ proposal was created and when it closes and a state.
 
 ![code](../examples/network-governance/list.out)
 
+:::info
+
+[Network](./account.md#npa) selector is available for the
+`governance list` command.
+
+:::
+
 #### `show` {#governance-show}
 
 `network governance show <proposal-id>` shows detailed information on
@@ -154,6 +161,13 @@ respond. If you encounter timeouts, consider setting up your own gRPC endpoint!
 
 :::
 
+:::info
+
+[Network](./account.md#npa) selector is available for the
+`governance show` command.
+
+:::
+
 #### `cast-vote` {#governance-cast-vote}
 
 `network governance cast-vote <proposal-id> { yes | no | abstain }` is used
@@ -163,6 +177,13 @@ to submit your vote on the governance proposal. The vote can either be `yes`,
 ![code shell](../examples/network-governance/cast-vote.in.static)
 
 ![code](../examples/network-governance/cast-vote.out.static)
+
+:::info
+
+[Network and account](./account.md#npa) selectors are available for the
+`governance cast-vote` command.
+
+:::
 
 #### `create-proposal` {#governance-create-proposal}
 
@@ -174,6 +195,13 @@ The following proposal types are currently supported:
 - `cancel-upgrade <proposal-id>`: Cancel network proposed upgrade. Provide the
   ID of the network upgrade proposal you wish to cancel.
 
+:::info
+
+[Network and account](./account.md#npa) selectors are available for all
+`governance create-proposal` subcommands.
+
+:::
+
 ### Show Network Properties {#show}
 
 `network show` shows the network property stored in the registry, scheduler,
@@ -181,6 +209,13 @@ genesis document or on chain.
 
 By passing `--height <block_number>` with a block number, you can obtain a
 historic value of the property.
+
+:::info
+
+[Network](./account.md#npa) selector is available for the
+`network show` command.
+
+:::
 
 The command expects one of the following parameters:
 
@@ -319,3 +354,10 @@ Mainnet was reported:
 ![code shell](../examples/network/status.in.static)
 
 ![code json](../examples/network/status.out.static)
+
+:::info
+
+[Network](./account.md#npa) selector is available for the
+`network status` command.
+
+:::

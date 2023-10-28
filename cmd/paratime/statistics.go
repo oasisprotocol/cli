@@ -379,14 +379,15 @@ var statsCmd = &cobra.Command{
 					}
 					seen[member.PublicKey] = true
 
-					if member.Role == scheduler.RoleWorker {
+					switch member.Role {
+					case scheduler.RoleWorker:
 						stats.entities[entity].roundsPrimary++
-					}
-					if member.Role == scheduler.RoleBackupWorker {
+						if member.PublicKey == currentScheduler.PublicKey {
+							stats.entities[entity].roundsProposer++
+						}
+					case scheduler.RoleBackupWorker:
 						stats.entities[entity].roundsBackup++
-					}
-					if member.PublicKey == currentScheduler.PublicKey {
-						stats.entities[entity].roundsProposer++
+					case scheduler.RoleInvalid:
 					}
 				}
 			}

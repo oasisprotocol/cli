@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"math"
 	"os"
+	"sort"
 	"strconv"
 
 	"github.com/olekukonko/tablewriter"
@@ -56,15 +58,17 @@ type entityStats struct {
 	roundsElected uint64
 	// Rounds entity node was elected as primary executor worker.
 	roundsPrimary uint64
-	// Rounds entity node was elected as primary executor worker and workers were invoked.
-	roundsPrimaryRequired uint64
 	// Rounds entity node was elected as a backup executor worker.
 	roundsBackup uint64
 	// Rounds entity node was elected as a backup executor worker
 	// and backup workers were invoked.
 	roundsBackupRequired uint64
-	// Rounds entity node was a proposer.
-	roundsProposer uint64
+	// Rounds entity node was a primary proposer.
+	roundsPrimaryProposer uint64
+	// Rounds entity node proposed as primary proposer.
+	roundsPrimaryProposed uint64
+	// Rounds entity node proposed as backup proposer.
+	roundsBackupProposed uint64
 
 	// How many good blocks committed while being primary worker.
 	committedGoodBlocksPrimary uint64
@@ -100,7 +104,8 @@ var statsCmd = &cobra.Command{
 		// Parse command line arguments
 		var (
 			startHeightArg int64 = -1
-			endHeight      uint64
+			startHeight    int64
+			endHeight      int64
 		)
 		if argLen := len(args); argLen > 0 {
 			var err error
@@ -110,7 +115,7 @@ var statsCmd = &cobra.Command{
 			cobra.CheckErr(err)
 
 			if argLen == 2 {
-				endHeight, err = strconv.ParseUint(args[1], 10, 64)
+				endHeight, err = strconv.ParseInt(args[1], 10, 64)
 				cobra.CheckErr(err)
 			}
 		}
@@ -127,12 +132,11 @@ var statsCmd = &cobra.Command{
 			var blk *consensus.Block
 			blk, err = consensusConn.GetBlock(ctx, consensus.HeightLatest)
 			cobra.CheckErr(err)
-			endHeight = uint64(blk.Height)
+			endHeight = blk.Height
 		}
-		var startHeight uint64
 		switch {
 		case startHeightArg < 0:
-			delta := uint64(-startHeightArg)
+			delta := -startHeightArg
 			if endHeight <= delta {
 				cobra.CheckErr(fmt.Errorf("start-height %d will underflow end-height %d", startHeightArg, endHeight))
 			}
@@ -141,9 +145,9 @@ var statsCmd = &cobra.Command{
 			var status *consensus.Status
 			status, err = consensusConn.GetStatus(ctx)
 			cobra.CheckErr(err)
-			startHeight = uint64(status.LastRetainedHeight)
+			startHeight = status.LastRetainedHeight
 		default:
-			startHeight = uint64(startHeightArg)
+			startHeight = startHeightArg
 		}
 
 		chainCtx, err := consensusConn.GetChainContext(ctx)
@@ -165,17 +169,10 @@ var statsCmd = &cobra.Command{
 			entities: make(map[signature.PublicKey]*entityStats),
 		}
 
-		var (
-			currentRound     uint64
-			currentCommittee *scheduler.Committee
-			currentScheduler *scheduler.CommitteeNode
-			roundDiscrepancy bool
-		)
-
 		roothashConn := consensusConn.RootHash()
 		registryConn := consensusConn.Registry()
 
-		nl, err := common.NewNodeLookup(ctx, consensusConn, registryConn, int64(startHeight))
+		nl, err := common.NewNodeLookup(ctx, consensusConn, registryConn, startHeight)
 		cobra.CheckErr(err)
 
 		nodeToEntityMap := make(map[signature.PublicKey]signature.PublicKey)
@@ -195,200 +192,192 @@ var statsCmd = &cobra.Command{
 			return entityID
 		}
 
-		for height := int64(startHeight); height < int64(endHeight); height++ {
+		var (
+			state            *roothash.RuntimeState
+			roundScheduler   signature.PublicKey
+			roundDiscrepancy bool
+		)
+
+		// Executor committed and execution discrepancy detected events may span across multiple
+		// consensus blocks. To avoid handling all of them, extract necessary data from the state
+		// preceding the starting block.
+		if height := startHeight - 1; height > 0 {
+			state, err = roothashConn.GetRuntimeState(ctx, &roothash.RuntimeRequest{
+				RuntimeID: runtimeID,
+				Height:    height,
+			})
+			switch err {
+			case nil:
+				if state.CommitmentPool == nil || state.CommitmentPool.HighestRank == math.MaxUint64 {
+					break
+				}
+				sc, ok := state.CommitmentPool.SchedulerCommitments[state.CommitmentPool.HighestRank]
+				if !ok {
+					break
+				}
+				roundScheduler = sc.Commitment.Header.SchedulerID
+				roundDiscrepancy = state.CommitmentPool.Discrepancy
+			case roothash.ErrInvalidRuntime:
+				// State not available.
+			case consensus.ErrVersionNotFound:
+				// Height too far in the past.
+			default:
+				cobra.CheckErr(err)
+			}
+		}
+
+		for height := startHeight; height < endHeight; height++ {
 			if height%1000 == 0 {
 				fmt.Printf("progressed: height: %d\n", height)
 			}
+
 			err = nl.SetHeight(ctx, height)
 			cobra.CheckErr(err)
 
+			// Query the latest runtime state.
 			rtRequest := &roothash.RuntimeRequest{
 				RuntimeID: runtimeID,
 				Height:    height,
 			}
 
-			// Query latest roothash block and events.
-			var blk *block.Block
-			blk, err = roothashConn.GetLatestBlock(ctx, rtRequest)
+			state, err = roothashConn.GetRuntimeState(ctx, rtRequest)
 			switch err {
 			case nil:
 			case roothash.ErrInvalidRuntime:
+				// State not available.
 				continue
 			default:
 				cobra.CheckErr(err)
 			}
+
+			// Skip if the runtime was suspended.
+			if state.Committee == nil || state.CommitmentPool == nil {
+				continue
+			}
+
+			// Query and process events.
 			var evs []*roothash.Event
 			evs, err = roothashConn.GetEvents(ctx, height)
 			cobra.CheckErr(err)
 
-			// Go over events before updating potential new round committee info.
-			// Even if round transition happened at this height, all events emitted
-			// at this height belong to the previous round.
 			for _, ev := range evs {
-				// Skip events for initial height where we don't have round info yet.
-				if height == int64(startHeight) {
-					break
-				}
 				// Skip events for other runtimes.
 				if ev.RuntimeID != runtimeID {
 					continue
 				}
+
 				switch {
 				case ev.ExecutorCommitted != nil:
-					// Nothing to do here. We use Finalized event Good/Bad Compute node
-					// fields to process commitments.
+					if ev.ExecutorCommitted.Commit.NodeID == ev.ExecutorCommitted.Commit.Header.SchedulerID {
+						roundScheduler = ev.ExecutorCommitted.Commit.Header.SchedulerID
+					}
 				case ev.ExecutionDiscrepancyDetected != nil:
+					// Note that we are counting discrepancy events that occurred between
+					// the specified start and end blocks, which differs from counting those
+					// associated with finalized blocks.
 					if ev.ExecutionDiscrepancyDetected.Timeout {
 						stats.discrepancyDetectedTimeout++
 					} else {
 						stats.discrepancyDetected++
 					}
+
 					roundDiscrepancy = true
 				case ev.Finalized != nil:
-					var rtResults *roothash.RoundResults
-					rtResults, err = roothashConn.GetLastRoundResults(ctx, rtRequest)
-					cobra.CheckErr(err)
-
-					// Skip the empty finalized event that is triggered on initial round.
-					if len(rtResults.GoodComputeEntities) == 0 && len(rtResults.BadComputeEntities) == 0 && currentCommittee == nil {
-						continue
-					}
-					// Skip if epoch transition or suspended blocks.
-					if blk.Header.HeaderType == block.EpochTransition || blk.Header.HeaderType == block.Suspended {
-						continue
-					}
-
-					// Update stats.
-				OUTER:
-					for _, member := range currentCommittee.Members {
-						// entity := nodeToEntity[member.PublicKey]
-						entity := nodeToEntity(member.PublicKey)
-						// Primary workers are always required.
-						if member.Role == scheduler.RoleWorker {
-							stats.entities[entity].roundsPrimaryRequired++
-						}
-						// In case of discrepancies backup workers were invoked as well.
-						if roundDiscrepancy && member.Role == scheduler.RoleBackupWorker {
-							stats.entities[entity].roundsBackupRequired++
+					func() {
+						stats.rounds++
+						switch ht := state.LastBlock.Header.HeaderType; ht {
+						case block.Normal:
+							stats.successfulRounds++
+						case block.RoundFailed:
+							stats.failedRounds++
+						case block.EpochTransition:
+							stats.epochTransitionRounds++
+							return
+						case block.Suspended:
+							stats.suspendedRounds++
+							return
+						default:
+							cobra.CheckErr(fmt.Errorf("unexpected block header type: header_type: %v, height: %v", ht, height))
 						}
 
-						// Go over good commitments.
-						for _, v := range rtResults.GoodComputeEntities {
-							if entity != v {
-								continue
+						primaryScheduler, ok := state.Committee.Scheduler(state.LastBlock.Header.Round, 0)
+						if !ok {
+							cobra.CheckErr(fmt.Errorf("failed to query primary scheduler, no workers in committee"))
+						}
+
+						var rtResults *roothash.RoundResults
+						rtResults, err = roothashConn.GetLastRoundResults(ctx, rtRequest)
+						cobra.CheckErr(err)
+
+						seen := make(map[signature.PublicKey]struct{})
+						good := make(map[signature.PublicKey]struct{})
+						bad := make(map[signature.PublicKey]struct{})
+
+						for _, ent := range rtResults.GoodComputeEntities {
+							good[ent] = struct{}{}
+						}
+						for _, ent := range rtResults.BadComputeEntities {
+							bad[ent] = struct{}{}
+						}
+
+						for _, member := range state.Committee.Members {
+							entity := nodeToEntity(member.PublicKey)
+							if _, ok := stats.entities[entity]; !ok {
+								stats.entities[entity] = &entityStats{}
 							}
+
+							// Count as elected once if the node has multiple roles.
+							if _, ok := seen[member.PublicKey]; !ok {
+								stats.entities[entity].roundsElected++
+							}
+							seen[member.PublicKey] = struct{}{}
+
 							switch member.Role {
 							case scheduler.RoleWorker:
-								stats.entities[entity].committedGoodBlocksPrimary++
-								continue OUTER
+								stats.entities[entity].roundsPrimary++
+
+								if _, ok := good[entity]; ok {
+									stats.entities[entity].committedGoodBlocksPrimary++
+								} else if _, ok := bad[entity]; ok {
+									stats.entities[entity].committedBadBlocksPrimary++
+								} else {
+									stats.entities[entity].missedPrimary++
+								}
+
+								if member.PublicKey == primaryScheduler.PublicKey {
+									stats.entities[entity].roundsPrimaryProposer++
+								}
+
+								if member.PublicKey == roundScheduler {
+									switch member.PublicKey == primaryScheduler.PublicKey {
+									case true:
+										stats.entities[entity].roundsPrimaryProposed++
+									case false:
+										stats.entities[entity].roundsBackupProposed++
+									}
+								}
 							case scheduler.RoleBackupWorker:
-								if roundDiscrepancy {
+								stats.entities[entity].roundsBackup++
+
+								if !roundDiscrepancy {
+									break
+								}
+
+								stats.entities[entity].roundsBackupRequired++
+
+								if _, ok := good[entity]; ok {
 									stats.entities[entity].committedGoodBlocksBackup++
-									continue OUTER
-								}
-							case scheduler.RoleInvalid:
-							}
-						}
-
-						// Go over bad commitments.
-						for _, v := range rtResults.BadComputeEntities {
-							if entity != v {
-								continue
-							}
-							switch member.Role {
-							case scheduler.RoleWorker:
-								stats.entities[entity].committedBadBlocksPrimary++
-								continue OUTER
-							case scheduler.RoleBackupWorker:
-								if roundDiscrepancy {
+								} else if _, ok := bad[entity]; ok {
 									stats.entities[entity].committedBadBlocksBackup++
-									continue OUTER
+								} else {
+									stats.entities[entity].missedBackup++
 								}
 							case scheduler.RoleInvalid:
 							}
 						}
+					}()
 
-						// Neither good nor bad - missed commitment.
-						if member.Role == scheduler.RoleWorker {
-							stats.entities[entity].missedPrimary++
-						}
-						if roundDiscrepancy && member.Role == scheduler.RoleBackupWorker {
-							stats.entities[entity].missedBackup++
-						}
-					}
-				}
-			}
-
-			// New round.
-			if currentRound != blk.Header.Round {
-				currentRound = blk.Header.Round
-				stats.rounds++
-
-				switch blk.Header.HeaderType {
-				case block.Normal:
-					stats.successfulRounds++
-				case block.EpochTransition:
-					stats.epochTransitionRounds++
-				case block.RoundFailed:
-					stats.failedRounds++
-				case block.Suspended:
-					stats.suspendedRounds++
-					currentCommittee = nil
-					currentScheduler = nil
-					continue
-				default:
-					cobra.CheckErr(fmt.Errorf(
-						"unexpected block header type: header_type: %v, height: %v",
-						blk.Header.HeaderType,
-						height,
-					))
-				}
-
-				// Query runtime state and setup committee info for the round.
-				var state *roothash.RuntimeState
-				state, err = roothashConn.GetRuntimeState(ctx, rtRequest)
-				cobra.CheckErr(err)
-				if state.Committee == nil || state.CommitmentPool == nil {
-					// No committee - election failed(?)
-					fmt.Printf("\nWarning: unexpected or missing committee for runtime: height: %d\n", height)
-					currentCommittee = nil
-					currentScheduler = nil
-					continue
-				}
-				// Set committee info.
-				var ok bool
-				currentCommittee = state.Committee
-				currentScheduler, ok = currentCommittee.Scheduler(currentRound, 0)
-				if !ok {
-					cobra.CheckErr("failed to query primary scheduler, no workers in committee")
-				}
-				roundDiscrepancy = false
-
-				// Update election stats.
-				seen := make(map[signature.PublicKey]bool)
-				for _, member := range currentCommittee.Members {
-					entity := nodeToEntity(member.PublicKey)
-					if _, ok := stats.entities[entity]; !ok {
-						stats.entities[entity] = &entityStats{}
-					}
-
-					// Multiple records for same node in case the node has
-					// multiple roles. Only count it as elected once.
-					if !seen[member.PublicKey] {
-						stats.entities[entity].roundsElected++
-					}
-					seen[member.PublicKey] = true
-
-					switch member.Role {
-					case scheduler.RoleWorker:
-						stats.entities[entity].roundsPrimary++
-						if member.PublicKey == currentScheduler.PublicKey {
-							stats.entities[entity].roundsProposer++
-						}
-					case scheduler.RoleBackupWorker:
-						stats.entities[entity].roundsBackup++
-					case scheduler.RoleInvalid:
-					}
+					roundDiscrepancy = false
 				}
 			}
 		}
@@ -433,15 +422,16 @@ func (s *runtimeStats) prepareEntitiesOutput(
 		"Elected",
 		"Primary",
 		"Backup",
-		"Proposer",
-		"Primary invoked",
-		"Primary Good commit",
-		"Prim Bad commmit",
-		"Bckp invoked",
-		"Bckp Good commit",
-		"Bckp Bad commit",
-		"Primary missed",
-		"Bckp missed",
+		"Prim Good Commit",
+		"Prim Bad Commit",
+		"Prim Missed",
+		"Bckp Invoked",
+		"Bckp Good Commit",
+		"Bckp Bad Commit",
+		"Bckp Missed",
+		"Primary Proposer",
+		"Prim Proposed",
+		"Bckp Proposed",
 	}
 
 	addrToName := func(addr types.Address) string {
@@ -454,28 +444,31 @@ func (s *runtimeStats) prepareEntitiesOutput(
 	}
 
 	for entity, stats := range s.entities {
-		var line []string
-
 		entityAddr := types.NewAddressFromConsensusPublicKey(entity)
 
-		line = append(line,
+		line := []string{
 			entityAddr.String(),
 			addrToName(entityAddr),
 			strconv.FormatUint(stats.roundsElected, 10),
 			strconv.FormatUint(stats.roundsPrimary, 10),
 			strconv.FormatUint(stats.roundsBackup, 10),
-			strconv.FormatUint(stats.roundsProposer, 10),
-			strconv.FormatUint(stats.roundsPrimaryRequired, 10),
 			strconv.FormatUint(stats.committedGoodBlocksPrimary, 10),
 			strconv.FormatUint(stats.committedBadBlocksPrimary, 10),
+			strconv.FormatUint(stats.missedPrimary, 10),
 			strconv.FormatUint(stats.roundsBackupRequired, 10),
 			strconv.FormatUint(stats.committedGoodBlocksBackup, 10),
 			strconv.FormatUint(stats.committedBadBlocksBackup, 10),
-			strconv.FormatUint(stats.missedPrimary, 10),
 			strconv.FormatUint(stats.missedBackup, 10),
-		)
+			strconv.FormatUint(stats.roundsPrimaryProposer, 10),
+			strconv.FormatUint(stats.roundsPrimaryProposed, 10),
+			strconv.FormatUint(stats.roundsBackupProposed, 10),
+		}
 		s.entitiesOutput = append(s.entitiesOutput, line)
 	}
+
+	sort.Slice(s.entitiesOutput, func(i, j int) bool {
+		return s.entitiesOutput[i][0] < s.entitiesOutput[j][0]
+	})
 }
 
 func (s *runtimeStats) printStats() {

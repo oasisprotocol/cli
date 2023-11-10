@@ -2,7 +2,7 @@ You are about to sign the following transaction:
 Method: staking.Burn
 Body:
   Amount: 2.5 TEST
-Nonce:  1
+Nonce:  2
 Fee:
   Amount: 0.0 TEST
   Gas limit: 1235

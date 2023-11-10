@@ -519,6 +519,29 @@ transaction.
 
 ### Entity Management {#entity}
 
+#### Initialize Entity {#entity-init}
+
+When setting up a validator node for the first time, you will need to provide
+the path to the file containing your entity descriptor as well as register it in
+the network registry. Use `account entity init` to generate the entity
+descriptor file containing the public key of the selected account.
+
+![code shell](../examples/account/entity-init.in.static)
+
+![code json](../examples/account/entity-init.out.static)
+
+By default, the file content will be printed to the standard output. You can use
+`-o` parameter to store it to a file, for example:
+
+![code shell](../examples/account/entity-init-o.y.in)
+
+:::info
+
+[Account](#account) selector is available for the
+`account entity init` command.
+
+:::
+
 #### Register your Entity {#entity-register}
 
 In order for validators to become part of the validator set and/or the compute

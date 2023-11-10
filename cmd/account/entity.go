@@ -8,6 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/oasisprotocol/oasis-core/go/common/cbor"
+	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/entity"
 	registry "github.com/oasisprotocol/oasis-core/go/registry/api"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
@@ -17,9 +19,54 @@ import (
 )
 
 var (
+	entityOutputFile string
+
 	entityCmd = &cobra.Command{
 		Use:   "entity",
 		Short: "Entity management in the network's registry",
+	}
+
+	entityInitCmd = &cobra.Command{
+		Use:   "init",
+		Short: "Init an empty entity file",
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg := cliConfig.Global()
+			npa := common.GetNPASelection(cfg)
+
+			if npa.Account == nil {
+				cobra.CheckErr("no accounts configured in your wallet")
+			}
+
+			// Load the account and ensure it corresponds to the entity.
+			acc := common.LoadAccount(cfg, npa.AccountName)
+			signer := acc.ConsensusSigner()
+			if signer == nil {
+				cobra.CheckErr(fmt.Errorf("account '%s' does not support signing consensus transactions", npa.AccountName))
+			}
+
+			descriptor := entity.Entity{
+				Versioned: cbor.NewVersioned(entity.LatestDescriptorVersion),
+				ID:        signer.Public(),
+				Nodes:     []signature.PublicKey{},
+			}
+
+			// Marshal to JSON, add explicit "nodes" field to hint user.
+			descriptorStr, err := json.Marshal(descriptor)
+			cobra.CheckErr(err)
+			var rawJSON map[string]interface{}
+			err = json.Unmarshal(descriptorStr, &rawJSON)
+			cobra.CheckErr(err)
+			rawJSON["nodes"] = []string{}
+			descriptorStr, err = common.PrettyJSONMarshal(rawJSON)
+			cobra.CheckErr(err)
+
+			if entityOutputFile == "" {
+				fmt.Printf("%s\n", descriptorStr)
+			} else {
+				err = os.WriteFile(entityOutputFile, descriptorStr, 0o644) //nolint: gosec
+				cobra.CheckErr(err)
+			}
+		},
 	}
 
 	entityRegisterCmd = &cobra.Command{
@@ -118,12 +165,17 @@ var (
 )
 
 func init() {
+	entityInitCmd.Flags().StringVarP(&entityOutputFile, "output-file", "o", "", "output entity descriptor into specified JSON file")
+	entityInitCmd.Flags().AddFlagSet(common.AccountFlag)
+	entityInitCmd.Flags().AddFlagSet(common.YesFlag)
+
 	entityRegisterCmd.Flags().AddFlagSet(common.SelectorNAFlags)
 	entityRegisterCmd.Flags().AddFlagSet(common.TxFlags)
 
 	entityDeregisterCmd.Flags().AddFlagSet(common.SelectorNAFlags)
 	entityDeregisterCmd.Flags().AddFlagSet(common.TxFlags)
 
+	entityCmd.AddCommand(entityInitCmd)
 	entityCmd.AddCommand(entityRegisterCmd)
 	entityCmd.AddCommand(entityDeregisterCmd)
 }

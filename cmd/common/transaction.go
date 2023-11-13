@@ -50,6 +50,9 @@ const (
 )
 
 var (
+	// YesFlag corresponds to the yes-to-all flag.
+	YesFlag *flag.FlagSet
+
 	// TxFlags contains the common consensus transaction flags.
 	TxFlags *flag.FlagSet
 
@@ -564,13 +567,16 @@ func WaitForEvent(
 }
 
 func init() {
+	YesFlag = flag.NewFlagSet("", flag.ContinueOnError)
+	YesFlag.BoolVarP(&txYes, "yes", "y", false, "answer yes to all questions")
+
 	RuntimeTxFlags = flag.NewFlagSet("", flag.ContinueOnError)
 	RuntimeTxFlags.BoolVar(&txOffline, "offline", false, "do not perform any operations requiring network access")
 	RuntimeTxFlags.Uint64Var(&txNonce, "nonce", invalidNonce, "override nonce to use")
 	RuntimeTxFlags.Uint64Var(&txGasLimit, "gas-limit", invalidGasLimit, "override gas limit to use (disable estimation)")
 	RuntimeTxFlags.StringVar(&txGasPrice, "gas-price", "", "override gas price to use")
 	RuntimeTxFlags.BoolVar(&txEncrypted, "encrypted", false, "encrypt transaction call data (requires online mode)")
-	RuntimeTxFlags.BoolVarP(&txYes, "yes", "y", false, "answer yes to all questions")
+	RuntimeTxFlags.AddFlagSet(YesFlag)
 	RuntimeTxFlags.BoolVar(&txUnsigned, "unsigned", false, "do not sign transaction")
 	RuntimeTxFlags.StringVar(&txFormat, "format", "json", "transaction output format (for offline/unsigned modes) [json, cbor]")
 	RuntimeTxFlags.StringVarP(&txOutputFile, "output-file", "o", "", "output transaction into specified file instead of broadcasting")
@@ -580,7 +586,7 @@ func init() {
 	TxFlags.Uint64Var(&txNonce, "nonce", invalidNonce, "override nonce to use")
 	TxFlags.Uint64Var(&txGasLimit, "gas-limit", invalidGasLimit, "override gas limit to use (disable estimation)")
 	TxFlags.StringVar(&txGasPrice, "gas-price", "", "override gas price to use")
-	TxFlags.BoolVarP(&txYes, "yes", "y", false, "answer yes to all questions")
+	TxFlags.AddFlagSet(YesFlag)
 	TxFlags.BoolVar(&txUnsigned, "unsigned", false, "do not sign transaction")
 	TxFlags.StringVar(&txFormat, "format", "json", "transaction output format (for offline/unsigned modes) [json, cbor]")
 	TxFlags.StringVarP(&txOutputFile, "output-file", "o", "", "output transaction into specified file instead of broadcasting")

@@ -16,7 +16,7 @@ Body:
       "signature": "DAwn+N8hKmQMbZda/fFJSEgErDAAdebXLfIPOpqUkJowJLUAL+nfrUMz5SVkKc0TnqQOavoSAVFz1yoRJ3QuBA=="
     }
   }
-Nonce:  1
+Nonce:  2
 Fee:
   Amount: 0.0 TEST
   Gas limit: 2471

@@ -3,7 +3,7 @@ Method: staking.AddEscrow
 Body:
   To:     oasis1qpkl3vykn9mf4xcq9eevmey4ffrzf0ajtcpvd7sk
   Amount: 20.0 TEST
-Nonce:  1
+Nonce:  2
 Fee:
   Amount: 0.0 TEST
   Gas limit: 1271

@@ -23,6 +23,8 @@ var (
 )
 
 var (
+	// AccountFlag corresponds to the --account selector flag.
+	AccountFlag *flag.FlagSet
 	// SelectorFlags contains the common selector flags for network/ParaTime/wallet.
 	SelectorFlags *flag.FlagSet
 	// SelectorNPFlags contains the common selector flags for network/ParaTime.
@@ -103,11 +105,14 @@ func (npa *NPASelection) PrettyPrintNetwork() (out string) {
 }
 
 func init() {
+	AccountFlag = flag.NewFlagSet("", flag.ContinueOnError)
+	AccountFlag.StringVar(&selectedAccount, "account", "", "explicitly set account to use")
+
 	SelectorFlags = flag.NewFlagSet("", flag.ContinueOnError)
 	SelectorFlags.StringVar(&selectedNetwork, "network", "", "explicitly set network to use")
 	SelectorFlags.StringVar(&selectedParaTime, "paratime", "", "explicitly set ParaTime to use")
 	SelectorFlags.BoolVar(&noParaTime, "no-paratime", false, "explicitly set that no ParaTime should be used")
-	SelectorFlags.StringVar(&selectedAccount, "account", "", "explicitly set account to use")
+	SelectorFlags.AddFlagSet(AccountFlag)
 
 	SelectorNPFlags = flag.NewFlagSet("", flag.ContinueOnError)
 	SelectorNPFlags.StringVar(&selectedNetwork, "network", "", "explicitly set network to use")
@@ -116,7 +121,7 @@ func init() {
 
 	SelectorNAFlags = flag.NewFlagSet("", flag.ContinueOnError)
 	SelectorNAFlags.StringVar(&selectedNetwork, "network", "", "explicitly set network to use")
-	SelectorNAFlags.StringVar(&selectedAccount, "account", "", "explicitly set account to use")
+	SelectorNAFlags.AddFlagSet(AccountFlag)
 
 	SelectorNFlags = flag.NewFlagSet("", flag.ContinueOnError)
 	SelectorNFlags.StringVar(&selectedNetwork, "network", "", "explicitly set network to use")

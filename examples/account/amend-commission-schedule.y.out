@@ -12,7 +12,7 @@ Body:
       (2) start:        epoch 335000
           minimum rate: 0.9%
           maximum rate: 1.9%
-Nonce:  1
+Nonce:  2
 Fee:
   Amount: 0.0 TEST
   Gas limit: 1361

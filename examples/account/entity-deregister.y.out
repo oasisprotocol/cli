@@ -2,7 +2,7 @@ You are about to sign the following transaction:
 Method: registry.DeregisterEntity
 Body:
   {}
-Nonce:  1
+Nonce:  2
 Fee:
   Amount: 0.0 TEST
   Gas limit: 1231

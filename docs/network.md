@@ -34,6 +34,8 @@ the current Mainnet and Testnet endpoints.
 
 Invoke `network add <name> <chain-context> <rpc-endpoint>` to add a new
 endpoint with a specific chain domain separation context and a gRPC address.
+This command is useful, if you want to connect to your own instance of the Oasis
+node instead of relying on the public gRPC endpoints.
 
 For TCP/IP endpoints, run:
 
@@ -50,7 +52,7 @@ For Unix sockets, use:
 ## Add a Local Network {#add-local}
 
 `network add-local <name> <rpc-endpoint>` command can be used if you are
-running a local instance of `oasis-node`. In this case, Oasis CLI will
+running `oasis-node` on your local machine. In this case, Oasis CLI will
 autodetect the native token symbol and decimal places, the chain domain
 separation context and registered ParaTimes.
 

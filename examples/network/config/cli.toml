@@ -94,7 +94,7 @@ default = ''
 [networks.mainnet_local]
 chain_context = 'b11b369e0da5bb230b220127f5e7b242d385ef8c6f54906243f30af63c815535'
 description = ''
-rpc = 'unix:/serverdir_mainnet/node/internal.sock'
+rpc = 'unix:/node/data/internal.sock'
 
 [networks.mainnet_local.denomination]
 decimals = 9

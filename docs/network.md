@@ -57,7 +57,7 @@ autodetect the native token symbol and decimal places, the chain domain
 separation context and registered ParaTimes.
 
 ```
-oasis network add-local testnet_local unix:/serverdir_testnet/internal.sock
+oasis network add-local testnet_local unix:/node_testnet/data/internal.sock
 ```
 
 ## List Networks {#list}

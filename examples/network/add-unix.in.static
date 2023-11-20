@@ -1,1 +1,1 @@
-oasis network add testnet_local 0b91b8e4e44b2003a7c5e23ddadb5e14ef5345c0ebcb3ddcae07fa2f244cab76 unix:/serverdir_testnet/node/internal.sock
+oasis network add testnet_local 0b91b8e4e44b2003a7c5e23ddadb5e14ef5345c0ebcb3ddcae07fa2f244cab76 unix:/node_testnet/data/internal.sock

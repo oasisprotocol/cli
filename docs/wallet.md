@@ -70,14 +70,9 @@ private key. You will have to enter the password for this account each time to
 access use it for signing the transactions (e.g. to send tokens). The account
 address is public and can be accessed without entering the passphrase.
 
-```shell
-oasis wallet create oscar
-```
+![code shell](../examples/wallet/create.in.static)
 
-```
-? Choose a new passphrase: 
-? Repeat passphrase:
-```
+![code](../examples/wallet/create.out.static)
 
 :::tip
 
@@ -91,17 +86,13 @@ flag. You can always [change the default account](#set-default) later.
 To use your hardware wallet, add `--kind ledger` parameter and Oasis CLI will
 store a reference to an account on your hardware wallet:
 
-```shell
-oasis wallet create logan --kind ledger
-```
+![code shell](../examples/wallet/create-ledger.in.static)
 
 A specific account kind (`ed25519-adr8`, `secp256k1-bip44`) and the derivation
 path number can be passed with `--file.algorithm` and `--file.number` or
 `--ledger.algorithm` and `--ledger.number` respectively. For example:
 
-```shell
-oasis wallet create lenny --kind ledger --ledger.algorithm secp256k1-bip44 --ledger.number 3
-```
+![code shell](../examples/wallet/create-ledger-secp256k1.in.static)
 
 :::tip
 
@@ -116,10 +107,9 @@ reset your Ledger with a new mnemonic, Oasis CLI will abort because the address
 of the account obtained from the new device will not match the one stored in
 your config.
 
-```
-oasis wallet show logan
-Error: address mismatch after loading account (expected: oasis1qpl4axynedmdrrgrg7dpw3yxc4a8crevr5dkuksl got: oasis1qzdyu09x7hs5nqa0sjgy5jtmz3j5f99ccq0aezjk)
-```
+![code shell](../examples/wallet/show-ledger-error.in.static)
+
+![code](../examples/wallet/show-ledger-error.out.static)
 
 :::
 
@@ -134,39 +124,15 @@ format.
 
 Importing an account with a mnemonic looks like this:
 
-```shell
-oasis wallet import eugene
-```
+![code shell](../examples/wallet/import-secp256k1-bip44.in.static)
 
-```
-? Kind: mnemonic
-? Algorithm: secp256k1-bip44
-? Key number: 0
-? Mnemonic: [Enter 2 empty lines to finish]man ankle mystery favorite tone number ice west spare marriage control lucky life together neither
-
-? Mnemonic: 
-man ankle mystery favorite tone number ice west spare marriage control lucky life together neither
-? Choose a new passphrase: 
-? Repeat passphrase:
-```
+![code](../examples/wallet/import-secp256k1-bip44.out.static)
 
 Let's make another Secp256k1 account and entering a hex-encoded raw private key:
 
-```shell
-oasis wallet import emma
-```
+![code shell](../examples/wallet/import-secp256k1-raw.in.static)
 
-```
-oasis wallet import emma
-? Kind: private key
-? Algorithm: secp256k1-raw
-? Private key (hex-encoded): [Enter 2 empty lines to finish]4811ebbe4f29f32a758f6f7bad39deb97ea67f07350637e31c75795dc679262a
-
-? Private key (hex-encoded): 
-4811ebbe4f29f32a758f6f7bad39deb97ea67f07350637e31c75795dc679262a
-? Choose a new passphrase: 
-? Repeat passphrase:
-```
+![code](../examples/wallet/import-secp256k1-raw.out.static)
 
 ## List Accounts Stored in Your Wallet {#list}
 
@@ -185,45 +151,22 @@ To verify whether an account exists in your wallet, use `wallet show <name>`.
 This will print the account's native address and the public key which requires
 entering your account's password.
 
-```shell
-oasis wallet show oscar
-```
+![code shell](../examples/wallet/show.in.static)
 
-```
-Unlock your account.
-? Passphrase:
-Name:             oscar
-Public Key:       Bx6gOixnxy15tCs09ua5DcKyX9uo2Forb32O6Hyjoc8=
-Native address:   oasis1qp87hflmelnpqhzcqcw8rhzakq4elj7jzv090p3e
-```
+![code](../examples/wallet/show.out.static)
 
 For `secp256k1` accounts Ethereum's hex-encoded address will also be printed.
 
-```shell
-oasis wallet show eugene
-```
+![code shell](../examples/wallet/show-secp256k1.in.static)
 
-```
-Unlock your account.
-? Passphrase: 
-Name:             eugene
-Public Key:       ArEjDxsPfDvfeLlity4mjGzy8E/nI4umiC8vYQh+eh/c
-Ethereum address: 0xBd16C6bF701a01DF1B5C11B14860b6bDbE776669
-Native address:   oasis1qrvzxld9rz83wv92lvnkpmr30c77kj2tvg0pednz
-```
+![code](../examples/wallet/show-secp256k1.out.static)
 
 Showing an account stored on your hardware wallet will require connecting it to
 your computer:
 
-```shell
-oasis wallet show logan
-```
+![code shell](../examples/wallet/show-ledger.in.static)
 
-```
-Name:             logan
-Public Key:       l+cuboPsOeuY1+kYlROrpmKgiiELmXSw9xl0WEg8cWE=
-Native address:   oasis1qpl4axynedmdrrgrg7dpw3yxc4a8crevr5dkuksl
-```
+![code](../examples/wallet/show-ledger.out.static)
 
 ## Export the Account's Secret {#export}
 
@@ -232,76 +175,36 @@ or the private key by running `wallet export <name>`.
 
 For example:
 
-```shell
-oasis wallet export oscar
-```
+![code shell](../examples/wallet/export.in.static)
 
-```
-WARNING: Exporting the account will expose secret key material!
-Unlock your account.
-? Passphrase: 
-Name:             oscar
-Public Key:       Bx6gOixnxy15tCs09ua5DcKyX9uo2Forb32O6Hyjoc8=
-Native address:   oasis1qp87hflmelnpqhzcqcw8rhzakq4elj7jzv090p3e
-Export:
-promote easily runway junior saddle gold flip believe wet example amount believe habit mixed pistol lemon increase moon rail mail fiction miss clip asset
-```
+![code](../examples/wallet/export.out.static)
 
-The same goes for Secp256k1 accounts:
+The same goes for your Secp256k1 accounts:
 
-```shell
-oasis wallet export eugene
-```
+![code shell](../examples/wallet/export-secp256k1-bip44.in.static)
 
-```
-WARNING: Exporting the account will expose secret key material!
-Unlock your account.
-? Passphrase: 
-Name:             eugene
-Public Key:       ArEjDxsPfDvfeLlity4mjGzy8E/nI4umiC8vYQh+eh/c
-Ethereum address: 0xBd16C6bF701a01DF1B5C11B14860b6bDbE776669
-Native address:   oasis1qrvzxld9rz83wv92lvnkpmr30c77kj2tvg0pednz
-Export:
-man ankle mystery favorite tone number ice west spare marriage control lucky life together neither
-```
+![code](../examples/wallet/export-secp256k1-bip44.out.static)
 
-```shell
-oasis wallet export emma
-```
+![code shell](../examples/wallet/export-secp256k1-raw.in.static)
 
-```
-WARNING: Exporting the account will expose secret key material!
-Unlock your account.
-? Passphrase: 
-Name:             emma
-Public Key:       Az8B2UpSUET0E3n9XMzr+HBvviQKcRvz6C6bJtRFWNYG
-Ethereum address: 0xeEbE22411f579682F6f9D68f4C19B3581bCb576b
-Native address:   oasis1qph93wnfw8shu04pqyarvtjy4lytz3hp0c7tqnqh
-Export:
-4811ebbe4f29f32a758f6f7bad39deb97ea67f07350637e31c75795dc679262a
-```
+![code](../examples/wallet/export-secp256k1-raw.out.static)
 
 Trying to export an account stored on your hardware wallet will only
 export its public key:
 
-```shell
-oasis wallet export lenny
-```
+![code shell](../examples/wallet/export-ledger.in.static)
 
-```
-WARNING: Exporting the account will expose secret key material!
-Name:             lenny
-Public Key:       AhhT2TUkEZ7rMasLBvHcsGj4SUO7Iw36ELEpL0evZDV1
-Ethereum address: 0x95e5e3C1BDD92cd4A0c14c62480DB5867946281D
-Native address:   oasis1qrmw4rhvp8ksj3yx6p2ftnkz864muc3re5jlgall
-Export:
-```
+![code](../examples/wallet/export-ledger.out.static)
 
 ## Renaming the Account {#rename}
 
 To rename an account, run `wallet rename <old_name> <new_name>`.
 
 For example:
+
+![code shell](../examples/wallet/00-list.in)
+
+![code](../examples/wallet/00-list.out)
 
 ![code shell](../examples/wallet/01-rename.in)
 
@@ -322,22 +225,15 @@ For example, let's delete `lenny` account:
 
 ![code](../examples/wallet/00-list.out)
 
-```shell
-oasis wallet remove lenny
-```
+![code shell](../examples/wallet/remove.in.static)
 
-```
-WARNING: Removing the account will ERASE secret key material!
-WARNING: THIS ACTION IS IRREVERSIBLE!
-? Enter 'I really want to remove account lenny' (without quotes) to confirm removal: I really want to remove account lenny
-```
+![code](../examples/wallet/remove.out.static)
 
 ```shell
 oasis wallet list
 ```
 
 ```
-oasis wallet list
 ACCOUNT         KIND                            ADDRESS                                        
 emma            file (secp256k1-raw)            oasis1qph93wnfw8shu04pqyarvtjy4lytz3hp0c7tqnqh
 eugene          file (secp256k1-bip44:0)        oasis1qrvzxld9rz83wv92lvnkpmr30c77kj2tvg0pednz
@@ -370,14 +266,9 @@ to submit their governance transaction, for example to vote on the network
 upgrade using the Oasis CLI, they need to import the key into the Oasis CLI
 wallet:
 
-```shell
-oasis wallet import-file my_entity entity.pem
-```
+![code shell](../examples/wallet/import-file.in.static)
 
-```
-? Choose a new passphrase: 
-? Repeat passphrase:
-```
+![code](../examples/wallet/import-file.out.static)
 
 The key is now safely stored and encrypted inside the Oasis CLI.
 
@@ -397,27 +288,16 @@ You can bind the account in your Oasis CLI wallet with a local instance of
 `wallet remote-signer <account_name> <socket_path>`, pick the account you wish
 to expose and provide a path to the new unix socket:
 
-```shell
-oasis wallet remote-signer oscar /datadir/oasis-oscar.socket
-```
+![code shell](../examples/wallet/remote-signer.in.static)
 
-```
-Unlock your account.
-? Passphrase: 
-Address: oasis1qp87hflmelnpqhzcqcw8rhzakq4elj7jzv090p3e
-Node Args:
-  --signer.backend=remote \
-  --signer.remote.address=unix:/datadir/oasis-oscar.socket
-
-*** REMOTE SIGNER READY ***
-```
+![code](../examples/wallet/remote-signer.out.static)
 
 ### Test Accounts {#test-accounts}
 
 Oasis CLI comes with the following hardcoded test accounts:
 
-- `test:alice`: Ed25519 test account by Oasis core tests
-- `test:bob`: Ed25519 test account by Oasis core tests
+- `test:alice`: Ed25519 test account used by Oasis core tests
+- `test:bob`: Ed25519 test account used by Oasis core tests
 - `test:charlie`: Secp256k1 test account
 - `test:cory`: Ed25519 account used by `oasis-net-runner`
 - `test:dave`: Secp256k1 test account
@@ -434,4 +314,4 @@ networks, because anyone can drain them!
 We suggest that you use these accounts for Localnet development or for
 reproducibility when you report bugs to the Oasis core team. You can access the
 private key of a test account the same way as you would for ordinary accounts
-by running `wallet export`.
+by invoking the [`oasis wallet export`](#export) command.

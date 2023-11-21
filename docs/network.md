@@ -86,11 +86,23 @@ To change the chain context of a network, use
 
 Chain contexts represent a root of trust in the network, so before changing them
 for production networks make sure you have verified them against a trusted
-source like the official Oasis documentation.
+source like the [Mainnet] and [Testnet] chapters in the official Oasis
+documentation.
 
 :::
 
+![code shell](../examples/network/04-list.in)
+
+![code shell](../examples/network/04-list.out)
+
 ![code shell](../examples/network/05-set-chain-context.in)
+
+![code shell](../examples/network/06-list.in)
+
+![code shell](../examples/network/06-list.out)
+
+[Mainnet]: https://github.com/oasisprotocol/docs/blob/main/docs/node/mainnet/README.md
+[Testnet]: https://github.com/oasisprotocol/docs/blob/main/docs/node/testnet/README.md
 
 ## Set Default Network {#set-default}
 

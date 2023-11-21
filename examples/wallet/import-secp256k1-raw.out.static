@@ -1,0 +1,9 @@
+oasis wallet import emma
+? Kind: private key
+? Algorithm: secp256k1-raw
+? Private key (hex-encoded): [Enter 2 empty lines to finish]4811ebbe4f29f32a758f6f7bad39deb97ea67f07350637e31c75795dc679262a
+
+? Private key (hex-encoded):
+4811ebbe4f29f32a758f6f7bad39deb97ea67f07350637e31c75795dc679262a
+? Choose a new passphrase:
+? Repeat passphrase:

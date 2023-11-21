@@ -202,6 +202,10 @@ To rename an account, run `wallet rename <old_name> <new_name>`.
 
 For example:
 
+![code shell](../examples/wallet/00-list.in)
+
+![code](../examples/wallet/00-list.out)
+
 ![code shell](../examples/wallet/01-rename.in)
 
 ![code shell](../examples/wallet/02-list.in)
@@ -310,4 +314,4 @@ networks, because anyone can drain them!
 We suggest that you use these accounts for Localnet development or for
 reproducibility when you report bugs to the Oasis core team. You can access the
 private key of a test account the same way as you would for ordinary accounts
-by running `wallet export`.
+by invoking the [`oasis wallet export`](#export) command.

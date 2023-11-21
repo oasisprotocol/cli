@@ -1,0 +1,8 @@
+Unlock your account.
+? Passphrase:
+Address: oasis1qp87hflmelnpqhzcqcw8rhzakq4elj7jzv090p3e
+Node Args:
+  --signer.backend=remote \
+  --signer.remote.address=unix:/datadir/oasis-oscar.socket
+
+*** REMOTE SIGNER READY ***

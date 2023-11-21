@@ -68,6 +68,10 @@ account or simply check, if an entry exists in the address book, by running
 You can always rename the entry in your address book by using
 `addressbook rename <old_name> <new_name>`:
 
+![code shell](../examples/addressbook/03-list.in)
+
+![code](../examples/addressbook/03-list.out)
+
 ![code shell](../examples/addressbook/06-rename.in)
 
 ![code shell](../examples/addressbook/07-list.in)
@@ -78,6 +82,10 @@ You can always rename the entry in your address book by using
 
 To delete an entry from your address book invoke
 `addressbook remove <name>`.
+
+![code shell](../examples/addressbook/03-list.in)
+
+![code](../examples/addressbook/03-list.out)
 
 ![code shell](../examples/addressbook/09-remove.in)
 

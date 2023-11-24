@@ -43,6 +43,8 @@ var govListCmd = &cobra.Command{
 				kind = "upgrade"
 			case proposal.Content.CancelUpgrade != nil:
 				kind = fmt.Sprintf("cancel upgrade %d", proposal.Content.CancelUpgrade.ProposalID)
+			case proposal.Content.ChangeParameters != nil:
+				kind = fmt.Sprintf("change parameters (%s)", proposal.Content.ChangeParameters.Module)
 			default:
 				kind = "unknown"
 			}

@@ -22,6 +22,26 @@ import (
 	"github.com/oasisprotocol/cli/metadata"
 )
 
+func addShares(validatorVoteShares map[governance.Vote]quantity.Quantity, vote governance.Vote, amount quantity.Quantity) error {
+	amt := amount.Clone()
+	currShares := validatorVoteShares[vote]
+	if err := amt.Add(&currShares); err != nil {
+		return fmt.Errorf("failed to add votes: %w", err)
+	}
+	validatorVoteShares[vote] = *amt
+	return nil
+}
+
+func subShares(validatorVoteShares map[governance.Vote]quantity.Quantity, vote governance.Vote, amount quantity.Quantity) error {
+	amt := amount.Clone()
+	currShares := validatorVoteShares[vote]
+	if err := currShares.Sub(amt); err != nil {
+		return fmt.Errorf("failed to sub votes: %w", err)
+	}
+	validatorVoteShares[vote] = currShares
+	return nil
+}
+
 var govShowCmd = &cobra.Command{
 	Use:   "show <proposal-id>",
 	Short: "Show proposal status by ID",
@@ -98,9 +118,11 @@ var govShowCmd = &cobra.Command{
 		// as the actual votes are examined.
 
 		totalVotingStake := quantity.NewQuantity()
-		validatorEntitiesEscrow := make(map[staking.Address]*quantity.Quantity)
-		voters := make(map[staking.Address]quantity.Quantity)
-		nonVoters := make(map[staking.Address]quantity.Quantity)
+		validatorVotes := make(map[staking.Address]*governance.Vote)
+		validatorVoteShares := make(map[staking.Address]map[governance.Vote]quantity.Quantity)
+		validatorEntitiesShares := make(map[staking.Address]*staking.SharePool)
+		validatorVoters := make(map[staking.Address]quantity.Quantity)
+		validatorNonVoters := make(map[staking.Address]quantity.Quantity)
 
 		validators, err := schedulerConn.GetValidators(ctx, height)
 		cobra.CheckErr(err)
@@ -113,7 +135,7 @@ var govShowCmd = &cobra.Command{
 			// If there are multiple nodes in the validator set belonging
 			// to the same entity, only count the entity escrow once.
 			entityAddr := staking.NewAddress(node.EntityID)
-			if validatorEntitiesEscrow[entityAddr] != nil {
+			if validatorEntitiesShares[entityAddr] != nil {
 				continue
 			}
 
@@ -127,32 +149,109 @@ var govShowCmd = &cobra.Command{
 			)
 			cobra.CheckErr(err)
 
-			validatorEntitiesEscrow[entityAddr] = &account.Escrow.Active.Balance
+			validatorEntitiesShares[entityAddr] = &account.Escrow.Active
 			err = totalVotingStake.Add(&account.Escrow.Active.Balance)
 			cobra.CheckErr(err)
-			nonVoters[entityAddr] = account.Escrow.Active.Balance
+			validatorNonVoters[entityAddr] = account.Escrow.Active.Balance
+			validatorVoteShares[entityAddr] = make(map[governance.Vote]quantity.Quantity)
 		}
 
-		// Tally the votes.
+		// Tally the validator votes.
 
-		derivedResults := make(map[governance.Vote]quantity.Quantity)
 		var invalidVotes uint64
 		for _, vote := range votes {
-			escrow, ok := validatorEntitiesEscrow[vote.Voter]
+			escrow, ok := validatorEntitiesShares[vote.Voter]
 			if !ok {
-				// Voter not in current validator set - invalid vote.
-				invalidVotes++
+				// Non validator votes handled later.
 				continue
 			}
 
-			currentVotes := derivedResults[vote.Vote]
-			newVotes := escrow.Clone()
-			err = newVotes.Add(&currentVotes)
-			cobra.CheckErr(err)
-			derivedResults[vote.Vote] = *newVotes
+			validatorVotes[vote.Voter] = &vote.Vote
+			if err = addShares(validatorVoteShares[vote.Voter], vote.Vote, escrow.TotalShares); err != nil {
+				cobra.CheckErr(fmt.Errorf("failed to add shares: %w", err))
+			}
+			delete(validatorNonVoters, vote.Voter)
+			validatorVoters[vote.Voter] = escrow.Balance
+		}
 
-			delete(nonVoters, vote.Voter)
-			voters[vote.Voter] = *escrow.Clone()
+		// Tally the delegator (non-validator) votes.
+		type override struct {
+			vote         governance.Vote
+			shares       quantity.Quantity
+			sharePercent *big.Float
+		}
+		validatorVoteOverrides := make(map[staking.Address]map[staking.Address]override)
+		for _, vote := range votes {
+			// Fetch outgoing delegations.
+			var delegations map[staking.Address]*staking.Delegation
+			delegations, err = stakingConn.DelegationsFor(ctx, &staking.OwnerQuery{Height: height, Owner: vote.Voter})
+			cobra.CheckErr(err)
+
+			var delegatesToValidator bool
+			for to, delegation := range delegations {
+				// Skip delegations to non-validators.
+				if _, ok := validatorEntitiesShares[to]; !ok {
+					continue
+				}
+				delegatesToValidator = true
+
+				validatorVote := validatorVotes[to]
+				// Nothing to do if vote matches the validator's vote.
+				if validatorVote != nil && vote.Vote == *validatorVote {
+					continue
+				}
+
+				// Vote doesn't match. Deduct shares from the validator's vote and
+				// add shares to the delegator's vote.
+				if validatorVote != nil {
+					if err = subShares(validatorVoteShares[to], *validatorVote, delegation.Shares); err != nil {
+						cobra.CheckErr(fmt.Errorf("failed to sub shares: %w", err))
+					}
+				}
+				if err = addShares(validatorVoteShares[to], vote.Vote, delegation.Shares); err != nil {
+					cobra.CheckErr(fmt.Errorf("failed to add shares: %w", err))
+				}
+
+				// Remember the validator vote overrides, so that we can display them later.
+				if validatorVoteOverrides[to] == nil {
+					validatorVoteOverrides[to] = make(map[staking.Address]override)
+				}
+				sharePercent := new(big.Float).SetInt(delegation.Shares.Clone().ToBigInt())
+				sharePercent = sharePercent.Mul(sharePercent, new(big.Float).SetInt64(100))
+				sharePercent = sharePercent.Quo(sharePercent, new(big.Float).SetInt(validatorEntitiesShares[to].TotalShares.ToBigInt()))
+				validatorVoteOverrides[to][vote.Voter] = override{
+					vote:         vote.Vote,
+					shares:       delegation.Shares,
+					sharePercent: sharePercent,
+				}
+			}
+
+			if !delegatesToValidator {
+				// Invalid vote if delegator doesn't delegate to a validator.
+				invalidVotes++
+			}
+		}
+
+		// Finalize the voting results - convert votes in shares into results in stake.
+
+		derivedResults := make(map[governance.Vote]quantity.Quantity)
+		for validator, votes := range validatorVoteShares {
+			sharePool := validatorEntitiesShares[validator]
+			for vote, shares := range votes {
+				// Compute stake from shares.
+				var escrow *quantity.Quantity
+				escrow, err = sharePool.StakeForShares(shares.Clone())
+				if err != nil {
+					cobra.CheckErr(fmt.Errorf("failed to compute stake from shares: %w", err))
+				}
+
+				// Add stake to results.
+				currentVotes := derivedResults[vote]
+				if err = currentVotes.Add(escrow); err != nil {
+					cobra.CheckErr(fmt.Errorf("failed to add votes: %w", err))
+				}
+				derivedResults[vote] = currentVotes
+			}
 		}
 
 		// Display the high-level summary of the proposal status.
@@ -267,7 +366,7 @@ var govShowCmd = &cobra.Command{
 
 		fmt.Println()
 		fmt.Println("=== VALIDATORS VOTED ===")
-		votersList := entitiesByDescendingStake(voters)
+		votersList := entitiesByDescendingStake(validatorVoters)
 		for i, val := range votersList {
 			name := getName(val.Address)
 			stakePercentage := new(big.Float).SetInt(val.Stake.Clone().ToBigInt())
@@ -275,11 +374,17 @@ var govShowCmd = &cobra.Command{
 			stakePercentage = stakePercentage.Quo(stakePercentage, new(big.Float).SetInt(totalVotingStake.ToBigInt()))
 			fmt.Printf("  %d. %s,%s,%s (%.2f%%)", i+1, val.Address, name, val.Stake, stakePercentage)
 			fmt.Println()
+			// Display delegators that voted differently.
+			for voter, override := range validatorVoteOverrides[val.Address] {
+				voterName := getName(voter)
+				fmt.Printf("    - %s,%s,%s (%.2f%%) -> %s", voter, voterName, override.shares, override.sharePercent, override.vote)
+				fmt.Println()
+			}
 		}
 
 		fmt.Println()
 		fmt.Println("=== VALIDATORS NOT VOTED ===")
-		nonVotersList := entitiesByDescendingStake(nonVoters)
+		nonVotersList := entitiesByDescendingStake(validatorNonVoters)
 		for i, val := range nonVotersList {
 			name := getName(val.Address)
 			stakePercentage := new(big.Float).SetInt(val.Stake.Clone().ToBigInt())
@@ -287,6 +392,12 @@ var govShowCmd = &cobra.Command{
 			stakePercentage = stakePercentage.Quo(stakePercentage, new(big.Float).SetInt(totalVotingStake.ToBigInt()))
 			fmt.Printf("  %d. %s,%s,%s (%.2f%%)", i+1, val.Address, name, val.Stake, stakePercentage)
 			fmt.Println()
+			// Display delegators that voted differently.
+			for voter, override := range validatorVoteOverrides[val.Address] {
+				voterName := getName(voter)
+				fmt.Printf("    - %s,%s,%s (%.2f%%) -> %s", voter, voterName, override.shares, override.sharePercent, override.vote)
+				fmt.Println()
+			}
 		}
 	},
 }

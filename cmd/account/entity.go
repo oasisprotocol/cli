@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	metadataRegistry "github.com/oasisprotocol/metadata-registry-tools"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-core/go/common/entity"
@@ -162,6 +163,79 @@ var (
 			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
 		},
 	}
+
+	registryPath            string
+	entityMetadataUpdateCmd = &cobra.Command{
+		Use:   "metadata-update <entity.json>",
+		Short: "Update account entity metadata in registry",
+		Long:  "Update your account entity metadata in the network registry.",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg := cliConfig.Global()
+			npa := common.GetNPASelection(cfg)
+
+			if npa.Account == nil {
+				cobra.CheckErr("no accounts configured in your wallet")
+			}
+
+			var fsRegistry metadataRegistry.MutableProvider
+			switch registryPath {
+			case "":
+				// Setup filesystem registry in the current directory.
+				common.Confirm("Metadata registry directory not specified, initializing registry in current directory", "not updating metadata")
+				wd, err := os.Getwd()
+				if err != nil {
+					cobra.CheckErr(fmt.Errorf("failed to get current working directory: %w", err))
+				}
+				fsRegistry, err = metadataRegistry.NewFilesystemPathProvider(wd)
+				if err != nil {
+					cobra.CheckErr(fmt.Errorf("failed to initialize metadata registry in current directory: %w", err))
+				}
+			default:
+				// Setup filesystem registry in the specified directory.
+				var err error
+				fsRegistry, err = metadataRegistry.NewFilesystemPathProvider(registryPath)
+				if err != nil {
+					cobra.CheckErr(fmt.Errorf("failed to initialize metadata registry: '%s': %w", registryPath, err))
+				}
+			}
+
+			// Open and parse the passed entity metadata file.
+			rawMetadata, err := os.ReadFile(args[0])
+			if err != nil {
+				cobra.CheckErr(fmt.Errorf("failed to read entity metadata file: %w", err))
+			}
+			var metadata metadataRegistry.EntityMetadata
+			if err = json.Unmarshal(rawMetadata, &metadata); err != nil {
+				cobra.CheckErr(fmt.Errorf("failed to parse serialized entity metadata: %w", err))
+			}
+
+			// Load the account and ensure it corresponds to the entity.
+			acc := common.LoadAccount(cfg, npa.AccountName)
+			signer := acc.ConsensusSigner()
+			if signer == nil {
+				cobra.CheckErr(fmt.Errorf("account '%s' does not support signing consensus transactions", npa.AccountName))
+			}
+
+			if err = metadata.ValidateBasic(); err != nil {
+				cobra.CheckErr(fmt.Errorf("provided entity metadata is invalid: %w", err))
+			}
+
+			metadata.PrettyPrint(context.Background(), "  ", os.Stdout)
+			common.Confirm("You are about to sign the above metadata descriptor", "not singing metadata descriptor")
+
+			signed, err := metadataRegistry.SignEntityMetadata(signer, &metadata)
+			if err != nil {
+				cobra.CheckErr(fmt.Errorf("failed to sign entity metadata: %w", err))
+			}
+
+			if err = fsRegistry.UpdateEntity(signed); err != nil {
+				cobra.CheckErr(fmt.Errorf("failed to update entity metadata: %w", err))
+			}
+
+			fmt.Printf("Successfully updated entity metadata.\n")
+		},
+	}
 )
 
 func init() {
@@ -175,7 +249,12 @@ func init() {
 	entityDeregisterCmd.Flags().AddFlagSet(common.SelectorNAFlags)
 	entityDeregisterCmd.Flags().AddFlagSet(common.TxFlags)
 
+	entityMetadataUpdateCmd.Flags().StringVarP(&registryPath, "registry-dir", "r", "", "path to the metadata registry directory")
+	entityMetadataUpdateCmd.Flags().AddFlagSet(common.AccountFlag)
+	entityMetadataUpdateCmd.Flags().AddFlagSet(common.YesFlag)
+
 	entityCmd.AddCommand(entityInitCmd)
 	entityCmd.AddCommand(entityRegisterCmd)
 	entityCmd.AddCommand(entityDeregisterCmd)
+	entityCmd.AddCommand(entityMetadataUpdateCmd)
 }

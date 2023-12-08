@@ -204,10 +204,14 @@ to submit your vote on the governance proposal. The vote can either be `yes`,
 To submit a new governance proposal use `network governance create-proposal`.
 The following proposal types are currently supported:
 
-- `upgrade <descriptor.json>`: Network upgrade proposal. Provide a JSON file
-  containing the upgrade descriptor.
 - `cancel-upgrade <proposal-id>`: Cancel network proposed upgrade. Provide the
   ID of the network upgrade proposal you wish to cancel.
+- `parameter-change <module-name> <changes.json>`: Network parameter change
+  proposal. Provide the consensus module name and the parameter changes JSON.
+  Valid module names are: `staking`, `governance`, `keymanager`, `scheduler`,
+  `registry`, and `roothash`
+- `upgrade <descriptor.json>`: Network upgrade proposal. Provide a JSON file
+  containing the upgrade descriptor.
 
 :::info
 
@@ -319,7 +323,7 @@ The provided ID can be one of the following:
 
 - If the [ParaTime ID] is provided, Oasis CLI shows ParaTime information stored
   in the network's registry.
-  
+
   For example, at time of writing information on Sapphire stored in the Mainnet
   registry were as follows:
 
@@ -345,7 +349,7 @@ The provided ID can be one of the following:
   ParaTimes, trusted execution environment support and more. For example:
 
   ![code shell](../examples/network-show/id-node.in.static)
-  
+
   ![code json](../examples/network-show/id-node.out.static)
 
 [ParaTime ID]: https://github.com/oasisprotocol/oasis-core/blob/master/docs/runtime/identifiers.md

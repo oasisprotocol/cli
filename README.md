@@ -92,3 +92,11 @@ of the CLI in `examples` folder to learn more.
 
 All configuration is stored in the `$XDG_CONFIG_HOME/oasis` directory (e.g.
 `$HOME/.config/oasis` on Linux).
+
+## License
+
+This software is licensed under [Apache 2.0](./LICENSE).
+
+The content of the documentation (the `/docs` folder) including the media (e.g.
+images and diagrams) is licensed under [Creative Commons Attribution 4.0
+International](./LICENSE-docs).

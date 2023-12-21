@@ -71,7 +71,7 @@ func newMasterKey(seed []byte) (sdkSignature.Signer, slip10.ChainCode, []byte, e
 	return splitDigest(I)
 }
 
-func newChildKey(kPar []byte, cPar slip10.ChainCode, index uint32) (sdkSignature.Signer, slip10.ChainCode, []byte, error) { //nolint: revive
+func newChildKey(kPar []byte, cPar slip10.ChainCode, index uint32) (sdkSignature.Signer, slip10.ChainCode, []byte, error) {
 	if len(kPar) < memory.SeedSize {
 		return nil, slip10.ChainCode{}, nil, fmt.Errorf("slip10: invalid parent key")
 	}

@@ -49,6 +49,27 @@ linters:
     - whitespace
 
 linters-settings:
+  depguard:
+    rules:
+      main:
+        files:
+          - $all
+        allow:
+          - $gostd
+          - github.com/oasisprotocol
+          - github.com/btcsuite/btcd
+          - github.com/adrg/xdg
+          - github.com/AlecAivazis/survey/v2
+          - github.com/ethereum/go-ethereum
+          - github.com/miguelmota/go-ethereum-hdwallet
+          - github.com/mitchellh/mapstructure
+          - github.com/olekukonko/tablewriter
+          - github.com/spf13/cobra
+          - github.com/spf13/pflag
+          - github.com/spf13/viper
+          - github.com/stretchr/testify
+          - github.com/tyler-smith/go-bip39
+          - github.com/zondax/ledger-go
   exhaustive:
     # Switch statements are to be considered exhaustive if a 'default' case is
     # present, even if all enum members aren't listed in the switch.

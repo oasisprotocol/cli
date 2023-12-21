@@ -63,7 +63,7 @@ jobs:
         # 'make lint-go'.
         uses: golangci/golangci-lint-action@v3.7.0
         with:
-          version: v1.52.0
+          version: v1.55
         # Always run this step so that all linting errors can be seen at once.
         if: always()
       - name: Ensure a clean code checkout

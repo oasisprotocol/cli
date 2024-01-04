@@ -1,4 +1,4 @@
-package file
+package file //nolint: dupl
 
 import (
 	"testing"
@@ -24,11 +24,11 @@ func TestSr25519FromMnemonic(t *testing.T) {
 
 	for _, m := range mnemonics {
 		if m.valid {
-			signer, err := Sr25519FromMnemonic(m.mnemonic, m.num)
+			signer, _, err := Sr25519FromMnemonic(m.mnemonic, m.num)
 			require.NoError(t, err)
 			require.Equal(t, m.pubkey, signer.Public().String())
 		} else {
-			_, err := Sr25519FromMnemonic(m.mnemonic, 0)
+			_, _, err := Sr25519FromMnemonic(m.mnemonic, 0)
 			require.Error(t, err)
 		}
 	}

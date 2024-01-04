@@ -37,11 +37,11 @@ var mnemonics = []struct {
 func TestSecp256k1FromMnemonic(t *testing.T) {
 	for _, m := range mnemonics {
 		if m.valid {
-			signer, err := Secp256k1FromMnemonic(m.mnemonic, m.num)
+			signer, _, err := Secp256k1FromMnemonic(m.mnemonic, m.num)
 			require.NoError(t, err)
 			require.Equal(t, m.pubkey, signer.Public().String())
 		} else {
-			_, err := Secp256k1FromMnemonic(m.mnemonic, 0)
+			_, _, err := Secp256k1FromMnemonic(m.mnemonic, 0)
 			require.Error(t, err)
 		}
 	}

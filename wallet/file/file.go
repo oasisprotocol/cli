@@ -11,14 +11,12 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	ethCommon "github.com/ethereum/go-ethereum/common"
-	"github.com/mitchellh/mapstructure"
 	flag "github.com/spf13/pflag"
 	bip39 "github.com/tyler-smith/go-bip39"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/sha3"
 
 	"github.com/oasisprotocol/deoxysii"
-	"github.com/oasisprotocol/oasis-core/go/common/crypto/sakg"
 	coreSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/ed25519"
@@ -56,11 +54,6 @@ func SupportedAlgorithmsForImport(kind *wallet.ImportKind) []string {
 	default:
 		return []string{}
 	}
-}
-
-type accountConfig struct {
-	Algorithm string `mapstructure:"algorithm"`
-	Number    uint32 `mapstructure:"number,omitempty"`
 }
 
 type secretState struct {
@@ -184,8 +177,8 @@ func (af *fileAccountFactory) Kind() string {
 }
 
 func (af *fileAccountFactory) PrettyKind(rawCfg map[string]interface{}) string {
-	cfg, err := af.unmarshalConfig(rawCfg)
-	if err != nil {
+	var cfg wallet.AccountConfig
+	if err := cfg.UnmarshalMap(rawCfg); err != nil {
 		return ""
 	}
 
@@ -249,8 +242,8 @@ func (af *fileAccountFactory) DataPrompt(kind wallet.ImportKind, rawCfg map[stri
 	case wallet.ImportKindMnemonic:
 		return &survey.Multiline{Message: "Mnemonic:"}
 	case wallet.ImportKindPrivateKey:
-		cfg, err := af.unmarshalConfig(rawCfg)
-		if err != nil {
+		var cfg wallet.AccountConfig
+		if err := cfg.UnmarshalMap(rawCfg); err != nil {
 			return nil
 		}
 		switch cfg.Algorithm {
@@ -273,8 +266,8 @@ func (af *fileAccountFactory) DataValidator(kind wallet.ImportKind, rawCfg map[s
 		switch kind {
 		case wallet.ImportKindMnemonic:
 		case wallet.ImportKindPrivateKey:
-			cfg, err := af.unmarshalConfig(rawCfg)
-			if err != nil {
+			var cfg wallet.AccountConfig
+			if err := cfg.UnmarshalMap(rawCfg); err != nil {
 				return nil
 			}
 			switch cfg.Algorithm {
@@ -319,8 +312,8 @@ func (af *fileAccountFactory) SupportedImportKinds() []wallet.ImportKind {
 }
 
 func (af *fileAccountFactory) HasConsensusSigner(rawCfg map[string]interface{}) bool {
-	cfg, err := af.unmarshalConfig(rawCfg)
-	if err != nil {
+	var cfg wallet.AccountConfig
+	if err := cfg.UnmarshalMap(rawCfg); err != nil {
 		return false
 	}
 
@@ -331,21 +324,9 @@ func (af *fileAccountFactory) HasConsensusSigner(rawCfg map[string]interface{}) 
 	return false
 }
 
-func (af *fileAccountFactory) unmarshalConfig(raw map[string]interface{}) (*accountConfig, error) {
-	if raw == nil {
-		return nil, fmt.Errorf("missing configuration")
-	}
-
-	var cfg accountConfig
-	if err := mapstructure.Decode(raw, &cfg); err != nil {
-		return nil, err
-	}
-	return &cfg, nil
-}
-
 func (af *fileAccountFactory) Create(name string, passphrase string, rawCfg map[string]interface{}) (wallet.Account, error) {
-	cfg, err := af.unmarshalConfig(rawCfg)
-	if err != nil {
+	var cfg wallet.AccountConfig
+	if err := cfg.UnmarshalMap(rawCfg); err != nil {
 		return nil, err
 	}
 
@@ -378,7 +359,7 @@ func (af *fileAccountFactory) Create(name string, passphrase string, rawCfg map[
 	}
 
 	// Create a proper account based on the chosen algorithm.
-	return newAccount(state, cfg)
+	return newAccount(state, &cfg)
 }
 
 // Migrate migrates the given wallet config entry to the latest version and returns true, if any changes were needed.
@@ -387,8 +368,8 @@ func (af *fileAccountFactory) Migrate(_ map[string]interface{}) bool {
 }
 
 func (af *fileAccountFactory) Load(name string, passphrase string, rawCfg map[string]interface{}) (wallet.Account, error) {
-	cfg, err := af.unmarshalConfig(rawCfg)
-	if err != nil {
+	var cfg wallet.AccountConfig
+	if err := cfg.UnmarshalMap(rawCfg); err != nil {
 		return nil, err
 	}
 
@@ -408,7 +389,7 @@ func (af *fileAccountFactory) Load(name string, passphrase string, rawCfg map[st
 		return nil, fmt.Errorf("failed to open account state (maybe incorrect passphrase?)")
 	}
 
-	return newAccount(state, cfg)
+	return newAccount(state, &cfg)
 }
 
 func (af *fileAccountFactory) Remove(name string, _ map[string]interface{}) error {
@@ -420,8 +401,8 @@ func (af *fileAccountFactory) Rename(old, new string, _ map[string]interface{}) 
 }
 
 func (af *fileAccountFactory) Import(name string, passphrase string, rawCfg map[string]interface{}, src *wallet.ImportSource) (wallet.Account, error) {
-	cfg, err := af.unmarshalConfig(rawCfg)
-	if err != nil {
+	var cfg wallet.AccountConfig
+	if err := cfg.UnmarshalMap(rawCfg); err != nil {
 		return nil, err
 	}
 
@@ -449,7 +430,7 @@ func (af *fileAccountFactory) Import(name string, passphrase string, rawCfg map[
 	}
 
 	// Create a proper account based on the chosen algorithm.
-	acc, err := newAccount(&state, cfg)
+	acc, err := newAccount(&state, &cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -471,16 +452,16 @@ func (af *fileAccountFactory) Import(name string, passphrase string, rawCfg map[
 }
 
 type fileAccount struct {
-	cfg    *accountConfig
+	cfg    *wallet.AccountConfig
 	state  *secretState
 	signer signature.Signer
 }
 
-func newAccount(state *secretState, cfg *accountConfig) (wallet.Account, error) {
+func newAccount(state *secretState, cfg *wallet.AccountConfig) (wallet.Account, error) {
 	switch state.Algorithm {
 	case wallet.AlgorithmEd25519Adr8:
 		// For Ed25519 use the ADR 0008 derivation scheme.
-		signer, _, err := sakg.GetAccountSigner(state.Data, "", cfg.Number)
+		signer, _, err := Ed25519FromMnemonic(state.Data, cfg.Number)
 		if err != nil {
 			return nil, fmt.Errorf("failed to derive signer: %w", err)
 		}
@@ -488,7 +469,7 @@ func newAccount(state *secretState, cfg *accountConfig) (wallet.Account, error) 
 		return &fileAccount{
 			cfg:    cfg,
 			state:  state,
-			signer: ed25519.WrapSigner(signer),
+			signer: signer,
 		}, nil
 	case wallet.AlgorithmEd25519Raw:
 		// For Ed25519-Raw use the raw private key.
@@ -504,7 +485,7 @@ func newAccount(state *secretState, cfg *accountConfig) (wallet.Account, error) 
 		}, nil
 	case wallet.AlgorithmSecp256k1Bip44:
 		// For Secp256k1-BIP-44 use the BIP-44 derivation scheme.
-		signer, err := Secp256k1FromMnemonic(state.Data, cfg.Number)
+		signer, _, err := Secp256k1FromMnemonic(state.Data, cfg.Number)
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize signer: %w", err)
 		}
@@ -527,7 +508,7 @@ func newAccount(state *secretState, cfg *accountConfig) (wallet.Account, error) 
 		}, nil
 	case wallet.AlgorithmSr25519Adr8:
 		// For Sr25519 use the ADR 0008 derivation scheme.
-		signer, err := Sr25519FromMnemonic(state.Data, cfg.Number)
+		signer, _, err := Sr25519FromMnemonic(state.Data, cfg.Number)
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize signer: %w", err)
 		}
@@ -604,8 +585,29 @@ func (a *fileAccount) SignatureAddressSpec() types.SignatureAddressSpec {
 	}
 }
 
-func (a *fileAccount) UnsafeExport() string {
-	return a.state.Data
+func (a *fileAccount) UnsafeExport() (string, string) {
+	switch a.cfg.Algorithm {
+	case wallet.AlgorithmEd25519Raw, wallet.AlgorithmSecp256k1Raw, wallet.AlgorithmSr25519Raw:
+		return a.state.Data, ""
+	}
+
+	mnemonic := a.state.Data
+
+	// For convenience derive the corresponding private key of the mnemonic.
+	key := ""
+	switch a.cfg.Algorithm {
+	case wallet.AlgorithmEd25519Adr8:
+		_, sk, _ := Ed25519FromMnemonic(a.state.Data, a.cfg.Number)
+		key = base64.StdEncoding.EncodeToString(sk)
+	case wallet.AlgorithmSecp256k1Bip44:
+		_, sk, _ := Secp256k1FromMnemonic(a.state.Data, a.cfg.Number)
+		key = hex.EncodeToString(sk)
+	case wallet.AlgorithmSr25519Adr8:
+		_, sk, _ := Sr25519FromMnemonic(a.state.Data, a.cfg.Number)
+		key = base64.StdEncoding.EncodeToString(sk)
+	}
+
+	return key, mnemonic
 }
 
 func init() {

@@ -2,8 +2,9 @@ WARNING: Exporting the account will expose secret key material!
 Unlock your account.
 ? Passphrase:
 Name:             emma
+Kind:             file (secp256k1-raw)
 Public Key:       Az8B2UpSUET0E3n9XMzr+HBvviQKcRvz6C6bJtRFWNYG
 Ethereum address: 0xeEbE22411f579682F6f9D68f4C19B3581bCb576b
 Native address:   oasis1qph93wnfw8shu04pqyarvtjy4lytz3hp0c7tqnqh
-Export:
+Secret key:
 4811ebbe4f29f32a758f6f7bad39deb97ea67f07350637e31c75795dc679262a

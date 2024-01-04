@@ -28,14 +28,8 @@ func LoadAccount(cfg *config.Config, name string) wallet.Account {
 		return acc
 	}
 
-	// Early check for whether the account exists so that we don't ask for passphrase first.
-	var (
-		acfg   *config.Account
-		exists bool
-	)
-	if acfg, exists = cfg.Wallet.All[name]; !exists {
-		cobra.CheckErr(fmt.Errorf("account '%s' does not exist in the wallet", name))
-	}
+	acfg, err := LoadAccountConfig(cfg, name)
+	cobra.CheckErr(err)
 
 	af, err := acfg.LoadFactory()
 	cobra.CheckErr(err)
@@ -55,6 +49,20 @@ func LoadAccount(cfg *config.Config, name string) wallet.Account {
 	return acc
 }
 
+// LoadAccountConfig loads the config instance of the given named account.
+func LoadAccountConfig(cfg *config.Config, name string) (*config.Account, error) {
+	if testName := helpers.ParseTestAccountAddress(name); testName != "" {
+		return LoadTestAccountConfig(testName)
+	}
+
+	// Early check for whether the account exists so that we don't ask for passphrase first.
+	if acfg, exists := cfg.Wallet.All[name]; exists {
+		return acfg, nil
+	}
+
+	return nil, fmt.Errorf("account '%s' does not exist in the wallet", name)
+}
+
 // LoadTestAccount loads the given named test account.
 func LoadTestAccount(name string) (wallet.Account, error) {
 	if testKey, ok := testing.TestAccounts[name]; ok {
@@ -70,11 +78,23 @@ func LoadTestAccountConfig(name string) (*config.Account, error) {
 		return nil, err
 	}
 
+	alg := ""
+	switch {
+	case testAcc.SignatureAddressSpec().Ed25519 != nil:
+		alg = wallet.AlgorithmEd25519Raw
+	case testAcc.SignatureAddressSpec().Secp256k1Eth != nil:
+		alg = wallet.AlgorithmSecp256k1Raw
+	case testAcc.SignatureAddressSpec().Sr25519 != nil:
+		alg = wallet.AlgorithmSr25519Raw
+	default:
+		return nil, fmt.Errorf("unrecognized algorithm for test account %s", name)
+	}
+
 	return &config.Account{
 		Description: "",
 		Kind:        test.Kind,
 		Address:     testAcc.Address().String(),
-		Config:      nil,
+		Config:      map[string]interface{}{"algorithm": alg},
 	}, nil
 }
 

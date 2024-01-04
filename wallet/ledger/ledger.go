@@ -5,7 +5,6 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	ethCommon "github.com/ethereum/go-ethereum/common"
-	"github.com/mitchellh/mapstructure"
 	flag "github.com/spf13/pflag"
 	"golang.org/x/crypto/sha3"
 
@@ -27,11 +26,6 @@ const (
 	cfgNumber    = "ledger.number"
 )
 
-type accountConfig struct {
-	Algorithm string `mapstructure:"algorithm"`
-	Number    uint32 `mapstructure:"number,omitempty"`
-}
-
 type ledgerAccountFactory struct {
 	flags *flag.FlagSet
 }
@@ -41,8 +35,8 @@ func (af *ledgerAccountFactory) Kind() string {
 }
 
 func (af *ledgerAccountFactory) PrettyKind(rawCfg map[string]interface{}) string {
-	cfg, err := af.unmarshalConfig(rawCfg)
-	if err != nil {
+	var cfg wallet.AccountConfig
+	if err := cfg.UnmarshalMap(rawCfg); err != nil {
 		return ""
 	}
 
@@ -86,8 +80,8 @@ func (af *ledgerAccountFactory) SupportedImportKinds() []wallet.ImportKind {
 }
 
 func (af *ledgerAccountFactory) HasConsensusSigner(rawCfg map[string]interface{}) bool {
-	cfg, err := af.unmarshalConfig(rawCfg)
-	if err != nil {
+	var cfg wallet.AccountConfig
+	if err := cfg.UnmarshalMap(rawCfg); err != nil {
 		return false
 	}
 
@@ -121,34 +115,22 @@ func (af *ledgerAccountFactory) Migrate(rawCfg map[string]interface{}) bool {
 	return changed
 }
 
-func (af *ledgerAccountFactory) unmarshalConfig(raw map[string]interface{}) (*accountConfig, error) {
-	if raw == nil {
-		return nil, fmt.Errorf("missing configuration")
-	}
-
-	var cfg accountConfig
-	if err := mapstructure.Decode(raw, &cfg); err != nil {
-		return nil, err
-	}
-	return &cfg, nil
-}
-
 func (af *ledgerAccountFactory) Create(_ string, _ string, rawCfg map[string]interface{}) (wallet.Account, error) {
-	cfg, err := af.unmarshalConfig(rawCfg)
-	if err != nil {
+	var cfg wallet.AccountConfig
+	if err := cfg.UnmarshalMap(rawCfg); err != nil {
 		return nil, err
 	}
 
-	return newAccount(cfg)
+	return newAccount(&cfg)
 }
 
 func (af *ledgerAccountFactory) Load(_ string, _ string, rawCfg map[string]interface{}) (wallet.Account, error) {
-	cfg, err := af.unmarshalConfig(rawCfg)
-	if err != nil {
+	var cfg wallet.AccountConfig
+	if err := cfg.UnmarshalMap(rawCfg); err != nil {
 		return nil, err
 	}
 
-	return newAccount(cfg)
+	return newAccount(&cfg)
 }
 
 func (af *ledgerAccountFactory) Remove(_ string, _ map[string]interface{}) error {
@@ -164,12 +146,12 @@ func (af *ledgerAccountFactory) Import(_ string, _ string, _ map[string]interfac
 }
 
 type ledgerAccount struct {
-	cfg        *accountConfig
+	cfg        *wallet.AccountConfig
 	signer     *ledgerSigner
 	coreSigner *ledgerCoreSigner
 }
 
-func newAccount(cfg *accountConfig) (wallet.Account, error) {
+func newAccount(cfg *wallet.AccountConfig) (wallet.Account, error) {
 	// Connect to device.
 	dev, err := connectToDevice()
 	if err != nil {
@@ -290,9 +272,9 @@ func (a *ledgerAccount) SignatureAddressSpec() types.SignatureAddressSpec {
 	return types.SignatureAddressSpec{}
 }
 
-func (a *ledgerAccount) UnsafeExport() string {
+func (a *ledgerAccount) UnsafeExport() (string, string) {
 	// Secret is stored on the device.
-	return ""
+	return "", ""
 }
 
 func init() {

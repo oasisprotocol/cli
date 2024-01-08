@@ -548,11 +548,11 @@ In order for validators to become part of the validator set and/or the compute
 committee, they first need to register as an entity inside the network's
 registry. Use the `account entity register <entity.json>` command to register
 your entity and provide a JSON file with the Entity descriptor. You can use the
-[`network show`][network-show-id-entities] command to see existing entities and
+[`network show`][network-show] command to see existing entities and
 then examine specific ones to see how entity descriptors of the currently
 registered entities look like.
 
-[network-show-id-entities]: ./network.md#show-id-entities
+[network-show]: ./network.md#show
 [oasis-core-registry]: https://github.com/oasisprotocol/oasis-core/blob/master/docs/consensus/services/registry.md#entities-and-nodes
 
 ![code shell](../examples/account/entity-register.y.in)

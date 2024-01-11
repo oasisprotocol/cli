@@ -313,7 +313,7 @@ Shows minimum gas costs for each consensus transaction.
 
 ![code](../examples/network-show/gas-costs.out)
 
-Above, we can see that the [maximum amount of gas](./network.md#gas-limit) our
+Above, we can see that the [maximum amount of gas](./account.md#gas-limit) our
 transaction can spend must be set to at least 1000 **gas units**, otherwise it
 will be rejected by the network.
 

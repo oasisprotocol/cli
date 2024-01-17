@@ -36,7 +36,7 @@ It boasts a number of handy features:
   - staking reward schedule transactions
 - Developer features:
   - built-in testing accounts compatible with the Oasis test runner, the Oasis
-    CI and the official sapphire-dev and emerald-dev Docker images
+    CI and the official Sapphire and Emerald Localnet Docker images
   - Oasis Wasm smart contract code deployment, instantiation, management and
     calls
   - debugging tools for deployed Wasm contracts

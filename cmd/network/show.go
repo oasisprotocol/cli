@@ -17,7 +17,6 @@ import (
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 	"github.com/oasisprotocol/oasis-core/go/staking/api/token"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
 	"github.com/oasisprotocol/cli/cmd/common"
@@ -213,7 +212,7 @@ func parseIdentifier(
 		return sel, nil
 	}
 
-	addr, _, err := helpers.ResolveAddress(npa.Network, s)
+	addr, _, err := common.ResolveAddress(npa.Network, s)
 	if err == nil {
 		return addr, nil
 	}

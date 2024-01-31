@@ -21,4 +21,5 @@ func init() {
 	Cmd.AddCommand(showCmd)
 	Cmd.AddCommand(statsCmd)
 	Cmd.AddCommand(denomination.Cmd)
+	Cmd.AddCommand(txStatsCmd)
 }

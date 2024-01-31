@@ -18,4 +18,5 @@ func init() {
 	Cmd.AddCommand(setDefaultCmd)
 	Cmd.AddCommand(showCmd)
 	Cmd.AddCommand(statsCmd)
+	Cmd.AddCommand(txStatsCmd)
 }

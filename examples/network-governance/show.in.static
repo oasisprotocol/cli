@@ -1,1 +1,1 @@
-oasis network governance show 5 --network localhost_testnet
+oasis network governance show 9 --network testnet

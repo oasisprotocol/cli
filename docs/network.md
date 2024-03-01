@@ -168,6 +168,13 @@ past or opened governance proposals on the consensus layer.
 
 ![code](../examples/network-governance/show.out.static)
 
+You can also view individual validator votes by passing the `--show-votes`
+parameter:
+
+![code shell](../examples/network-governance/show-votes.in.static)
+
+![code](../examples/network-governance/show-votes.out.static)
+
 :::info
 
 Governance proposals are not indexed and an endpoint may take some time to

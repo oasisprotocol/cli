@@ -1,40 +1,21 @@
-Network:     localhost_testnet
-Proposal ID: 5
+=== PROPOSAL CONTENT ===
+Change Parameters:
+  Module: governance
+  Changes: 
+    - Parameter: upgrade_cancel_min_epoch_diff
+      Value: 15
+
+=== PROPOSAL STATUS ===
+Network:     testnet
+Proposal ID: 9
 Status:      passed
 Results:
-  - yes: 40353433694198429
+  - yes: 43494459676132712
   - no: 0
   - abstain: 0
 
 === VOTED STAKE ===
-Total voting stake: 50569514477387972
-Voted stake:        40353433694198429 (79.80%)
-Voted yes stake:    40353433694198429 (100.00%)
+Total voting stake: 43777341677851724
+Voted stake:        43494459676132712 (99.35%)
+Voted yes stake:    43494459676132712 (100.00%)
 Threshold:          68%
-
-=== VALIDATORS VOTED ===
-  1. oasis1qz2tg4hsatlxfaf8yut9gxgv8990ujaz4sldgmzx,<none>,10090915233195893 (19.95%)
-  2. oasis1qqv25adrld8jjquzxzg769689lgf9jxvwgjs8tha,<none>,10088536651526034 (19.95%)
-  3. oasis1qq2vzcvxn0js5unsch5me2xz4kr43vcasv0d5eq4,<none>,10087294462687006 (19.95%)
-  4. oasis1qz424yg28jqmgfq3xvly6ky64jqnmlylfc27d7cp,<none>,10086687346789496 (19.95%)
-
-=== VALIDATORS NOT VOTED ===
-  1. oasis1qr37y56g92chzvsew54kj7gu47cxyly7jytt5rm0,<none>,10086569233063782 (19.95%)
-  2. oasis1qrwncs459lauc77zw23efdn9dmfcp23cxv095l5z,GateOmega,36880124779329 (0.07%)
-  3. oasis1qq60zmsfca0gvmm3v8906pn5zqtt4ee2ssexramg,Validatrium,33702388192293 (0.07%)
-  4. oasis1qzjm0zwfg4egs9kk4d9rkujudzk8pjp5rvxyr3ag,Munay Network,11688006553404 (0.02%)
-  5. oasis1qpq97fm6lf87jzms9agd6z902nh7axtxvus6m352,LDV,10366034293998 (0.02%)
-  6. oasis1qpz97gfrvj5xzx8jx7x9zweeq0rcf2q6jg4a09qz,Stardust Staking,10073645442224 (0.02%)
-  7. oasis1qr2jxg57ch6p3787t2a8973v8zn8g82nxuex0773,Doorgod,9065607211215 (0.02%)
-  8. oasis1qz9x0zpja6n25hc5242k2e60l6a7ke2zsq9cqrqz,SerGo,5038002123045 (0.01%)
-  9. oasis1qqxxut9x74dutu587f9nj8787qz4dm0ueu05l88c,Princess Stake,2820051385569 (0.01%)
-  10. oasis1qq45am6gzaur2rxhk26av9qf7ryhgca6ecg28clu,Jr,2015272611166 (0.00%)
-  11. oasis1qzlzczsdme4scprjjh4h4vtljnmx3ag4vgpdnqln,Alexander (aka Bambarello) Validator,1591674847600 (0.00%)
-  12. oasis1qrq7hgvv26003hy89klcmy3mnedrmyd7lvf0k6qn,Perfect Stake,1402251445282 (0.00%)
-  13. oasis1qzwe6xywazp29tp20974wgxhdcpdf6yxfcn2jxvv,Simply Staking,1259545381854 (0.00%)
-  14. oasis1qphcvmsh6mw98vtg0cg4dvdsen5tm0g3e58eqpnp,Appload,1107161223526 (0.00%)
-  15. oasis1qpc66dgff4wrkj8kac4njrl2uvww3c9m5ycjwar2,<none>,1007401444145 (0.00%)
-  16. oasis1qpswaz4djukz0zanquyh2vswk59up22emysq5am9,StakeService,797017095508 (0.00%)
-  17. oasis1qr4vsan850vmztuy9r2pex4fj4wxnmhvlgclg500,<none>,297168911795 (0.00%)
-  18. oasis1qrdrup88pr27pjaaqh2m34dl6hu2u0lh4cfk3lnh,<none>,200192811785 (0.00%)
-  19. oasis1qqgvqelw8kmcd8k4cqypcsyajkl3gq6ppc4t34n2,AnkaStake,200004372023 (0.00%)

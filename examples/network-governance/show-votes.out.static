@@ -1,0 +1,71 @@
+=== PROPOSAL CONTENT ===
+Change Parameters:
+  Module: governance
+  Changes: 
+    - Parameter: upgrade_cancel_min_epoch_diff
+      Value: 15
+
+=== PROPOSAL STATUS ===
+Network:     testnet
+Proposal ID: 9
+Status:      passed
+Results:
+  - yes: 43494459676132712
+  - no: 0
+  - abstain: 0
+
+=== VOTED STAKE ===
+Total voting stake: 43777341677851724
+Voted stake:        43494459676132712 (99.35%)
+Voted yes stake:    43494459676132712 (100.00%)
+Threshold:          68%
+
+=== VALIDATORS VOTED ===
+  1. oasis1qqv25adrld8jjquzxzg769689lgf9jxvwgjs8tha,<none>,11072533240458237 (25.29%)
+  2. oasis1qz2tg4hsatlxfaf8yut9gxgv8990ujaz4sldgmzx,<none>,10922431911536365 (24.95%)
+  3. oasis1qz424yg28jqmgfq3xvly6ky64jqnmlylfc27d7cp,<none>,10786148310722167 (24.64%)
+  4. oasis1qq2vzcvxn0js5unsch5me2xz4kr43vcasv0d5eq4,<none>,10713346213415943 (24.47%)
+
+=== VALIDATORS NOT VOTED ===
+  1. oasis1qrwncs459lauc77zw23efdn9dmfcp23cxv095l5z,GateOmega,43681995855414 (0.10%)
+  2. oasis1qq60zmsfca0gvmm3v8906pn5zqtt4ee2ssexramg,Validatrium,37519643115923 (0.09%)
+  3. oasis1qrkwv688m3naejcy8rhycls8r78ga0th4qaun90k,Tuzem,13051121909522 (0.03%)
+  4. oasis1qrg430wr84xqh2pm6hv609v7jx9j3gt7xykmjl65,cherkes,12829194880949 (0.03%)
+  5. oasis1qzjm0zwfg4egs9kk4d9rkujudzk8pjp5rvxyr3ag,Munay Network,12777089617060 (0.03%)
+  6. oasis1qqsxhxedvzt0et3sahcqcjw02p4kcz92dqtjuzwh,BroMyb,12062754356510 (0.03%)
+  7. oasis1qpq97fm6lf87jzms9agd6z902nh7axtxvus6m352,LDV,11442842011460 (0.03%)
+  8. oasis1qpz97gfrvj5xzx8jx7x9zweeq0rcf2q6jg4a09qz,Stardust,11304018972474 (0.03%)
+  9. oasis1qrkf98prkpf05kd6he7wcvpzr9sd6gs2jvrn5keh,glebanyy,10964792231490 (0.03%)
+  10. oasis1qzxtc82d7gmcr5yazlu786gkwcvukz3zvu9ph5la,ushakov,10954729838903 (0.03%)
+  11. oasis1qpgg65qg7r7yy2a0qp2yufvcsyl2lm46lg03g6cp,Breathe and Stake,10942254111385 (0.02%)
+  12. oasis1qrruwg0y4au55efu0pcgl0nanaq6p3sdwv0jhzv5,Dobrynya Hukutu4,10753083746804 (0.02%)
+  13. oasis1qq6k7q4uukpucz322m8dhy0pt0gvfdgrvcvrx2rm,Spectrum Staking,10724618200610 (0.02%)
+  14. oasis1qr2jxg57ch6p3787t2a8973v8zn8g82nxuex0773,Doorgod,9959349109598 (0.02%)
+  15. oasis1qrp0cgv0u5mxm7l3ruzqyk57g6ntz6f8muymfe4p,ELYSIUM,9536638984147 (0.02%)
+  16. oasis1qrfeessnrnyaggvyvne52aple2f8vaw93vt608sz,Julia-Ju,7765469996624 (0.02%)
+  17. oasis1qz9x0zpja6n25hc5242k2e60l6a7ke2zsq9cqrqz,SerGo,5553178612897 (0.01%)
+  18. oasis1qq4fj0fdydz83zvcgt4kn38ea7ncm3dj8qkcfnm4,Wanderer Staking,5471851136155 (0.01%)
+  19. oasis1qzcemlzf7zv2jxsufex4h9mjaqwy4upnzy7qrl7x,Making.Cash Validator,5461635837440 (0.01%)
+  20. oasis1qrq7hgvv26003hy89klcmy3mnedrmyd7lvf0k6qn,Perfect Stake,4040750411525 (0.01%)
+  21. oasis1qqxxut9x74dutu587f9nj8787qz4dm0ueu05l88c,Princess Stake,3406051188880 (0.01%)
+  22. oasis1qq45am6gzaur2rxhk26av9qf7ryhgca6ecg28clu,Jr,2201101606599 (0.01%)
+  23. oasis1qz7rce6dmnh9qtr9nltsyy69d69j3a95rqm3jmxw,Everstake,2171181028607 (0.00%)
+  24. oasis1qz8w4erh0kkwpmdtwd3dt9ueaz9hmzfpecjhd7t4,Chloris Network,2011713919098 (0.00%)
+  25. oasis1qzlzczsdme4scprjjh4h4vtljnmx3ag4vgpdnqln,Alexander (aka Bambarello) Validator,1757051650379 (0.00%)
+  26. oasis1qzwe6xywazp29tp20974wgxhdcpdf6yxfcn2jxvv,Simply Staking,1388519563110 (0.00%)
+  27. oasis1qq2vdcvkyzdghcrrdhvujk3tvva84wd9yvt68zyx,Lusia,1300150706950 (0.00%)
+  28. oasis1qphcvmsh6mw98vtg0cg4dvdsen5tm0g3e58eqpnp,Appload,1221281508316 (0.00%)
+  29. oasis1qpc66dgff4wrkj8kac4njrl2uvww3c9m5ycjwar2,Forbole-Testnet,1112551173826 (0.00%)
+  30. oasis1qzz9wdgt4hxfmcelfgyg8ne827a47pvh4g4jamtu,max999,1096825296654 (0.00%)
+  31. oasis1qz5zfcaqqud75naqln92ez7czjxf0dpyj5rmtfls,alexandr0,1096729833573 (0.00%)
+  32. oasis1qz4532s3lhkpju7fd3mxqfvaw98pjq5htss4g4w0,RedHead,1096422596648 (0.00%)
+  33. oasis1qphhz4u08xgt4wk85x4t8xv6g3nxy8fq5ue4htxr,Kumaji,1042663336329 (0.00%)
+  34. oasis1qrrggkf3jxa3mqjj0uzfpn8wg5hpsn5hdvusqspc,Bit Cat😻 ,959384168121 (0.00%)
+  35. oasis1qz6tqn2ktffz2jjlj2fwqlhw7f2rwwud5ghh54yv,WeHaveServers.com,933754283937 (0.00%)
+  36. oasis1qpswaz4djukz0zanquyh2vswk59up22emysq5am9,StakeService,879748845930 (0.00%)
+  37. oasis1qq87z733lxx87zyuutee5xpxcksqk3mj9uq3xvaq,w3coins,819152557031 (0.00%)
+  38. oasis1qrcf5mwjyu7hahwfjgwmywhy9cjyaqdd5vkj7ah3,ou812,418376899484 (0.00%)
+  39. oasis1qpxaq8thpx3y8wumn6hmfx70rvk0j9cxrgz9h27k,Colossus,410141268162 (0.00%)
+  40. oasis1qr4vsan850vmztuy9r2pex4fj4wxnmhvlgclg500,<none>,327983310482 (0.00%)
+  41. oasis1qqgvqelw8kmcd8k4cqypcsyajkl3gq6ppc4t34n2,AnkaStake,220810245010 (0.00%)
+  42. oasis1qrpp8h9wl3wtqn04nvyx4dcrlz3jzqazugec7pxz,CryptoSJ.net,213393794996 (0.00%)

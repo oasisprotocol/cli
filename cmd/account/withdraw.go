@@ -71,9 +71,7 @@ var withdrawCmd = &cobra.Command{
 		common.CheckForceErr(common.CheckAddressNotReserved(cfg, addrToCheck))
 
 		// Parse amount.
-		// TODO: This should actually query the ParaTime (or config) to check what the consensus
-		//       layer denomination is in the ParaTime. Assume NATIVE for now.
-		amountBaseUnits, err := helpers.ParseParaTimeDenomination(npa.ParaTime, amount, types.NativeDenomination)
+		amountBaseUnits, err := helpers.ParseParaTimeDenomination(npa.ParaTime, amount, npa.ConsensusDenomination())
 		cobra.CheckErr(err)
 
 		// Prepare transaction.

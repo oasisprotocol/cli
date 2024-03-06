@@ -17,15 +17,23 @@ import (
 )
 
 var transferCmd = &cobra.Command{
-	Use:     "transfer <amount> <to>",
+	Use:     "transfer <amount> [<denom>] <to>",
 	Short:   "Transfer given amount of tokens",
 	Aliases: []string{"t"},
-	Args:    cobra.ExactArgs(2),
+	Args:    cobra.RangeArgs(2, 3),
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
 		txCfg := common.GetTransactionConfig()
-		amount, to := args[0], args[1]
+		var amount, denom, to string
+		switch len(args) {
+		case 2:
+			amount, to = args[0], args[1]
+		case 3:
+			amount, denom, to = args[0], args[1], args[2]
+		default:
+			cobra.CheckErr("unexpected number of arguments") // Should never happen.
+		}
 
 		if npa.Account == nil {
 			cobra.CheckErr("no accounts configured in your wallet")
@@ -57,6 +65,10 @@ var transferCmd = &cobra.Command{
 				common.CheckForceErr(common.CheckAddressIsConsensusCapable(cfg, toEthAddr.Hex()))
 			}
 
+			if denom != "" {
+				cobra.CheckErr("consensus layer only supports the native denomination")
+			}
+
 			// Consensus layer transfer.
 			amount, err := helpers.ParseConsensusDenomination(npa.Network, amount)
 			cobra.CheckErr(err)
@@ -71,9 +83,7 @@ var transferCmd = &cobra.Command{
 			cobra.CheckErr(err)
 		default:
 			// ParaTime transfer.
-			// TODO: This should actually query the ParaTime (or config) to check what the consensus
-			//       layer denomination is in the ParaTime. Assume NATIVE for now.
-			amountBaseUnits, err := helpers.ParseParaTimeDenomination(npa.ParaTime, amount, types.NativeDenomination)
+			amountBaseUnits, err := helpers.ParseParaTimeDenomination(npa.ParaTime, amount, types.Denomination(denom))
 			cobra.CheckErr(err)
 
 			// Prepare transaction.

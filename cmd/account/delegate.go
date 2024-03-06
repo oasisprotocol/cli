@@ -12,7 +12,6 @@ import (
 	sdkSignature "github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/consensusaccounts"
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
 	"github.com/oasisprotocol/cli/cmd/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
@@ -67,9 +66,7 @@ var delegateCmd = &cobra.Command{
 			cobra.CheckErr(err)
 		default:
 			// ParaTime delegation.
-			// TODO: This should actually query the ParaTime (or config) to check what the consensus
-			//       layer denomination is in the ParaTime. Assume NATIVE for now.
-			amountBaseUnits, err := helpers.ParseParaTimeDenomination(npa.ParaTime, amount, types.NativeDenomination)
+			amountBaseUnits, err := helpers.ParseParaTimeDenomination(npa.ParaTime, amount, npa.ConsensusDenomination())
 			cobra.CheckErr(err)
 
 			// Prepare transaction.

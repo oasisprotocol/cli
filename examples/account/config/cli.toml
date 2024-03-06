@@ -4,7 +4,7 @@ default = 'testnet'
 [networks.mainnet]
 chain_context = 'b11b369e0da5bb230b220127f5e7b242d385ef8c6f54906243f30af63c815535'
 description = ''
-rpc = 'grpc.oasis.dev:443'
+rpc = 'grpc.oasis.io:443'
 
 [networks.mainnet.denomination]
 decimals = 9
@@ -43,7 +43,7 @@ symbol = 'ROSE'
 [networks.testnet]
 chain_context = '50304f98ddb656620ea817cc1446c401752a05a249b36c9b90dba4616829977a'
 description = ''
-rpc = 'testnet.grpc.oasis.dev:443'
+rpc = 'testnet.grpc.oasis.io:443'
 
 [networks.testnet.denomination]
 decimals = 9

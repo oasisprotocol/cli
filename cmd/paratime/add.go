@@ -68,6 +68,7 @@ var addCmd = &cobra.Command{
 				Decimals: answers.Decimals,
 			},
 		}
+		pt.ConsensusDenomination = config.NativeDenominationKey // TODO: Make this configurable.
 
 		err = net.ParaTimes.Add(name, &pt)
 		cobra.CheckErr(err)

@@ -1,10 +1,10 @@
 [networks]
-default = 'mainnet'
+default = 'testnet'
 
 [networks.mainnet]
 chain_context = 'b11b369e0da5bb230b220127f5e7b242d385ef8c6f54906243f30af63c815535'
 description = ''
-rpc = 'grpc.oasis.io:443'
+rpc = 'grpc.oasis.dev:443'
 
 [networks.mainnet.denomination]
 decimals = 9
@@ -43,14 +43,14 @@ symbol = 'ROSE'
 [networks.testnet]
 chain_context = '50304f98ddb656620ea817cc1446c401752a05a249b36c9b90dba4616829977a'
 description = ''
-rpc = 'testnet.grpc.oasis.io:443'
+rpc = 'testnet.grpc.oasis.dev:443'
 
 [networks.testnet.denomination]
 decimals = 9
 symbol = 'TEST'
 
 [networks.testnet.paratimes]
-default = 'emerald'
+default = 'sapphire'
 
 [networks.testnet.paratimes.cipher]
 description = ''
@@ -80,11 +80,18 @@ decimals = 18
 symbol = 'TEST'
 
 [wallets]
-default = 'eugene'
+default = 'oscar'
 
 [wallets.emma]
 address = 'oasis1qph93wnfw8shu04pqyarvtjy4lytz3hp0c7tqnqh'
 algorithm = 'secp256k1-raw'
+description = ''
+kind = 'file'
+number = 0
+
+[wallets.eric]
+address = 'oasis1qzplmfaeywvtc2qnylyhk0uzcxr4y5s3euhaug7q'
+algorithm = 'secp256k1-bip44'
 description = ''
 kind = 'file'
 number = 0
@@ -108,6 +115,13 @@ address = 'oasis1qpl4axynedmdrrgrg7dpw3yxc4a8crevr5dkuksl'
 algorithm = 'ed25519-legacy'
 description = ''
 kind = 'ledger'
+number = 0
+
+[wallets.orlando]
+address = 'oasis1qq84sc4q0shp5c5klwklqu59evz2mg59hveg7dqx'
+algorithm = 'ed25519-adr8'
+description = ''
+kind = 'file'
 number = 0
 
 [wallets.oscar]

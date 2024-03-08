@@ -1,0 +1,3 @@
+NAME       	CHAIN CONTEXT                                                   	RPC                       
+mainnet    	bb3d748def55bdfb797a2ac53ee6ee141e54cd2ab2dc2375f4a0703a178e6e55	grpc.oasis.io:443        	
+testnet (*)	0b91b8e4e44b2003a7c5e23ddadb5e14ef5345c0ebcb3ddcae07fa2f244cab76	testnet.grpc.oasis.io:443	

@@ -34,6 +34,7 @@ var (
 	txNonce      uint64
 	txGasLimit   uint64
 	txGasPrice   string
+	txFeeDenom   string
 	txEncrypted  bool
 	txYes        bool
 	txUnsigned   bool
@@ -115,6 +116,11 @@ func SignConsensusTransaction(
 		tx.Fee = &consensusTx.Fee{}
 	}
 	tx.Fee.Gas = consensusTx.Gas(txGasLimit)
+
+	// For sanity make sure no fee denomination has been specified.
+	if txFeeDenom != "" {
+		return nil, fmt.Errorf("consensus layer only supports the native denomination for paying fees")
+	}
 
 	gasPrice := quantity.NewQuantity()
 	if txGasPrice != "" {
@@ -215,11 +221,12 @@ func SignParaTimeTransaction(
 		tx.AuthInfo.Fee.Gas = txGasLimit
 	}
 
+	feeDenom := types.Denomination(txFeeDenom)
+
 	gasPrice := &types.BaseUnits{}
 	if txGasPrice != "" {
-		// TODO: Support different denominations for gas fees.
 		var err error
-		gasPrice, err = helpers.ParseParaTimeDenomination(npa.ParaTime, txGasPrice, types.NativeDenomination)
+		gasPrice, err = helpers.ParseParaTimeDenomination(npa.ParaTime, txGasPrice, feeDenom)
 		if err != nil {
 			return nil, nil, fmt.Errorf("bad gas price: %w", err)
 		}
@@ -262,9 +269,7 @@ func SignParaTimeTransaction(
 				return nil, nil, fmt.Errorf("failed to query minimum gas price: %w", err)
 			}
 
-			// TODO: Support different denominations for gas fees.
-			denom := types.NativeDenomination
-			*gasPrice = types.NewBaseUnits(mgp[denom], denom)
+			*gasPrice = types.NewBaseUnits(mgp[feeDenom], feeDenom)
 		}
 	}
 
@@ -575,6 +580,7 @@ func init() {
 	RuntimeTxFlags.Uint64Var(&txNonce, "nonce", invalidNonce, "override nonce to use")
 	RuntimeTxFlags.Uint64Var(&txGasLimit, "gas-limit", invalidGasLimit, "override gas limit to use (disable estimation)")
 	RuntimeTxFlags.StringVar(&txGasPrice, "gas-price", "", "override gas price to use")
+	RuntimeTxFlags.StringVar(&txFeeDenom, "fee-denom", "", "override fee denomination (defaults to native)")
 	RuntimeTxFlags.BoolVar(&txEncrypted, "encrypted", false, "encrypt transaction call data (requires online mode)")
 	RuntimeTxFlags.AddFlagSet(YesFlag)
 	RuntimeTxFlags.BoolVar(&txUnsigned, "unsigned", false, "do not sign transaction")

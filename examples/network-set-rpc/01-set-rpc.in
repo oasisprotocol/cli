@@ -1,1 +1,1 @@
-oasis network set-rpc testnet_alt testnet3.grpc.oasis.dev:443
+oasis network set-rpc testnet_alt testnet3.grpc.oasis.io:443

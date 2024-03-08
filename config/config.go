@@ -192,18 +192,53 @@ func (cfg *Config) migrateNetworks() bool {
 	var changes bool
 	for name, net := range cfg.Networks.All {
 		defaultCfg, knownDefault := Default.Networks.All[name]
-		oldChainContexts, knownOld := OldNetworks[name]
+		oldNetwork, knownOld := OldNetworks[name]
 		if !knownDefault || !knownOld {
 			continue
 		}
 
-		for _, oldChainContext := range oldChainContexts {
+		// Chain contexts.
+		for _, oldChainContext := range oldNetwork.ChainContexts {
 			if net.ChainContext == oldChainContext {
 				// If old chain context is known, replace with default.
 				net.ChainContext = defaultCfg.ChainContext
 				changes = true
 				break
 			}
+		}
+
+		// RPCs.
+		for _, oldRPC := range oldNetwork.RPCs {
+			if net.RPC == oldRPC {
+				// If old RPC is known, replace with default.
+				net.RPC = defaultCfg.RPC
+				changes = true
+				break
+			}
+		}
+
+		// Migrate consensus denominations for known paratimes.
+		for ptName, pt := range net.ParaTimes.All {
+			ptCfg, knownPt := defaultCfg.ParaTimes.All[ptName]
+			if !knownPt {
+				continue
+			}
+			if pt.ConsensusDenomination == ptCfg.ConsensusDenomination {
+				continue
+			}
+
+			pt.ConsensusDenomination = ptCfg.ConsensusDenomination
+			changes = true
+		}
+
+		// Add new paratimes.
+		for ptName, pt := range defaultCfg.ParaTimes.All {
+			if _, ok := net.ParaTimes.All[ptName]; ok {
+				continue
+			}
+
+			net.ParaTimes.All[ptName] = pt
+			changes = true
 		}
 	}
 

@@ -7,6 +7,7 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
@@ -92,6 +93,21 @@ func (npa *NPASelection) PrettyPrintNetwork() (out string) {
 	out = npa.NetworkName
 	if len(npa.Network.Description) > 0 {
 		out += fmt.Sprintf(" (%s)", npa.Network.Description)
+	}
+	return
+}
+
+// ConsensusDenomination returns the denomination used to represent the consensus layer token.
+func (npa *NPASelection) ConsensusDenomination() (denom types.Denomination) {
+	if npa.ParaTime == nil {
+		return types.NativeDenomination
+	}
+
+	switch cfgDenom := npa.ParaTime.ConsensusDenomination; cfgDenom {
+	case config.NativeDenominationKey:
+		denom = types.NativeDenomination
+	default:
+		denom = types.Denomination(cfgDenom)
 	}
 	return
 }

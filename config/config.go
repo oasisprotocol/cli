@@ -237,6 +237,9 @@ func (cfg *Config) migrateNetworks() bool {
 				continue
 			}
 
+			if net.ParaTimes.All == nil {
+				net.ParaTimes.All = make(map[string]*config.ParaTime)
+			}
 			net.ParaTimes.All[ptName] = pt
 			changes = true
 		}

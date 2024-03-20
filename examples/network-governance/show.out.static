@@ -1,18 +1,20 @@
+=== PROPOSAL STATUS ===
+Network:         testnet
+Proposal ID:     9
+Status:          passed
+Submitted By:    oasis1qrx85mv85k708ylww597rd42enlzhdmeu56wqj72
+Created At:      epoch 30693
+Results:
+  - yes: 43494459676132712
+  - no: 0
+  - abstain: 0
+
 === PROPOSAL CONTENT ===
 Change Parameters:
   Module: governance
   Changes: 
     - Parameter: upgrade_cancel_min_epoch_diff
       Value: 15
-
-=== PROPOSAL STATUS ===
-Network:     testnet
-Proposal ID: 9
-Status:      passed
-Results:
-  - yes: 43494459676132712
-  - no: 0
-  - abstain: 0
 
 === VOTED STAKE ===
 Total voting stake: 43777341677851724

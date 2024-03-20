@@ -1,18 +1,20 @@
+=== PROPOSAL STATUS ===
+Network:         testnet
+Proposal ID:     9
+Status:          passed
+Submitted By:    oasis1qrx85mv85k708ylww597rd42enlzhdmeu56wqj72
+Created At:      epoch 30693
+Results:
+  - yes: 43494459676132712
+  - no: 0
+  - abstain: 0
+
 === PROPOSAL CONTENT ===
 Change Parameters:
   Module: governance
   Changes: 
     - Parameter: upgrade_cancel_min_epoch_diff
       Value: 15
-
-=== PROPOSAL STATUS ===
-Network:     testnet
-Proposal ID: 9
-Status:      passed
-Results:
-  - yes: 43494459676132712
-  - no: 0
-  - abstain: 0
 
 === VOTED STAKE ===
 Total voting stake: 43777341677851724
@@ -21,10 +23,10 @@ Voted yes stake:    43494459676132712 (100.00%)
 Threshold:          68%
 
 === VALIDATORS VOTED ===
-  1. oasis1qqv25adrld8jjquzxzg769689lgf9jxvwgjs8tha,<none>,11072533240458237 (25.29%)
-  2. oasis1qz2tg4hsatlxfaf8yut9gxgv8990ujaz4sldgmzx,<none>,10922431911536365 (24.95%)
-  3. oasis1qz424yg28jqmgfq3xvly6ky64jqnmlylfc27d7cp,<none>,10786148310722167 (24.64%)
-  4. oasis1qq2vzcvxn0js5unsch5me2xz4kr43vcasv0d5eq4,<none>,10713346213415943 (24.47%)
+  1. oasis1qqv25adrld8jjquzxzg769689lgf9jxvwgjs8tha,<none>,11072533240458237 (25.29%): yes
+  2. oasis1qz2tg4hsatlxfaf8yut9gxgv8990ujaz4sldgmzx,<none>,10922431911536365 (24.95%): yes
+  3. oasis1qz424yg28jqmgfq3xvly6ky64jqnmlylfc27d7cp,<none>,10786148310722167 (24.64%): yes
+  4. oasis1qq2vzcvxn0js5unsch5me2xz4kr43vcasv0d5eq4,<none>,10713346213415943 (24.47%): yes
 
 === VALIDATORS NOT VOTED ===
   1. oasis1qrwncs459lauc77zw23efdn9dmfcp23cxv095l5z,GateOmega,43681995855414 (0.10%)

@@ -86,16 +86,27 @@ var (
 			proposal, err := governanceConn.Proposal(ctx, proposalQuery)
 			cobra.CheckErr(err)
 
-			if proposal.State != governance.StateActive {
-				// If the proposal is closed, adjust the query height to the
-				// epoch at which the proposal was closed.
-				height, err = beaconConn.GetEpochBlock(
+			hasCorrectVotingPower := true
+			switch proposal.State {
+			case governance.StateActive:
+			default:
+				// If the proposal is closed, adjust the query height to the epoch at which the
+				// proposal was closed.
+				var pastHeight int64
+				pastHeight, err = beaconConn.GetEpochBlock(
 					ctx,
 					proposal.ClosesAt,
 				)
-				cobra.CheckErr(err)
+				if err != nil {
+					// In case we are unable to query historic state, it is still better if we are
+					// able to show the proposal, even if we are not able to calculate the total
+					// eligible voting power at the time.
+					hasCorrectVotingPower = false
+					break
+				}
 
-				proposalQuery.Height = height
+				proposalQuery.Height = pastHeight
+				height = pastHeight
 
 				proposal, err = governanceConn.Proposal(ctx, proposalQuery)
 				cobra.CheckErr(err)
@@ -259,23 +270,14 @@ var (
 				}
 			}
 
-			// Display the proposal content.
-
-			fmt.Println("=== PROPOSAL CONTENT ===")
-			proposal.Content.PrettyPrint(ctx, "", os.Stdout)
-			fmt.Println()
-
 			// Display the high-level summary of the proposal status.
 
 			fmt.Println("=== PROPOSAL STATUS ===")
-			fmt.Printf("Network:     %s", npa.PrettyPrintNetwork())
-			fmt.Println()
-
-			fmt.Printf("Proposal ID: %d", proposalID)
-			fmt.Println()
-
-			fmt.Printf("Status:      %s", proposal.State)
-			fmt.Println()
+			fmt.Printf("Network:         %s\n", npa.PrettyPrintNetwork())
+			fmt.Printf("Proposal ID:     %d\n", proposalID)
+			fmt.Printf("Status:          %s\n", proposal.State)
+			fmt.Printf("Submitted By:    %s\n", proposal.Submitter)
+			fmt.Printf("Created At:      epoch %d\n", proposal.CreatedAt)
 
 			switch proposal.State {
 			case governance.StateActive:
@@ -294,10 +296,8 @@ var (
 				)
 				cobra.CheckErr(err)
 
-				fmt.Printf("Vote outcome if ended now: %s", proposal.State)
-				fmt.Println()
-				fmt.Printf("Voting ends in %d epochs.", proposal.ClosesAt-epoch)
-				fmt.Println()
+				fmt.Printf("Closes At:       epoch %d (in %d epochs)\n", proposal.ClosesAt, proposal.ClosesAt-epoch)
+				fmt.Printf("Current Outcome: %s\n", proposal.State)
 			case governance.StatePassed, governance.StateFailed, governance.StateRejected:
 				fmt.Println("Results:")
 				for _, v := range []governance.Vote{governance.VoteYes, governance.VoteNo, governance.VoteAbstain} {
@@ -308,6 +308,14 @@ var (
 				cobra.CheckErr(fmt.Errorf("unexpected proposal state: %v", proposal.State))
 			}
 
+			fmt.Println()
+
+			// Display the proposal content.
+
+			fmt.Println("=== PROPOSAL CONTENT ===")
+			proposal.Content.PrettyPrint(ctx, "", os.Stdout)
+			fmt.Println()
+
 			// Calculate voting percentages.
 			votedStake, err := proposal.VotedSum()
 			cobra.CheckErr(err)
@@ -315,16 +323,19 @@ var (
 			voteStakePercentage := new(big.Float).SetInt(votedStake.Clone().ToBigInt())
 			voteStakePercentage = voteStakePercentage.Mul(voteStakePercentage, new(big.Float).SetInt64(100))
 			voteStakePercentage = voteStakePercentage.Quo(voteStakePercentage, new(big.Float).SetInt(totalVotingStake.ToBigInt()))
-			fmt.Println()
 			fmt.Println("=== VOTED STAKE ===")
-			fmt.Printf("Total voting stake: %s", totalVotingStake)
-			fmt.Println()
-			fmt.Printf(
-				"Voted stake:        %s (%.2f%%)",
-				votedStake,
-				voteStakePercentage,
-			)
-			fmt.Println()
+			switch hasCorrectVotingPower {
+			case true:
+				// Also show historic voted stake.
+				fmt.Printf("Total voting stake: %s\n", totalVotingStake)
+				fmt.Printf(
+					"Voted stake:        %s (%.2f%%)\n",
+					votedStake,
+					voteStakePercentage,
+				)
+			case false:
+				fmt.Printf("Voted stake:        %s\n", votedStake)
+			}
 
 			votedYes := proposal.Results[governance.VoteYes]
 			votedYesPercentage := new(big.Float).SetInt(votedYes.Clone().ToBigInt())
@@ -338,11 +349,14 @@ var (
 				votedYesPercentage,
 			)
 			fmt.Println()
-			fmt.Printf(
-				"Threshold:          %d%%",
-				governanceParams.StakeThreshold,
-			)
-			fmt.Println()
+
+			if hasCorrectVotingPower {
+				fmt.Printf(
+					"Threshold:          %d%%",
+					governanceParams.StakeThreshold,
+				)
+				fmt.Println()
+			}
 
 			if showVotes {
 				// Try to figure out the human readable names for all the entities.
@@ -385,31 +399,41 @@ var (
 					stakePercentage := new(big.Float).SetInt(val.Stake.Clone().ToBigInt())
 					stakePercentage = stakePercentage.Mul(stakePercentage, new(big.Float).SetInt64(100))
 					stakePercentage = stakePercentage.Quo(stakePercentage, new(big.Float).SetInt(totalVotingStake.ToBigInt()))
-					fmt.Printf("  %d. %s,%s,%s (%.2f%%)", i+1, val.Address, name, val.Stake, stakePercentage)
-					fmt.Println()
+
+					if hasCorrectVotingPower {
+						fmt.Printf("  %d. %s,%s,%s (%.2f%%): %s\n", i+1, val.Address, name, val.Stake, stakePercentage, validatorVotes[val.Address])
+					} else {
+						fmt.Printf("  %d. %s,%s: %s\n", i+1, val.Address, name, validatorVotes[val.Address])
+					}
+
 					// Display delegators that voted differently.
 					for voter, override := range validatorVoteOverrides[val.Address] {
 						voterName := getName(voter)
-						fmt.Printf("    - %s,%s,%s (%.2f%%) -> %s", voter, voterName, override.shares, override.sharePercent, override.vote)
-						fmt.Println()
+						if hasCorrectVotingPower {
+							fmt.Printf("    - %s,%s,%s (%.2f%%) -> %s\n", voter, voterName, override.shares, override.sharePercent, override.vote)
+						} else {
+							fmt.Printf("    - %s,%s -> %s\n", voter, voterName, override.vote)
+						}
 					}
 				}
 
-				fmt.Println()
-				fmt.Println("=== VALIDATORS NOT VOTED ===")
-				nonVotersList := entitiesByDescendingStake(validatorNonVoters)
-				for i, val := range nonVotersList {
-					name := getName(val.Address)
-					stakePercentage := new(big.Float).SetInt(val.Stake.Clone().ToBigInt())
-					stakePercentage = stakePercentage.Mul(stakePercentage, new(big.Float).SetInt64(100))
-					stakePercentage = stakePercentage.Quo(stakePercentage, new(big.Float).SetInt(totalVotingStake.ToBigInt()))
-					fmt.Printf("  %d. %s,%s,%s (%.2f%%)", i+1, val.Address, name, val.Stake, stakePercentage)
+				if hasCorrectVotingPower {
 					fmt.Println()
-					// Display delegators that voted differently.
-					for voter, override := range validatorVoteOverrides[val.Address] {
-						voterName := getName(voter)
-						fmt.Printf("    - %s,%s,%s (%.2f%%) -> %s", voter, voterName, override.shares, override.sharePercent, override.vote)
+					fmt.Println("=== VALIDATORS NOT VOTED ===")
+					nonVotersList := entitiesByDescendingStake(validatorNonVoters)
+					for i, val := range nonVotersList {
+						name := getName(val.Address)
+						stakePercentage := new(big.Float).SetInt(val.Stake.Clone().ToBigInt())
+						stakePercentage = stakePercentage.Mul(stakePercentage, new(big.Float).SetInt64(100))
+						stakePercentage = stakePercentage.Quo(stakePercentage, new(big.Float).SetInt(totalVotingStake.ToBigInt()))
+						fmt.Printf("  %d. %s,%s,%s (%.2f%%)", i+1, val.Address, name, val.Stake, stakePercentage)
 						fmt.Println()
+						// Display delegators that voted differently.
+						for voter, override := range validatorVoteOverrides[val.Address] {
+							voterName := getName(voter)
+							fmt.Printf("    - %s,%s,%s (%.2f%%) -> %s", voter, voterName, override.shares, override.sharePercent, override.vote)
+							fmt.Println()
+						}
 					}
 				}
 			}

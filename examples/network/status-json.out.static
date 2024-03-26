@@ -1,0 +1,663 @@
+{
+  "software_version": "23.0.9",
+  "identity": {
+    "node": "mVyn1iZkOAlP7AQRuhYHahAkUEGJmywY1G8raR5u/3I=",
+    "consensus": "CQVOWxM6nNl4zeatY2TC5ZtJ4vz6joP+HAZIbqwyKgw=",
+    "tls": "NV7emPy4aoIScppvKMqJZpVN+q/6pqDrop9yvNbUpwU="
+  },
+  "consensus": {
+    "status": "ready",
+    "version": {
+      "major": 7
+    },
+    "backend": "tendermint",
+    "features": 3,
+    "latest_height": 18270232,
+    "latest_hash": "a586e2fc45b1d70f9b37331a5767cd365ec249a7cacb5630033c154dccb66ce7",
+    "latest_time": "2024-03-08T10:46:02+01:00",
+    "latest_epoch": 30437,
+    "latest_state_root": {
+      "ns": "0000000000000000000000000000000000000000000000000000000000000000",
+      "version": 18270231,
+      "root_type": 1,
+      "hash": "420851d6af33cef0af7c16abce92db3a6d10fbd4ea1ee04d54b82764a30a5738"
+    },
+    "genesis_height": 16817956,
+    "genesis_hash": "7670c86852c214f4e2b5ad571f4c2c344c630afdb409f7a5a3adce5a85240f31",
+    "last_retained_height": 16817956,
+    "last_retained_hash": "7670c86852c214f4e2b5ad571f4c2c344c630afdb409f7a5a3adce5a85240f31",
+    "chain_context": "bb3d748def55bdfb797a2ac53ee6ee141e54cd2ab2dc2375f4a0703a178e6e55",
+    "is_validator": false,
+    "p2p": {
+      "pub_key": "/YOH7B2pk8Iff19lzWQ1qkKJ+PbXJtcyP6k7avW6NkE=",
+      "peer_id": "e4f393164321e67b2ad1d62cd698aa175d4f7165",
+      "addresses": [
+        "/YOH7B2pk8Iff19lzWQ1qkKJ+PbXJtcyP6k7avW6NkE=@34.135.216.16:26656"
+      ],
+      "peers": [
+        "9a4d7c9aabbab2967aea6ad01a8a8632c64a38f4@131.153.164.23:51314",
+        "68d63f77952a6c2e5f0f7040402cba93cdeaa70a@95.216.72.47:38756",
+        "140a7c1411ff0de81c8fa6744f31fdf654063eaa@135.181.22.224:26656",
+        "4390496facda27743a10c2c0c5ff2c7e454e6e5d@95.216.37.80:45508",
+        "1be3c26045608e81bd7c27a7aaa0366a70181f1b@131.153.164.11:49462",
+        "19b24c4124e6a5e5eaf9508537544252e9202555@18.176.52.160:43004",
+        "dba1969fc288a52d69d8cc8e08f9e5ef6882e42a@188.42.245.84:37856",
+        "eb474e45eea6de5330f13d910a6be36864e439de@143.42.108.67:33896",
+        "136d2d3b17be220719ab23a0611bc68e52323e5a@95.217.204.115:53792",
+        "dc7ac801187cf1600072a4caad315e4f492c9b18@91.235.116.246:49064",
+        "53c9ffebd7c2e96c1302ebe7bcd31382a69e5348@135.181.2.18:38514",
+        "b74f519bb45738233bd8b5723accf0fa967fee46@131.153.158.203:46988",
+        "c717bacf4fe474f881c31b63330a9d45bf9698ab@95.217.77.154:55244",
+        "95d97246a37d44a226021cf9f5014b976e022416@20.232.103.170:53852",
+        "0666e962c44875289b8355a4a8bf9d58c88c387e@52.194.107.16:30389",
+        "f7e8a17f275543353d713315863577aad9a455c7@131.153.57.230:47004",
+        "04e6c48bfb04f4642ce257d3a973aca74b265fdd@104.198.241.118:37838",
+        "bf4cbb24920f04ae34ec7b568d79d89e44563413@66.165.251.58:33824",
+        "d064899fa00e860734e3cb9839e6945f0fc8dce2@91.216.245.188:26656",
+        "f4bde78f8ad065d3b74c3baf3e65e8ac9067789c@54.82.200.23:64728",
+        "d6503409d1be441f290bb45aafe3c8f2343c0d02@94.130.25.75:25123",
+        "3a0aa443bcafd6360fba8173c88be772dd010c3d@80.64.208.190:1720",
+        "d6aabd0a4c9ec030828be419059cc77c19137510@93.157.248.142:26656",
+        "ca0e733b946ef09491e2ad26f5425c404465b774@80.64.208.171:35165",
+        "de3249501db9312f53556af293ca8f7d1ff5b093@87.119.223.15:59628",
+        "c2ffb6c7b77aa504f4816789e5a4d4a42f29f36d@3.112.138.57:47988",
+        "752af3d38aea5e8eff69161833658031f3d5ac44@217.79.252.130:44368",
+        "8aa27f84baa1a340fb672f75027ec4655fd78968@34.135.12.249:52220",
+        "322c5bce6cf858e4dedc1057fff879f2ca819e3d@15.235.183.125:60642",
+        "8703c37574622728b19ac7cb76508284fb381279@86.111.48.51:47994",
+        "ae36c8f46b340315691c7bf0bd8c77012fb2f86d@134.119.191.179:48932",
+        "108fa65cc0e82191dbdc64cd7fc916907acb0c17@34.71.93.50:26656",
+        "24c362d09c1bedd98b9fe207916227f9b3d7d34e@66.85.141.242:53474",
+        "cfbd5780a731690862b6ed42ab0fbd966dc4a14c@13.115.221.102:41614",
+        "ffa875d275e8a30f1e0ded2af542fee3ceff4f2d@162.55.95.170:36756",
+        "239246b126e70e8023201b2c4066cfb6eaf7d50c@52.194.8.37:59952",
+        "4e98fd9344befa108c9ab714d673212bba5dc1b8@47.243.161.117:50270",
+        "36189358cbed896d5ee7af2f0582d010b937403f@18.176.159.242:9313",
+        "59ef3fe6a5e6520da1fc67e9684d74bb433f1320@47.242.42.58:35440",
+        "3cc19a3fde93e22ce954c223aaf54c5e2e84cd32@142.132.213.82:26656",
+        "5fb93f5ac86efeddc35062f7f3e789f1a0cd39d7@142.132.194.124:42358",
+        "d22834f65843ac1aeabd424803699fd4b86b0a77@178.63.47.146:52052",
+        "59e633dcef4db5f79a65dafc410e7815ea105e8e@135.181.179.38:16656",
+        "a81d024f7f42ab190bb60f457c79c29abc2a9bb1@162.55.245.211:35566",
+        "e7ad5f2aec34b3486ad91a40bd4439f67da77440@95.111.240.82:60716",
+        "41df0b7f45a1b2164805b61576293ce04a0a57ec@165.232.81.5:49402",
+        "ed8d710f7ba7a12df9f143a62aac322300124653@159.69.183.181:37520",
+        "ec89299f6538af21aad50ee9a02b5ae2a1e3a67d@131.153.164.21:44180",
+        "dd0d0ae872577c53a2a5e5886d2df1dec08e3311@65.109.20.222:40346",
+        "5114f3918d2ce178376837e25baa31dd6ca75bc3@15.165.142.244:44556",
+        "f2c77c2243949dbe0c1fe60146429e81f2a56b6e@92.42.109.183:58922",
+        "d8b549e447292d1b36987a70836e0b59e3b75121@54.208.50.80:26656",
+        "f5ba16af030d45322508bf43ee83fd93f0491b5d@66.85.141.186:57306",
+        "2ae1b6657b434aa34bde472f880051ec0e1423b2@134.119.190.191:42154",
+        "d11601b05409a7a6b887f533bafe60890ab9ea66@47.242.195.167:35402",
+        "bbfac1c724eb4e3f7787b6b2db96f99fda5d252d@65.108.6.54:32884",
+        "f8b16418e95d6508b98479f7ba086c57baf4bee1@167.172.31.178:26656",
+        "24e7035e8380ca2cfbce8850522a628f93ba70cf@45.125.23.194:60234",
+        "c36236d658276737cd96ceffd700d80895053812@157.90.199.94:52664",
+        "b2b267a52aec2bc9203e4efb4bb06da4ed37ae12@95.217.34.120:56976",
+        "5e2538898cba75f1d58a9a8bc33059a72d8ec80e@174.138.162.2:46720",
+        "e15e2a29672bc0784b45ea1bf81d51e0fc5f1bbb@134.119.194.139:39384",
+        "6c18886e0b16d93410db563fc7d66804b74b9796@23.88.38.81:26777",
+        "85d744388148b6d2c10a66b40ef7c9e73e5a99cc@212.126.35.132:33970",
+        "412890d778a3d90123a156ff01e8af563622ffaf@164.68.120.119:42900",
+        "378ce07a57fc2d7caffd2d3a8a15ecafa0cebc88@35.79.207.60:1261",
+        "0107967d77c59c9f2741bf8ca2d1ad393913f1ff@65.109.34.46:26656",
+        "e2bcd89092c40eaee9694c9389ff687ab1d8a6b7@148.251.246.233:45818",
+        "e983bcecaae17c3c77be98eeae9740e773f03799@8.217.165.72:40986",
+        "232730ebcb4350c9390ceb85d690563474e4caea@157.90.89.253:26686",
+        "925583eb4e02a5cb69e18fd5eddac27ffad639e5@195.189.97.15:42656",
+        "78ddec184305cb332a4f223331fa387d91f57301@51.79.176.85:40294",
+        "4c8622ff6fc152a13fe394f95c85f0c32a991d6f@65.21.90.141:27656",
+        "4eeba1ead5b7ede2c968426d0104935bf7ee8a49@212.232.29.233:49322",
+        "a51cda7babb0994b52fe70ff658915ebdd5f167a@93.115.25.138:60204",
+        "15c88aac912c1020b3d49a90fb894dff738c476a@131.153.164.15:26656",
+        "1b611282f1f06262b38fdd16958dd70f083f532d@80.64.208.154:36889",
+        "ecc168dd1bef0d6e325d7191d546c18dfbeadac2@54.199.153.43:42473",
+        "2d1b795f1cf73cfce05f43cdeec7ea7d01a52cac@35.232.154.67:38088",
+        "e527309ff618bfc41904bbb93317781aaccefd1a@84.234.97.201:44462",
+        "c426e80e4972e3efb0a85588e6f3712f53e463e9@142.132.203.173:44226",
+        "d0c65475d3db97663678d7546ae6fa68c5464e5e@131.153.205.66:46844",
+        "aa246b072060eb700001fe25cd03bbb42a72fff4@193.34.212.218:34726",
+        "bd8c0023bd9046c13b7bccf1bef3b2a0ba0541d4@52.204.103.24:47011",
+        "273d1d2ab06c0caf522fd63a0d8948dd9d4fd439@65.109.30.110:40366",
+        "b8994b04adf1393b4957ccfd3406361455046897@159.69.59.60:39980",
+        "e6e6cdb013ec62313e1062e8247f10edb4daa113@95.217.144.50:60244",
+        "49991aac0a36020204b14cb4311ab5b42fb8f771@93.115.25.171:48408",
+        "51dd31bb5e86b2014b16e058f00fff8a9dc81e83@65.108.127.220:60148",
+        "36abd07fba6e9fe6c28a8106e7e314ba4ac738bc@92.42.109.101:33444",
+        "1638e5805abc75ee7575bea77a246e3b81a7c23c@135.181.62.168:26656",
+        "c06a9e8cc5e33997d4d224418d9e936887fa5ed3@185.107.80.40:45312",
+        "e98583c0682d6c65991923f6d0dad5d6599fc756@54.249.45.3:35356",
+        "82af2cf1624cebbf3cb91efb0639c4296d8fd434@51.222.154.19:26656",
+        "56cb4457419f814c0c3722e8cc84558b36d1dbf0@131.153.158.145:51058",
+        "7ca85f4942e424935f9b8e5fc3fd52465d0b6e53@65.21.73.113:35790",
+        "645d7abf7b0e89845b5cdc74baa9131099966332@34.252.55.98:59878",
+        "d02357dfe32dadfa21fbad9129a793d836627d2c@95.217.118.121:16656",
+        "4f6c97a1ede39d37c2445037e2493a9ba45eb6c2@92.204.248.255:48548",
+        "184f768af5a8fa8bb4e9336261da4bb47757b0c7@185.188.42.107:46258",
+        "0435bcb4c96099853a5577a179193eeffac1ad56@136.244.86.89:42430",
+        "b9b9a5d34b7cf19fc22fc8055608c39f506cd46a@129.226.155.121:13549",
+        "462dc40e72a895c054b885a6777c8eb609fe0169@34.48.1.200:59758",
+        "078adc90344d7c7c261625ea4a3d5f223d4618fd@146.59.85.227:43726",
+        "4bc1ce84911cea6a17ee3c5564fd658e09798245@80.64.208.193:17990",
+        "9fb0071d9630e2e1592e912d52565933ee292549@65.108.201.32:52640",
+        "bff37dfb8bda01e432369e8267272ebc47e32523@178.63.93.41:46318",
+        "b22d7ed700f22390e0f4e3de051561b032a80818@84.39.245.93:39652",
+        "806d29e0c3a2072cd35544a01b279d74d222b575@64.25.109.153:56770",
+        "1ecee321d4ac42a818ce14b4ac1f10775ea3ba56@78.46.18.44:33102",
+        "ac6ccf89de3c109e6dd9f92d3210d7bc9887a0ee@193.201.82.155:55662",
+        "b7c38b98134fb29257d05145fd997645e9333484@165.154.224.206:38834",
+        "e27f6b7a350b4cc2b48a6cbe94b0a02b0dcb0bf3@35.199.49.168:60736",
+        "0d8b2a311c5089230f9c1aacb925682fd64eabe4@13.125.182.16:52190",
+        "52114be29ad3ea06c81feec22c8e4321205144ae@95.214.53.217:53468",
+        "5e163829692be3dd1c5bc42ffbc836453516f4d8@51.89.190.189:43414",
+        "1520ced3b1f1445988a72cbeda48a3d748860a62@70.165.57.67:20714"
+      ]
+    }
+  },
+  "light_client": {
+    "latest_height": 18269956,
+    "latest_hash": "a4a723371efe4eaef2cb6d98204961daa67ff6052b48a9445fff3f8413ee0c3b",
+    "latest_time": "2024-03-08T10:18:42+01:00",
+    "oldest_height": 16817956,
+    "oldest_hash": "7670c86852c214f4e2b5ad571f4c2c344c630afdb409f7a5a3adce5a85240f31",
+    "oldest_time": "2023-11-29T11:02:19+01:00",
+    "peer_ids": [
+      "12D3KooWDK97pWjMJDuu5Rq1eALHG2eyxzf2JAFccDh7sDgQUVwJ",
+      "12D3KooWPxb48tCvx8mytzYwn7FU4qsmF5QUiK2upd16NXkctmUY",
+      "12D3KooWA6en49Pg7fwLgZMUZGwURNyB98yDAJh9j74vV74kdD7V"
+    ]
+  },
+  "runtimes": {
+    "000000000000000000000000000000000000000000000000e199119c992377cb": {
+      "descriptor": {
+        "v": 3,
+        "id": "000000000000000000000000000000000000000000000000e199119c992377cb",
+        "entity_id": "TAv9qXjV4yBphnKLJcNkzois1TLoYUjaRPrMfY58Apo=",
+        "genesis": {
+          "state_root": "c672b8d1ef56ed28ab87c3622c5114069bdd3ad7b8f9737498d0c01ecef0967a",
+          "round": 0
+        },
+        "kind": 1,
+        "tee_hardware": 1,
+        "key_manager": "4000000000000000000000000000000000000000000000008c5ea5e49b4bc9ac",
+        "executor": {
+          "group_size": 5,
+          "group_backup_size": 11,
+          "allowed_stragglers": 1,
+          "round_timeout": 2,
+          "max_messages": 256
+        },
+        "txn_scheduler": {
+          "batch_flush_timeout": 1000000000,
+          "max_batch_size": 1000,
+          "max_batch_size_bytes": 10485760,
+          "propose_batch_timeout": 5000000000
+        },
+        "storage": {
+          "checkpoint_interval": 100000,
+          "checkpoint_num_kept": 2,
+          "checkpoint_chunk_size": 8388608
+        },
+        "admission_policy": {
+          "any_node": {}
+        },
+        "constraints": {
+          "executor": {
+            "backup-worker": {
+              "validator_set": {},
+              "max_nodes": {
+                "limit": 1
+              },
+              "min_pool_size": {
+                "limit": 11
+              }
+            },
+            "worker": {
+              "validator_set": {},
+              "max_nodes": {
+                "limit": 1
+              },
+              "min_pool_size": {
+                "limit": 11
+              }
+            }
+          }
+        },
+        "staking": {
+          "min_in_message_fee": "0"
+        },
+        "governance_model": "entity",
+        "deployments": [
+          {
+            "version": {
+              "major": 2,
+              "minor": 6,
+              "patch": 2
+            },
+            "valid_from": 20492,
+            "tee": "oWhlbmNsYXZlc4GiaW1yX3NpZ25lclggQCXat+vaH77MTjY3YG4CEhTQ9BxtBCL9N4sqi4iBhFlqbXJfZW5jbGF2ZVggyJORh2eP/BKGIVTGWwyQowE65kx2EdME5DtKjbMcPxE="
+          },
+          {
+            "version": {
+              "major": 3,
+              "patch": 2
+            },
+            "valid_from": 28186,
+            "tee": "oWhlbmNsYXZlc4GiaW1yX3NpZ25lclggQCXat+vaH77MTjY3YG4CEhTQ9BxtBCL9N4sqi4iBhFlqbXJfZW5jbGF2ZVgg2sZMDBwkVsRPxVr1GDArubMyzKn6Im0fhYgOh4CbSM4="
+          }
+        ]
+      },
+      "latest_round": 1433155,
+      "latest_hash": "1e74144d52c955b33f8f5314d5febecddf5858ec4db28aca1567824af6503a87",
+      "latest_time": "2024-03-08T10:46:02+01:00",
+      "latest_state_root": {
+        "ns": "000000000000000000000000000000000000000000000000e199119c992377cb",
+        "version": 1433155,
+        "root_type": 1,
+        "hash": "b50a6918a1c2cfaef743025ac3cc8e78cbaed8c376751632564b81ef018a104d"
+      },
+      "genesis_round": 44054,
+      "genesis_hash": "7f14a395c6daa1ec492152a29c8c27f5b84fba94e09652d765d6d0937ba2abfb",
+      "last_retained_round": 44054,
+      "last_retained_hash": "7f14a395c6daa1ec492152a29c8c27f5b84fba94e09652d765d6d0937ba2abfb",
+      "committee": {
+        "status": "ready",
+        "active_version": {
+          "major": 3,
+          "patch": 2
+        },
+        "latest_round": 1433155,
+        "latest_height": 18270232,
+        "executor_roles": null,
+        "scheduler_rank": 18446744073709551615,
+        "peers": [
+          "/ip4/51.210.116.110/tcp/30002/p2p/12D3KooWEvfS5EdnpcC8etv8eiE3oSkhWid2FEXb5oAisZT3AJyo",
+          "/ip4/66.85.156.122/tcp/30002/p2p/12D3KooWN2wNNar6xWQuRem6QGaWie5u3StWWmdZm4xeZ4CFKADE",
+          "/ip4/51.222.41.188/tcp/30002/p2p/12D3KooWKTvsowgyv3WRTVm2dvEBtxpKsshWKtKJmGriGDPdzRBM",
+          "/ip4/93.107.154.131/tcp/30002/p2p/12D3KooWQZXoU1GFSSWsmqWALRz2nvukxENCPBKJGndTca3gfW8o",
+          "/ip4/134.119.219.154/tcp/20103/p2p/12D3KooWCdX3M9s1HicZVDqEtuyJ8NPDihR4cZDdNroYxJgiCtsD",
+          "/ip4/131.153.59.34/tcp/26892/p2p/12D3KooWB4GhP7dXsBnFjTpkgr3sCmwkKxcmDhkHKNxZ3CrGgHDR",
+          "/ip4/51.89.234.42/tcp/30002/p2p/12D3KooWS74Wqr1ZYLWafymznv4ib48DzDdmgZzVqMkM2ntNg5DZ",
+          "/ip4/80.64.208.193/tcp/30002/p2p/12D3KooWJArUJBm2ikBb8ZfDmVeXTrawXz9qscP1kCSuye2oraQv",
+          "/ip4/131.153.164.15/tcp/30002/p2p/12D3KooWCixcEb3YyZqQnANYX9YLVuAxQ2tNaRapQuYh9TeTTFZV",
+          "/ip4/131.153.99.10/tcp/30002/p2p/12D3KooWKPMS72iRgPDWczMVzKyYa3DSZmc771XDNXnMWVPnjfmJ",
+          "/ip4/2.56.188.205/tcp/30003/p2p/12D3KooWApMJjg1bGe85Ag5WZVxnmvxhk3izxV3rD4KiWDeKQ2xK",
+          "/ip4/134.119.190.237/tcp/30002/p2p/12D3KooWSPgs5SCss4U2RRXuuBhGv5HMcsZwsVNW426TtFUxJBKA",
+          "/ip4/66.85.154.218/tcp/30002/p2p/12D3KooWRRbEUSjnw3FwLm368wd8pArGRG6YCYMhAdA8oWG1CgkT",
+          "/ip4/131.153.57.226/tcp/30002/p2p/12D3KooWDzq86WGEqEHcVCYfhukxuYKPq7cjrCxwsYg5euBpTcfi",
+          "/ip4/51.81.57.69/tcp/30002/p2p/12D3KooWAcrMmjagXif4ocSDeZxWT4XA8LMNinHASwrmG2uV64H5",
+          "/ip4/51.91.75.150/tcp/30002/p2p/12D3KooWQaNYjegtZyFtyrRNCF1yxB3sgGtBgY8asgEpFEcXPJiS",
+          "/ip4/84.234.97.201/tcp/30004/p2p/12D3KooWJy5LhH2z79Zu2Ki7HWjmwcHDxRuCNzLFxtz7ksYFQxXo",
+          "/ip4/51.222.44.106/tcp/30002/p2p/12D3KooWSJ4WnjUY76cfiifujynaxD15QnCdQfzxuJsyqzat24rp",
+          "/ip4/174.138.162.2/tcp/30002/p2p/12D3KooWAYVr6x3xpw7PCywXwbsneDc4eAN9SiaT4TndL61xE64J",
+          "/ip4/131.153.158.97/tcp/30002/p2p/12D3KooWSnJtBMWpaYmwZgkHQApefXzuQhUxRencTzwyuXzuWpFf",
+          "/ip4/212.232.29.235/tcp/35002/p2p/12D3KooWSHF3gtW3thCZVJ3HJJTHNyJMB273iEVbJHVPpRYpdmmb",
+          "/ip4/80.64.208.194/tcp/30002/p2p/12D3KooWGTfuY6Umye8348GDgbfghM6gwLbFDQEdbpeXbahFRE5R",
+          "/ip4/131.153.154.13/tcp/30002/p2p/12D3KooWGfyNBqnppXZ1jo8zRcav3uKunj85HGbEDqj67d72jbJv",
+          "/ip4/66.85.139.42/tcp/25002/p2p/12D3KooWMqPvVGdzgz56jHVsAjL1W8YwR2FpiFvpR8SCw6SZxX32",
+          "/ip4/185.107.80.40/tcp/30002/p2p/12D3KooWHHG9fq9bLSKSdtQXBtqMJj4K3zyDCUJU9PvEKj7CBFbw",
+          "/ip4/131.153.165.57/tcp/30002/p2p/12D3KooWStTpimpJLSa85gsWG17SGpdh43pHogQDhzFGiKXDQAJe",
+          "/ip4/34.135.12.249/tcp/9002/p2p/12D3KooWNxPsNEZa1P8cFoqHwevBAzjx81hAxUXPLs9nKajbUoy8",
+          "/ip4/34.71.93.50/tcp/9002/p2p/12D3KooWD5SCMPhVVtSQEX4jbZym37BtNAADzr3XjrLYG558abKN",
+          "/ip4/135.181.112.38/tcp/9200/p2p/12D3KooWSyaGh3PZScCVDZKteMTEszm4GXPBP2Fv8k5QfTLUvbhF",
+          "/ip4/89.212.17.232/tcp/9200/p2p/12D3KooWPcz11AarnbjJaJyxz1y5C9nbVfVuJJqqbvFTrZ5RXRko",
+          "/ip4/195.201.202.101/tcp/34648/p2p/12D3KooWMEnRxPekFYjyRvr6sTahT5LtCWiBaLmakoXgBbk9F7tQ"
+        ],
+        "host": {
+          "versions": [
+            {
+              "major": 2,
+              "minor": 6,
+              "patch": 2
+            },
+            {
+              "major": 3,
+              "patch": 2
+            }
+          ]
+        }
+      },
+      "storage": {
+        "status": "syncing rounds",
+        "last_finalized_round": 1433155
+      },
+      "provisioner": "sandbox"
+    },
+    "000000000000000000000000000000000000000000000000e2eaa99fc008f87f": {
+      "descriptor": {
+        "v": 3,
+        "id": "000000000000000000000000000000000000000000000000e2eaa99fc008f87f",
+        "entity_id": "TAv9qXjV4yBphnKLJcNkzois1TLoYUjaRPrMfY58Apo=",
+        "genesis": {
+          "state_root": "c672b8d1ef56ed28ab87c3622c5114069bdd3ad7b8f9737498d0c01ecef0967a",
+          "round": 0
+        },
+        "kind": 1,
+        "tee_hardware": 0,
+        "executor": {
+          "group_size": 10,
+          "group_backup_size": 30,
+          "allowed_stragglers": 1,
+          "round_timeout": 2,
+          "max_messages": 256,
+          "min_live_rounds_percent": 50,
+          "min_live_rounds_eval": 10,
+          "max_liveness_fails": 4
+        },
+        "txn_scheduler": {
+          "batch_flush_timeout": 1000000000,
+          "max_batch_size": 1000,
+          "max_batch_size_bytes": 1048576,
+          "propose_batch_timeout": 5000000000
+        },
+        "storage": {
+          "checkpoint_interval": 100000,
+          "checkpoint_num_kept": 2,
+          "checkpoint_chunk_size": 8388608
+        },
+        "admission_policy": {
+          "any_node": {}
+        },
+        "constraints": {
+          "executor": {
+            "backup-worker": {
+              "validator_set": {},
+              "max_nodes": {
+                "limit": 1
+              },
+              "min_pool_size": {
+                "limit": 30
+              }
+            },
+            "worker": {
+              "validator_set": {},
+              "max_nodes": {
+                "limit": 1
+              },
+              "min_pool_size": {
+                "limit": 30
+              }
+            }
+          }
+        },
+        "staking": {
+          "thresholds": {
+            "node-compute": "5000000000000000"
+          },
+          "min_in_message_fee": "0"
+        },
+        "governance_model": "entity",
+        "deployments": [
+          {
+            "version": {
+              "major": 10
+            },
+            "valid_from": 21437
+          },
+          {
+            "version": {
+              "major": 11
+            },
+            "valid_from": 28017
+          }
+        ]
+      },
+      "latest_round": 9322034,
+      "latest_hash": "448e91c56b20536951d17f67fc71e975dcadfe33c4cf3307ec038ab8890712a4",
+      "latest_time": "2024-03-08T10:46:02+01:00",
+      "latest_state_root": {
+        "ns": "000000000000000000000000000000000000000000000000e2eaa99fc008f87f",
+        "version": 9322034,
+        "root_type": 1,
+        "hash": "cb811c51d318d72fdad434ec390f122210ec3d7f9001b78dccfd7095d0fe8c02"
+      },
+      "genesis_round": 7875129,
+      "genesis_hash": "602632dba1fe37719925835a0e30e155668addf9cf91307d14b08c1362f38c80",
+      "last_retained_round": 7875129,
+      "last_retained_hash": "602632dba1fe37719925835a0e30e155668addf9cf91307d14b08c1362f38c80",
+      "committee": {
+        "status": "ready",
+        "active_version": {
+          "major": 11
+        },
+        "latest_round": 9322034,
+        "latest_height": 18270232,
+        "executor_roles": null,
+        "scheduler_rank": 18446744073709551615,
+        "peers": [
+          "/ip4/65.108.127.220/tcp/46002/p2p/12D3KooWCM5fJRX7SZP2LzBqs9wQ1xdkf79u4HZjYVzPVUKYFhbq",
+          "/ip4/88.198.49.137/tcp/46657/p2p/12D3KooWBsGC8isMUPqC56wkaLsq1cYgfkyybFXrsZMhjJBR7AHx",
+          "/ip4/51.210.116.110/tcp/30002/p2p/12D3KooWEvfS5EdnpcC8etv8eiE3oSkhWid2FEXb5oAisZT3AJyo",
+          "/ip4/34.48.1.200/tcp/30002/p2p/12D3KooW9whHFUP4G5apBgKNDMc1Uc4yb3E3opvPgqVrPC9T6Kvu",
+          "/ip4/195.14.6.187/tcp/9200/p2p/12D3KooWALMakdAtrHbEHCMKXVaKuUqucYYRo9vXUQavjDj65eQQ",
+          "/ip4/65.108.71.225/tcp/35002/p2p/12D3KooWML9Lyua1yqZa34FJpcydEYUzWNMHLrRj1NsnPbG3dvqH",
+          "/ip4/66.85.156.122/tcp/30002/p2p/12D3KooWN2wNNar6xWQuRem6QGaWie5u3StWWmdZm4xeZ4CFKADE",
+          "/ip4/51.222.41.188/tcp/30002/p2p/12D3KooWKTvsowgyv3WRTVm2dvEBtxpKsshWKtKJmGriGDPdzRBM",
+          "/ip4/34.85.239.136/tcp/30002/p2p/12D3KooWEWDthPgwwhe1bvDp5rwTNs4M2q1UHUKtMyXBW4JCrfJs",
+          "/ip4/131.153.59.34/tcp/26892/p2p/12D3KooWB4GhP7dXsBnFjTpkgr3sCmwkKxcmDhkHKNxZ3CrGgHDR",
+          "/ip4/51.89.234.42/tcp/30002/p2p/12D3KooWS74Wqr1ZYLWafymznv4ib48DzDdmgZzVqMkM2ntNg5DZ",
+          "/ip4/131.153.164.15/tcp/30002/p2p/12D3KooWCixcEb3YyZqQnANYX9YLVuAxQ2tNaRapQuYh9TeTTFZV",
+          "/ip4/131.153.164.23/tcp/20103/p2p/12D3KooWLZ8qr2rUZKhMzj3kEFCSfEaSM7m9gKkexQ9hNLh3J42p",
+          "/ip4/131.153.99.10/tcp/30002/p2p/12D3KooWKPMS72iRgPDWczMVzKyYa3DSZmc771XDNXnMWVPnjfmJ",
+          "/ip4/66.85.154.218/tcp/30002/p2p/12D3KooWRRbEUSjnw3FwLm368wd8pArGRG6YCYMhAdA8oWG1CgkT",
+          "/ip4/131.153.57.230/tcp/30002/p2p/12D3KooWDzq86WGEqEHcVCYfhukxuYKPq7cjrCxwsYg5euBpTcfi",
+          "/ip4/51.91.75.150/tcp/30002/p2p/12D3KooWQaNYjegtZyFtyrRNCF1yxB3sgGtBgY8asgEpFEcXPJiS",
+          "/ip4/51.222.44.106/tcp/30002/p2p/12D3KooWSJ4WnjUY76cfiifujynaxD15QnCdQfzxuJsyqzat24rp",
+          "/ip4/174.138.162.2/tcp/30002/p2p/12D3KooWAYVr6x3xpw7PCywXwbsneDc4eAN9SiaT4TndL61xE64J",
+          "/ip4/74.118.139.149/tcp/30002/p2p/12D3KooWPbvwm5SvjmYm4ghavhN3LHT4AV9MGeyPdUUxFqwjhwcC",
+          "/ip4/135.181.112.38/tcp/9200/p2p/12D3KooWSyaGh3PZScCVDZKteMTEszm4GXPBP2Fv8k5QfTLUvbhF",
+          "/ip4/104.198.128.161/tcp/9002/p2p/12D3KooWMRnHvBkAieXoWFCUwm8CanK8pNTK3qe7SM7qQqRaxetA",
+          "/ip4/131.153.205.66/tcp/9200/p2p/12D3KooWC8aPyvutEPaBiRx2Sq1HK5DkBfxrtvicd7bShJY72Ham",
+          "/ip4/89.212.17.232/tcp/9200/p2p/12D3KooWPcz11AarnbjJaJyxz1y5C9nbVfVuJJqqbvFTrZ5RXRko",
+          "/ip4/195.201.202.101/tcp/34648/p2p/12D3KooWMEnRxPekFYjyRvr6sTahT5LtCWiBaLmakoXgBbk9F7tQ",
+          "/ip4/43.157.5.35/tcp/9200/p2p/12D3KooWKEfhVy5mG6S2MerWVpYRUU9LJPVfnSN8agntumGwJ77P",
+          "/ip4/34.135.12.249/tcp/9002/p2p/12D3KooWNxPsNEZa1P8cFoqHwevBAzjx81hAxUXPLs9nKajbUoy8",
+          "/ip4/3.253.128.73/tcp/9200/p2p/12D3KooWHfda8yH4DRkvhSKiYqjFtwwtFkThMGRNNKyduR7Dz2wk",
+          "/ip4/93.115.25.171/tcp/9200/p2p/12D3KooWCgRyX8HKYvtWcy5JBcFQ2NSrKXAR8YFsKruzfjgTN8in",
+          "/ip4/34.71.93.50/tcp/9002/p2p/12D3KooWD5SCMPhVVtSQEX4jbZym37BtNAADzr3XjrLYG558abKN",
+          "/ip4/157.90.89.253/tcp/9200/p2p/12D3KooWH6xTgP5rNRNKza4GD4S37btCwJzbrddLjrc4GprxpqbH"
+        ],
+        "host": {
+          "versions": [
+            {
+              "major": 11
+            },
+            {
+              "major": 10
+            }
+          ]
+        }
+      },
+      "storage": {
+        "status": "syncing rounds",
+        "last_finalized_round": 9322034
+      },
+      "provisioner": "sandbox"
+    },
+    "000000000000000000000000000000000000000000000000f80306c9858e7279": {
+      "descriptor": {
+        "v": 3,
+        "id": "000000000000000000000000000000000000000000000000f80306c9858e7279",
+        "entity_id": "TAv9qXjV4yBphnKLJcNkzois1TLoYUjaRPrMfY58Apo=",
+        "genesis": {
+          "state_root": "c672b8d1ef56ed28ab87c3622c5114069bdd3ad7b8f9737498d0c01ecef0967a",
+          "round": 0
+        },
+        "kind": 1,
+        "tee_hardware": 1,
+        "key_manager": "4000000000000000000000000000000000000000000000008c5ea5e49b4bc9ac",
+        "executor": {
+          "group_size": 10,
+          "group_backup_size": 15,
+          "allowed_stragglers": 4,
+          "round_timeout": 2,
+          "max_messages": 256,
+          "min_live_rounds_eval": 60,
+          "max_liveness_fails": 4
+        },
+        "txn_scheduler": {
+          "batch_flush_timeout": 1000000000,
+          "max_batch_size": 1000,
+          "max_batch_size_bytes": 1048576,
+          "propose_batch_timeout": 5000000000
+        },
+        "storage": {
+          "checkpoint_interval": 100000,
+          "checkpoint_num_kept": 2,
+          "checkpoint_chunk_size": 8388608
+        },
+        "admission_policy": {
+          "any_node": {}
+        },
+        "constraints": {
+          "executor": {
+            "backup-worker": {
+              "validator_set": {},
+              "max_nodes": {
+                "limit": 1
+              },
+              "min_pool_size": {
+                "limit": 15
+              }
+            },
+            "worker": {
+              "validator_set": {},
+              "max_nodes": {
+                "limit": 1
+              },
+              "min_pool_size": {
+                "limit": 15
+              }
+            }
+          }
+        },
+        "staking": {
+          "thresholds": {
+            "node-compute": "5000000000000000"
+          },
+          "min_in_message_fee": "0"
+        },
+        "governance_model": "entity",
+        "deployments": [
+          {
+            "version": {
+              "minor": 7
+            },
+            "valid_from": 28190,
+            "tee": "oWhlbmNsYXZlc4GiaW1yX3NpZ25lclggQCXat+vaH77MTjY3YG4CEhTQ9BxtBCL9N4sqi4iBhFlqbXJfZW5jbGF2ZVgg5ww4lVfjy7mcDs3AfHnvq2Q4JbzXkh+UCeOukPjcJpc="
+          }
+        ]
+      },
+      "latest_round": 2775514,
+      "latest_hash": "5f6ab3e90ea2778dfe2526a5e4d1466289abe5f09c2f7fec82e6f6b3ca3d7d83",
+      "latest_time": "2024-03-08T10:46:02+01:00",
+      "latest_state_root": {
+        "ns": "000000000000000000000000000000000000000000000000f80306c9858e7279",
+        "version": 2775514,
+        "root_type": 1,
+        "hash": "03f951006fea6ade82c9b1d350043784d61c4794d5bfd13145c2569348d0d20b"
+      },
+      "genesis_round": 1357486,
+      "genesis_hash": "151309e2bee057eff11500d83834c59edaa0defdceabddf8d27bcf8dbbf11aa3",
+      "last_retained_round": 1357486,
+      "last_retained_hash": "151309e2bee057eff11500d83834c59edaa0defdceabddf8d27bcf8dbbf11aa3",
+      "committee": {
+        "status": "ready",
+        "active_version": {
+          "minor": 7
+        },
+        "latest_round": 2775514,
+        "latest_height": 18270232,
+        "executor_roles": null,
+        "scheduler_rank": 18446744073709551615,
+        "peers": [
+          "/ip4/66.85.147.250/tcp/30005/p2p/12D3KooWN7fWvPgXqaD42LfpnZPdSrJpfjY7koPvL7MuJ6a9Zsag",
+          "/ip4/93.107.154.131/tcp/30002/p2p/12D3KooWQZXoU1GFSSWsmqWALRz2nvukxENCPBKJGndTca3gfW8o",
+          "/ip4/134.119.219.154/tcp/20103/p2p/12D3KooWCdX3M9s1HicZVDqEtuyJ8NPDihR4cZDdNroYxJgiCtsD",
+          "/ip4/84.39.245.93/tcp/30102/p2p/12D3KooWP97nqRjJdQ32x1aLyGbhD5ruLYtZiJBVG4JD4Yy8fqgF",
+          "/ip4/131.153.59.34/tcp/26892/p2p/12D3KooWB4GhP7dXsBnFjTpkgr3sCmwkKxcmDhkHKNxZ3CrGgHDR",
+          "/ip4/51.89.234.42/tcp/30002/p2p/12D3KooWS74Wqr1ZYLWafymznv4ib48DzDdmgZzVqMkM2ntNg5DZ",
+          "/ip4/131.153.164.15/tcp/30002/p2p/12D3KooWCixcEb3YyZqQnANYX9YLVuAxQ2tNaRapQuYh9TeTTFZV",
+          "/ip4/131.153.99.10/tcp/30002/p2p/12D3KooWKPMS72iRgPDWczMVzKyYa3DSZmc771XDNXnMWVPnjfmJ",
+          "/ip4/66.85.154.218/tcp/30002/p2p/12D3KooWRRbEUSjnw3FwLm368wd8pArGRG6YCYMhAdA8oWG1CgkT",
+          "/ip4/131.153.57.230/tcp/30002/p2p/12D3KooWDzq86WGEqEHcVCYfhukxuYKPq7cjrCxwsYg5euBpTcfi",
+          "/ip4/2.56.188.205/tcp/9200/p2p/12D3KooWFDWBBH6nskRDFEjvRghvp5Tu3DQ2ZStsBtjyS3wmpXcV",
+          "/ip4/51.91.75.150/tcp/30002/p2p/12D3KooWQaNYjegtZyFtyrRNCF1yxB3sgGtBgY8asgEpFEcXPJiS",
+          "/ip4/174.138.162.2/tcp/30002/p2p/12D3KooWAYVr6x3xpw7PCywXwbsneDc4eAN9SiaT4TndL61xE64J",
+          "/ip4/131.153.158.97/tcp/30002/p2p/12D3KooWSnJtBMWpaYmwZgkHQApefXzuQhUxRencTzwyuXzuWpFf",
+          "/ip4/92.42.109.101/tcp/30002/p2p/12D3KooWQyAVM5NVfYJHWZn6a5phHe8wZH3n3CVVNA7SF2JUtQu4",
+          "/ip4/51.222.44.106/tcp/30002/p2p/12D3KooWSJ4WnjUY76cfiifujynaxD15QnCdQfzxuJsyqzat24rp",
+          "/ip4/212.232.29.235/tcp/35002/p2p/12D3KooWSHF3gtW3thCZVJ3HJJTHNyJMB273iEVbJHVPpRYpdmmb",
+          "/ip4/131.153.154.13/tcp/30002/p2p/12D3KooWGfyNBqnppXZ1jo8zRcav3uKunj85HGbEDqj67d72jbJv",
+          "/ip4/66.85.139.42/tcp/25002/p2p/12D3KooWMqPvVGdzgz56jHVsAjL1W8YwR2FpiFvpR8SCw6SZxX32",
+          "/ip4/185.107.80.40/tcp/30002/p2p/12D3KooWHHG9fq9bLSKSdtQXBtqMJj4K3zyDCUJU9PvEKj7CBFbw",
+          "/ip4/131.153.165.57/tcp/30002/p2p/12D3KooWStTpimpJLSa85gsWG17SGpdh43pHogQDhzFGiKXDQAJe",
+          "/ip4/51.210.116.110/tcp/30002/p2p/12D3KooWEvfS5EdnpcC8etv8eiE3oSkhWid2FEXb5oAisZT3AJyo",
+          "/ip4/66.85.156.122/tcp/30002/p2p/12D3KooWN2wNNar6xWQuRem6QGaWie5u3StWWmdZm4xeZ4CFKADE",
+          "/ip4/51.222.41.188/tcp/30002/p2p/12D3KooWKTvsowgyv3WRTVm2dvEBtxpKsshWKtKJmGriGDPdzRBM",
+          "/ip4/131.153.158.145/tcp/20103/p2p/12D3KooWJebHaWqqsDXm38apaWT4RX83N119L8mMHh7GemZtKzQe",
+          "/ip4/131.153.158.241/tcp/20103/p2p/12D3KooWL5r52yBoHmRL7gesjUZMM8QSf8Yi1iWLNh6fACEsoJQR",
+          "/ip4/131.153.158.195/tcp/20103/p2p/12D3KooWJvttMywMUmxoNPzeE7NDRGSN56qQCNSoZmd95AEbfZhq",
+          "/ip4/131.153.158.203/tcp/20103/p2p/12D3KooWPo5FYGDQQikFhrFfzHDw2XPKAfhX5NAtp4HePHFgKQQ2",
+          "/ip4/20.231.83.188/tcp/9002/p2p/12D3KooWMRFWewSpssbH1ouKAPFohTwZWerY8q7HYnnRdbqHwW88",
+          "/ip4/135.181.112.38/tcp/9200/p2p/12D3KooWSyaGh3PZScCVDZKteMTEszm4GXPBP2Fv8k5QfTLUvbhF",
+          "/ip4/20.232.103.170/tcp/9002/p2p/12D3KooWDeXUzwZg4miWeBatCxhtzsq1VoReBZY651cCJPJQjkBX",
+          "/ip4/89.212.17.232/tcp/9200/p2p/12D3KooWPcz11AarnbjJaJyxz1y5C9nbVfVuJJqqbvFTrZ5RXRko",
+          "/ip4/131.153.164.11/tcp/20103/p2p/12D3KooWA6en49Pg7fwLgZMUZGwURNyB98yDAJh9j74vV74kdD7V",
+          "/ip4/195.201.202.101/tcp/34648/p2p/12D3KooWMEnRxPekFYjyRvr6sTahT5LtCWiBaLmakoXgBbk9F7tQ",
+          "/ip4/131.153.158.115/tcp/20103/p2p/12D3KooWPQbAYgnij8kwBZbDH2ArZV8Ch9vgHSP8bCKMph1S6FMm",
+          "/ip4/44.213.118.127/tcp/9200/p2p/12D3KooWK52QkQdGFnjHLUVUurKZnCdUBFacnJ3gyCHWbqDthaet",
+          "/ip4/131.153.147.30/tcp/9200/p2p/12D3KooWJQCVuzE6chjFRdHnn2M4SCXngZ87TmdDU3ccosMaQ4kt",
+          "/ip4/34.135.12.249/tcp/9002/p2p/12D3KooWNxPsNEZa1P8cFoqHwevBAzjx81hAxUXPLs9nKajbUoy8",
+          "/ip4/131.153.158.147/tcp/20103/p2p/12D3KooW9vQWrHSZZn3mKGZkFgCsP5XPHGnszr4A54etg67tR5YK",
+          "/ip4/20.163.238.123/tcp/9002/p2p/12D3KooWLT8joftMLzdnDt1Lb2rZKNYZZ1PEWPg81GpcJMaErkzm",
+          "/ip4/34.71.93.50/tcp/9002/p2p/12D3KooWD5SCMPhVVtSQEX4jbZym37BtNAADzr3XjrLYG558abKN",
+          "/ip4/20.124.126.75/tcp/9002/p2p/12D3KooWQTkXHYy6UnSaHuZvET5JL3fe5fV5P1eqs7So2Fz5nsdT"
+        ],
+        "host": {
+          "versions": [
+            {
+              "minor": 7
+            },
+            {
+              "minor": 6,
+              "patch": 4
+            }
+          ]
+        }
+      },
+      "storage": {
+        "status": "syncing rounds",
+        "last_finalized_round": 2775514
+      },
+      "provisioner": "sandbox"
+    }
+  },
+  "registration": {
+    "last_attempt_successful": false,
+    "last_attempt": "0001-01-01T00:00:00Z",
+    "last_registration": "0001-01-01T00:00:00Z"
+  },
+  "p2p": {
+    "pub_key": "/YOH7B2pk8Iff19lzWQ1qkKJ+PbXJtcyP6k7avW6NkE=",
+    "peer_id": "12D3KooWSsyeFEkSTrGTWXhnnpVGPExNeNX7FYtuVUkrWLUYVkSU",
+    "addresses": [
+      "34.135.216.16:9002"
+    ],
+    "num_peers": 99,
+    "num_connections": 102,
+    "protocols": {
+      "/oasis/bb3d748def55bdfb797a2ac53ee6ee141e54cd2ab2dc2375f4a0703a178e6e55/keymanager/4000000000000000000000000000000000000000000000008c5ea5e49b4bc9ac/2.0.0": 6,
+      "/oasis/bb3d748def55bdfb797a2ac53ee6ee141e54cd2ab2dc2375f4a0703a178e6e55/light/1.0.0": 99,
+      "/oasis/bb3d748def55bdfb797a2ac53ee6ee141e54cd2ab2dc2375f4a0703a178e6e55/storagesync/000000000000000000000000000000000000000000000000e199119c992377cb/2.0.0": 34,
+      "/oasis/bb3d748def55bdfb797a2ac53ee6ee141e54cd2ab2dc2375f4a0703a178e6e55/storagesync/000000000000000000000000000000000000000000000000e2eaa99fc008f87f/2.0.0": 34,
+      "/oasis/bb3d748def55bdfb797a2ac53ee6ee141e54cd2ab2dc2375f4a0703a178e6e55/storagesync/000000000000000000000000000000000000000000000000f80306c9858e7279/2.0.0": 47
+    },
+    "topics": {
+      "oasis/bb3d748def55bdfb797a2ac53ee6ee141e54cd2ab2dc2375f4a0703a178e6e55/tx/000000000000000000000000000000000000000000000000e199119c992377cb/5.0.0": 34,
+      "oasis/bb3d748def55bdfb797a2ac53ee6ee141e54cd2ab2dc2375f4a0703a178e6e55/tx/000000000000000000000000000000000000000000000000e2eaa99fc008f87f/5.0.0": 34,
+      "oasis/bb3d748def55bdfb797a2ac53ee6ee141e54cd2ab2dc2375f4a0703a178e6e55/tx/000000000000000000000000000000000000000000000000f80306c9858e7279/5.0.0": 48
+    }
+  }
+}

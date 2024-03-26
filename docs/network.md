@@ -380,6 +380,13 @@ Mainnet was reported:
 
 ![code json](../examples/network/status.out.static)
 
+You can also view output in json format by passing the `--format json`
+parameter:
+
+![code shell](../examples/network/status-json.in.static)
+
+![code](../examples/network/status-json.out.static)
+
 :::info
 
 [Network](./account.md#npa) selector is available for the

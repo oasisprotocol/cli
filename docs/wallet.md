@@ -241,6 +241,11 @@ logan           ledger (ed25519-legacy:0)       oasis1qpl4axynedmdrrgrg7dpw3yxc4
 oscar (*)       file (ed25519-raw)              oasis1qp87hflmelnpqhzcqcw8rhzakq4elj7jzv090p3e
 ```
 
+You can also delete accounct in non-interactive mode format by passing the
+`-y` parameter:
+
+![code shell](../examples/wallet/remove-y.in.static)
+
 ## Set Default Account {#set-default}
 
 To change your default account, use `wallet set-default <name>` and the

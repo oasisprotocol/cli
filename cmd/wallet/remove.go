@@ -6,6 +6,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 
+	"github.com/oasisprotocol/cli/cmd/common"
 	"github.com/oasisprotocol/cli/config"
 )
 
@@ -23,25 +24,31 @@ var rmCmd = &cobra.Command{
 			cobra.CheckErr(fmt.Errorf("account '%s' does not exist", name))
 		}
 
-		fmt.Printf("WARNING: Removing the account will ERASE secret key material!\n")
-		fmt.Printf("WARNING: THIS ACTION IS IRREVERSIBLE!\n")
+		if !common.GetAnswerYes() {
+			fmt.Printf("WARNING: Removing the account will ERASE secret key material!\n")
+			fmt.Printf("WARNING: THIS ACTION IS IRREVERSIBLE!\n")
 
-		var result string
-		confirmText := fmt.Sprintf("I really want to remove account %s", name)
-		prompt := &survey.Input{
-			Message: fmt.Sprintf("Enter '%s' (without quotes) to confirm removal:", confirmText),
+			var result string
+			confirmText := fmt.Sprintf("I really want to remove account %s", name)
+			prompt := &survey.Input{
+				Message: fmt.Sprintf("Enter '%s' (without quotes) to confirm removal:", confirmText),
+			}
+			err := survey.AskOne(prompt, &result)
+			cobra.CheckErr(err)
+
+			if result != confirmText {
+				cobra.CheckErr("Aborted.")
+			}
 		}
-		err := survey.AskOne(prompt, &result)
-		cobra.CheckErr(err)
 
-		if result != confirmText {
-			cobra.CheckErr("Aborted.")
-		}
-
-		err = cfg.Wallet.Remove(name)
+		err := cfg.Wallet.Remove(name)
 		cobra.CheckErr(err)
 
 		err = cfg.Save()
 		cobra.CheckErr(err)
 	},
+}
+
+func init() {
+	rmCmd.Flags().AddFlagSet(common.AnswerYesFlag)
 }

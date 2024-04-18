@@ -241,7 +241,7 @@ var (
 func init() {
 	entityInitCmd.Flags().StringVarP(&entityOutputFile, "output-file", "o", "", "output entity descriptor into specified JSON file")
 	entityInitCmd.Flags().AddFlagSet(common.AccountFlag)
-	entityInitCmd.Flags().AddFlagSet(common.YesFlag)
+	entityInitCmd.Flags().AddFlagSet(common.AnswerYesFlag)
 
 	entityRegisterCmd.Flags().AddFlagSet(common.SelectorNAFlags)
 	entityRegisterCmd.Flags().AddFlagSet(common.TxFlags)
@@ -251,7 +251,7 @@ func init() {
 
 	entityMetadataUpdateCmd.Flags().StringVarP(&registryPath, "registry-dir", "r", "", "path to the metadata registry directory")
 	entityMetadataUpdateCmd.Flags().AddFlagSet(common.AccountFlag)
-	entityMetadataUpdateCmd.Flags().AddFlagSet(common.YesFlag)
+	entityMetadataUpdateCmd.Flags().AddFlagSet(common.AnswerYesFlag)
 
 	entityCmd.AddCommand(entityInitCmd)
 	entityCmd.AddCommand(entityRegisterCmd)

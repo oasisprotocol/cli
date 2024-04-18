@@ -26,7 +26,7 @@ var (
 
 // Confirm asks the user for confirmation and aborts when rejected.
 func Confirm(msg, abortMsg string) {
-	if txYes {
+	if answerYes {
 		fmt.Printf("? %s Yes\n", msg)
 		return
 	}

@@ -214,10 +214,11 @@ For example:
 
 ## Deleting an Account {#remove}
 
-To irreversibly delete the account from your wallet use `wallet remove <name>`.
-For file-based accounts this will delete the file containing the private key
-from your disk. For hardware wallet accounts this will delete the Oasis CLI
-reference, but the private keys will remain intact on your hardware wallet.
+To irreversibly delete the accounts from your wallet use
+`wallet remove [names]`. For file-based accounts this will delete the file
+containing the private key from your disk. For hardware wallet accounts this
+will delete the Oasis CLI reference, but the private keys will remain intact on
+your hardware wallet.
 
 For example, let's delete `lenny` account:
 

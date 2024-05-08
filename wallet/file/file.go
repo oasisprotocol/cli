@@ -279,9 +279,9 @@ func (af *fileAccountFactory) DataValidator(kind wallet.ImportKind, rawCfg map[s
 				}
 			case wallet.AlgorithmSecp256k1Raw:
 				// Ensure the private key is hex encoded.
-				_, err := hex.DecodeString(ans.(string))
+				_, err := Secp256k1FromHex(ans.(string))
 				if err != nil {
-					return fmt.Errorf("private key must be hex-encoded (without leading 0x): %w", err)
+					return fmt.Errorf("private key must be hex-encoded: %w", err)
 				}
 			case wallet.AlgorithmSr25519Raw:
 				// Ensure the private key is base64 encoded.

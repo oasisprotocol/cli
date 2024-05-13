@@ -1,9 +1,14 @@
 package paratime
 
 import (
+	"fmt"
+	"slices"
 	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
+
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 
 	"github.com/oasisprotocol/cli/cmd/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
@@ -18,7 +23,7 @@ var listCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		table := table.New()
-		table.SetHeader([]string{"Network", "Paratime", "ID"})
+		table.SetHeader([]string{"Network", "Paratime", "ID", "Denomination(s)"})
 
 		var output [][]string
 		for netName, net := range cfg.Networks.All {
@@ -32,6 +37,7 @@ var listCmd = &cobra.Command{
 					netName,
 					displayPtName,
 					pt.ID,
+					formatDenominations(pt.Denominations),
 				})
 			}
 		}
@@ -47,4 +53,20 @@ var listCmd = &cobra.Command{
 		table.AppendBulk(output)
 		table.Render()
 	},
+}
+
+func formatDenominations(denominations map[string]*config.DenominationInfo) string {
+	var fmtDenom string
+	fmtDenomArray := make([]string, 0, len(denominations))
+	for nativeKey, denom := range denominations {
+		if nativeKey == config.NativeDenominationKey {
+			fmtDenom = fmt.Sprintf("%s[%d] (*)", denom.Symbol, denom.Decimals)
+		} else {
+			fmtDenom = fmt.Sprintf("%s[%d]", denom.Symbol, denom.Decimals)
+		}
+
+		fmtDenomArray = append(fmtDenomArray, fmtDenom)
+	}
+	slices.Sort(fmtDenomArray)
+	return strings.Join(fmtDenomArray, "\n")
 }

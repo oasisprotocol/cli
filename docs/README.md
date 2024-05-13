@@ -1,6 +1,6 @@
 ---
 title: Oasis CLI
-description: Powerful CLI for managing Oasis network, nodes, tokens and dapps
+description: Powerful CLI for managing Oasis networks, nodes, tokens and dApps
 ---
 
 # Oasis Command Line Interface
@@ -12,7 +12,8 @@ binaries from the [GitHub repository].
 It boasts a number of handy features:
 
 - Flexible setup:
-  - supports Mainnet, Testnet, Localnet or any other Oasis network deployment
+  - supports Mainnet, Testnet, Localnet or any other deployment of the Oasis
+    network
   - consensus layer configuration with arbitrary token
   - configuration of custom ParaTimes with arbitrary token
   - connecting to remote (via TCP/IP) or local (Unix socket) Oasis node

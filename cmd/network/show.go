@@ -14,6 +14,7 @@ import (
 	consensusPretty "github.com/oasisprotocol/oasis-core/go/common/prettyprint"
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	registry "github.com/oasisprotocol/oasis-core/go/registry/api"
+	roothash "github.com/oasisprotocol/oasis-core/go/roothash/api"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 	"github.com/oasisprotocol/oasis-core/go/staking/api/token"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
@@ -21,6 +22,7 @@ import (
 
 	"github.com/oasisprotocol/cli/cmd/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
+	"github.com/oasisprotocol/cli/table"
 )
 
 type propertySelector int
@@ -33,10 +35,11 @@ const (
 	selValidators
 	selNativeToken
 	selGasCosts
+	selCommittees
 )
 
 var showCmd = &cobra.Command{
-	Use:     "show { <id> | entities | nodes | paratimes | validators | native-token | gas-costs }",
+	Use:     "show { <id> | entities | nodes | paratimes | validators | native-token | gas-costs | committees }",
 	Short:   "Show network properties",
 	Long:    "Show network property stored in the registry, scheduler, genesis document or chain. Query by ID, hash or a specified kind.",
 	Args:    cobra.ExactArgs(1),
@@ -55,6 +58,7 @@ var showCmd = &cobra.Command{
 
 		consensusConn := conn.Consensus()
 		registryConn := consensusConn.Registry()
+		roothashConn := consensusConn.RootHash()
 
 		// Figure out the height to use if "latest".
 		height, err := common.GetActualHeight(
@@ -195,6 +199,57 @@ var showCmd = &cobra.Command{
 					fmt.Println()
 				}
 				return
+			case selCommittees:
+				runtimes, err := registryConn.GetRuntimes(ctx, &registry.GetRuntimesQuery{
+					Height:           height,
+					IncludeSuspended: false,
+				})
+				cobra.CheckErr(err)
+
+				for _, runtime := range runtimes {
+					if runtime.Kind != registry.KindCompute {
+						continue
+					}
+					table := table.New()
+					table.SetHeader([]string{"Entity ID", "Node ID", "Role"})
+
+					runtimeID := runtime.ID
+					paratimeName := getParatimeName(cfg, runtimeID.String())
+
+					fmt.Println("=== COMMITTEE ===")
+					fmt.Printf("Paratime: %s(%s)\n", paratimeName, runtimeID)
+					fmt.Printf("Height:   %d\n", height)
+					fmt.Println()
+
+					state, _ := roothashConn.GetRuntimeState(ctx, &roothash.RuntimeRequest{
+						Height:    height,
+						RuntimeID: runtimeID,
+					})
+					cobra.CheckErr(err)
+
+					var output [][]string
+					for _, member := range state.Committee.Members {
+						nodeQuery := &registry.IDQuery{
+							Height: height,
+							ID:     member.PublicKey,
+						}
+
+						node, err := consensusConn.Registry().GetNode(ctx, nodeQuery)
+						cobra.CheckErr(err)
+
+						output = append(output, []string{
+							node.EntityID.String(),
+							member.PublicKey.String(),
+							member.Role.String(),
+						})
+					}
+
+					table.AppendBulk(output)
+					table.Render()
+					fmt.Println()
+				}
+				return
+
 			default:
 				// Should never happen.
 			}
@@ -242,6 +297,8 @@ func selectorFromString(s string) propertySelector {
 		return selNativeToken
 	case "gas-costs":
 		return selGasCosts
+	case "committees":
+		return selCommittees
 	}
 	return selInvalid
 }

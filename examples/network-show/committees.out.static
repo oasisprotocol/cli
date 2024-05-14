@@ -1,0 +1,99 @@
+=== COMMITTEE ===
+Paratime: sapphire(000000000000000000000000000000000000000000000000f80306c9858e7279)
+Height:   19241881
+
+ENTITY ID                                       NODE ID                                         ROLE          
+T5k7PtOR01oZrdnZveDpO9AFpMUhEREZk7WSSfm8Gtg=    RT7JKF5T1hlKXTYZsp4SL07f4IHG6O0SQppf8wnfr+Y=    worker       
+oOVxTw2hEYgYvSrTjjKODCt/Soy3OLcQV9YBy/PF/xY=    Io86AKuu7YDnya+fVnldHBybFggwCoXeQPu3Wj8kHW4=    worker       
+sDi9ZxHYB+rHTpVh4abNFXDMRSecfGe4QzbyGK8ZgQg=    FEMUVK91HEULeQpMZj07jN2giNKjd6HPK3VdjsIQcjY=    worker       
+RMa2ER0wvraR+4u5QOGOrRTwmMVOYNcOot7sFppPRP0=    DW4/7kVEumpZV1CmntaQBncSV36t6QoE0QwQd5pLIZU=    worker       
+21+iPu/omYBN7X5cUY4QnD4b9VVuAiW/u8uABqt2VjM=    x8DFPc8E9BZxLJKbh51xj41es3R53AkJERfMEyRCrbk=    worker       
+7nCBfl1vRS4kn7G2yJZeZdwE8OFA4avUphWdCRrFhJM=    drsZxbpqG5h+4tq/JKWqmoVGXmQUirVCjD8GLBuNj9M=    worker       
+iGs5cCGos/I5KQv82MwgGMNENaxy3bhuWdFXtINcu0U=    HH/jnBO0AqHocNg4aS7MiMjiKmta1VP0ceRc0iILMAw=    worker       
+ko5wr5SMqhKb+P1kimM1EF/T4SqvW/WjSOwPHigQl+k=    aJFHeID4Q7qUfMa42dRwaa9PQrZ/cVDiE3WNt4bQjo0=    worker       
+UDV5FoaIkssdSFWC4asZtxvsyagoyrIS5rPX8p/np2U=    86y1tHzH9GlxvS0Bneh5l2AUDXYO6VMrzx75JvJViNE=    worker       
+BdSzNycR8Y3MdHooxU0vtOEPr3ZG9KD5p8wxHtvueUU=    +JOOp6OMmzldm9Dy7Cnbl/FE66bNkU0TJquOYnQIv7s=    worker       
+nw+8VTk+LbrZ4mSmeKYuQGu/swFgAOpPB5ls4STzh1g=    XCiPWblWT3n1aN2NI0vslmlfV9GOkxE2Ih2SI66ZR38=    backup-worker
+J2nwlXuYEPNZ0mMH2Phg5RofbZzj65xDvQMNdy9Ji0E=    ITrwEekdZNqXrEzvw3GT6Q3AtHDd51f19nD2nVU/f0c=    backup-worker
+sDi9ZxHYB+rHTpVh4abNFXDMRSecfGe4QzbyGK8ZgQg=    FEMUVK91HEULeQpMZj07jN2giNKjd6HPK3VdjsIQcjY=    backup-worker
+6XvrCu3wqMKYc5a0d5UZzG7ZGeb3j//MzcqUMUHkMCk=    C+AWG4iXz590kCdbO/DAb4sBZr+umjyp683ucmawdM4=    backup-worker
+T5k7PtOR01oZrdnZveDpO9AFpMUhEREZk7WSSfm8Gtg=    RT7JKF5T1hlKXTYZsp4SL07f4IHG6O0SQppf8wnfr+Y=    backup-worker
+RFpWeibJDHnfgoq9mO1BJcxyDbIstDi22ZBhvgXvE1Y=    YTHRajyCrIwOiys1ktOarSUyV1NVolvAw6DQqhaXg6w=    backup-worker
+LQaKibf9tD8KXO210NhiDUHzXTsRIeK5l/3ITmfg118=    7/WyW54TO+31VkXZcj4xIAgv5kWxR6azSEjwrSAte3Y=    backup-worker
+hNBVs2ay1IWvufQwX0TbYA6X4ocKaMpzpyaMTHggi6Q=    bKvnByvx8qwF41EqOG6wdmatGzz/qT2nbHC8i8VM65k=    backup-worker
+UDV5FoaIkssdSFWC4asZtxvsyagoyrIS5rPX8p/np2U=    86y1tHzH9GlxvS0Bneh5l2AUDXYO6VMrzx75JvJViNE=    backup-worker
+9yOiPY3NnNMpEzB+6XS/OqahzFwwX8mFhmT2fvbxlVI=    mIKW8IEDWZZxCRtDTvWQLpslvfUBwWxVAxLakwq25C8=    backup-worker
+nZoBfua/odt7fZThkfzGQo2oBp8UnEj+VpG52SB8onM=    70ibfZrA3+d9O4qNnecsXceTCvsLTywOjNQfN83MYQQ=    backup-worker
+1JttHp0rBBBHDOpPl8fAiLTcN9tUzxJGjk7llFcvhZQ=    rK6mrmCRi2dYPNraNwqg2jgEVi4sd6hi53JmT2HVGxQ=    backup-worker
+4gbOOU09bcyvM53Up1lTnP+sLb0feniJu0OcUUPCBSs=    +zVbgQqOdY90Z2NQKXFByNT0OwLxj/Ho4j4qT5u2yKM=    backup-worker
+fhXoWYc8Ml153jBBvFrQ4CRY7vnbCk9j269rVLeg7cE=    NM/XberrrMrvavGDCYc9CX8HPT1TPz1YHWuBaDArDHc=    backup-worker
+WXs7ElBlm30la2fG4oZDpubeFu5sKkjDVeflWo+YuIA=    ST2B7aeKSspiFNy325rIh8alQIRVCDyZ5t8f2NKN3PU=    backup-worker
+
+=== COMMITTEE ===
+Paratime: emerald(000000000000000000000000000000000000000000000000e2eaa99fc008f87f)
+Height:   19241881
+
+ENTITY ID                                       NODE ID                                         ROLE          
+L4OY/0mNEduAS9z6jh2xLp72b8gZURgcrd76AOiRIXk=    fGqOEIbBxaM2YmMcKq4PbpUOd9+s3TcS4AxaTChGuz0=    worker       
+g9UqzvW6JvfKrflRKbCPBpm41rH/O+4apCK+KkD2tG4=    4wqhqp5wDAfvQxNZUUSDmM2fVYrkxKq/tqjnnCe72Uw=    worker       
+PrCDIA3uyoLqNOZJ1PrRWdyviFn6K0PWFz91qQ9QyTw=    o8p0FlVg1Wlv+ZLKojWS7c0P4xZHklFt9frLW4B4QlE=    worker       
+bTok0el8GbmUzTAAgcQ78uww/TsgeWwXpM3N2S49qBQ=    cb/avZHoAQkZiHGzkjJxEkVsqiiiJzL/5fHp1TsDTdY=    worker       
+BTAJNDyd6/UQ+pfhTDdPGsothzJ+C5/C/g52a3DIlMw=    RV/KmNN7oWH7qDjx/7kn+o9nsyd52CPUauF9MGvxl70=    worker       
+4gbOOU09bcyvM53Up1lTnP+sLb0feniJu0OcUUPCBSs=    +zVbgQqOdY90Z2NQKXFByNT0OwLxj/Ho4j4qT5u2yKM=    worker       
+RMa2ER0wvraR+4u5QOGOrRTwmMVOYNcOot7sFppPRP0=    4mcgJKfEa6RqWh9NqSJ+/yfs6X8dU0tG1dI1L0lFNzM=    worker       
+6XvrCu3wqMKYc5a0d5UZzG7ZGeb3j//MzcqUMUHkMCk=    VtP8ubAEY1p8iOshGDUqxrZGstnswozt7h1wlMAvba8=    worker       
+1YeMK0NAZtE1ZK8u6KWddkKGZoD5VLfG9EAZI3b8HzE=    bhVU8RdrUXE7XgI7hIIdMFOhsomBFmPEnNU9zFPTHzY=    worker       
+cVGc1fI6xu0WeI2GUrLIwDpH/JtBE3PwD+P66YkSKg8=    giemTZIHjRmBA3FzYMK01eokfs8L/VmusK3M5+lUdGc=    worker       
+4gbOOU09bcyvM53Up1lTnP+sLb0feniJu0OcUUPCBSs=    +zVbgQqOdY90Z2NQKXFByNT0OwLxj/Ho4j4qT5u2yKM=    backup-worker
+p1VsfSsedbKn/5GzkPsr15XD+/AOIfbPda1/2yT84N4=    S2eoEMq6Qzms5Yd/fIOhSEacHp7Pym0BfgBEmsijEDw=    backup-worker
+bTok0el8GbmUzTAAgcQ78uww/TsgeWwXpM3N2S49qBQ=    cb/avZHoAQkZiHGzkjJxEkVsqiiiJzL/5fHp1TsDTdY=    backup-worker
+sDi9ZxHYB+rHTpVh4abNFXDMRSecfGe4QzbyGK8ZgQg=    Dpj1ibIMtTHMh/i5qh0eZcGGmOVODELSHvg/ZFBIPbY=    backup-worker
+UFXCpcvXBOHbxtObG4psGcn+LgZOedvDDUAqVengpPk=    rczLI7bYocBYyQ+bsnHPNPKc+SJpunQiuxip/tNlolw=    backup-worker
+RMa2ER0wvraR+4u5QOGOrRTwmMVOYNcOot7sFppPRP0=    4mcgJKfEa6RqWh9NqSJ+/yfs6X8dU0tG1dI1L0lFNzM=    backup-worker
+kupW3Pt0XMeERSkdDWyZMU4oZrk0wGysVXVyqX3rylc=    BZvhmvc1YZpXteI2nPhBDyC2jxi04MHEbKXB1DpTM1w=    backup-worker
+6XvrCu3wqMKYc5a0d5UZzG7ZGeb3j//MzcqUMUHkMCk=    VtP8ubAEY1p8iOshGDUqxrZGstnswozt7h1wlMAvba8=    backup-worker
+TWLcdgEfahwyFPTC7nN3rZacPO2aXlLfZIDt7uXbzEI=    5uD3zbTZGhivYt1ZQw/Yr/Bcg2t6zEdyR9Ogg5ipkho=    backup-worker
+oOVxTw2hEYgYvSrTjjKODCt/Soy3OLcQV9YBy/PF/xY=    jVPUq8aUDKe9jawIs7wPB4NBml27ft5kICIY7SBh/yQ=    backup-worker
+WXs7ElBlm30la2fG4oZDpubeFu5sKkjDVeflWo+YuIA=    RzMsfs49HQDT5fIVKQ+flR/sCJjrkKDPsc5ZS6O7VdM=    backup-worker
+1YeMK0NAZtE1ZK8u6KWddkKGZoD5VLfG9EAZI3b8HzE=    bhVU8RdrUXE7XgI7hIIdMFOhsomBFmPEnNU9zFPTHzY=    backup-worker
+cVGc1fI6xu0WeI2GUrLIwDpH/JtBE3PwD+P66YkSKg8=    giemTZIHjRmBA3FzYMK01eokfs8L/VmusK3M5+lUdGc=    backup-worker
+nZoBfua/odt7fZThkfzGQo2oBp8UnEj+VpG52SB8onM=    urRVg0K+6UhuxOnRE1/wIiPuuTu188orpsLDTz5NFTw=    backup-worker
+UkwjS1YvEfHx9b6MMT5Q1WvCY3aWn2lxRDsB/Pw+zGk=    CdkWAAnsdYg0g6yl90Eiqdwqer6NK9yIxWWvPR3fwD8=    backup-worker
+PrCDIA3uyoLqNOZJ1PrRWdyviFn6K0PWFz91qQ9QyTw=    o8p0FlVg1Wlv+ZLKojWS7c0P4xZHklFt9frLW4B4QlE=    backup-worker
+nw+8VTk+LbrZ4mSmeKYuQGu/swFgAOpPB5ls4STzh1g=    XCiPWblWT3n1aN2NI0vslmlfV9GOkxE2Ih2SI66ZR38=    backup-worker
+BTAJNDyd6/UQ+pfhTDdPGsothzJ+C5/C/g52a3DIlMw=    RV/KmNN7oWH7qDjx/7kn+o9nsyd52CPUauF9MGvxl70=    backup-worker
+1JttHp0rBBBHDOpPl8fAiLTcN9tUzxJGjk7llFcvhZQ=    dN/aIe69HWFUHtOy/oqWdp1jw4fzOIljXLbMI79ilTo=    backup-worker
+uxSkvFu6x4MIYV+M1VrDu3m/qbADs/1Ae3mWAcEmnaQ=    0qOmNfZvPDnjyzPU/97x1FWsl0d3UsImNiSNXd7lE/0=    backup-worker
+21+iPu/omYBN7X5cUY4QnD4b9VVuAiW/u8uABqt2VjM=    x8DFPc8E9BZxLJKbh51xj41es3R53AkJERfMEyRCrbk=    backup-worker
+BdSzNycR8Y3MdHooxU0vtOEPr3ZG9KD5p8wxHtvueUU=    CZgE+WU9T8YpTnPRosJYFqos9S8W53jGQKeRrRxMeQc=    backup-worker
+FDqRmM1FyhaGas+lquWmGAKgMsU2rj7UESAlnOHtxco=    qnRAoObwndP/P9otTzQ/9Z2+vmSQ1Pch7G4tGBSTxCo=    backup-worker
+ko5wr5SMqhKb+P1kimM1EF/T4SqvW/WjSOwPHigQl+k=    aJFHeID4Q7qUfMa42dRwaa9PQrZ/cVDiE3WNt4bQjo0=    backup-worker
+AX8zJsi0DnrrdwCi/8JJptXSy62kZgQcAYKlCYD4oN8=    BqCqG8wuMVdnONN5bysITf0mYQD5FD+TEF5wrJttsSQ=    backup-worker
+aiTgGyYB2l4uAMG93Ajq5S4EXPIRkYDg1ICLjWD45Ck=    pGkBYly79y2gJUEOau8XN04ErcfwrObO+W5+CYXJW5k=    backup-worker
+kfr2A6K6TlvhQm4nz88Hczzkd2Aq5PlkxSpnmUUBAFs=    KUjJArjDn1TtZOi6AgYki1fUTC2PrU0LJFJ4ppHt3NQ=    backup-worker
+cgXH87+sYoe2mXsdDKWCyRvWZ8JqnVnxJkCq09LlBoI=    6ioksdd5uKtlNnPmCpu1NYohfamlb/QHiD8EhMuTbfw=    backup-worker
+N+3/m12DoAqzFS0yF3R/kXSkSj7pZnWhq8nRCo/MKwk=    zibJtnvTpDotvOK3a3nNYmlYwg/K4TdZB781TQCEAT4=    backup-worker
+/ylWdaid2DDlI4BMVkX6gAR6eaBYlLolHbjCmHitrzc=    9sk2Nq2DFGv932dnavOIr02RnfQUOngggsn2HUEEfRg=    backup-worker
+
+=== COMMITTEE ===
+Paratime: cipher(000000000000000000000000000000000000000000000000e199119c992377cb)
+Height:   19241881
+
+ENTITY ID                                       NODE ID                                         ROLE          
+bTok0el8GbmUzTAAgcQ78uww/TsgeWwXpM3N2S49qBQ=    LI48Ol5Is045ijOAjiCiKFHKOyzwuGL6mMTr3F5cMdM=    worker       
+1YeMK0NAZtE1ZK8u6KWddkKGZoD5VLfG9EAZI3b8HzE=    /dBEDGDBCu6TF5w9crktZ9aloTBpOGGSa6A8uVNunAo=    worker       
+sDi9ZxHYB+rHTpVh4abNFXDMRSecfGe4QzbyGK8ZgQg=    FEMUVK91HEULeQpMZj07jN2giNKjd6HPK3VdjsIQcjY=    worker       
+ko5wr5SMqhKb+P1kimM1EF/T4SqvW/WjSOwPHigQl+k=    aJFHeID4Q7qUfMa42dRwaa9PQrZ/cVDiE3WNt4bQjo0=    worker       
+1JttHp0rBBBHDOpPl8fAiLTcN9tUzxJGjk7llFcvhZQ=    kgTUu0eXQWfPaE8Li8NgXf0bsjXdupxIfM8moGrTMK4=    worker       
+UDV5FoaIkssdSFWC4asZtxvsyagoyrIS5rPX8p/np2U=    VonN99SPIvJ6Aq8dS5JQG9g50svyuLwMHjXZYAAtLKo=    backup-worker
+RMa2ER0wvraR+4u5QOGOrRTwmMVOYNcOot7sFppPRP0=    k0g6YN7CFSgjaPU1EjVWXhzPVmEset+3sQ3c3NJ8Ys4=    backup-worker
+cgXH87+sYoe2mXsdDKWCyRvWZ8JqnVnxJkCq09LlBoI=    6ioksdd5uKtlNnPmCpu1NYohfamlb/QHiD8EhMuTbfw=    backup-worker
+nw+8VTk+LbrZ4mSmeKYuQGu/swFgAOpPB5ls4STzh1g=    XCiPWblWT3n1aN2NI0vslmlfV9GOkxE2Ih2SI66ZR38=    backup-worker
+WazI78lMcmjyCH5+5RKkkfOTUR+XheHIohlqMu+a9As=    uvPTOOyC+Kb+Hl3Pw34S3/YC9IerAdZncyW08LIaTtw=    backup-worker
+PrCDIA3uyoLqNOZJ1PrRWdyviFn6K0PWFz91qQ9QyTw=    vI2QpEG/5LYwU+Fp52QsYxdRMRoy9j+pdJSb23tW3ng=    backup-worker
+YDHYz/R+Y7pCodhmgkCqzoqqN54gzRfVE5fjZriX+RI=    7Rz1yAFZcAD06OOTZxx5LLDg2L5+1Me4304xZB8cgxU=    backup-worker
+zAhtGrpk1L3bBLaP5enm3natUTCoj7MEFryq9+MG4tE=    PsfFUQrXqGoFtowWZcoc8ilh8xHP94LvNYHvqQHpw1E=    backup-worker
+wCGlLKUiTNr9Ba49YA6dDuqm9rdtPcKKsKzHqMBn+rc=    vlG7mUtP7s2PsnARfyrI3mW/q4pcqRi3SHk2GxmQ2NM=    backup-worker
+J2nwlXuYEPNZ0mMH2Phg5RofbZzj65xDvQMNdy9Ji0E=    ITrwEekdZNqXrEzvw3GT6Q3AtHDd51f19nD2nVU/f0c=    backup-worker
+oOVxTw2hEYgYvSrTjjKODCt/Soy3OLcQV9YBy/PF/xY=    Io86AKuu7YDnya+fVnldHBybFggwCoXeQPu3Wj8kHW4=    backup-worker
+

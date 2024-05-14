@@ -324,6 +324,14 @@ Above, we can see that the [maximum amount of gas](./account.md#gas-limit) our
 transaction can spend must be set to at least 1000 **gas units**, otherwise it
 will be rejected by the network.
 
+#### `committees` {#committees}
+
+Shows runtime committees.
+
+![code shell](../examples/network-show/committees.in.static)
+
+![code](../examples/network-show/committees.out.static)
+
 #### `<id>` {#show-id}
 
 The provided ID can be one of the following:

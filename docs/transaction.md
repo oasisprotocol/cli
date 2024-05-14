@@ -1,6 +1,6 @@
 ---
 title: Transaction
-description: Using CLI to submit or decode a transaction
+description: Use CLI to decode, verify, sign and submit a transaction
 ---
 
 # Transaction Tools
@@ -33,23 +33,24 @@ We can decode and verify the transaction as follows:
 
 ![code](../examples/transaction/show.out)
 
-Since the signature also includes the [chain domain separation context], it
-will be invalid on other networks such as Mainnet and Oasis CLI will mark it as
-`[INVALID SIGNATURE]`:
+Since the signature depends on the [chain domain separation context], the
+transaction above will be invalid on other networks such as the Mainnet. In this
+case the Oasis CLI will print the `[INVALID SIGNATURE]` warning below the
+signature:
 
 ![code shell](../examples/transaction/show-invalid.in)
 
-![code](../examples/transaction/show-invalid.out)
+![code {4}](../examples/transaction/show-invalid.out)
 
-A similar approach is suitable for ParaTime transactions. Take the following
-transaction which transfers `1.0 TEST` from `test:alice` to `test:bob` inside
-Sapphire ParaTime on Testnet and save it as `testtx2.json`:
+The `show` command is also compatible with ParaTime transactions. Take the
+following transaction which transfers `1.0 TEST` from `test:alice` to `test:bob`
+inside Sapphire ParaTime on the Testnet:
 
 ![code json](../examples/transaction/testtx2.json "testtx2.json")
 
-Oasis CLI will be able to verify the transaction only for the exact network and
-ParaTime combination since both are included inside the chain domain separation
-context of a ParaTime transaction signature.
+The Oasis CLI will be able to verify a transaction only for the **exact network
+and ParaTime combination** since both are used to derive the chain domain
+separation context for signing the transaction.
 
 ![code shell](../examples/transaction/show-paratime-tx.in)
 

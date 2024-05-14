@@ -467,11 +467,17 @@ and for all other prompts it will keep the proposed default values.
 
 ### Output Transaction to File {#output-file}
 
-You can use `--output-file <filename>` parameter to save a transaction to
-a JSON file instead of immediately broadcasting it to the network. Afterwards,
-use the [`transaction`] command to verify and submit the transaction.
+Use `--output-file <filename>` parameter to save the resulting transaction to a
+file instead of broadcasting it to the network. You can then use the
+[`transaction`] command to verify and submit it.
+
+Check out the [`--unsigned`] flag, if you wish to store the unsigned version of
+the transaction and the [`--format`] parameter for a different transaction
+encoding.
 
 [`transaction`]: ./transaction.md
+[`--unsigned`]: #unsigned
+[`--format`]: #format
 
 ### Do Not Sign the Transaction {#unsigned}
 
@@ -490,10 +496,26 @@ setup is ideal when you want to sign a transaction with the
 4. copy it over to the networked machine,
 5. [broadcast the transaction][transaction-submit] on the networked machine.
 
+Use the CBOR format, if you are using a 3rd party tool in step 3 to sign the
+transaction content directly. Check out the [`--format`] parameter to learn
+more.
+
 [`--output-file`]: #output-file
 [transaction-sign]: ./transaction.md#sign
 [transaction-submit]: ./transaction.md#submit
 [offline/air-gapped machine]: https://en.wikipedia.org/wiki/Air_gap_\(networking\)
+
+### Output format {#format}
+
+Use `--format json` or `--format cbor` to select the output file
+format. By default the JSON encoding is selected so that the file is
+human-readable and that 3rd party applications can easily manage it. If you want
+to output the transaction in the same format that will be stored on-chain or you
+are using a 3rd party tool for signing the content of the transaction file
+directly use the CBOR encoding.
+
+This parameter only works together with [`--unsigned`] and/or
+[`--output-file`] parameters.
 
 ### Offline Mode {#offline}
 

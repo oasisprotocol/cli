@@ -40,7 +40,7 @@ signature:
 
 ![code shell](../examples/transaction/show-invalid.in)
 
-![code {4}](../examples/transaction/show-invalid.out)
+![code text {4}](../examples/transaction/show-invalid.out)
 
 The `show` command is also compatible with ParaTime transactions. Take the
 following transaction which transfers `1.0 TEST` from `test:alice` to `test:bob`

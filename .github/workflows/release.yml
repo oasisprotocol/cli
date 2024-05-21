@@ -11,6 +11,9 @@ permissions:
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/goreleaser/goreleaser-cross:v1.22.3
+      options: --user 1001
     steps:
       - name: Checkout
         uses: actions/checkout@v4

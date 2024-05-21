@@ -56,7 +56,7 @@ lint: $(lint-targets)
 
 # Release.
 release-build:
-	@goreleaser release --rm-dist
+	@goreleaser release --clean
 
 # Test.
 test-targets := test-unit

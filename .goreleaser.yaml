@@ -5,24 +5,67 @@ before:
     - go mod tidy
 
 universal_binaries:
-  - replace: true
+  - id: oasis-darwin-universal
+    ids:
+      - oasis-darwin-amd64
+      - oasis-darwin-arm64
+    replace: true
     name_template: oasis
 
+env:
+  - CGO_ENABLED=1
+
 builds:
-  - binary: oasis
+  - &build-common
+    id: oasis-linux-amd64
+    binary: oasis
+    env:
+      - CC=x86_64-linux-gnu-gcc
+      - CXX=x86_64-linux-gnu-g++
+    goos:
+      - linux
+    goarch:
+      - amd64
     flags:
       - -trimpath
     ldflags:
       - -buildid=
       - "{{.Env.GOLDFLAGS_VERSION}}"
-    targets:
-      - linux_amd64
-      - darwin_amd64
-      - darwin_arm64
+  - <<: *build-common
+    id: oasis-linux-arm64
+    env:
+      - CC=aarch64-linux-gnu-gcc
+      - CXX=aarch64-linux-gnu-g++
+    goos:
+      - linux
+    goarch:
+      - arm64
+  - <<: *build-common
+    id: oasis-darwin-amd64
+    env:
+      - CC=o64-clang
+      - CXX=o64-clang++
+    goos:
+      - darwin
+    goarch:
+      - amd64
+  - <<: *build-common
+    id: oasis-darwin-arm64
+    env:
+      - CC=oa64-clang
+      - CXX=oa64-clang++
+    goos:
+      - darwin
+    goarch:
+      - arm64
 
 archives:
   - name_template: "{{replace .ProjectName \" \" \"_\" | tolower}}_{{.Version}}_{{.Os}}_{{.Arch}}"
     wrap_in_directory: true
+    builds:
+      - oasis-linux-amd64
+      - oasis-linux-arm64
+      - oasis-darwin-universal
 
 checksum:
   name_template: SHA256SUMS-{{.Version}}.txt

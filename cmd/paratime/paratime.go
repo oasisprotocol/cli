@@ -2,6 +2,8 @@ package paratime
 
 import (
 	"github.com/spf13/cobra"
+
+	"github.com/oasisprotocol/cli/cmd/paratime/denomination"
 )
 
 var Cmd = &cobra.Command{
@@ -18,4 +20,5 @@ func init() {
 	Cmd.AddCommand(setDefaultCmd)
 	Cmd.AddCommand(showCmd)
 	Cmd.AddCommand(statsCmd)
+	Cmd.AddCommand(denomination.Cmd)
 }

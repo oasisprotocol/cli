@@ -140,6 +140,35 @@ encrypted:
 
 ![code](../examples/paratime-show/show-tx-encrypted.out.static)
 
+## Set information about a denomination {#denom-set}
+
+To set information about a denomination on the specific network and paratime use
+`paratime denom set <network> <paratime> <denomination> <number_of_decimals>
+--symbol <symbol>`. To use this command a denomination must already exist in the
+actual paratime.
+
+![code shell](../examples/paratime-denom/00-denom-set.in)
+
+## Set information about the native denomination {#denom-set-native}
+
+To set information about the native denomination on the specific network and
+paratime use `paratime denom set-native <network> <paratime> <denomination>
+<number_of_decimals>`.
+
+The native denomination is already mandatory in the [`paratime add`](#add)
+command.
+
+![code shell](../examples/paratime-denom/01-denom-set-native.in)
+
+## Remove denomination {#denom-remove}
+
+To remove an existing denomination on the specific network and paratime use
+`paratime denom remove <network> <paratime> <denomination>`.
+
+The native denomination cannot be removed.
+
+![code shell](../examples/paratime-denom/02-denom-remove.in)
+
 ## Advanced
 
 ### Register a New ParaTime {#register}

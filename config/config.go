@@ -48,6 +48,9 @@ type Config struct {
 	Networks    config.Networks `mapstructure:"networks"`
 	Wallet      Wallet          `mapstructure:"wallets"`
 	AddressBook AddressBook     `mapstructure:"address_book"`
+
+	// LastMigration is the last migration version.
+	LastMigration int `mapstructure:"last_migration"`
 }
 
 // Directory returns the path to the used configuration directory.
@@ -175,8 +178,16 @@ func (cfg *Config) Save() error {
 func (cfg *Config) Migrate() (bool, error) {
 	var changes bool
 
+	// Versioned migrations.
+	verChanges, err := cfg.migrateVersions()
+	if err != nil {
+		return false, err
+	}
+	changes = changes || verChanges
+
 	// Networks.
-	changes = changes || cfg.migrateNetworks()
+	netChanges := cfg.migrateNetworks()
+	changes = changes || netChanges
 
 	// Wallets.
 	walletChanges, err := cfg.Wallet.Migrate()

@@ -6,7 +6,8 @@ import (
 
 // Default is the default config that should be used in case no configuration file exists.
 var Default = Config{
-	Networks: config.DefaultNetworks,
+	Networks:      config.DefaultNetworks,
+	LastMigration: latestMigrationVersion,
 }
 
 // OldNetwork contains information about an old version of a known network configuration.

@@ -7,6 +7,7 @@ import (
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
 
+	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
@@ -75,12 +76,22 @@ var withdrawCmd = &cobra.Command{
 		cobra.CheckErr(err)
 
 		// Prepare transaction.
-		tx := consensusaccounts.NewWithdrawTx(nil, &consensusaccounts.Withdraw{
+		innerTx := consensusaccounts.Withdraw{
 			To:     toAddr,
 			Amount: *amountBaseUnits,
-		})
+		}
+		tx := consensusaccounts.NewWithdrawTx(nil, &innerTx)
 
 		acc := common.LoadAccount(cfg, npa.AccountName)
+		if subtractFee {
+			var fee *quantity.Quantity
+			_, fee, _, err = common.PrepareParatimeTransaction(ctx, npa, acc, conn, tx)
+			cobra.CheckErr(err)
+			err = amountBaseUnits.Amount.Sub(fee)
+			cobra.CheckErr(err)
+			innerTx.Amount = *amountBaseUnits
+			tx = consensusaccounts.NewWithdrawTx(nil, &innerTx)
+		}
 		sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 		cobra.CheckErr(err)
 
@@ -125,6 +136,7 @@ var withdrawCmd = &cobra.Command{
 }
 
 func init() {
+	withdrawCmd.Flags().AddFlagSet(SubtractFeeFlags)
 	withdrawCmd.Flags().AddFlagSet(common.SelectorFlags)
 	withdrawCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	withdrawCmd.Flags().AddFlagSet(common.ForceFlag)

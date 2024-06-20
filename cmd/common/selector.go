@@ -25,7 +25,7 @@ var (
 var (
 	// AccountFlag corresponds to the --account selector flag.
 	AccountFlag *flag.FlagSet
-	// SelectorFlags contains the common selector flags for network/ParaTime/wallet.
+	// SelectorFlags contains the common selector flags for network/ParaTime/account.
 	SelectorFlags *flag.FlagSet
 	// SelectorNPFlags contains the common selector flags for network/ParaTime.
 	SelectorNPFlags *flag.FlagSet

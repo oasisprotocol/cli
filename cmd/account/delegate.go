@@ -124,6 +124,7 @@ var delegateCmd = &cobra.Command{
 }
 
 func init() {
+	delegateCmd.Flags().AddFlagSet(SubtractFeeFlags)
 	delegateCmd.Flags().AddFlagSet(common.SelectorFlags)
 	delegateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 }

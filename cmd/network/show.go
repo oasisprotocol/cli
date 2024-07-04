@@ -307,9 +307,9 @@ func showNativeToken(ctx context.Context, height int64, npa *common.NPASelection
 	fmt.Printf("%-25s %s", "Network:", npa.PrettyPrintNetwork())
 	fmt.Println()
 
-	tokenSymbol, err := stakingConn.TokenSymbol(ctx)
+	tokenSymbol, err := stakingConn.TokenSymbol(ctx, height)
 	cobra.CheckErr(err)
-	tokenValueExponent, err := stakingConn.TokenValueExponent(ctx)
+	tokenValueExponent, err := stakingConn.TokenValueExponent(ctx, height)
 	cobra.CheckErr(err)
 
 	ctx = context.WithValue(

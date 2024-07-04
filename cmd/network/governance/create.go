@@ -13,6 +13,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	governance "github.com/oasisprotocol/oasis-core/go/governance/api"
 	keymanager "github.com/oasisprotocol/oasis-core/go/keymanager/api"
+	keymanagerSecrets "github.com/oasisprotocol/oasis-core/go/keymanager/secrets"
 	registry "github.com/oasisprotocol/oasis-core/go/registry/api"
 	roothash "github.com/oasisprotocol/oasis-core/go/roothash/api"
 	scheduler "github.com/oasisprotocol/oasis-core/go/scheduler/api"
@@ -40,7 +41,7 @@ func parseConsensusParameterChange(module string, raw []byte) (cbor.RawMessage, 
 	case governance.ModuleName:
 		return parseChange(raw, &governance.ConsensusParameterChanges{}, module)
 	case keymanager.ModuleName:
-		return parseChange(raw, &keymanager.ConsensusParameterChanges{}, module)
+		return parseChange(raw, &keymanagerSecrets.ConsensusParameterChanges{}, module)
 	case registry.ModuleName:
 		return parseChange(raw, &registry.ConsensusParameterChanges{}, module)
 	case roothash.ModuleName:

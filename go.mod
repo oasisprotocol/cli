@@ -12,7 +12,7 @@ replace github.com/cometbft/cometbft => github.com/oasisprotocol/cometbft v0.37.
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
-	github.com/adrg/xdg v0.4.0
+	github.com/adrg/xdg v0.5.0
 	github.com/btcsuite/btcd/btcec/v2 v2.3.3
 	github.com/ethereum/go-ethereum v1.14.6
 	github.com/miguelmota/go-ethereum-hdwallet v0.1.2

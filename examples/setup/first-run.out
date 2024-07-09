@@ -11,6 +11,7 @@ Available Commands:
   help        Help about any command
   network     Consensus layer operations
   paratime    ParaTime layer operations
+  rofl        ROFL app management
   transaction Raw transaction operations
   wallet      Manage accounts in the local wallet
 

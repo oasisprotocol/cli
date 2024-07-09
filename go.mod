@@ -30,7 +30,7 @@ require (
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/zondax/ledger-go v0.14.3
 	golang.org/x/crypto v0.26.0
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -146,7 +146,6 @@ require (
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/blake3 v1.2.2 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )

@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"

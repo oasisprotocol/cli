@@ -13,6 +13,7 @@ import (
 	"github.com/oasisprotocol/cli/cmd/account"
 	"github.com/oasisprotocol/cli/cmd/network"
 	"github.com/oasisprotocol/cli/cmd/paratime"
+	"github.com/oasisprotocol/cli/cmd/rofl"
 	"github.com/oasisprotocol/cli/cmd/wallet"
 	"github.com/oasisprotocol/cli/config"
 	"github.com/oasisprotocol/cli/version"
@@ -104,4 +105,5 @@ func init() {
 	rootCmd.AddCommand(addressBookCmd)
 	rootCmd.AddCommand(contractCmd)
 	rootCmd.AddCommand(txCmd)
+	rootCmd.AddCommand(rofl.Cmd)
 }

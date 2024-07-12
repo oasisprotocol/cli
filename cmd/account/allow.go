@@ -65,6 +65,7 @@ var allowCmd = &cobra.Command{
 }
 
 func init() {
+	allowCmd.Flags().AddFlagSet(SubtractFeeFlags)
 	allowCmd.Flags().AddFlagSet(common.SelectorNAFlags)
 	allowCmd.Flags().AddFlagSet(common.TxFlags)
 }

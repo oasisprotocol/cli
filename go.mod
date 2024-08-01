@@ -14,7 +14,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/adrg/xdg v0.5.0
 	github.com/btcsuite/btcd/btcec/v2 v2.3.3
-	github.com/ethereum/go-ethereum v1.14.6
+	github.com/ethereum/go-ethereum v1.14.7
 	github.com/miguelmota/go-ethereum-hdwallet v0.1.2
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a
@@ -78,7 +78,7 @@ require (
 	github.com/hashicorp/go-plugin v1.4.6 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb // indirect
-	github.com/holiman/uint256 v1.2.4 // indirect
+	github.com/holiman/uint256 v1.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/ipfs/go-cid v0.4.1 // indirect
 	github.com/ipfs/go-log/v2 v2.5.1 // indirect

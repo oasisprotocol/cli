@@ -8,7 +8,7 @@ toolchain go1.22.4
 // the maintainers merge the PR: https://github.com/spf13/cast/pull/144
 replace github.com/spf13/cast => github.com/oasisprotocol/cast v0.0.0-20220606122631-eba453e69641
 
-replace github.com/cometbft/cometbft => github.com/oasisprotocol/cometbft v0.37.7-oasis1
+replace github.com/cometbft/cometbft => github.com/oasisprotocol/cometbft v0.37.9-oasis1
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
@@ -20,8 +20,8 @@ require (
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a
 	github.com/oasisprotocol/deoxysii v0.0.0-20220228165953-2091330c22b7
 	github.com/oasisprotocol/metadata-registry-tools v0.0.0-20220406100644-7e9a2b991920
-	github.com/oasisprotocol/oasis-core/go v0.2401.0
-	github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.10.1
+	github.com/oasisprotocol/oasis-core/go v0.2402.0
+	github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.10.2
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
@@ -46,7 +46,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
-	github.com/cometbft/cometbft v0.37.7 // indirect
+	github.com/cometbft/cometbft v0.37.9 // indirect
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/consensys/gnark-crypto v0.12.1 // indirect
 	github.com/crate-crypto/go-kzg-4844 v1.0.0 // indirect

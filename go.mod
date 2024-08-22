@@ -14,7 +14,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/adrg/xdg v0.5.0
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4
-	github.com/ethereum/go-ethereum v1.14.7
+	github.com/ethereum/go-ethereum v1.14.8
 	github.com/miguelmota/go-ethereum-hdwallet v0.1.2
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a
@@ -78,7 +78,7 @@ require (
 	github.com/hashicorp/go-plugin v1.4.6 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb // indirect
-	github.com/holiman/uint256 v1.3.0 // indirect
+	github.com/holiman/uint256 v1.3.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/ipfs/go-cid v0.4.1 // indirect
 	github.com/ipfs/go-log/v2 v2.5.1 // indirect
@@ -143,7 +143,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240314234333-6e1732d8331c // indirect
 	google.golang.org/grpc v1.63.2 // indirect
 	google.golang.org/grpc/security/advancedtls v0.0.0-20221004221323-12db695f1648 // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
+	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	lukechampine.com/blake3 v1.2.2 // indirect

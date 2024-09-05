@@ -53,11 +53,21 @@ For Unix sockets, use:
 
 `network add-local <name> <rpc-endpoint>` command can be used if you are
 running `oasis-node` on your local machine. In this case, Oasis CLI will
-autodetect the native token symbol and decimal places, the chain domain
-separation context and registered ParaTimes.
+autodetect the chain domain separation context. For the Oasis Mainnet and
+Testnet chains, the native token symbol, the number of decimal places and
+registered ParaTimes will automatically be predefined. Otherwise, the Oasis CLI
+will ask you to enter them.
 
-```
+```shell
 oasis network add-local testnet_local unix:/node_testnet/data/internal.sock
+```
+
+To override the defaults, you can pass `--num-decimals`, `--symbol` and
+`--description` parameters. This is especially useful, if you are running the
+command in a [non-interactive mode](account.md#y):
+
+```shell
+oasis network add-local testnet_local unix:/node_testnet/data/internal.sock --num-decimals 9 --symbol TEST --description "Work machine - Localnet" -y
 ```
 
 ## List Networks {#list}

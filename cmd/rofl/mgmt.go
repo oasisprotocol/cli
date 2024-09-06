@@ -20,7 +20,13 @@ import (
 )
 
 var (
+	identifierSchemes = map[string]rofl.IdentifierScheme{
+		"cri": rofl.CreatorRoundIndex,
+		"cn":  rofl.CreatorNonce,
+	}
+
 	policyFn     string
+	scheme       string
 	adminAddress string
 
 	createCmd = &cobra.Command{
@@ -51,9 +57,15 @@ var (
 				cobra.CheckErr(err)
 			}
 
+			idScheme, ok := identifierSchemes[scheme]
+			if !ok {
+				cobra.CheckErr(fmt.Errorf("unknown scheme %s", scheme))
+			}
+
 			// Prepare transaction.
 			tx := rofl.NewCreateTx(nil, &rofl.Create{
 				Policy: *policy,
+				Scheme: idScheme,
 			})
 
 			acc := common.LoadAccount(cfg, npa.AccountName)
@@ -247,6 +259,7 @@ func init() {
 
 	createCmd.Flags().AddFlagSet(common.SelectorFlags)
 	createCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
+	createCmd.Flags().StringVar(&scheme, "scheme", "cn", "app ID generation scheme: creator+round+index [cri] or creator+nonce [cn]")
 
 	updateCmd.Flags().AddFlagSet(common.SelectorFlags)
 	updateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)

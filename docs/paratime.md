@@ -41,6 +41,13 @@ oasis paratime add testnet sapphire2 0000000000000000000000000000000000000000000
 ? Denomination decimal places: 18
 ```
 
+You can also enable [non-interactive mode](account.md#y) and pass
+`--num-decimals`, `--symbol` and `--description` parameters directly:
+
+```shell
+oasis paratime add testnet sapphire2 000000000000000000000000000000000000000000000000a6d1e3ebf60dff6d --num-decimals 18 --symbol TEST --description "Testnet Sapphire 2" -y
+```
+
 :::danger Decimal places of the native and ParaTime token may differ!
 
 Emerald and Sapphire use **18 decimals** for compatibility with

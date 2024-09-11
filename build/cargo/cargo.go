@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"strings"
 )
 
 // Metadata is the cargo package metadata.
@@ -48,13 +49,16 @@ func GetMetadata() (*Metadata, error) {
 }
 
 // Build builds a Rust program using `cargo` in the current working directory.
-func Build(release bool, target string) (string, error) {
+func Build(release bool, target string, features []string) (string, error) {
 	args := []string{"build"}
 	if release {
 		args = append(args, "--release")
 	}
 	if target != "" {
 		args = append(args, "--target", target)
+	}
+	if features != nil {
+		args = append(args, "--features", strings.Join(features, ","))
 	}
 	// Ensure the build process outputs JSON.
 	args = append(args, "--message-format", "json")

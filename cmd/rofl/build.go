@@ -1,12 +1,14 @@
 package rofl
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
 	"io"
 	"math/big"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -15,8 +17,10 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/sgx"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx/sigstruct"
 	"github.com/oasisprotocol/oasis-core/go/common/version"
+	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle"
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle/component"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 
 	"github.com/oasisprotocol/cli/build/cargo"
 	"github.com/oasisprotocol/cli/build/sgxs"
@@ -24,12 +28,21 @@ import (
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
+// Build modes.
+const (
+	buildModeProduction = "production"
+	buildModeUnsafe     = "unsafe"
+	buildModeAuto       = "auto"
+)
+
 var (
 	sgxHeapSize  uint64
 	sgxStackSize uint64
 	sgxThreads   uint64
 
-	outputFn string
+	outputFn  string
+	buildMode string
+	offline   bool
 
 	buildCmd = &cobra.Command{
 		Use:   "build",
@@ -51,6 +64,28 @@ var (
 			// For SGX we currently only support Rust applications.
 
 			fmt.Println("Building an SGX-based Rust ROFL application...")
+
+			// Configure build mode. In case auto is selected and not offline, query the network.
+			// If autodetection fails, default to production mode.
+			switch {
+			case buildMode == buildModeAuto && !offline:
+				ctx := context.Background()
+				conn, err := connection.Connect(ctx, npa.Network)
+				if err != nil {
+					break // Autodetection failed.
+				}
+
+				params, err := conn.Consensus().Registry().ConsensusParameters(ctx, consensus.HeightLatest)
+				if err != nil {
+					break // Autodetection failed.
+				}
+
+				if params.DebugAllowTestRuntimes {
+					buildMode = buildModeUnsafe
+				}
+			default:
+			}
+			features := sgxSetupBuildEnv()
 
 			// Obtain package metadata.
 			pkgMeta, err := cargo.GetMetadata()
@@ -75,14 +110,14 @@ var (
 
 			// First build for the default target.
 			fmt.Println("Building ELF binary...")
-			elfPath, err := cargo.Build(true, "")
+			elfPath, err := cargo.Build(true, "", features)
 			if err != nil {
 				cobra.CheckErr(fmt.Errorf("failed to build ELF binary: %w", err))
 			}
 
 			// Then build for the SGX target.
 			fmt.Println("Building SGXS binary...")
-			elfSgxPath, err := cargo.Build(true, "x86_64-fortanix-unknown-sgx")
+			elfSgxPath, err := cargo.Build(true, "x86_64-fortanix-unknown-sgx", nil)
 			if err != nil {
 				cobra.CheckErr(fmt.Errorf("failed to build SGXS binary: %w", err))
 			}
@@ -261,6 +296,38 @@ NextSetOfPrimes:
 	return priv, nil
 }
 
+// sgxSetupBuildEnv sets up the SGX build environment and returns the list of features to enable.
+func sgxSetupBuildEnv() []string {
+	switch buildMode {
+	case buildModeProduction, buildModeAuto:
+		// Production builds.
+		fmt.Println("Building in production mode.")
+
+		for _, kv := range os.Environ() {
+			key, _, _ := strings.Cut(kv, "=")
+			if strings.HasPrefix(key, "OASIS_UNSAFE_") {
+				os.Unsetenv(key)
+			}
+		}
+
+		return nil // No features.
+	case buildModeUnsafe:
+		// Unsafe debug builds.
+		fmt.Println("WARNING: Building in UNSAFE DEBUG mode with MOCK SGX.")
+		fmt.Println("WARNING: This build will NOT BE DEPLOYABLE outside local test environments.")
+
+		os.Setenv("OASIS_UNSAFE_SKIP_AVR_VERIFY", "1")
+		os.Setenv("OASIS_UNSAFE_ALLOW_DEBUG_ENCLAVES", "1")
+		os.Setenv("OASIS_UNSAFE_MOCK_SGX", "1")
+		os.Unsetenv("OASIS_UNSAFE_SKIP_KM_POLICY")
+
+		return []string{"debug-mock-sgx"}
+	default:
+		cobra.CheckErr(fmt.Errorf("unsupported build mode: %s", buildMode))
+		return nil
+	}
+}
+
 func init() {
 	sgxFlags := flag.NewFlagSet("", flag.ContinueOnError)
 	sgxFlags.Uint64Var(&sgxHeapSize, "sgx-heap-size", 512*1024*1024, "SGX enclave heap size")
@@ -268,8 +335,13 @@ func init() {
 	sgxFlags.Uint64Var(&sgxThreads, "sgx-threads", 32, "SGX enclave maximum number of threads")
 	sgxFlags.StringVar(&outputFn, "output", "", "output bundle filename")
 
+	globalFlags := flag.NewFlagSet("", flag.ContinueOnError)
+	globalFlags.StringVar(&buildMode, "mode", "auto", "build mode [production, unsafe, auto]")
+	globalFlags.BoolVar(&offline, "offline", false, "do not perform any operations requiring network access")
+
 	buildSgxCmd.Flags().AddFlagSet(common.SelectorNPFlags)
 	buildSgxCmd.Flags().AddFlagSet(sgxFlags)
 
+	buildCmd.PersistentFlags().AddFlagSet(globalFlags)
 	buildCmd.AddCommand(buildSgxCmd)
 }

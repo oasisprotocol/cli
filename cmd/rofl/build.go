@@ -72,12 +72,12 @@ var (
 				ctx := context.Background()
 				conn, err := connection.Connect(ctx, npa.Network)
 				if err != nil {
-					break // Autodetection failed.
+					cobra.CheckErr(fmt.Errorf("unable to autodetect build mode, please provide --mode flag manually: failed to connect to GRPC endpoint: %v", err))
 				}
 
 				params, err := conn.Consensus().Registry().ConsensusParameters(ctx, consensus.HeightLatest)
 				if err != nil {
-					break // Autodetection failed.
+					cobra.CheckErr(fmt.Errorf("unable to autodetect build mode, please provide --mode flag manually: failed to get consensus parameters: %v", err))
 				}
 
 				if params.DebugAllowTestRuntimes {

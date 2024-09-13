@@ -23,7 +23,7 @@ var rmCmd = &cobra.Command{
 			cobra.CheckErr(fmt.Errorf("network '%s' does not exist", name))
 		}
 
-		if len(net.ParaTimes.All) > 0 {
+		if !common.GetAnswerYes() && len(net.ParaTimes.All) > 0 {
 			fmt.Printf("WARNING: Network '%s' contains %d ParaTimes.\n", name, len(net.ParaTimes.All))
 			common.Confirm("Are you sure you want to remove the network?", "not removing network")
 		}
@@ -34,4 +34,8 @@ var rmCmd = &cobra.Command{
 		err = cfg.Save()
 		cobra.CheckErr(err)
 	},
+}
+
+func init() {
+	rmCmd.Flags().AddFlagSet(common.AnswerYesFlag)
 }

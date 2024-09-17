@@ -87,6 +87,11 @@ all dependant ParaTimes.
 
 ![code shell](../examples/network/01-remove.in)
 
+You can also delete network in non-interactive mode format by passing the
+`-y` parameter:
+
+![code shell](../examples/network/remove-y.in.static)
+
 ## Set Network Chain Context {#set-chain-context}
 
 To change the chain context of a network, use

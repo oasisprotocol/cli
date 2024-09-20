@@ -72,12 +72,12 @@ var (
 				ctx := context.Background()
 				conn, err := connection.Connect(ctx, npa.Network)
 				if err != nil {
-					break // Autodetection failed.
+					cobra.CheckErr(fmt.Errorf("unable to autodetect build mode, please provide --mode flag manually: failed to connect to GRPC endpoint: %v", err))
 				}
 
 				params, err := conn.Consensus().Registry().ConsensusParameters(ctx, consensus.HeightLatest)
 				if err != nil {
-					break // Autodetection failed.
+					cobra.CheckErr(fmt.Errorf("unable to autodetect build mode, please provide --mode flag manually: failed to get consensus parameters: %v", err))
 				}
 
 				if params.DebugAllowTestRuntimes {
@@ -110,7 +110,7 @@ var (
 
 			// First build for the default target.
 			fmt.Println("Building ELF binary...")
-			elfPath, err := cargo.Build(true, "", features)
+			elfPath, err := cargo.Build(true, "x86_64-unknown-linux-musl", features)
 			if err != nil {
 				cobra.CheckErr(fmt.Errorf("failed to build ELF binary: %w", err))
 			}

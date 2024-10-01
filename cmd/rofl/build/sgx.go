@@ -1,7 +1,6 @@
-package rofl
+package build
 
 import (
-	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
@@ -17,10 +16,8 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/sgx"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx/sigstruct"
 	"github.com/oasisprotocol/oasis-core/go/common/version"
-	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle"
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle/component"
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 
 	"github.com/oasisprotocol/cli/build/cargo"
 	"github.com/oasisprotocol/cli/build/sgxs"
@@ -28,28 +25,12 @@ import (
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
-// Build modes.
-const (
-	buildModeProduction = "production"
-	buildModeUnsafe     = "unsafe"
-	buildModeAuto       = "auto"
-)
-
 var (
 	sgxHeapSize  uint64
 	sgxStackSize uint64
 	sgxThreads   uint64
 
-	outputFn  string
-	buildMode string
-	offline   bool
-
-	buildCmd = &cobra.Command{
-		Use:   "build",
-		Short: "Build a ROFL application",
-	}
-
-	buildSgxCmd = &cobra.Command{
+	sgxCmd = &cobra.Command{
 		Use:   "sgx",
 		Short: "Build an SGX-based Rust ROFL application",
 		Args:  cobra.NoArgs,
@@ -65,26 +46,7 @@ var (
 
 			fmt.Println("Building an SGX-based Rust ROFL application...")
 
-			// Configure build mode. In case auto is selected and not offline, query the network.
-			// If autodetection fails, default to production mode.
-			switch {
-			case buildMode == buildModeAuto && !offline:
-				ctx := context.Background()
-				conn, err := connection.Connect(ctx, npa.Network)
-				if err != nil {
-					cobra.CheckErr(fmt.Errorf("unable to autodetect build mode, please provide --mode flag manually: failed to connect to GRPC endpoint: %v", err))
-				}
-
-				params, err := conn.Consensus().Registry().ConsensusParameters(ctx, consensus.HeightLatest)
-				if err != nil {
-					cobra.CheckErr(fmt.Errorf("unable to autodetect build mode, please provide --mode flag manually: failed to get consensus parameters: %v", err))
-				}
-
-				if params.DebugAllowTestRuntimes {
-					buildMode = buildModeUnsafe
-				}
-			default:
-			}
+			detectBuildMode(npa)
 			features := sgxSetupBuildEnv()
 
 			// Obtain package metadata.
@@ -333,15 +295,7 @@ func init() {
 	sgxFlags.Uint64Var(&sgxHeapSize, "sgx-heap-size", 512*1024*1024, "SGX enclave heap size")
 	sgxFlags.Uint64Var(&sgxStackSize, "sgx-stack-size", 2*1024*1024, "SGX enclave stack size")
 	sgxFlags.Uint64Var(&sgxThreads, "sgx-threads", 32, "SGX enclave maximum number of threads")
-	sgxFlags.StringVar(&outputFn, "output", "", "output bundle filename")
 
-	globalFlags := flag.NewFlagSet("", flag.ContinueOnError)
-	globalFlags.StringVar(&buildMode, "mode", "auto", "build mode [production, unsafe, auto]")
-	globalFlags.BoolVar(&offline, "offline", false, "do not perform any operations requiring network access")
-
-	buildSgxCmd.Flags().AddFlagSet(common.SelectorNPFlags)
-	buildSgxCmd.Flags().AddFlagSet(sgxFlags)
-
-	buildCmd.PersistentFlags().AddFlagSet(globalFlags)
-	buildCmd.AddCommand(buildSgxCmd)
+	sgxCmd.Flags().AddFlagSet(common.SelectorNPFlags)
+	sgxCmd.Flags().AddFlagSet(sgxFlags)
 }

@@ -2,6 +2,8 @@ package rofl
 
 import (
 	"github.com/spf13/cobra"
+
+	"github.com/oasisprotocol/cli/cmd/rofl/build"
 )
 
 var Cmd = &cobra.Command{
@@ -16,6 +18,6 @@ func init() {
 	Cmd.AddCommand(removeCmd)
 	Cmd.AddCommand(showCmd)
 	Cmd.AddCommand(trustRootCmd)
-	Cmd.AddCommand(buildCmd)
+	Cmd.AddCommand(build.Cmd)
 	Cmd.AddCommand(identityCmd)
 }

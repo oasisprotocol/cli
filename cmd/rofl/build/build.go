@@ -62,4 +62,5 @@ func init() {
 
 	Cmd.PersistentFlags().AddFlagSet(globalFlags)
 	Cmd.AddCommand(sgxCmd)
+	Cmd.AddCommand(tdxCmd)
 }

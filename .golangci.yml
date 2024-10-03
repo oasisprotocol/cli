@@ -70,6 +70,8 @@ linters-settings:
           - github.com/stretchr/testify
           - github.com/tyler-smith/go-bip39
           - github.com/zondax/ledger-go
+          - github.com/foxboron/go-uefi/authenticode
+          - golang.org/x/text
   exhaustive:
     # Switch statements are to be considered exhaustive if a 'default' case is
     # present, even if all enum members aren't listed in the switch.

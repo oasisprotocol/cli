@@ -6,18 +6,44 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"slices"
 	"strings"
 )
 
 // Metadata is the cargo package metadata.
 type Metadata struct {
-	Name    string
-	Version string
+	Name         string
+	Version      string
+	Dependencies []Dependency
+}
+
+// FindDependency finds the first dependency with the given name and returns it. Iff no such
+// dependency can be found, it returns nil.
+func (m *Metadata) FindDependency(name string) *Dependency {
+	for _, d := range m.Dependencies {
+		if d.Name != name {
+			continue
+		}
+
+		return &d
+	}
+	return nil
+}
+
+// Dependency is the metadata about a dependency.
+type Dependency struct {
+	Name     string   `json:"name"`
+	Features []string `json:"features"`
+}
+
+// HasFeature returns true iff the given feature is present among the features.
+func (d *Dependency) HasFeature(feature string) bool {
+	return slices.Contains(d.Features, feature)
 }
 
 // GetMetadata queries `cargo` for metadata of the package in the current working directory.
 func GetMetadata() (*Metadata, error) {
-	cmd := exec.Command("cargo", "metadata", "--no-deps")
+	cmd := exec.Command("cargo", "metadata", "--no-deps", "--format-version", "1")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize metadata process: %w", err)
@@ -29,8 +55,12 @@ func GetMetadata() (*Metadata, error) {
 	dec := json.NewDecoder(stdout)
 	var rawMeta struct {
 		Packages []struct {
-			Name    string `json:"name"`
-			Version string `json:"version"`
+			Name         string `json:"name"`
+			Version      string `json:"version"`
+			Dependencies []struct {
+				Name     string   `json:"name"`
+				Features []string `json:"features"`
+			} `json:"dependencies"`
 		} `json:"packages"`
 	}
 	if err = dec.Decode(&rawMeta); err != nil {
@@ -43,10 +73,19 @@ func GetMetadata() (*Metadata, error) {
 		return nil, fmt.Errorf("no cargo packages found")
 	}
 
-	return &Metadata{
+	meta := &Metadata{
 		Name:    rawMeta.Packages[0].Name,
 		Version: rawMeta.Packages[0].Version,
-	}, nil
+	}
+	for _, dep := range rawMeta.Packages[0].Dependencies {
+		d := Dependency{
+			Name:     dep.Name,
+			Features: dep.Features,
+		}
+		meta.Dependencies = append(meta.Dependencies, d)
+	}
+
+	return meta, nil
 }
 
 // Build builds a Rust program using `cargo` in the current working directory.

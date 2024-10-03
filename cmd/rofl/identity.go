@@ -48,9 +48,14 @@ var (
 					}
 				}
 
-				enclaveID, err = bnd.EnclaveIdentity(comp.ID())
-				if err != nil {
-					cobra.CheckErr(fmt.Errorf("failed to generate enclave identity of '%s': %w", comp.ID(), err))
+				switch teeKind := comp.TEEKind(); teeKind {
+				case component.TEEKindSGX:
+					enclaveID, err = bnd.EnclaveIdentity(comp.ID())
+					if err != nil {
+						cobra.CheckErr(fmt.Errorf("failed to generate enclave identity of '%s': %w", comp.ID(), err))
+					}
+				default:
+					cobra.CheckErr(fmt.Errorf("identity computation for TEE kind '%s' not supported", teeKind))
 				}
 
 				data, _ := enclaveID.MarshalText()

@@ -1,0 +1,6 @@
+TrustRoot {
+    height: 1022,
+    hash: "bb3e63d729dd568ce07b37eea33eddf8082ed4cacbd64097aad32168a4a4fc9a".into(),
+    runtime_id: "8000000000000000000000000000000000000000000000000000000000000000".into(),
+    chain_context: "074f5ba071c4385a7ad24aea0a3a7b137901395e8f3b35479c1cce87d3170f4e".to_string(),
+}

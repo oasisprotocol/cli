@@ -38,6 +38,7 @@ It boasts a number of handy features:
 - Developer features:
   - built-in testing accounts compatible with the Oasis test runner, the Oasis
     CI and the official Sapphire and Emerald Localnet Docker images
+  - Oasis ROFL app compilation, deployment and management
   - Oasis Wasm smart contract code deployment, instantiation, management and
     calls
   - debugging tools for deployed Wasm contracts

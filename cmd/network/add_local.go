@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
+	cmnGrpc "github.com/oasisprotocol/oasis-core/go/common/grpc"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 
@@ -32,7 +33,7 @@ var (
 			}
 			// Validate initial network configuration early.
 			cobra.CheckErr(config.ValidateIdentifier(name))
-			if !net.IsLocalRPC() {
+			if !cmnGrpc.IsLocalAddress(net.RPC) {
 				cobra.CheckErr(fmt.Errorf("rpc-endpoint '%s' is not local", rpc))
 			}
 

@@ -134,6 +134,24 @@ Let's make another Secp256k1 account and entering a hex-encoded raw private key:
 
 ![code](../examples/wallet/import-secp256k1-raw.out.static)
 
+To override the defaults, you can pass `--algorithm`, `--number` and `--secret`
+parameters. This is especially useful, if you are running the command in a
+non-interactive mode:
+
+![code](../examples/wallet/import-secp256k1-bip44-y.in.static)
+
+:::danger Be cautious when importing accounts in non-interactive mode
+
+Since the account's secret is provided as a command line parameter in the
+non-interactive mode, make sure you **read the account's secret from a file or
+an environment variable**. Otherwise, the secret may be stored and exposed in
+your shell history.
+
+Also, protecting your account with a password is currently not supported in the
+non-interactive mode.
+
+:::
+
 ## List Accounts Stored in Your Wallet {#list}
 
 You can list all available accounts in your wallet with `wallet list`:

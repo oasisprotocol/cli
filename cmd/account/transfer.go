@@ -74,10 +74,20 @@ var transferCmd = &cobra.Command{
 			cobra.CheckErr(err)
 
 			// Prepare transaction.
-			tx := staking.NewTransferTx(0, nil, &staking.Transfer{
+			innerTx := staking.Transfer{
 				To:     toAddr.ConsensusAddress(),
 				Amount: *amount,
-			})
+			}
+			tx := staking.NewTransferTx(0, nil, &innerTx)
+
+			if subtractFee {
+				_, _, fee, err := common.ComputeConsensusGasInfo(ctx, npa, acc.ConsensusSigner(), conn, tx)
+				cobra.CheckErr(err)
+				err = amount.Sub(fee)
+				cobra.CheckErr(err)
+				innerTx.Amount = *amount
+				tx = staking.NewTransferTx(0, nil, &innerTx)
+			}
 
 			sigTx, err = common.SignConsensusTransaction(ctx, npa, acc, conn, tx)
 			cobra.CheckErr(err)
@@ -102,6 +112,7 @@ var transferCmd = &cobra.Command{
 }
 
 func init() {
+	transferCmd.Flags().AddFlagSet(SubtractFeeFlags)
 	transferCmd.Flags().AddFlagSet(common.SelectorFlags)
 	transferCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	transferCmd.Flags().AddFlagSet(common.ForceFlag)

@@ -55,6 +55,7 @@ var burnCmd = &cobra.Command{
 }
 
 func init() {
+	burnCmd.Flags().AddFlagSet(SubtractFeeFlags)
 	burnCmd.Flags().AddFlagSet(common.SelectorNAFlags)
 	burnCmd.Flags().AddFlagSet(common.TxFlags)
 }

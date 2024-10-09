@@ -37,3 +37,7 @@ var exportCmd = &cobra.Command{
 		}
 	},
 }
+
+func init() {
+	exportCmd.Flags().AddFlagSet(common.AnswerYesFlag)
+}

@@ -40,3 +40,7 @@ func showPublicWalletInfo(name string, wallet wallet.Account, accCfg *config.Acc
 	}
 	fmt.Printf("Native address:   %s\n", wallet.Address())
 }
+
+func init() {
+	showCmd.Flags().AddFlagSet(common.AnswerYesFlag)
+}

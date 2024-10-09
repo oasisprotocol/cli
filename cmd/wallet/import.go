@@ -24,7 +24,7 @@ var (
 	kind       wallet.ImportKind
 
 	importCmd = &cobra.Command{
-		Use:   "import <name> [flags]",
+		Use:   "import <name>",
 		Short: "Import an existing account",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {

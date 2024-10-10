@@ -83,7 +83,7 @@ var (
 
 	updateCmd = &cobra.Command{
 		Use:   "update <app-id> --policy <policy.yml> --admin <address>",
-		Short: "Create a new ROFL application",
+		Short: "Update an existing ROFL application",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := cliConfig.Global()

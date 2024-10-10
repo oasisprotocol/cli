@@ -1,0 +1,44 @@
+You are about to sign the following transaction:
+Format: plain
+Method: rofl.Create
+Body:
+  {
+    "policy": {
+      "quotes": {
+        "pcs": {
+          "tcb_validity_period": 30,
+          "min_tcb_evaluation_data_number": 16
+        }
+      },
+      "enclaves": [
+        "0+tTmlVjUvP0eIHXH7Dld3svPppCUdKDwYxnzplndLea/8+uR7hI7CyvHEm0soNTHhzEJfk1grNoBuUqQ9eNGg=="
+      ],
+      "endorsements": [
+        {
+          "any": {}
+        }
+      ],
+      "fees": 2,
+      "max_expiration": 3
+    },
+    "scheme": 1
+  }
+Authorized signer(s):
+  1. YgkEiVSR4SMQdfXw+ppuFYlqH0seutnCKk8KG8PyAx0= (ed25519)
+     Nonce: 2
+Fee:
+  Amount: 0.0101487
+  Gas limit: 101487
+  (gas price: 0.0000001  per gas unit)
+
+Network:  localnet
+ParaTime: sapphire
+Account:  test:bob
+? Sign this transaction? Yes
+(In case you are using a hardware-based signer you may need to confirm on device.)
+Broadcasting transaction...
+Transaction included in block successfully.
+Round:            18715
+Transaction hash: 91d86ededa202bce7fb6fd8b5db10f0284a90d3e61ce5f73ea8031c1c1cce342
+Execution successful.
+Created ROFL application: rofl1qqn9xndja7e2pnxhttktmecvwzz0yqwxsquqyxdf

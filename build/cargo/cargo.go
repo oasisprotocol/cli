@@ -2,6 +2,7 @@
 package cargo
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os/exec"
@@ -64,10 +65,14 @@ func Build(release bool, target string, features []string) (string, error) {
 	args = append(args, "--message-format", "json")
 
 	cmd := exec.Command("cargo", args...)
+	// Parse stdout JSON messages and store stderr to buffer.
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return "", fmt.Errorf("failed to initialize build process: %w", err)
 	}
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
 	if err = cmd.Start(); err != nil {
 		return "", fmt.Errorf("failed to start build process: %w", err)
 	}
@@ -105,7 +110,7 @@ func Build(release bool, target string, features []string) (string, error) {
 		}
 	}
 	if err = cmd.Wait(); err != nil {
-		return "", fmt.Errorf("build process failed: %w", err)
+		return "", fmt.Errorf("build process failed: %w\nStandard error output:\n%s", err, stderr.String())
 	}
 
 	if executable == "" {

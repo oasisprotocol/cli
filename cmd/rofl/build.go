@@ -200,9 +200,9 @@ var (
 				if b, err = os.ReadFile(src); err != nil {
 					cobra.CheckErr(fmt.Errorf("failed to load asset '%s': %w", src, err))
 				}
-				_ = bnd.Add(dst, b)
+				_ = bnd.Add(dst, bundle.NewBytesData(b))
 			}
-			_ = bnd.Add(sigName, sigData)
+			_ = bnd.Add(sigName, bundle.NewBytesData(sigData))
 
 			// Write the bundle out.
 			outFn := fmt.Sprintf("%s.orc", bnd.Manifest.Name)

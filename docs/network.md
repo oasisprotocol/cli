@@ -285,6 +285,17 @@ your own client node to enable this functionality.
 
 :::
 
+#### `parameters` {#show-parameters}
+
+Shows all consensus parameters for the following modules: consensus,
+key manager, registry, roothash, staking, scheduler, beacon, and governance.
+
+![code shell](../examples/network-show/parameters.in)
+
+![code](../examples/network-show/parameters.out)
+
+By passing `--format json`, the output is formatted as JSON.
+
 #### `paratimes` {#show-paratimes}
 
 Shows all registered ParaTimes in the network registry.

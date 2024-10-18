@@ -48,6 +48,7 @@ var (
 					}
 				}
 
+				// TODO: Add support for TDX.
 				enclaveID, err = bnd.EnclaveIdentity(comp.ID())
 				if err != nil {
 					cobra.CheckErr(fmt.Errorf("failed to generate enclave identity of '%s': %w", comp.ID(), err))

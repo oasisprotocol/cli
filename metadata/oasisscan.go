@@ -35,7 +35,7 @@ func EntitiesFromOasisscan(ctx context.Context) (map[types.Address]*Entity, erro
 	reqCtx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(reqCtx, "GET", "https://www.oasisscan.com/mainnet/validator/list", nil)
+	req, err := http.NewRequestWithContext(reqCtx, "GET", "https://www.oasisscan.com/v2/mainnet/validator/list", nil)
 	if err != nil {
 		return nil, err
 	}

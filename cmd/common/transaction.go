@@ -118,13 +118,10 @@ func SignConsensusTransaction(
 		return nil, fmt.Errorf("consensus layer only supports the native denomination for paying fees")
 	}
 
-	gasPrice := quantity.NewQuantity()
-	if txGasPrice != "" {
-		var err error
-		gasPrice, err = helpers.ParseConsensusDenomination(npa.Network, txGasPrice)
-		if err != nil {
-			return nil, fmt.Errorf("bad gas price: %w", err)
-		}
+	// TODO: Should be moved under !txOffline
+	_, gas, fee, err := ComputeConsensusGas(ctx, npa, signer, conn, tx)
+	if err != nil {
+		return nil, err
 	}
 
 	if !txOffline { //nolint: nestif
@@ -142,13 +139,6 @@ func SignConsensusTransaction(
 
 		// Gas estimation if not specified.
 		if tx.Fee.Gas == invalidGasLimit {
-			gas, err := conn.Consensus().EstimateGas(ctx, &consensus.EstimateGasRequest{
-				Signer:      signer.Public(),
-				Transaction: tx,
-			})
-			if err != nil {
-				return nil, fmt.Errorf("failed to estimate gas: %w", err)
-			}
 			tx.Fee.Gas = gas
 		}
 	}
@@ -158,11 +148,7 @@ func SignConsensusTransaction(
 		return nil, fmt.Errorf("nonce and/or gas limit must be specified in offline mode")
 	}
 
-	// Compute fee amount based on gas price.
-	if err := gasPrice.Mul(quantity.NewFromUint64(uint64(tx.Fee.Gas))); err != nil {
-		return nil, err
-	}
-	tx.Fee.Amount = *gasPrice
+	tx.Fee.Amount = *fee
 
 	if txUnsigned {
 		// Return an unsigned transaction.
@@ -181,6 +167,73 @@ func SignConsensusTransaction(
 	}
 
 	return &consensusTx.SignedTransaction{Signed: *signed}, nil
+}
+
+// ComputeConsensusGas estimates gas for the given consensus transaction.
+//
+// Returns the gas price, gas limit and total fee amount.
+func ComputeConsensusGas(ctx context.Context, npa *NPASelection, signer coreSignature.Signer, conn connection.Connection, tx *consensusTx.Transaction) (gasPrice *quantity.Quantity, gas consensusTx.Gas, fee *quantity.Quantity, err error) {
+	gasPrice = quantity.NewQuantity()
+	if txGasPrice != "" {
+		gasPrice, err = helpers.ParseConsensusDenomination(npa.Network, txGasPrice)
+		if err != nil {
+			return nil, 0, nil, fmt.Errorf("bad gas price: %w", err)
+		}
+	}
+	gas = consensusTx.Gas(txGasLimit)
+	if gas == invalidGasLimit {
+		gas, err = conn.Consensus().EstimateGas(ctx, &consensus.EstimateGasRequest{
+			Signer:      signer.Public(),
+			Transaction: tx,
+		})
+		if err != nil {
+			return nil, 0, nil, fmt.Errorf("failed to estimate gas: %w", err)
+		}
+	}
+	// Compute fee amount based on gas price.
+	fee = gasPrice.Clone()
+	if err = fee.Mul(quantity.NewFromUint64(uint64(gas))); err != nil {
+		return nil, 0, nil, fmt.Errorf("failed to compute gas fee: %w", err)
+	}
+	return
+}
+
+// ComputeParaTimeGas estimates gas for the given ParaTime transaction.
+//
+// Returns the gas price, gas limit and total fee amount.
+func ComputeParaTimeGas(ctx context.Context, npa *NPASelection, signer signature.Signer, conn connection.Connection, tx *types.Transaction) (gasPrice *types.BaseUnits, gas consensusTx.Gas, fee *quantity.Quantity, feeDenom types.Denomination, err error) {
+	feeDenom = types.Denomination(txFeeDenom)
+	if txGasPrice != "" {
+		var err error
+		gasPrice, err = helpers.ParseParaTimeDenomination(npa.ParaTime, txGasPrice, feeDenom)
+		if err != nil {
+			return nil, 0, nil, "", fmt.Errorf("bad gas price: %w", err)
+		}
+	}
+	if tx.AuthInfo.Fee.Gas == invalidGasLimit {
+		var err error
+		tx.AuthInfo.Fee.Gas, err = conn.Runtime(npa.ParaTime).Core.EstimateGas(ctx, client.RoundLatest, tx, false)
+		if err != nil {
+			return nil, 0, nil, "", fmt.Errorf("failed to estimate gas: %w", err)
+		}
+	}
+
+	// Gas price determination if not specified.
+	if txGasPrice == "" {
+		mgp, err := conn.Runtime(npa.ParaTime).Core.MinGasPrice(ctx)
+		if err != nil {
+			return nil, 0, nil, "", fmt.Errorf("failed to query minimum gas price: %w", err)
+		}
+
+		*gasPrice = types.NewBaseUnits(mgp[feeDenom], feeDenom)
+	}
+	fee = gasPrice.Amount.Clone()
+
+	// Compute fee amount based on gas price.
+	if err := fee.Mul(quantity.NewFromUint64(tx.AuthInfo.Fee.Gas)); err != nil {
+		return nil, 0, nil, "", err
+	}
+	return
 }
 
 // SignParaTimeTransaction signs a ParaTime transaction.
@@ -217,17 +270,6 @@ func SignParaTimeTransaction(
 		tx.AuthInfo.Fee.Gas = txGasLimit
 	}
 
-	feeDenom := types.Denomination(txFeeDenom)
-
-	gasPrice := &types.BaseUnits{}
-	if txGasPrice != "" {
-		var err error
-		gasPrice, err = helpers.ParseParaTimeDenomination(npa.ParaTime, txGasPrice, feeDenom)
-		if err != nil {
-			return nil, nil, fmt.Errorf("bad gas price: %w", err)
-		}
-	}
-
 	if !hasSignerInfo {
 		nonce := txNonce
 
@@ -248,25 +290,9 @@ func SignParaTimeTransaction(
 		tx.AppendAuthSignature(account.SignatureAddressSpec(), nonce)
 	}
 
-	if !txOffline { //nolint: nestif
-		// Gas estimation if not specified.
-		if tx.AuthInfo.Fee.Gas == invalidGasLimit {
-			var err error
-			tx.AuthInfo.Fee.Gas, err = conn.Runtime(npa.ParaTime).Core.EstimateGas(ctx, client.RoundLatest, tx, false)
-			if err != nil {
-				return nil, nil, fmt.Errorf("failed to estimate gas: %w", err)
-			}
-		}
-
-		// Gas price determination if not specified.
-		if txGasPrice == "" {
-			mgp, err := conn.Runtime(npa.ParaTime).Core.MinGasPrice(ctx)
-			if err != nil {
-				return nil, nil, fmt.Errorf("failed to query minimum gas price: %w", err)
-			}
-
-			*gasPrice = types.NewBaseUnits(mgp[feeDenom], feeDenom)
-		}
+	_, _, fee, feeDenom, err := ComputeParaTimeGas(ctx, npa, account.Signer(), conn, tx)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	// If we are using offline mode and gas limit is not specified, abort.
@@ -274,12 +300,8 @@ func SignParaTimeTransaction(
 		return nil, nil, fmt.Errorf("gas limit must be specified in offline mode")
 	}
 
-	// Compute fee amount based on gas price.
-	if err := gasPrice.Amount.Mul(quantity.NewFromUint64(tx.AuthInfo.Fee.Gas)); err != nil {
-		return nil, nil, err
-	}
-	tx.AuthInfo.Fee.Amount.Amount = gasPrice.Amount
-	tx.AuthInfo.Fee.Amount.Denomination = gasPrice.Denomination
+	tx.AuthInfo.Fee.Amount.Amount = *fee
+	tx.AuthInfo.Fee.Amount.Denomination = feeDenom
 
 	// Handle confidential transactions.
 	var meta interface{}

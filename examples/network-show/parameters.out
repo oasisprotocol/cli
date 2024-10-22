@@ -1,0 +1,166 @@
+=== CONSENSUS PARAMETERS ===
+  backend: tendermint
+  params:
+    timeout_commit: 5000000000
+    skip_timeout_commit: false
+    empty_block_interval: 0
+    max_tx_size: 32768
+    max_block_size: 1048576
+    max_block_gas: 0
+    max_evidence_size: 51200
+    state_checkpoint_interval: 100000
+    state_checkpoint_num_kept: 2
+    state_checkpoint_chunk_size: 8388608
+    gas_costs:
+      tx_byte: 1
+
+=== KEYMANAGER PARAMETERS ===
+  params:
+    gas_costs:
+      publish_ephemeral_secret: 1000
+      publish_master_secret: 1000
+      update_policy: 1000
+  statuses:
+      id: 4000000000000000000000000000000000000000000000008c5ea5e49b4bc9ac
+      is_initialized: true
+      is_secure: true
+      checksum: Wd1+cYi5c2iXynGezp3ObZYY4/SHVT3MvGAbqEi2XZw=
+      nodes: null
+      policy:
+        policy:
+          serial: 8
+          id: 4000000000000000000000000000000000000000000000008c5ea5e49b4bc9ac
+          enclaves:
+            oAcyPVTJyxSpDBpV2R+AseNuqpe4oy0OaP9Gf2dpL6pAJdq369ofvsxONjdgbgISFND0HG0EIv03iyqLiIGEWQ==:
+              may_query:
+                000000000000000000000000000000000000000000000000e199119c992377cb:
+                  yJORh2eP/BKGIVTGWwyQowE65kx2EdME5DtKjbMcPxFAJdq369ofvsxONjdgbgISFND0HG0EIv03iyqLiIGEWQ==
+                000000000000000000000000000000000000000000000000f80306c9858e7279:
+                  imO1np4RCgLOJauA/bz6x5aeGvcGPVJlDb44+xLt77xAJdq369ofvsxONjdgbgISFND0HG0EIv03iyqLiIGEWQ==
+              may_replicate:
+                xfkp0XL+FcyMHjS2TAq8BYkOtzfvLnBN2nqNGus/58pAJdq369ofvsxONjdgbgISFND0HG0EIv03iyqLiIGEWQ==
+            xfkp0XL+FcyMHjS2TAq8BYkOtzfvLnBN2nqNGus/58pAJdq369ofvsxONjdgbgISFND0HG0EIv03iyqLiIGEWQ==:
+              may_query:
+                000000000000000000000000000000000000000000000000e199119c992377cb:
+                  yJORh2eP/BKGIVTGWwyQowE65kx2EdME5DtKjbMcPxFAJdq369ofvsxONjdgbgISFND0HG0EIv03iyqLiIGEWQ==
+                000000000000000000000000000000000000000000000000f80306c9858e7279:
+                  imO1np4RCgLOJauA/bz6x5aeGvcGPVJlDb44+xLt77xAJdq369ofvsxONjdgbgISFND0HG0EIv03iyqLiIGEWQ==
+              may_replicate:
+        signatures:
+            public_key: 723UDX3qFpiFwAKVey/G0pvEdP8821k2Dxb5C/bdHHE=
+            signature: Cpy8gT2cMZkKwWlCiYlVmSvxgPg+wDghPAswIqd9CNm4v8hVpcYbG2eM6PQ65722v5w6vPpy0/NM6UPLqC4qDw==
+            public_key: JnaLeRjP7xDPJlnD2mv3+PduIWJXqwjpZsaYuV0B5A0=
+            signature: grn2xoLMMouPJOfRMeDs0psfUN3SQmK01MMPcuRXuwWr9ZA3by7p0IgJzJb8E8jaU67ejaBxbxRoaoNGHrf4Bg==
+            public_key: K51hXrPo8spG6QhXW/5rqw2fmq3UevBsQKnRlcTEGkU=
+            signature: 6AOtus3hSZSkeOUGix1TZh2QfMZWaTy3UI35m5mfbSL+u7JSGquBfIHDvD2eFRFoqxzx7Jn9gS91zEf1hiBmAA==
+
+=== REGISTRY PARAMETERS ===
+  enable_km_churp: true
+  gas_costs:
+    deregister_entity: 1000
+    prove_freshness: 1000
+    register_entity: 1000
+    register_node: 1000
+    register_runtime: 1000
+    runtime_epoch_maintenance: 1000
+    unfreeze_node: 1000
+  max_node_expiration: 2
+  enable_runtime_governance_models:
+    entity: true
+    runtime: true
+  tee_features:
+    sgx:
+      pcs: true
+      signed_attestations: true
+      max_attestation_age: 1200
+    freshness_proofs: true
+  max_runtime_deployments: 5
+
+=== ROOTHASH PARAMETERS ===
+  gas_costs:
+    compute_commit: 10000
+    evidence: 5000
+    merge_commit: 10000
+    proposer_timeout: 5000
+    submit_msg: 1000
+  max_runtime_messages: 256
+  max_in_runtime_messages: 128
+  max_evidence_age: 100
+  max_past_roots_stored: 1200
+
+=== STAKING PARAMETERS ===
+  thresholds:
+    entity: 100000000000
+    keymanager-churp: 10000000000000
+    node-compute: 100000000000
+    node-keymanager: 100000000000
+    node-observer: 100000000000
+    node-validator: 100000000000
+    runtime-compute: 50000000000000
+    runtime-keymanager: 50000000000000
+  debonding_interval: 336
+  reward_schedule:
+      until: 90000
+      scale: 283
+  signing_reward_threshold_numerator: 3
+  signing_reward_threshold_denominator: 4
+  commission_schedule_rules:
+    rate_change_interval: 1
+    rate_bound_lead: 336
+    max_rate_steps: 10
+    max_bound_steps: 10
+    min_commission_rate: 0
+  slashing:
+    consensus-equivocation:
+      amount: 100000000000
+      freeze_interval: 18446744073709551615
+    consensus-light-client-attack:
+      amount: 100000000000
+      freeze_interval: 18446744073709551615
+  gas_costs:
+    add_escrow: 1000
+    allow: 1000
+    amend_commission_schedule: 1000
+    burn: 1000
+    reclaim_escrow: 1000
+    transfer: 1000
+    withdraw: 1000
+  min_delegation: 100000000000
+  min_transfer: 10000000
+  min_transact_balance: 0
+  allow_escrow_messages: true
+  max_allowances: 16
+  fee_split_weight_propose: 2
+  fee_split_weight_vote: 1
+  fee_split_weight_next_propose: 1
+  reward_factor_epoch_signed: 1
+  reward_factor_block_proposed: 0
+
+=== SCHEDULER PARAMETERS ===
+  min_validators: 30
+  max_validators: 120
+  max_validators_per_entity: 1
+  reward_factor_epoch_election_any: 0
+
+=== BEACON PARAMETERS ===
+  backend: vrf
+  vrf_parameters:
+    alpha_hq_threshold: 20
+    interval: 600
+    proof_delay: 400
+    gas_costs:
+      vrf_prove: 1000
+
+=== GOVERNANCE PARAMETERS ===
+  gas_costs:
+    cast_vote: 1000
+    submit_proposal: 1000
+  min_proposal_deposit: 10000000000000
+  voting_period: 168
+  stake_threshold: 68
+  upgrade_min_epoch_diff: 336
+  upgrade_cancel_min_epoch_diff: 192
+  enable_change_parameters_proposal: true
+  allow_vote_without_entity: true
+  allow_proposal_metadata: true
+

@@ -285,6 +285,17 @@ your own client node to enable this functionality.
 
 :::
 
+#### `parameters` {#show-parameters}
+
+Shows all consensus parameters for the following modules: consensus,
+key manager, registry, roothash, staking, scheduler, beacon, and governance.
+
+![code shell](../examples/network-show/parameters.in)
+
+![code](../examples/network-show/parameters.out)
+
+By passing `--format json`, the output is formatted as JSON.
+
 #### `paratimes` {#show-paratimes}
 
 Shows all registered ParaTimes in the network registry.
@@ -403,12 +414,7 @@ Mainnet was reported:
 
 ![code json](../examples/network/status.out.static)
 
-You can also view output in json format by passing the `--format json`
-parameter:
-
-![code shell](../examples/network/status-json.in.static)
-
-![code](../examples/network/status-json.out.static)
+By passing `--format json`, the output is formatted as JSON.
 
 :::info
 

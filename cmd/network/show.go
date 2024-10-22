@@ -9,9 +9,11 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	consensusPretty "github.com/oasisprotocol/oasis-core/go/common/prettyprint"
+	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	registry "github.com/oasisprotocol/oasis-core/go/registry/api"
 	roothash "github.com/oasisprotocol/oasis-core/go/roothash/api"
@@ -36,10 +38,11 @@ const (
 	selNativeToken
 	selGasCosts
 	selCommittees
+	selParameters
 )
 
 var showCmd = &cobra.Command{
-	Use:     "show { <id> | entities | nodes | paratimes | validators | native-token | gas-costs | committees }",
+	Use:     "show { <id> | committees | entities | gas-costs | native-token | nodes | parameters | paratimes | validators }",
 	Short:   "Show network properties",
 	Long:    "Show network property stored in the registry, scheduler, genesis document or chain. Query by ID, hash or a specified kind.",
 	Args:    cobra.ExactArgs(1),
@@ -249,6 +252,9 @@ var showCmd = &cobra.Command{
 					fmt.Println()
 				}
 				return
+			case selParameters:
+				showParameters(ctx, height, consensusConn)
+				return
 
 			default:
 				// Should never happen.
@@ -299,6 +305,8 @@ func selectorFromString(s string) propertySelector {
 		return selGasCosts
 	case "committees":
 		return selCommittees
+	case "parameters":
+		return selParameters
 	}
 	return selInvalid
 }
@@ -382,7 +390,98 @@ func showNativeToken(ctx context.Context, height int64, npa *common.NPASelection
 	}
 }
 
+func PrettifyFromJSON(blob interface{}) string {
+	pp, err := json.MarshalIndent(blob, "", "  ")
+	cobra.CheckErr(err)
+
+	out := string(pp)
+	out = strings.ReplaceAll(out, "{", "")
+	out = strings.ReplaceAll(out, "}", "")
+	out = strings.ReplaceAll(out, "[", "")
+	out = strings.ReplaceAll(out, "]", "")
+	out = strings.ReplaceAll(out, ",", "")
+	out = strings.ReplaceAll(out, "\"", "")
+
+	ret := ""
+	for _, line := range strings.Split(out, "\n") {
+		line = strings.TrimRight(line, " \n")
+		if len(line) == 0 {
+			continue
+		}
+		ret += line + "\n"
+	}
+
+	return ret
+}
+
+func showParameters(ctx context.Context, height int64, cons consensus.ClientBackend) {
+	checkErr := func(what string, err error) {
+		if err != nil {
+			cobra.CheckErr(fmt.Errorf("%s: %w", what, err))
+		}
+	}
+
+	// Get these two from the genesis document, since cons.GetParameters is
+	// not allowed on the public grpc node and the keymanager would require a
+	// ServicesBackend instead of the ClientBackend that the Oasis Client SDK
+	// provides.
+	genesisDoc, err := cons.GetGenesisDocument(ctx)
+	checkErr("GetGenesisDocument", err)
+	consensusParams := genesisDoc.Consensus
+	keymanagerParams := genesisDoc.KeyManager
+
+	// Get live consensus parameters from all the other backends.
+	registryParams, err := cons.Registry().ConsensusParameters(ctx, height)
+	checkErr("Registry", err)
+
+	roothashParams, err := cons.RootHash().ConsensusParameters(ctx, height)
+	checkErr("RootHash", err)
+
+	stakingParams, err := cons.Staking().ConsensusParameters(ctx, height)
+	checkErr("Staking", err)
+
+	schedulerParams, err := cons.Scheduler().ConsensusParameters(ctx, height)
+	checkErr("Scheduler", err)
+
+	beaconParams, err := cons.Beacon().ConsensusParameters(ctx, height)
+	checkErr("Beacon", err)
+
+	governanceParams, err := cons.Governance().ConsensusParameters(ctx, height)
+	checkErr("Governance", err)
+
+	doc := make(map[string]interface{})
+
+	doSection := func(name string, params interface{}) {
+		if outputFormat == formatJSON {
+			doc[name] = params
+		} else {
+			fmt.Printf("=== %s PARAMETERS ===\n", strings.ToUpper(name))
+			out := PrettifyFromJSON(params)
+			fmt.Printf("%s\n", out)
+		}
+	}
+
+	doSection("consensus", consensusParams)
+	doSection("keymanager", keymanagerParams)
+	doSection("registry", registryParams)
+	doSection("roothash", roothashParams)
+	doSection("staking", stakingParams)
+	doSection("scheduler", schedulerParams)
+	doSection("beacon", beaconParams)
+	doSection("governance", governanceParams)
+
+	if outputFormat == formatJSON {
+		pp, err := json.MarshalIndent(doc, "", "  ")
+		cobra.CheckErr(err)
+		fmt.Printf("%s\n", pp)
+	}
+}
+
 func init() {
+	formatFlag := flag.NewFlagSet("", flag.ContinueOnError)
+	formatFlag.StringVar(&outputFormat, "format", formatText, "output format ["+strings.Join([]string{formatText, formatJSON}, ",")+"]")
+	showCmd.Flags().AddFlagSet(formatFlag)
+
 	showCmd.Flags().AddFlagSet(common.SelectorNFlags)
 	showCmd.Flags().AddFlagSet(common.HeightFlag)
 }

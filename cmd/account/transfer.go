@@ -60,6 +60,7 @@ var transferCmd = &cobra.Command{
 		var sigTx, meta interface{}
 		switch npa.ParaTime {
 		case nil:
+			// Consensus layer transfer.
 			common.CheckForceErr(common.CheckAddressIsConsensusCapable(cfg, toAddr.String()))
 			if toEthAddr != nil {
 				common.CheckForceErr(common.CheckAddressIsConsensusCapable(cfg, toEthAddr.Hex()))
@@ -69,15 +70,24 @@ var transferCmd = &cobra.Command{
 				cobra.CheckErr("consensus layer only supports the native denomination")
 			}
 
-			// Consensus layer transfer.
-			amount, err := helpers.ParseConsensusDenomination(npa.Network, amount)
+			amountBaseUnits, err := helpers.ParseConsensusDenomination(npa.Network, amount)
 			cobra.CheckErr(err)
 
 			// Prepare transaction.
-			tx := staking.NewTransferTx(0, nil, &staking.Transfer{
+			innerTx := staking.Transfer{
 				To:     toAddr.ConsensusAddress(),
-				Amount: *amount,
-			})
+				Amount: *amountBaseUnits,
+			}
+			tx := staking.NewTransferTx(0, nil, &innerTx)
+
+			if subtractFee {
+				_, _, fee, err := common.ComputeConsensusGas(ctx, npa, acc.ConsensusSigner(), conn, tx)
+				cobra.CheckErr(err)
+				err = amountBaseUnits.Sub(fee)
+				cobra.CheckErr(err)
+				innerTx.Amount = *amountBaseUnits
+				tx = staking.NewTransferTx(0, nil, &innerTx)
+			}
 
 			sigTx, err = common.SignConsensusTransaction(ctx, npa, acc, conn, tx)
 			cobra.CheckErr(err)
@@ -87,10 +97,20 @@ var transferCmd = &cobra.Command{
 			cobra.CheckErr(err)
 
 			// Prepare transaction.
-			tx := accounts.NewTransferTx(nil, &accounts.Transfer{
+			innerTx := accounts.Transfer{
 				To:     *toAddr,
 				Amount: *amountBaseUnits,
-			})
+			}
+			tx := accounts.NewTransferTx(nil, &innerTx)
+
+			if subtractFee {
+				_, _, fee, _, err := common.ComputeParaTimeGas(ctx, npa, acc.Signer(), conn, tx)
+				cobra.CheckErr(err)
+				err = amountBaseUnits.Amount.Sub(fee)
+				cobra.CheckErr(err)
+				innerTx.Amount = *amountBaseUnits
+				tx = accounts.NewTransferTx(nil, &innerTx)
+			}
 
 			txDetails := sdkSignature.TxDetails{OrigTo: toEthAddr}
 			sigTx, meta, err = common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, &txDetails)
@@ -102,6 +122,7 @@ var transferCmd = &cobra.Command{
 }
 
 func init() {
+	transferCmd.Flags().AddFlagSet(SubtractFeeFlags)
 	transferCmd.Flags().AddFlagSet(common.SelectorFlags)
 	transferCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	transferCmd.Flags().AddFlagSet(common.ForceFlag)

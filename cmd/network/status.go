@@ -3,11 +3,14 @@ package network
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+
+	coreCommon "github.com/oasisprotocol/oasis-core/go/common"
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 
@@ -132,7 +135,31 @@ var (
 					fmt.Println("==== ParaTimes ====")
 				}
 
-				for _, runtime := range nodeStatus.Runtimes {
+				keys := make([]coreCommon.Namespace, 0, len(nodeStatus.Runtimes))
+				for key := range nodeStatus.Runtimes {
+					keys = append(keys, key)
+				}
+				sort.Slice(keys, func(i, j int) bool {
+					var iParatimeName, jParatimeName string
+
+					iDescriptor := nodeStatus.Runtimes[keys[i]].Descriptor
+					jDescriptor := nodeStatus.Runtimes[keys[j]].Descriptor
+
+					if iDescriptor != nil {
+						iDescriptorID := iDescriptor.ID.String()
+						iParatimeName = getParatimeName(cfg, iDescriptorID) + iDescriptorID
+					}
+
+					if jDescriptor != nil {
+						jDescriptorID := jDescriptor.ID.String()
+						jParatimeName = getParatimeName(cfg, jDescriptorID) + jDescriptorID
+					}
+
+					return iParatimeName < jParatimeName
+				})
+
+				for _, key := range keys {
+					runtime := nodeStatus.Runtimes[key]
 					descriptor := runtime.Descriptor
 					if descriptor != nil {
 						paratimeName := getParatimeName(cfg, descriptor.ID.String())

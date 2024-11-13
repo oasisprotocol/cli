@@ -22,7 +22,7 @@ var (
 		Aliases: []string{"ls"},
 		Short:   "List addresses stored in address book",
 		Args:    cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			cfg := config.Global()
 			table := table.New()
 			table.SetHeader([]string{"Name", "Address"})
@@ -53,7 +53,7 @@ var (
 		Use:   "add <name> <address>",
 		Short: "Add an address to address book",
 		Args:  cobra.ExactArgs(2),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := config.Global()
 			name := args[0]
 			address := args[1]
@@ -73,7 +73,7 @@ var (
 		Use:   "show <name>",
 		Short: "Show address information",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			name := args[0]
 			abEntry, ok := config.Global().AddressBook.All[name]
 			if !ok {
@@ -93,7 +93,7 @@ var (
 		Aliases: []string{"rm"},
 		Short:   "Remove an address from address book",
 		Args:    cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := config.Global()
 			name := args[0]
 
@@ -110,7 +110,7 @@ var (
 		Aliases: []string{"mv"},
 		Short:   "Rename address",
 		Args:    cobra.ExactArgs(2),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := config.Global()
 			oldName, newName := args[0], args[1]
 

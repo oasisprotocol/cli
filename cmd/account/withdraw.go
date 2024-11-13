@@ -22,7 +22,7 @@ var withdrawCmd = &cobra.Command{
 	Use:   "withdraw <amount> [to]",
 	Short: "Withdraw tokens from ParaTime",
 	Args:  cobra.RangeArgs(1, 2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
 		txCfg := common.GetTransactionConfig()

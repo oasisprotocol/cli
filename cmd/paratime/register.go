@@ -18,7 +18,7 @@ var registerCmd = &cobra.Command{
 	Use:   "register <descriptor.json>",
 	Short: "Register a new ParaTime or update an existing one",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
 		txCfg := common.GetTransactionConfig()

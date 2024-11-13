@@ -16,7 +16,7 @@ var setChainContextCmd = &cobra.Command{
 	Use:   "set-chain-context <name> [chain-context]",
 	Short: "Sets the chain context of the given network",
 	Args:  cobra.RangeArgs(1, 2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		name := args[0]
 

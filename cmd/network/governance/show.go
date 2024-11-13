@@ -51,7 +51,7 @@ var (
 		Use:   "show <proposal-id>",
 		Short: "Show proposal status by ID",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 

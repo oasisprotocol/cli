@@ -30,7 +30,7 @@ var (
 		Short:   "Show balance and other information",
 		Aliases: []string{"s"},
 		Args:    cobra.MaximumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 

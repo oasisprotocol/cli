@@ -19,7 +19,7 @@ var (
 		Use:   "set <network> <paratime> <denomination> <number_of_decimals> [--symbol <symbol>]",
 		Short: "Set denomination",
 		Args:  cobra.ExactArgs(4),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			networkArg, ptArg, denomArg, decimalsArg := args[0], args[1], args[2], args[3]
 

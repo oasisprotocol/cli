@@ -15,7 +15,7 @@ var listCmd = &cobra.Command{
 	Aliases: []string{"ls"},
 	Short:   "List configured accounts",
 	Args:    cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		cfg := config.Global()
 		table := table.New()
 		table.SetHeader([]string{"Account", "Kind", "Address"})

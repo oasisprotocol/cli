@@ -47,7 +47,7 @@ var showCmd = &cobra.Command{
 	Long:    "Show network property stored in the registry, scheduler, genesis document or chain. Query by ID, hash or a specified kind.",
 	Args:    cobra.ExactArgs(1),
 	Aliases: []string{"s"},
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
 

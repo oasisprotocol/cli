@@ -42,7 +42,7 @@ var (
 		Use:   "show <instance-id>",
 		Short: "Show information about instantiated contract",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			strInstanceID := args[0]
@@ -72,7 +72,7 @@ var (
 		Use:   "show-code <code-id>",
 		Short: "Show information about uploaded contract code",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			strCodeID := args[0]
@@ -110,7 +110,7 @@ var (
 		Long: `Dump public or confidential contract store in JSON. Valid UTF-8 keys in the result set will be
 encoded as strings, or otherwise as Base64.`,
 		Args: cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			strInstanceID := args[0]
@@ -156,7 +156,7 @@ encoded as strings, or otherwise as Base64.`,
 a string or Base64-encoded. Valid UTF-8 keys in the result set will be encoded as strings, or
 otherwise as Base64.`,
 		Args: cobra.ExactArgs(2),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			strInstanceID := args[0]
@@ -202,7 +202,7 @@ otherwise as Base64.`,
 		Use:   "dump-code <code-id>",
 		Short: "Dump WebAssembly smart contract code",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			strCodeID := args[0]
@@ -234,7 +234,7 @@ otherwise as Base64.`,
 		Use:   "upload <contract.wasm> [--instantiate-policy POLICY]",
 		Short: "Upload WebAssembly smart contract",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
@@ -288,7 +288,7 @@ otherwise as Base64.`,
 		Aliases: []string{"inst"},
 		Short:   "Instantiate WebAssembly smart contract",
 		Args:    cobra.ExactArgs(2),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
@@ -347,7 +347,7 @@ otherwise as Base64.`,
 		Use:   "call <instance-id> <data-yaml> [--tokens TOKENS]",
 		Short: "Call WebAssembly smart contract",
 		Args:  cobra.ExactArgs(2),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
@@ -412,7 +412,7 @@ otherwise as Base64.`,
 		Use:   "change-upgrade-policy <instance-id> <policy>",
 		Short: "Change WebAssembly smart contract upgrade policy",
 		Args:  cobra.ExactArgs(2),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()

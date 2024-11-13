@@ -18,7 +18,7 @@ var govCastVoteCmd = &cobra.Command{
 	Use:   "cast-vote <proposal-id> { yes | no | abstain }",
 	Short: "Cast a governance vote on a proposal",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
 		txCfg := common.GetTransactionConfig()

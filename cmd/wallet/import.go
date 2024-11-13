@@ -27,7 +27,7 @@ var (
 		Use:   "import <name>",
 		Short: "Import an existing account",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := config.Global()
 			name := args[0]
 

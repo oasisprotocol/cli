@@ -17,7 +17,7 @@ var nodeUnfreezeCmd = &cobra.Command{
 	Use:   "node-unfreeze <node-id>",
 	Short: "Unfreeze a frozen validator node",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
 		txCfg := common.GetTransactionConfig()

@@ -14,7 +14,7 @@ var rmCmd = &cobra.Command{
 	Aliases: []string{"rm"},
 	Short:   "Remove an existing network",
 	Args:    cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		name := args[0]
 

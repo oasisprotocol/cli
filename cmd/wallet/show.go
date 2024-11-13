@@ -15,7 +15,7 @@ var showCmd = &cobra.Command{
 	Short:   "Show public account information",
 	Aliases: []string{"s"},
 	Args:    cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		name := args[0]
 
 		acc := common.LoadAccount(config.Global(), name)

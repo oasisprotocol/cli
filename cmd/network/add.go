@@ -15,7 +15,7 @@ var addCmd = &cobra.Command{
 	Use:   "add <name> <rpc-endpoint> [chain-context]",
 	Short: "Add a new network",
 	Args:  cobra.RangeArgs(2, 3),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		name, rpc := args[0], args[1]
 

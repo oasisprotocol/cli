@@ -33,7 +33,7 @@ var (
 		Use:   "create <policy.yml>",
 		Short: "Create a new ROFL application",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
@@ -85,7 +85,7 @@ var (
 		Use:   "update <app-id> --policy <policy.yml> --admin <address>",
 		Short: "Update an existing ROFL application",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
@@ -146,7 +146,7 @@ var (
 		Use:   "remove <app-id>",
 		Short: "Remove an existing ROFL application",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
@@ -189,7 +189,7 @@ var (
 		Use:   "show <app-id>",
 		Short: "Show information about a ROFL application",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			rawAppID := args[0]

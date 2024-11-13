@@ -21,7 +21,7 @@ var (
 		Short:   "Show the cryptographic identity of the ROFL app(s) in the specified bundle",
 		Aliases: []string{"id"},
 		Args:    cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			bundleFn := args[0]
 
 			bnd, err := bundle.Open(bundleFn)

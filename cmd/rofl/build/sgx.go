@@ -34,7 +34,7 @@ var (
 		Use:   "sgx",
 		Short: "Build an SGX-based Rust ROFL application",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 

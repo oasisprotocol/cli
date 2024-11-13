@@ -47,7 +47,7 @@ var (
 		Long:    "Show ParaTime-specific information about a given block round, (optionally) its transactions or other information. Use \"latest\" to use the last round.",
 		Aliases: []string{"s"},
 		Args:    cobra.RangeArgs(1, 2),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 

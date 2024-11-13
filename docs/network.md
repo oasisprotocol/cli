@@ -95,7 +95,7 @@ You can also delete network in non-interactive mode format by passing the
 ## Set Network Chain Context {#set-chain-context}
 
 To change the chain context of a network, use
-`network set-chain-context <name> <chain-context>`.
+`network set-chain-context <name> [chain-context]`.
 
 :::caution
 
@@ -110,11 +110,17 @@ documentation.
 
 ![code shell](../examples/network/04-list.out)
 
-![code shell](../examples/network/05-set-chain-context.in)
+![code shell](../examples/network/05-set-chain-context-ctx.in)
 
 ![code shell](../examples/network/06-list.in)
 
 ![code shell](../examples/network/06-list.out)
+
+To automatically detect the chain context, simply omit the `[chain-context]`
+argument. This is especially useful for Localnet, where the chain context
+changes each time you restart the `oasis-net-runner`:
+
+![code shell](../examples/network/set-chain-context.in.static)
 
 [Mainnet]: https://github.com/oasisprotocol/docs/blob/main/docs/node/mainnet/README.md
 [Testnet]: https://github.com/oasisprotocol/docs/blob/main/docs/node/testnet/README.md

@@ -6,7 +6,7 @@ Body:
 Nonce:  2
 Fee:
   Amount: 0.0 TEST
-  Gas limit: 1278
+  Gas limit: 1286
   (gas price: 0.0 TEST per gas unit)
 
 Network:  testnet

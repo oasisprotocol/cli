@@ -1,0 +1,17 @@
+You are about to sign the following transaction:
+Format: plain
+Method: accounts.Transfer
+Body:
+  To: test:dave (oasis1qrk58a6j2qn065m6p06jgjyt032f7qucy5wqeqpt)
+  Amount: 0.999769 TEST
+Authorized signer(s):
+  1. cb+NHKt7JT4fumy0wQdkiBwO3P+DUh8ylozMpsu1xH4= (ed25519)
+     Nonce: 0
+Fee:
+  Amount: 0.000231 TEST
+  Gas limit: 2310
+  (gas price: 0.0000001 TEST per gas unit)
+
+Network:  testnet
+ParaTime: sapphire
+Account:  orlando

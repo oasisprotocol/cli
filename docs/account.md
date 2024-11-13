@@ -231,6 +231,13 @@ Consensus layer token transfers:
 
 :::
 
+:::info
+
+The [`--subtract-fee`](#subtract-fee) flag is available both for consensus
+and ParaTime transfers.
+
+:::
+
 ## Allowance {#allow}
 
 `account allow <beneficiary> <amount>` command makes your funds withdrawable by
@@ -361,6 +368,13 @@ not supported on the consensus layer!
 
 [Network, ParaTime and account](#npa) selectors are available for the
 `account withdraw` command.
+
+:::
+
+:::info
+
+The [`--subtract-fee`](#subtract-fee) flag is available for withdrawal
+transactions.
 
 :::
 
@@ -527,6 +541,16 @@ automatically obtained from the network. Oasis CLI will print the transaction to
 the standard output for you to examine. Use [`--output-file`](#output-file), if
 you wish to save the transaction to the file and submit it to the network
 afterwards by using the [`transaction submit`][transaction-submit] command.
+
+### Subtract fee {#subtract-fee}
+
+To include the transaction fee inside the given amount, pass the
+`--subtract-fee` flag. This comes handy, if you want to drain the account or
+keep it rounded to some specific number.
+
+![code shell](../examples/account/transfer-subtract-fee.y.in)
+
+![code shell](../examples/account/transfer-subtract-fee.y.out)
 
 ### Account's Nonce {#nonce}
 

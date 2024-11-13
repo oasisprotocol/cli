@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	sdkSignature "github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
@@ -60,6 +61,7 @@ var transferCmd = &cobra.Command{
 		var sigTx, meta interface{}
 		switch npa.ParaTime {
 		case nil:
+			// Consensus layer transfer.
 			common.CheckForceErr(common.CheckAddressIsConsensusCapable(cfg, toAddr.String()))
 			if toEthAddr != nil {
 				common.CheckForceErr(common.CheckAddressIsConsensusCapable(cfg, toEthAddr.Hex()))
@@ -69,29 +71,46 @@ var transferCmd = &cobra.Command{
 				cobra.CheckErr("consensus layer only supports the native denomination")
 			}
 
-			// Consensus layer transfer.
-			amount, err := helpers.ParseConsensusDenomination(npa.Network, amount)
+			amt, err := helpers.ParseConsensusDenomination(npa.Network, amount)
 			cobra.CheckErr(err)
 
 			// Prepare transaction.
-			tx := staking.NewTransferTx(0, nil, &staking.Transfer{
+			innerTx := staking.Transfer{
 				To:     toAddr.ConsensusAddress(),
-				Amount: *amount,
-			})
-
+				Amount: *amt,
+			}
+			tx := staking.NewTransferTx(0, nil, &innerTx)
+			if subtractFee {
+				var fee *quantity.Quantity
+				_, fee, err = common.PrepareConsensusTransaction(ctx, npa, acc.ConsensusSigner(), conn, tx)
+				cobra.CheckErr(err)
+				err = amt.Sub(fee)
+				cobra.CheckErr(err)
+				innerTx.Amount = *amt
+				tx = staking.NewTransferTx(0, nil, &innerTx)
+			}
 			sigTx, err = common.SignConsensusTransaction(ctx, npa, acc, conn, tx)
 			cobra.CheckErr(err)
 		default:
 			// ParaTime transfer.
-			amountBaseUnits, err := helpers.ParseParaTimeDenomination(npa.ParaTime, amount, types.Denomination(denom))
+			amtBaseUnits, err := helpers.ParseParaTimeDenomination(npa.ParaTime, amount, types.Denomination(denom))
 			cobra.CheckErr(err)
 
 			// Prepare transaction.
-			tx := accounts.NewTransferTx(nil, &accounts.Transfer{
+			innerTx := accounts.Transfer{
 				To:     *toAddr,
-				Amount: *amountBaseUnits,
-			})
-
+				Amount: *amtBaseUnits,
+			}
+			tx := accounts.NewTransferTx(nil, &innerTx)
+			if subtractFee {
+				var fee *quantity.Quantity
+				_, fee, _, err = common.PrepareParatimeTransaction(ctx, npa, acc, conn, tx)
+				cobra.CheckErr(err)
+				err = amtBaseUnits.Amount.Sub(fee)
+				cobra.CheckErr(err)
+				innerTx.Amount = *amtBaseUnits
+				tx = accounts.NewTransferTx(nil, &innerTx)
+			}
 			txDetails := sdkSignature.TxDetails{OrigTo: toEthAddr}
 			sigTx, meta, err = common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, &txDetails)
 			cobra.CheckErr(err)
@@ -102,6 +121,7 @@ var transferCmd = &cobra.Command{
 }
 
 func init() {
+	transferCmd.Flags().AddFlagSet(SubtractFeeFlags)
 	transferCmd.Flags().AddFlagSet(common.SelectorFlags)
 	transferCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	transferCmd.Flags().AddFlagSet(common.ForceFlag)

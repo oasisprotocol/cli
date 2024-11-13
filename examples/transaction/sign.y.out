@@ -3,7 +3,7 @@ Method: staking.Transfer
 Body:
   To:     oasis1qrydpazemvuwtnp3efm7vmfvg3tde044qg6cxwzx
   Amount: 1.0 TEST
-Nonce:  50
+Nonce:  32
 Fee:
   Amount: 0.0 TEST
   Gas limit: 1265

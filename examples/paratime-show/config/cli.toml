@@ -1,0 +1,119 @@
+last_migration = 1
+
+[networks]
+default = 'testnet'
+
+[networks.mainnet]
+chain_context = 'bb3d748def55bdfb797a2ac53ee6ee141e54cd2ab2dc2375f4a0703a178e6e55'
+description = ''
+rpc = 'grpc.oasis.io:443'
+
+[networks.mainnet.denomination]
+decimals = 9
+symbol = 'ROSE'
+
+[networks.mainnet.paratimes]
+default = 'sapphire'
+
+[networks.mainnet.paratimes.cipher]
+consensus_denomination = '_'
+description = ''
+id = '000000000000000000000000000000000000000000000000e199119c992377cb'
+
+[networks.mainnet.paratimes.cipher.denominations]
+[networks.mainnet.paratimes.cipher.denominations._]
+decimals = 9
+symbol = 'ROSE'
+
+[networks.mainnet.paratimes.emerald]
+consensus_denomination = '_'
+description = ''
+id = '000000000000000000000000000000000000000000000000e2eaa99fc008f87f'
+
+[networks.mainnet.paratimes.emerald.denominations]
+[networks.mainnet.paratimes.emerald.denominations._]
+decimals = 18
+symbol = 'ROSE'
+
+[networks.mainnet.paratimes.sapphire]
+consensus_denomination = '_'
+description = ''
+id = '000000000000000000000000000000000000000000000000f80306c9858e7279'
+
+[networks.mainnet.paratimes.sapphire.denominations]
+[networks.mainnet.paratimes.sapphire.denominations._]
+decimals = 18
+symbol = 'ROSE'
+
+[networks.testnet]
+chain_context = '0b91b8e4e44b2003a7c5e23ddadb5e14ef5345c0ebcb3ddcae07fa2f244cab76'
+description = ''
+rpc = 'testnet.grpc.oasis.io:443'
+
+[networks.testnet.denomination]
+decimals = 9
+symbol = 'TEST'
+
+[networks.testnet.paratimes]
+default = 'sapphire'
+
+[networks.testnet.paratimes.cipher]
+consensus_denomination = '_'
+description = ''
+id = '0000000000000000000000000000000000000000000000000000000000000000'
+
+[networks.testnet.paratimes.cipher.denominations]
+[networks.testnet.paratimes.cipher.denominations._]
+decimals = 9
+symbol = 'TEST'
+
+[networks.testnet.paratimes.emerald]
+consensus_denomination = '_'
+description = ''
+id = '00000000000000000000000000000000000000000000000072c8215e60d5bca7'
+
+[networks.testnet.paratimes.emerald.denominations]
+[networks.testnet.paratimes.emerald.denominations._]
+decimals = 18
+symbol = 'TEST'
+
+[networks.testnet.paratimes.pontusx_dev]
+consensus_denomination = 'TEST'
+description = 'Pontus-X Devnet'
+id = '0000000000000000000000000000000000000000000000004febe52eb412b421'
+
+[networks.testnet.paratimes.pontusx_dev.denominations]
+[networks.testnet.paratimes.pontusx_dev.denominations._]
+decimals = 18
+symbol = 'EUROe'
+
+[networks.testnet.paratimes.pontusx_dev.denominations.test]
+decimals = 18
+symbol = 'TEST'
+
+[networks.testnet.paratimes.pontusx_test]
+consensus_denomination = 'TEST'
+description = 'Pontus-X Testnet'
+id = '00000000000000000000000000000000000000000000000004a6f9071c007069'
+
+[networks.testnet.paratimes.pontusx_test.denominations]
+[networks.testnet.paratimes.pontusx_test.denominations._]
+decimals = 18
+symbol = 'EUROe'
+
+[networks.testnet.paratimes.pontusx_test.denominations.test]
+decimals = 18
+symbol = 'TEST'
+
+[networks.testnet.paratimes.sapphire]
+consensus_denomination = '_'
+description = ''
+id = '000000000000000000000000000000000000000000000000a6d1e3ebf60dff6c'
+
+[networks.testnet.paratimes.sapphire.denominations]
+[networks.testnet.paratimes.sapphire.denominations._]
+decimals = 18
+symbol = 'TEST'
+
+[wallets]
+default = ''

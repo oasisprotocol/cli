@@ -253,7 +253,7 @@ var showCmd = &cobra.Command{
 				}
 				return
 			case selParameters:
-				showParameters(ctx, height, consensusConn)
+				showParameters(ctx, npa, height, consensusConn)
 				return
 
 			default:
@@ -390,31 +390,7 @@ func showNativeToken(ctx context.Context, height int64, npa *common.NPASelection
 	}
 }
 
-func PrettifyFromJSON(blob interface{}) string {
-	pp, err := json.MarshalIndent(blob, "", "  ")
-	cobra.CheckErr(err)
-
-	out := string(pp)
-	out = strings.ReplaceAll(out, "{", "")
-	out = strings.ReplaceAll(out, "}", "")
-	out = strings.ReplaceAll(out, "[", "")
-	out = strings.ReplaceAll(out, "]", "")
-	out = strings.ReplaceAll(out, ",", "")
-	out = strings.ReplaceAll(out, "\"", "")
-
-	ret := ""
-	for _, line := range strings.Split(out, "\n") {
-		line = strings.TrimRight(line, " \n")
-		if len(line) == 0 {
-			continue
-		}
-		ret += line + "\n"
-	}
-
-	return ret
-}
-
-func showParameters(ctx context.Context, height int64, cons consensus.ClientBackend) {
+func showParameters(ctx context.Context, npa *common.NPASelection, height int64, cons consensus.ClientBackend) {
 	checkErr := func(what string, err error) {
 		if err != nil {
 			cobra.CheckErr(fmt.Errorf("%s: %w", what, err))
@@ -456,7 +432,7 @@ func showParameters(ctx context.Context, height int64, cons consensus.ClientBack
 			doc[name] = params
 		} else {
 			fmt.Printf("=== %s PARAMETERS ===\n", strings.ToUpper(name))
-			out := PrettifyFromJSON(params)
+			out := common.PrettyPrint(npa, "  ", params)
 			fmt.Printf("%s\n", out)
 		}
 	}

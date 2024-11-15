@@ -340,7 +340,7 @@ The **staking thresholds** fields are the following:
   node or a key manager. This is the amount that will be slashed in case of
   inappropriate node behavior.
 - `runtime-compute`, `runtime-keymanager`: The amount needed to be staked to an
-  entity for [registering a new ParaTime or a key manager](./paratime.md#register).
+  entity for [registering a new ParaTime or a key manager].
   Keep in mind that a ParaTime cannot be unregistered and there is no way of
   getting the staked assets back.
 
@@ -354,6 +354,8 @@ Apart from the `node-compute` threshold above, a ParaTime may require additional
 [`network show id`](#show-id) command to see it.
 
 :::
+
+[registering a new ParaTime or a key manager]: ./paratime.md#register
 
 #### `gas-costs` {#show-gas-costs}
 

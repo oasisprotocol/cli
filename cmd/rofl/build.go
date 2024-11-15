@@ -110,7 +110,7 @@ var (
 
 			// First build for the default target.
 			fmt.Println("Building ELF binary...")
-			elfPath, err := cargo.Build(true, "x86_64-unknown-linux-musl", features)
+			elfPath, err := cargo.Build(true, "x86_64-unknown-linux-gnu", features)
 			if err != nil {
 				cobra.CheckErr(fmt.Errorf("failed to build ELF binary: %w", err))
 			}

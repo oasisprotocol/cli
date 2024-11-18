@@ -32,22 +32,29 @@ the current Mainnet and Testnet endpoints.
 
 ## Add a Network {#add}
 
-Invoke `network add <name> <chain-context> <rpc-endpoint>` to add a new
+Invoke `network add <name> <rpc-endpoint> [chain-context]` to add a new
 endpoint with a specific chain domain separation context and a gRPC address.
 This command is useful, if you want to connect to your own instance of the Oasis
 node instead of relying on the public gRPC endpoints.
 
 For TCP/IP endpoints, run:
 
-![code shell](../examples/network/add-tcpip.in.static)
+![code shell](../examples/network/add-tcpip-ctx.in.static)
 
-![code](../examples/network/add-tcpip.out.static)
+![code](../examples/network/add-tcpip-ctx.out.static)
 
 For Unix sockets, use:
 
-![code shell](../examples/network/add-unix.in.static)
+![code shell](../examples/network/add-unix-ctx.in.static)
 
-![code](../examples/network/add-unix.out.static)
+![code](../examples/network/add-unix-ctx.out.static)
+
+To automatically detect the chain context, simply omit the `[chain-context]`
+argument:
+
+![code shell](../examples/network/add-tcpip.in.static)
+
+![code](../examples/network/add-tcpip.out.static)
 
 ## Add a Local Network {#add-local}
 

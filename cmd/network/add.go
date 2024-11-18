@@ -1,27 +1,47 @@
 package network
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
 var addCmd = &cobra.Command{
-	Use:   "add <name> <chain-context> <rpc-endpoint>",
+	Use:   "add <name> <rpc-endpoint> [chain-context]",
 	Short: "Add a new network",
-	Args:  cobra.ExactArgs(3),
+	Args:  cobra.RangeArgs(2, 3),
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
-		name, chainContext, rpc := args[0], args[1], args[2]
+		name, rpc := args[0], args[1]
 
-		net := config.Network{
-			ChainContext: chainContext,
-			RPC:          rpc,
-		}
 		// Validate initial network configuration early.
 		cobra.CheckErr(config.ValidateIdentifier(name))
+
+		net := config.Network{
+			RPC: rpc,
+		}
+
+		if len(args) >= 3 {
+			net.ChainContext = args[2]
+		} else {
+			// Connect to the network and query the chain context.
+			network := config.Network{
+				RPC: net.RPC,
+			}
+			ctx := context.Background()
+			conn, err := connection.ConnectNoVerify(ctx, &network)
+			cobra.CheckErr(err)
+			chainCtx, err := conn.Consensus().GetChainContext(ctx)
+			cobra.CheckErr(err)
+			net.ChainContext = chainCtx
+			cobra.CheckErr(net.Validate())
+		}
+
 		cobra.CheckErr(net.Validate())
 
 		// Ask user for some additional parameters.

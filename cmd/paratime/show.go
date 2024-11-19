@@ -11,6 +11,7 @@ import (
 
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
@@ -23,229 +24,276 @@ import (
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
+type propertySelector int
+
 const (
-	blockLatest = "latest"
+	selRoundLatest = "latest"
+	formatText     = "text"
+	formatJSON     = "json"
 )
 
-var showCmd = &cobra.Command{
-	Use:     "show <number> [ <tx-index> | <tx-hash> ]",
-	Short:   "Show information about a block and its transactions",
-	Long:    "Show information about a given block number and (optionally) its transactions. Use \"latest\" to use the last block.",
-	Aliases: []string{"s"},
-	Args:    cobra.RangeArgs(1, 2),
-	Run: func(cmd *cobra.Command, args []string) {
-		cfg := cliConfig.Global()
-		npa := common.GetNPASelection(cfg)
+const (
+	selInvalid propertySelector = iota
+	selParameters
+)
 
-		var (
-			err     error
-			blkNum  uint64
-			txIndex int
-			txHash  hash.Hash
-		)
-		switch blkNumRaw := args[0]; blkNumRaw {
-		case blockLatest:
-			// The latest block.
-			blkNum = client.RoundLatest // TODO: Support consensus.
-		default:
-			// A specific block.
-			blkNum, err = strconv.ParseUint(blkNumRaw, 10, 64)
-			if err != nil {
-				cobra.CheckErr(fmt.Errorf("malformed block number: %w", err))
+var (
+	outputFormat  string
+	selectedRound uint64
+
+	showCmd = &cobra.Command{
+		Use:     "show { <round> [ <tx-index> | <tx-hash> ] | parameters }",
+		Short:   "Show information about a ParaTime block, its transactions or other parameters",
+		Long:    "Show ParaTime-specific information about a given block round, (optionally) its transactions or other information. Use \"latest\" to use the last round.",
+		Aliases: []string{"s"},
+		Args:    cobra.RangeArgs(1, 2),
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg := cliConfig.Global()
+			npa := common.GetNPASelection(cfg)
+
+			if npa.ParaTime == nil {
+				cobra.CheckErr("no ParaTimes to investigate")
 			}
-		}
 
-		if len(args) >= 2 {
-			txIndexOrHash := args[1]
+			p, err := parseBlockNum(args[0])
+			cobra.CheckErr(err)
 
-			txIndex, err = strconv.Atoi(txIndexOrHash)
-			if err != nil {
-				txIndex = -1
-				if err = txHash.UnmarshalHex(txIndexOrHash); err != nil {
-					cobra.CheckErr(fmt.Errorf("malformed tx hash: %w", err))
+			var (
+				//			err error
+				//			blkNum  uint64
+				txIndex int
+				txHash  hash.Hash
+			)
+
+			if len(args) >= 2 {
+				txIndexOrHash := args[1]
+
+				txIndex, err = strconv.Atoi(txIndexOrHash)
+				if err != nil {
+					txIndex = -1
+					if err = txHash.UnmarshalHex(txIndexOrHash); err != nil {
+						cobra.CheckErr(fmt.Errorf("malformed tx hash: %w", err))
+					}
 				}
 			}
-		}
 
-		// Establish connection with the target network.
-		ctx := context.Background()
-		conn, err := connection.Connect(ctx, npa.Network)
-		cobra.CheckErr(err)
+			// Establish connection with the target network.
+			ctx := context.Background()
+			conn, err := connection.Connect(ctx, npa.Network)
+			cobra.CheckErr(err)
 
-		fmt.Printf("Network:        %s", npa.NetworkName)
-		if len(npa.Network.Description) > 0 {
-			fmt.Printf(" (%s)", npa.Network.Description)
-		}
-		fmt.Println()
+			if outputFormat == formatText {
+				fmt.Printf("Network:        %s", npa.NetworkName)
+				if len(npa.Network.Description) > 0 {
+					fmt.Printf(" (%s)", npa.Network.Description)
+				}
+				fmt.Println()
+				fmt.Printf("ParaTime:       %s", npa.ParaTimeName)
+				if len(npa.ParaTime.Description) > 0 {
+					fmt.Printf(" (%s)", npa.ParaTime.Description)
+				}
+				fmt.Println()
+			}
 
-		switch npa.ParaTime {
-		case nil:
-			// Consensus layer.
-			cobra.CheckErr("inspecting consensus layer blocks not yet supported") // TODO
-		default:
 			// Runtime layer.
 			rt := conn.Runtime(npa.ParaTime)
 
-			evDecoders := []client.EventDecoder{
-				rt.Accounts,
-				rt.ConsensusAccounts,
-				rt.Contracts,
-				rt.Evm,
-			}
-
-			blk, err := rt.GetBlock(ctx, blkNum)
-			cobra.CheckErr(err)
-
-			fmt.Printf("ParaTime:       %s", npa.ParaTimeName)
-			if len(npa.ParaTime.Description) > 0 {
-				fmt.Printf(" (%s)", npa.ParaTime.Description)
-			}
-			fmt.Println()
-			fmt.Printf("Round:          %d\n", blk.Header.Round)
-			fmt.Printf("Version:        %d\n", blk.Header.Version)
-			fmt.Printf("Namespace:      %s\n", blk.Header.Namespace)
-
-			// TODO: Fix when timestamp has a String method.
-			ts, _ := blk.Header.Timestamp.MarshalText()
-			fmt.Printf("Timestamp:      %s\n", string(ts))
-
-			// TODO: Fix when type has a String method.
-			fmt.Printf("Type:           %d\n", blk.Header.HeaderType)
-			fmt.Printf("Previous:       %s\n", blk.Header.PreviousHash)
-			fmt.Printf("I/O root:       %s\n", blk.Header.IORoot)
-			fmt.Printf("State root:     %s\n", blk.Header.StateRoot)
-			fmt.Printf("Messages (out): %s\n", blk.Header.MessagesHash)
-			fmt.Printf("Messages (in):  %s\n", blk.Header.InMessagesHash)
-
-			txs, err := rt.GetTransactionsWithResults(ctx, blk.Header.Round)
-			cobra.CheckErr(err)
-
-			fmt.Printf("Transactions:   %d\n", len(txs))
-
-			evs, err := rt.GetEventsRaw(ctx, blkNum)
-			cobra.CheckErr(err)
-			if len(evs) > 0 {
-				// Check if there were any block events emitted.
-				var blockEvs []*types.Event
-				for _, ev := range evs {
-					if ev.TxHash.Equal(&runtimeTx.TagBlockTxHash) {
-						blockEvs = append(blockEvs, ev)
-					}
+			switch v := p.(type) {
+			case uint64:
+				blkNum := v
+				evDecoders := []client.EventDecoder{
+					rt.Accounts,
+					rt.ConsensusAccounts,
+					rt.Contracts,
+					rt.Evm,
 				}
 
-				if numEvents := len(blockEvs); numEvents > 0 {
-					fmt.Printf("=== Block events ===\n")
-					fmt.Printf("Events: %d\n", numEvents)
-					fmt.Println()
+				blk, err := rt.GetBlock(ctx, blkNum)
+				cobra.CheckErr(err)
 
-					for evIndex, ev := range blockEvs {
-						prettyPrintEvent("  ", evIndex, ev, evDecoders)
-						fmt.Println()
-					}
-				}
-			}
+				fmt.Printf("Round:          %d\n", blk.Header.Round)
+				fmt.Printf("Version:        %d\n", blk.Header.Version)
+				fmt.Printf("Namespace:      %s\n", blk.Header.Namespace)
 
-			if len(args) >= 2 {
-				fmt.Println()
+				// TODO: Fix when timestamp has a String method.
+				ts, _ := blk.Header.Timestamp.MarshalText()
+				fmt.Printf("Timestamp:      %s\n", string(ts))
 
-				// Resolve transaction index if needed.
-				if txIndex == -1 {
-					for i, tx := range txs {
-						if h := tx.Tx.Hash(); h.Equal(&txHash) {
-							txIndex = i
-							break
+				// TODO: Fix when type has a String method.
+				fmt.Printf("Type:           %d\n", blk.Header.HeaderType)
+				fmt.Printf("Previous:       %s\n", blk.Header.PreviousHash)
+				fmt.Printf("I/O root:       %s\n", blk.Header.IORoot)
+				fmt.Printf("State root:     %s\n", blk.Header.StateRoot)
+				fmt.Printf("Messages (out): %s\n", blk.Header.MessagesHash)
+				fmt.Printf("Messages (in):  %s\n", blk.Header.InMessagesHash)
+
+				txs, err := rt.GetTransactionsWithResults(ctx, blk.Header.Round)
+				cobra.CheckErr(err)
+
+				fmt.Printf("Transactions:   %d\n", len(txs))
+
+				evs, err := rt.GetEventsRaw(ctx, blkNum)
+				cobra.CheckErr(err)
+				if len(evs) > 0 {
+					// Check if there were any block events emitted.
+					var blockEvs []*types.Event
+					for _, ev := range evs {
+						if ev.TxHash.Equal(&runtimeTx.TagBlockTxHash) {
+							blockEvs = append(blockEvs, ev)
 						}
 					}
 
+					if numEvents := len(blockEvs); numEvents > 0 {
+						fmt.Println()
+						fmt.Printf("=== Block events ===\n")
+						fmt.Printf("Events: %d\n", numEvents)
+						fmt.Println()
+
+						for evIndex, ev := range blockEvs {
+							prettyPrintEvent("  ", evIndex, ev, evDecoders)
+							fmt.Println()
+						}
+					}
+				}
+
+				if len(args) >= 2 {
+					fmt.Println()
+
+					// Resolve transaction index if needed.
 					if txIndex == -1 {
-						cobra.CheckErr(fmt.Errorf("failed to find transaction with hash %s", txHash))
-					}
-				}
-
-				if txIndex >= len(txs) {
-					cobra.CheckErr(fmt.Errorf("transaction index %d is out of range", txIndex))
-				}
-				tx := txs[txIndex]
-
-				fmt.Printf("=== Transaction %d ===\n", txIndex)
-
-				if len(tx.Tx.AuthProofs) == 1 && tx.Tx.AuthProofs[0].Module != "" {
-					// Module-specific transaction encoding scheme.
-					scheme := tx.Tx.AuthProofs[0].Module
-
-					switch scheme {
-					case "evm.ethereum.v0":
-						// Ethereum transaction encoding.
-						var ethTx ethTypes.Transaction
-						if err := ethTx.UnmarshalBinary(tx.Tx.Body); err != nil {
-							fmt.Printf("[malformed 'evm.ethereum.v0' transaction: %s]\n", err)
-							break
+						for i, tx := range txs {
+							if h := tx.Tx.Hash(); h.Equal(&txHash) {
+								txIndex = i
+								break
+							}
 						}
 
-						fmt.Printf("Kind:      evm.ethereum.v0\n")
-						fmt.Printf("Hash:      %s\n", tx.Tx.Hash())
-						fmt.Printf("Eth hash:  %s\n", ethTx.Hash())
-						fmt.Printf("Chain ID:  %s\n", ethTx.ChainId())
-						fmt.Printf("Nonce:     %d\n", ethTx.Nonce())
-						fmt.Printf("Type:      %d\n", ethTx.Type())
-						fmt.Printf("To:        %s\n", ethTx.To())
-						fmt.Printf("Value:     %s\n", ethTx.Value())
-						fmt.Printf("Gas limit: %d\n", ethTx.Gas())
-						fmt.Printf("Gas price: %s\n", ethTx.GasPrice())
-						fmt.Printf("Data:\n")
-						if len(ethTx.Data()) > 0 {
-							fmt.Printf("  %s\n", hex.EncodeToString(ethTx.Data()))
-						} else {
-							fmt.Printf("  (none)\n")
+						if txIndex == -1 {
+							cobra.CheckErr(fmt.Errorf("failed to find transaction with hash %s", txHash))
 						}
-					default:
-						fmt.Printf("[module-specific transaction encoding scheme: %s]\n", scheme)
 					}
-				} else {
-					// Regular SDK transaction.
-					fmt.Printf("Kind: oasis\n")
 
-					common.PrintTransactionRaw(npa, &tx.Tx)
-				}
-				fmt.Println()
+					if txIndex >= len(txs) {
+						cobra.CheckErr(fmt.Errorf("transaction index %d is out of range", txIndex))
+					}
+					tx := txs[txIndex]
 
-				// Show result.
-				fmt.Printf("=== Result of transaction %d ===\n", txIndex)
-				switch res := tx.Result; {
-				case res.Failed != nil:
-					fmt.Printf("Status:  failed\n")
-					fmt.Printf("Module:  %s\n", res.Failed.Module)
-					fmt.Printf("Code:    %d\n", res.Failed.Code)
-					fmt.Printf("Message: %s\n", res.Failed.Message)
-				case res.Ok != nil:
-					fmt.Printf("Status: ok\n")
-					fmt.Printf("Data:\n")
-					prettyPrintCBOR("  ", "result", res.Ok)
-				case res.Unknown != nil:
-					fmt.Printf("Status: unknown\n")
-					fmt.Printf("Data:\n")
-					prettyPrintCBOR("  ", "result", res.Unknown)
-				default:
-					fmt.Printf("[unsupported result kind]\n")
-				}
-				fmt.Println()
+					fmt.Printf("=== Transaction %d ===\n", txIndex)
 
-				// Show events.
-				fmt.Printf("=== Events emitted by transaction %d ===\n", txIndex)
-				if numEvents := len(tx.Events); numEvents > 0 {
-					fmt.Printf("Events: %d\n", numEvents)
+					if len(tx.Tx.AuthProofs) == 1 && tx.Tx.AuthProofs[0].Module != "" {
+						// Module-specific transaction encoding scheme.
+						scheme := tx.Tx.AuthProofs[0].Module
+
+						switch scheme {
+						case "evm.ethereum.v0":
+							// Ethereum transaction encoding.
+							var ethTx ethTypes.Transaction
+							if err := ethTx.UnmarshalBinary(tx.Tx.Body); err != nil {
+								fmt.Printf("[malformed 'evm.ethereum.v0' transaction: %s]\n", err)
+								break
+							}
+
+							fmt.Printf("Kind:      evm.ethereum.v0\n")
+							fmt.Printf("Hash:      %s\n", tx.Tx.Hash())
+							fmt.Printf("Eth hash:  %s\n", ethTx.Hash())
+							fmt.Printf("Chain ID:  %s\n", ethTx.ChainId())
+							fmt.Printf("Nonce:     %d\n", ethTx.Nonce())
+							fmt.Printf("Type:      %d\n", ethTx.Type())
+							fmt.Printf("To:        %s\n", ethTx.To())
+							fmt.Printf("Value:     %s\n", ethTx.Value())
+							fmt.Printf("Gas limit: %d\n", ethTx.Gas())
+							fmt.Printf("Gas price: %s\n", ethTx.GasPrice())
+							fmt.Printf("Data:\n")
+							if len(ethTx.Data()) > 0 {
+								fmt.Printf("  %s\n", hex.EncodeToString(ethTx.Data()))
+							} else {
+								fmt.Printf("  (none)\n")
+							}
+						default:
+							fmt.Printf("[module-specific transaction encoding scheme: %s]\n", scheme)
+						}
+					} else {
+						// Regular SDK transaction.
+						fmt.Printf("Kind: oasis\n")
+
+						common.PrintTransactionRaw(npa, &tx.Tx)
+					}
 					fmt.Println()
 
-					for evIndex, ev := range tx.Events {
-						prettyPrintEvent("  ", evIndex, ev, evDecoders)
-						fmt.Println()
+					// Show result.
+					fmt.Printf("=== Result of transaction %d ===\n", txIndex)
+					switch res := tx.Result; {
+					case res.Failed != nil:
+						fmt.Printf("Status:  failed\n")
+						fmt.Printf("Module:  %s\n", res.Failed.Module)
+						fmt.Printf("Code:    %d\n", res.Failed.Code)
+						fmt.Printf("Message: %s\n", res.Failed.Message)
+					case res.Ok != nil:
+						fmt.Printf("Status: ok\n")
+						fmt.Printf("Data:\n")
+						prettyPrintCBOR("  ", "result", res.Ok)
+					case res.Unknown != nil:
+						fmt.Printf("Status: unknown\n")
+						fmt.Printf("Data:\n")
+						prettyPrintCBOR("  ", "result", res.Unknown)
+					default:
+						fmt.Printf("[unsupported result kind]\n")
 					}
-				} else {
-					fmt.Println("No events emitted by this transaction.")
+					fmt.Println()
+
+					// Show events.
+					fmt.Printf("=== Events emitted by transaction %d ===\n", txIndex)
+					if numEvents := len(tx.Events); numEvents > 0 {
+						fmt.Printf("Events: %d\n", numEvents)
+						fmt.Println()
+
+						for evIndex, ev := range tx.Events {
+							prettyPrintEvent("  ", evIndex, ev, evDecoders)
+							fmt.Println()
+						}
+					} else {
+						fmt.Println("No events emitted by this transaction.")
+					}
+				}
+			case propertySelector:
+				switch v {
+				case selParameters:
+					showParameters(ctx, npa, selectedRound, rt)
+					return
+				default:
+					cobra.CheckErr(fmt.Errorf("selector '%s' not found", args[0]))
 				}
 			}
+		},
+	}
+)
+
+func parseBlockNum(
+	s string,
+) (interface{}, error) { // TODO: Use `any`
+	if sel := selectorFromString(s); sel != selInvalid {
+		return sel, nil
+	}
+
+	switch blkNumRaw := s; blkNumRaw {
+	case selRoundLatest:
+		// The latest block.
+		return client.RoundLatest, nil // TODO: Support consensus.
+	default:
+		// A specific block.
+		blkNum, err := strconv.ParseUint(blkNumRaw, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("malformed block number: %w", err)
 		}
-	},
+		return blkNum, nil
+	}
+}
+
+func selectorFromString(s string) propertySelector {
+	if strings.ToLower(strings.TrimSpace(s)) == "parameters" {
+		return selParameters
+	}
+	return selInvalid
 }
 
 func prettyPrintCBOR(indent string, kind string, data []byte) {
@@ -385,6 +433,45 @@ func prettyPrintEvent(indent string, evIndex int, ev *types.Event, decoders []cl
 	prettyPrintCBOR(indent+"  ", "event", ev.Value)
 }
 
+func showParameters(ctx context.Context, npa *common.NPASelection, round uint64, rt connection.RuntimeClient) {
+	checkErr := func(what string, err error) {
+		if err != nil {
+			cobra.CheckErr(fmt.Errorf("%s: %w", what, err))
+		}
+	}
+
+	stakeThresholds, err := rt.ROFL.StakeThresholds(ctx, round)
+	checkErr("ROFL StakeThresholds", err)
+
+	doc := make(map[string]interface{})
+
+	doSection := func(name string, params interface{}) {
+		if outputFormat == formatJSON {
+			doc[name] = params
+		} else {
+			fmt.Printf("\n=== %s PARAMETERS ===\n", strings.ToUpper(name))
+			out := common.PrettyPrint(npa, "  ", params)
+			fmt.Printf("%s\n", out)
+		}
+	}
+
+	doSection("rofl", stakeThresholds)
+
+	if outputFormat == formatJSON {
+		pp, err := json.MarshalIndent(doc, "", "  ")
+		cobra.CheckErr(err)
+		fmt.Printf("%s\n", pp)
+	}
+}
+
 func init() {
+	formatFlag := flag.NewFlagSet("", flag.ContinueOnError)
+	formatFlag.StringVar(&outputFormat, "format", formatText, "output format ["+strings.Join([]string{formatText, formatJSON}, ",")+"]")
+
+	roundFlag := flag.NewFlagSet("", flag.ContinueOnError)
+	roundFlag.Uint64Var(&selectedRound, "round", client.RoundLatest, "explicitly set block round to use")
+
 	showCmd.Flags().AddFlagSet(common.SelectorNPFlags)
+	showCmd.Flags().AddFlagSet(roundFlag)
+	showCmd.Flags().AddFlagSet(formatFlag)
 }

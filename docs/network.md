@@ -332,24 +332,30 @@ We can see that the token's name is ROSE and that 1 token corresponds to 10^9
 Next, we can observe that the **total supply** is 10 billion tokens and that
 about 1.3 billion tokens are in the **common pool**.
 
-**Staking thresholds** are important for the network validators. They show
-the minimum staked amount required to become an active validator for the entity
-and all node kinds (validator, compute, key manager nodes). At time of writing,
-this was 100 tokens. For example, if you wanted to register an entity running a
-validator and a compute node, you would need to stake (i.e. *escrow*) at least
-300 tokens.
+The **staking thresholds** fields are the following:
+
+- `entity`: The amount needed to be staked when registering an entity.
+- `node-validator`, `node-compute`, `node-keymanager`: The amount needed to be
+  staked to the corresponding entity for a node to run as a validator, a compute
+  node or a key manager. This is the amount that will be slashed in case of
+  inappropriate node behavior.
+- `runtime-compute`, `runtime-keymanager`: The amount needed to be staked to an
+  entity for [registering a new ParaTime or a key manager].
+  Keep in mind that a ParaTime cannot be unregistered and there is no way of
+  getting the staked assets back.
+
+For example, if you wanted to register an entity running a validator and a
+compute node, you would need to stake (i.e. *escrow*) at least 300 tokens.
 
 :::info
 
-Each runtime may also require a **minimum ParaTime-specific escrow** for
-running a compute node. Use the [`network show id`](#show-id)
-command and pass a corresponding Paratime ID to see it.
+Apart from the `node-compute` threshold above, a ParaTime may require additional
+**ParaTime-specific escrow** for running a compute node. Use the
+[`network show id`](#show-id) command to see it.
 
 :::
 
-The `runtime-` fields show you the required staked amount for
-[**registering a new ParaTime**](./paratime.md#register) of any kind (compute,
-key manager) was 50,000 tokens at time of writing.
+[registering a new ParaTime or a key manager]: ./paratime.md#register
 
 #### `gas-costs` {#show-gas-costs}
 
@@ -386,10 +392,20 @@ The provided ID can be one of the following:
   ![code json](../examples/network-show/id-paratime.out.static)
 
   Network validators may be interested in the **ParaTime staking threshold**
-  stored inside the `thresholds` field. In the example above, the amount to run
-  a Sapphire compute node on the Mainnet is 5,000,000 tokens and should be
-  considered on top of the consensus-layer validator staking thresholds
-  obtained by the [`network show native-token`](#show-native-token) command.
+  stored inside the `thresholds` field:
+
+  ```shell
+  oasis network show 000000000000000000000000000000000000000000000000f80306c9858e7279 | jq '.staking.thresholds."node-compute"'
+  ```
+  
+  ```
+  "5000000000000000"
+  ```
+
+  In the example above, the amount to run a Sapphire compute node on the Mainnet
+  is 5,000,000 tokens and should be considered on top of the consensus-layer
+  validator staking thresholds obtained by the
+  [`network show native-token`](#show-native-token) command.
 
 - If the entity ID is provided, Oasis CLI shows information on the entity and
   its corresponding nodes in the network registry. For example:

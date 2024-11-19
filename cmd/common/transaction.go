@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
-	"github.com/oasisprotocol/oasis-core/go/common"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	coreSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	consensusPretty "github.com/oasisprotocol/oasis-core/go/common/prettyprint"
@@ -352,31 +351,9 @@ func SignParaTimeTransaction(
 
 // PrintTransactionRaw prints the transaction which can be either signed or unsigned.
 func PrintTransactionRaw(npa *NPASelection, tx interface{}) {
-	switch rtx := tx.(type) {
+	switch tx.(type) {
 	case consensusPretty.PrettyPrinter:
-		// Signed or unsigned consensus or runtime transaction.
-		var ns common.Namespace
-		if npa.ParaTime != nil {
-			ns = npa.ParaTime.Namespace()
-		}
-		sigCtx := signature.RichContext{
-			RuntimeID:    ns,
-			ChainContext: npa.Network.ChainContext,
-			Base:         types.SignatureContextBase,
-		}
-		ctx := context.Background()
-		ctx = context.WithValue(ctx, consensusPretty.ContextKeyTokenSymbol, npa.Network.Denomination.Symbol)
-		ctx = context.WithValue(ctx, consensusPretty.ContextKeyTokenValueExponent, npa.Network.Denomination.Decimals)
-		if npa.ParaTime != nil {
-			ctx = context.WithValue(ctx, config.ContextKeyParaTimeCfg, npa.ParaTime)
-		}
-		ctx = context.WithValue(ctx, signature.ContextKeySigContext, &sigCtx)
-		ctx = context.WithValue(ctx, types.ContextKeyAccountNames, GenAccountNames())
-
-		// Set up chain context for signature verification during pretty-printing.
-		coreSignature.UnsafeResetChainContext()
-		coreSignature.SetChainContext(npa.Network.ChainContext)
-		rtx.PrettyPrint(ctx, "", os.Stdout)
+		fmt.Print(PrettyPrint(npa, "", tx))
 	default:
 		fmt.Printf("[unsupported transaction type: %T]\n", tx)
 	}

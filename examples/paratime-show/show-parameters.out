@@ -1,0 +1,8 @@
+Network:        testnet
+ParaTime:       sapphire
+
+=== ROFL PARAMETERS ===
+  app_create:
+    Amount: 10000000000000000000000
+    Denomination:
+

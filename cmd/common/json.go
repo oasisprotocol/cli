@@ -1,11 +1,18 @@
 package common
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"unicode/utf8"
 
+	"github.com/oasisprotocol/oasis-core/go/common"
+	coreSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
+	consensusPretty "github.com/oasisprotocol/oasis-core/go/common/prettyprint"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
@@ -97,4 +104,60 @@ func JSONMarshalUniversalValue(v interface{}) []byte {
 	vJSON, err := json.Marshal(v)
 	cobra.CheckErr(err)
 	return vJSON
+}
+
+// PrettyPrint transforms generic JSON-formatted data into a pretty-printed string.
+// For types implementing consensusPretty.PrettyPrinter, it uses the custom pretty printer.
+// For other types, it does basic JSON indentation and cleanup of common delimiters.
+func PrettyPrint(npa *NPASelection, prefix string, blob interface{}) string {
+	ret := ""
+	switch rtx := blob.(type) {
+	case consensusPretty.PrettyPrinter:
+		// Signed or unsigned consensus or runtime transaction.
+		var ns common.Namespace
+		if npa.ParaTime != nil {
+			ns = npa.ParaTime.Namespace()
+		}
+		sigCtx := signature.RichContext{
+			RuntimeID:    ns,
+			ChainContext: npa.Network.ChainContext,
+			Base:         types.SignatureContextBase,
+		}
+		ctx := context.Background()
+		ctx = context.WithValue(ctx, consensusPretty.ContextKeyTokenSymbol, npa.Network.Denomination.Symbol)
+		ctx = context.WithValue(ctx, consensusPretty.ContextKeyTokenValueExponent, npa.Network.Denomination.Decimals)
+		if npa.ParaTime != nil {
+			ctx = context.WithValue(ctx, config.ContextKeyParaTimeCfg, npa.ParaTime)
+		}
+		ctx = context.WithValue(ctx, signature.ContextKeySigContext, &sigCtx)
+		ctx = context.WithValue(ctx, types.ContextKeyAccountNames, GenAccountNames())
+
+		// Set up chain context for signature verification during pretty-printing.
+		coreSignature.UnsafeResetChainContext()
+		coreSignature.SetChainContext(npa.Network.ChainContext)
+		var pp strings.Builder
+		rtx.PrettyPrint(ctx, prefix, &pp)
+		ret = pp.String()
+	default:
+		pp, err := PrettyJSONMarshal(blob)
+		cobra.CheckErr(err)
+
+		out := string(pp)
+		out = strings.ReplaceAll(out, "{", "")
+		out = strings.ReplaceAll(out, "}", "")
+		out = strings.ReplaceAll(out, "[", "")
+		out = strings.ReplaceAll(out, "]", "")
+		out = strings.ReplaceAll(out, ",", "")
+		out = strings.ReplaceAll(out, "\"", "")
+
+		for _, line := range strings.Split(out, "\n") {
+			line = strings.TrimRight(line, " \n")
+			if len(line) == 0 {
+				continue
+			}
+			ret += line + "\n"
+		}
+	}
+
+	return ret
 }

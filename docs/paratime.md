@@ -125,8 +125,13 @@ For example, to set the Cipher ParaTime default on the Testnet, run:
 
 ## Show {#show}
 
-Use `paratime show <block>` providing the block round to print its header and
-other information.
+Use `paratime show` to investigate a specific ParaTime block or other
+parameters.
+
+### `<round>` {#show-round}
+
+Providing the block round or `latest` literal will print its header and other
+information.
 
 ![code shell](../examples/paratime-show/show.in.static)
 
@@ -146,6 +151,17 @@ encrypted:
 ![code shell](../examples/paratime-show/show-tx-encrypted.in.static)
 
 ![code](../examples/paratime-show/show-tx-encrypted.out.static)
+
+### `parameters` {#show-parameters}
+
+This will print various ParaTime-specific parameters such as the ROFL stake
+thresholds.
+
+![code shell](../examples/paratime-show/show-parameters.in)
+
+![code](../examples/paratime-show/show-parameters.out)
+
+By passing `--format json`, the output is formatted as JSON.
 
 ## Set information about a denomination {#denom-set}
 

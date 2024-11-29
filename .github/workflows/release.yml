@@ -24,7 +24,7 @@ jobs:
         with:
           go-version: "1.22.x"
       - name: Install GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           install-only: true
           distribution: goreleaser

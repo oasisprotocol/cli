@@ -12,7 +12,7 @@ var setDefaultCmd = &cobra.Command{
 	Use:   "set-default <network> <name>",
 	Short: "Sets the given ParaTime as the default ParaTime for the given network",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		network, name := args[0], args[1]
 

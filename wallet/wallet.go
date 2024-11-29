@@ -173,7 +173,7 @@ func Load(kind string) (Factory, error) {
 // AvailableKinds returns all of the available account factories.
 func AvailableKinds() []Factory {
 	var kinds []Factory
-	registeredFactories.Range(func(key, value interface{}) bool {
+	registeredFactories.Range(func(_, value interface{}) bool {
 		kinds = append(kinds, value.(Factory))
 		return true
 	})

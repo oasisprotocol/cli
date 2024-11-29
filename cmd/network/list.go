@@ -15,7 +15,7 @@ var listCmd = &cobra.Command{
 	Aliases: []string{"ls"},
 	Short:   "List configured networks",
 	Args:    cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		cfg := cliConfig.Global()
 		table := table.New()
 		table.SetHeader([]string{"Name", "Chain Context", "RPC"})

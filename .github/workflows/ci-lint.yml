@@ -41,7 +41,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.21.x"
+          go-version: "1.22.x"
           cache: false
       - name: Install gitlint
         run: |
@@ -63,7 +63,7 @@ jobs:
         # 'make lint-go'.
         uses: golangci/golangci-lint-action@v6.1.0
         with:
-          version: v1.55
+          version: v1.56
         # Always run this step so that all linting errors can be seen at once.
         if: always()
       - name: Ensure a clean code checkout

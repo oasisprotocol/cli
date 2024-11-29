@@ -15,7 +15,7 @@ var setNativeDenomCmd = &cobra.Command{
 	Use:   "set-native <network> <paratime> <symbol> <number_of_decimals>",
 	Short: "Set native denomination",
 	Args:  cobra.ExactArgs(4),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		networkArg, ptArg, symbolArg, decimalsArg := args[0], args[1], args[2], args[3]
 

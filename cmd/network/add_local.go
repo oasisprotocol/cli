@@ -24,7 +24,7 @@ var (
 		Use:   "add-local <name> <rpc-endpoint>",
 		Short: "Add a new local network",
 		Args:  cobra.ExactArgs(2),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			name, rpc := args[0], args[1]
 

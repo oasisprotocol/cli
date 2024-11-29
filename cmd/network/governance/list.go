@@ -18,7 +18,7 @@ var govListCmd = &cobra.Command{
 	Aliases: []string{"ls"},
 	Short:   "List governance proposals",
 	Args:    cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
 

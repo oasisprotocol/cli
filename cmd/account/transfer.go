@@ -22,7 +22,7 @@ var transferCmd = &cobra.Command{
 	Short:   "Transfer given amount of tokens",
 	Aliases: []string{"t"},
 	Args:    cobra.RangeArgs(2, 3),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
 		txCfg := common.GetTransactionConfig()

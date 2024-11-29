@@ -13,7 +13,7 @@ var exportCmd = &cobra.Command{
 	Use:   "export <name>",
 	Short: "Export secret account information",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		name := args[0]
 
 		fmt.Printf("WARNING: Exporting the account will expose secret key material!\n")

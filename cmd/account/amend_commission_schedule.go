@@ -23,7 +23,7 @@ var (
 	amendCommissionScheduleCmd = &cobra.Command{
 		Use:   "amend-commission-schedule",
 		Short: "Amend the validator's commission schedule",
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()

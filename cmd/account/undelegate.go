@@ -21,7 +21,7 @@ var undelegateCmd = &cobra.Command{
 	Use:   "undelegate <shares> <from>",
 	Short: "Undelegate given amount of shares from an entity",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
 		txCfg := common.GetTransactionConfig()

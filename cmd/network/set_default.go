@@ -10,7 +10,7 @@ var setDefaultCmd = &cobra.Command{
 	Use:   "set-default <name>",
 	Short: "Sets the given network as the default network",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		name := args[0]
 

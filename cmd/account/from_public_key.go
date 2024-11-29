@@ -13,7 +13,7 @@ var fromPublicKeyCmd = &cobra.Command{
 	Use:   "from-public-key <public-key>",
 	Short: "Convert public key to an account address",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		var pk signature.PublicKey
 		err := pk.UnmarshalText([]byte(args[0]))
 		cobra.CheckErr(err)

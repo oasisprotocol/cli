@@ -9,6 +9,8 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/sgx"
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle"
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle/component"
+
+	"github.com/oasisprotocol/cli/build/measurement"
 )
 
 var (
@@ -19,7 +21,7 @@ var (
 		Short:   "Show the cryptographic identity of the ROFL app(s) in the specified bundle",
 		Aliases: []string{"id"},
 		Args:    cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			bundleFn := args[0]
 
 			bnd, err := bundle.Open(bundleFn)
@@ -34,7 +36,6 @@ var (
 				}
 			}
 
-			var enclaveID *sgx.EnclaveIdentity
 			for _, comp := range bnd.Manifest.GetAvailableComponents() {
 				if comp.Kind != component.ROFL {
 					continue // Skip non-ROFL components.
@@ -48,13 +49,25 @@ var (
 					}
 				}
 
-				enclaveID, err = bnd.EnclaveIdentity(comp.ID())
+				var eids []*sgx.EnclaveIdentity
+				switch teeKind := comp.TEEKind(); teeKind {
+				case component.TEEKindSGX:
+					var enclaveID *sgx.EnclaveIdentity
+					enclaveID, err = bnd.EnclaveIdentity(comp.ID())
+					eids = append(eids, enclaveID)
+				case component.TEEKindTDX:
+					eids, err = measurement.MeasureTdxQemu(bnd, comp)
+				default:
+					cobra.CheckErr(fmt.Errorf("identity computation for TEE kind '%s' not supported", teeKind))
+				}
 				if err != nil {
 					cobra.CheckErr(fmt.Errorf("failed to generate enclave identity of '%s': %w", comp.ID(), err))
 				}
 
-				data, _ := enclaveID.MarshalText()
-				fmt.Println(string(data))
+				for _, enclaveID := range eids {
+					data, _ := enclaveID.MarshalText()
+					fmt.Println(string(data))
+				}
 				return
 			}
 

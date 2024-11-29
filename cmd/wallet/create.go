@@ -18,7 +18,7 @@ var createCmd = &cobra.Command{
 	Use:   "create <name>",
 	Short: "Create a new account",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := config.Global()
 		name := args[0]
 

@@ -41,7 +41,7 @@ var (
 		Use:   "status",
 		Short: "Show the current status of the node and the network",
 		Args:  cobra.NoArgs,
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, _ []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 

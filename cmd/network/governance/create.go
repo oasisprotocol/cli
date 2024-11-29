@@ -65,7 +65,7 @@ var (
 		Use:   "upgrade <descriptor.json>",
 		Short: "Create an upgrade descriptor governance proposal",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
@@ -116,7 +116,7 @@ var (
 		Use:   "parameter-change <module> <changes.json>",
 		Short: "Create a parameter change governance proposal",
 		Args:  cobra.ExactArgs(2),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
@@ -171,7 +171,7 @@ var (
 		Use:   "cancel-upgrade <proposal-id>",
 		Short: "Create a cancel upgrade governance proposal",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()

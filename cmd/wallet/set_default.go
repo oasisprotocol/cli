@@ -10,7 +10,7 @@ var setDefaultCmd = &cobra.Command{
 	Use:   "set-default <name>",
 	Short: "Sets the given account as the default account",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := config.Global()
 		name := args[0]
 

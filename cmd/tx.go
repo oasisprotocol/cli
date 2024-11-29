@@ -30,7 +30,7 @@ var (
 		Use:   "submit <filename.json>",
 		Short: "Submit a transaction",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			filename := args[0]
@@ -72,7 +72,7 @@ var (
 		Use:   "sign <filename.json>",
 		Short: "Sign an unsigned transaction",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
@@ -119,7 +119,7 @@ var (
 		Use:   "show <filename.json>",
 		Short: "Pretty print a transaction",
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			filename := args[0]

@@ -17,7 +17,7 @@ var allowCmd = &cobra.Command{
 	Use:   "allow <beneficiary> <amount>",
 	Short: "Configure beneficiary allowance",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
 		txCfg := common.GetTransactionConfig()

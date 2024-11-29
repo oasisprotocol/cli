@@ -93,7 +93,7 @@ var statsCmd = &cobra.Command{
 		"\nIf 0 start-height passed, it will generate statistics from the oldest block available to the endpoint.",
 	Aliases: []string{"stats"},
 	Args:    cobra.MaximumNArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
 		if npa.ParaTime == nil {

@@ -20,7 +20,7 @@ var remoteSignerCmd = &cobra.Command{
 	Use:   "remote-signer <name> <socket-path>",
 	Short: "Act as a oasis-node remote entity signer over AF_LOCAL",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		name, socketPath := args[0], args[1]
 
 		acc := common.LoadAccount(config.Global(), name)

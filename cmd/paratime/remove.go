@@ -13,7 +13,7 @@ var removeCmd = &cobra.Command{
 	Aliases: []string{"rm"},
 	Short:   "Remove an existing ParaTime",
 	Args:    cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		network, name := args[0], args[1]
 

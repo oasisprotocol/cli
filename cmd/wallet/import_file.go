@@ -20,7 +20,7 @@ var importFileCmd = &cobra.Command{
 	Short: "Import an existing account from file",
 	Long:  "Import the private key from an existing PEM file",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := config.Global()
 		name := args[0]
 		filename := args[1]

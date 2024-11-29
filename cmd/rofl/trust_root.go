@@ -16,7 +16,7 @@ var trustRootCmd = &cobra.Command{
 	Use:   "trust-root",
 	Short: "Show a recent trust root for a ROFL application",
 	Args:  cobra.NoArgs,
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
 

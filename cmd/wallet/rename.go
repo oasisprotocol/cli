@@ -13,7 +13,7 @@ var renameCmd = &cobra.Command{
 	Short:   "Rename an existing account",
 	Aliases: []string{"mv"},
 	Args:    cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := config.Global()
 		oldName, newName := args[0], args[1]
 

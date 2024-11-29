@@ -21,7 +21,7 @@ var delegateCmd = &cobra.Command{
 	Use:   "delegate <amount> <to>",
 	Short: "Delegate given amount of tokens to an entity",
 	Args:  cobra.ExactArgs(2),
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
 		txCfg := common.GetTransactionConfig()

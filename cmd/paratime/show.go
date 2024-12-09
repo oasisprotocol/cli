@@ -106,6 +106,7 @@ var (
 					rt.ConsensusAccounts,
 					rt.Contracts,
 					rt.Evm,
+					rt.ROFL,
 				}
 
 				blk, err := rt.GetBlock(ctx, blkNum)

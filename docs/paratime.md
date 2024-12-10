@@ -36,7 +36,7 @@ oasis paratime add testnet sapphire2 0000000000000000000000000000000000000000000
 ```
 
 ```
-? Description: 
+? Description:
 ? Denomination symbol: TEST
 ? Denomination decimal places: 18
 ```
@@ -160,6 +160,18 @@ thresholds.
 ![code shell](../examples/paratime-show/show-parameters.in)
 
 ![code](../examples/paratime-show/show-parameters.out)
+
+By passing `--format json`, the output is formatted as JSON.
+
+### `events` {#show-events}
+
+This will return all Paratime events emitted in the block.
+
+Use `--round <round>` to specify the round number.
+
+![code shell](../examples/paratime-show/show-events.in)
+
+![code](../examples/paratime-show/show-events.out)
 
 By passing `--format json`, the output is formatted as JSON.
 

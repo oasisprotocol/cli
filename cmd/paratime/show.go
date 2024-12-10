@@ -18,6 +18,12 @@ import (
 	runtimeTx "github.com/oasisprotocol/oasis-core/go/runtime/transaction"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/accounts"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/consensusaccounts"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/contracts"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/core"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/evm"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
 	"github.com/oasisprotocol/cli/cmd/common"
@@ -35,15 +41,25 @@ const (
 const (
 	selInvalid propertySelector = iota
 	selParameters
+	selEvents
 )
+
+var eventDecoders = []func(*types.Event) ([]client.DecodedEvent, error){
+	accounts.DecodeEvent,
+	consensusaccounts.DecodeEvent,
+	contracts.DecodeEvent,
+	core.DecodeEvent,
+	evm.DecodeEvent,
+	rofl.DecodeEvent,
+}
 
 var (
 	outputFormat  string
 	selectedRound uint64
 
 	showCmd = &cobra.Command{
-		Use:     "show { <round> [ <tx-index> | <tx-hash> ] | parameters }",
-		Short:   "Show information about a ParaTime block, its transactions or other parameters",
+		Use:     "show { <round> [ <tx-index> | <tx-hash> ] | parameters | events }",
+		Short:   "Show information about a ParaTime block, its transactions, events or other parameters",
 		Long:    "Show ParaTime-specific information about a given block round, (optionally) its transactions or other information. Use \"latest\" to use the last round.",
 		Aliases: []string{"s"},
 		Args:    cobra.RangeArgs(1, 2),
@@ -101,13 +117,6 @@ var (
 			switch v := p.(type) {
 			case uint64:
 				blkNum := v
-				evDecoders := []client.EventDecoder{
-					rt.Accounts,
-					rt.ConsensusAccounts,
-					rt.Contracts,
-					rt.Evm,
-					rt.ROFL,
-				}
 
 				blk, err := rt.GetBlock(ctx, blkNum)
 				cobra.CheckErr(err)
@@ -151,7 +160,7 @@ var (
 						fmt.Println()
 
 						for evIndex, ev := range blockEvs {
-							prettyPrintEvent("  ", evIndex, ev, evDecoders)
+							prettyPrintEvent("  ", evIndex, ev)
 							fmt.Println()
 						}
 					}
@@ -249,7 +258,7 @@ var (
 						fmt.Println()
 
 						for evIndex, ev := range tx.Events {
-							prettyPrintEvent("  ", evIndex, ev, evDecoders)
+							prettyPrintEvent("  ", evIndex, ev)
 							fmt.Println()
 						}
 					} else {
@@ -260,6 +269,9 @@ var (
 				switch v {
 				case selParameters:
 					showParameters(ctx, npa, selectedRound, rt)
+					return
+				case selEvents:
+					showEvents(ctx, selectedRound, rt)
 					return
 				default:
 					cobra.CheckErr(fmt.Errorf("selector '%s' not found", args[0]))
@@ -293,6 +305,9 @@ func parseBlockNum(
 func selectorFromString(s string) propertySelector {
 	if strings.ToLower(strings.TrimSpace(s)) == "parameters" {
 		return selParameters
+	}
+	if strings.ToLower(strings.TrimSpace(s)) == "events" {
+		return selEvents
 	}
 	return selInvalid
 }
@@ -414,14 +429,17 @@ func prettyPrintStruct(indent string, kind string, data []byte, body interface{}
 	fmt.Println(indent + output)
 }
 
-func prettyPrintEvent(indent string, evIndex int, ev *types.Event, decoders []client.EventDecoder) {
+func prettyPrintEvent(indent string, evIndex int, ev *types.Event) {
 	fmt.Printf("%s--- Event %d ---\n", indent, evIndex)
 	fmt.Printf("%sModule: %s\n", indent, ev.Module)
 	fmt.Printf("%sCode:   %d\n", indent, ev.Code)
+	if ev.TxHash != nil {
+		fmt.Printf("%sTx hash: %s\n", indent, ev.TxHash.String())
+	}
 	fmt.Printf("%sData:\n", indent)
 
-	for _, decoder := range decoders {
-		decoded, err := decoder.DecodeEvent(ev)
+	for _, decoder := range eventDecoders {
+		decoded, err := decoder(ev)
 		if err != nil {
 			continue
 		}
@@ -432,6 +450,37 @@ func prettyPrintEvent(indent string, evIndex int, ev *types.Event, decoders []cl
 	}
 
 	prettyPrintCBOR(indent+"  ", "event", ev.Value)
+}
+
+func jsonPrintEvents(evs []*types.Event) {
+	out := []map[string]interface{}{}
+
+	for _, ev := range evs {
+		fields := make(map[string]interface{})
+		fields["module"] = ev.Module
+		fields["code"] = ev.Code
+		if ev.TxHash != nil {
+			fields["tx_hash"] = ev.TxHash.String()
+		}
+		fields["data"] = ev.Value
+
+		for _, decoder := range eventDecoders {
+			decoded, err := decoder(ev)
+			if err != nil {
+				continue
+			}
+			if decoded != nil {
+				fields["parsed"] = decoded
+
+				break
+			}
+		}
+		out = append(out, fields)
+	}
+
+	str, err := common.PrettyJSONMarshal(out)
+	cobra.CheckErr(err)
+	fmt.Printf("%s\n", str)
 }
 
 func showParameters(ctx context.Context, npa *common.NPASelection, round uint64, rt connection.RuntimeClient) {
@@ -462,6 +511,29 @@ func showParameters(ctx context.Context, npa *common.NPASelection, round uint64,
 		pp, err := json.MarshalIndent(doc, "", "  ")
 		cobra.CheckErr(err)
 		fmt.Printf("%s\n", pp)
+	}
+}
+
+func showEvents(ctx context.Context, round uint64, rt connection.RuntimeClient) {
+	evs, err := rt.GetEventsRaw(ctx, round)
+	cobra.CheckErr(err)
+
+	if len(evs) == 0 {
+		if outputFormat == formatJSON {
+			fmt.Printf("[]\n")
+		} else {
+			fmt.Println("No events emitted in this block.")
+		}
+		return
+	}
+
+	if outputFormat == formatJSON {
+		jsonPrintEvents(evs)
+	} else {
+		for evIndex, ev := range evs {
+			prettyPrintEvent("", evIndex, ev)
+			fmt.Println()
+		}
 	}
 }
 

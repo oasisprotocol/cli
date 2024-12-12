@@ -20,8 +20,10 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle/component"
 
 	"github.com/oasisprotocol/cli/build/cargo"
+	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/build/sgxs"
 	"github.com/oasisprotocol/cli/cmd/common"
+	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
@@ -37,6 +39,7 @@ var (
 		Run: func(_ *cobra.Command, _ []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
+			manifest, _ := roflCommon.MaybeLoadManifestAndSetNPA(cfg, npa)
 
 			if npa.ParaTime == nil {
 				cobra.CheckErr("no ParaTime selected")
@@ -47,7 +50,7 @@ var (
 			fmt.Println("Building an SGX-based Rust ROFL application...")
 
 			detectBuildMode(npa)
-			features := sgxSetupBuildEnv()
+			features := sgxSetupBuildEnv(manifest, npa)
 
 			// Obtain package metadata.
 			pkgMeta, err := cargo.GetMetadata()
@@ -58,11 +61,21 @@ var (
 			// Start creating the bundle early so we can fail before building anything.
 			bnd := &bundle.Bundle{
 				Manifest: &bundle.Manifest{
-					Name: pkgMeta.Name,
-					ID:   npa.ParaTime.Namespace(),
+					ID: npa.ParaTime.Namespace(),
 				},
 			}
-			bnd.Manifest.Version, err = version.FromString(pkgMeta.Version)
+			var rawVersion string
+			switch manifest {
+			case nil:
+				// No ROFL app manifest, use Cargo manifest.
+				bnd.Manifest.Name = pkgMeta.Name
+				rawVersion = pkgMeta.Version
+			default:
+				// Use ROFL app manifest.
+				bnd.Manifest.Name = manifest.Name
+				rawVersion = manifest.Version
+			}
+			bnd.Manifest.Version, err = version.FromString(rawVersion)
 			if err != nil {
 				cobra.CheckErr(fmt.Errorf("unsupported package version format: %w", err))
 			}
@@ -259,7 +272,9 @@ NextSetOfPrimes:
 }
 
 // sgxSetupBuildEnv sets up the SGX build environment and returns the list of features to enable.
-func sgxSetupBuildEnv() []string {
+func sgxSetupBuildEnv(manifest *buildRofl.Manifest, npa *common.NPASelection) []string {
+	setupBuildEnv(manifest, npa)
+
 	switch buildMode {
 	case buildModeProduction, buildModeAuto:
 		// Production builds.

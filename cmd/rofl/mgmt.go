@@ -16,6 +16,7 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 
 	"github.com/oasisprotocol/cli/cmd/common"
+	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
@@ -30,14 +31,21 @@ var (
 	adminAddress string
 
 	createCmd = &cobra.Command{
-		Use:   "create <policy.yml>",
+		Use:   "create [<policy.yml>]",
 		Short: "Create a new ROFL application",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
-			policyFn = args[0]
+
+			var policy *rofl.AppAuthPolicy
+			if len(args) > 0 {
+				policy = loadPolicy(args[0])
+			} else {
+				manifest := roflCommon.LoadManifestAndSetNPA(cfg, npa)
+				policy = manifest.Policy
+			}
 
 			if npa.Account == nil {
 				cobra.CheckErr("no accounts configured in your wallet")
@@ -45,8 +53,6 @@ var (
 			if npa.ParaTime == nil {
 				cobra.CheckErr("no ParaTime selected")
 			}
-
-			policy := loadPolicy(policyFn)
 
 			// When not in offline mode, connect to the given network endpoint.
 			ctx := context.Background()
@@ -82,14 +88,30 @@ var (
 	}
 
 	updateCmd = &cobra.Command{
-		Use:   "update <app-id> --policy <policy.yml> --admin <address>",
+		Use:   "update [<app-id> --policy <policy.yml> --admin <address>]",
 		Short: "Update an existing ROFL application",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
-			rawAppID := args[0]
+
+			var (
+				rawAppID string
+				policy   *rofl.AppAuthPolicy
+			)
+			if len(args) > 0 {
+				rawAppID = args[0]
+				policy = loadPolicy(policyFn)
+			} else {
+				manifest := roflCommon.LoadManifestAndSetNPA(cfg, npa)
+				rawAppID = manifest.AppID
+
+				if adminAddress == "" && manifest.Admin != "" {
+					adminAddress = "self"
+				}
+				policy = manifest.Policy
+			}
 			var appID rofl.AppID
 			if err := appID.UnmarshalText([]byte(rawAppID)); err != nil {
 				cobra.CheckErr(fmt.Errorf("malformed ROFL app ID: %w", err))
@@ -102,8 +124,12 @@ var (
 				cobra.CheckErr("no ParaTime selected")
 			}
 
-			if policyFn == "" || adminAddress == "" {
-				fmt.Println("You must specify both --policy and --admin.")
+			if adminAddress == "" {
+				fmt.Println("You must specify --admin or configure an admin in the manifest.")
+				return
+			}
+			if policy == nil {
+				fmt.Println("You must specify --policy or configure policy in the manifest.")
 				return
 			}
 
@@ -118,7 +144,7 @@ var (
 
 			updateBody := rofl.Update{
 				ID:     appID,
-				Policy: *loadPolicy(policyFn),
+				Policy: *policy,
 			}
 
 			// Update administrator address.
@@ -143,14 +169,21 @@ var (
 	}
 
 	removeCmd = &cobra.Command{
-		Use:   "remove <app-id>",
+		Use:   "remove [<app-id>]",
 		Short: "Remove an existing ROFL application",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
-			rawAppID := args[0]
+
+			var rawAppID string
+			if len(args) > 0 {
+				rawAppID = args[0]
+			} else {
+				manifest := roflCommon.LoadManifestAndSetNPA(cfg, npa)
+				rawAppID = manifest.AppID
+			}
 			var appID rofl.AppID
 			if err := appID.UnmarshalText([]byte(rawAppID)); err != nil {
 				cobra.CheckErr(fmt.Errorf("malformed ROFL app ID: %w", err))
@@ -186,13 +219,20 @@ var (
 	}
 
 	showCmd = &cobra.Command{
-		Use:   "show <app-id>",
+		Use:   "show [<app-id>]",
 		Short: "Show information about a ROFL application",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
-			rawAppID := args[0]
+
+			var rawAppID string
+			if len(args) > 0 {
+				rawAppID = args[0]
+			} else {
+				manifest := roflCommon.LoadManifestAndSetNPA(cfg, npa)
+				rawAppID = manifest.AppID
+			}
 			var appID rofl.AppID
 			if err := appID.UnmarshalText([]byte(rawAppID)); err != nil {
 				cobra.CheckErr(fmt.Errorf("malformed ROFL app ID: %w", err))
@@ -240,7 +280,6 @@ var (
 )
 
 func loadPolicy(fn string) *rofl.AppAuthPolicy {
-	// Load app policy.
 	rawPolicy, err := os.ReadFile(fn)
 	cobra.CheckErr(err)
 

@@ -4,10 +4,10 @@ import (
 	"archive/tar"
 	"compress/bzip2"
 	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"net/http"
 	"net/url"
 	"os"
@@ -25,22 +25,30 @@ import (
 const artifactCacheDir = "build_cache"
 
 // maybeDownloadArtifact downloads the given artifact and optionally verifies its integrity against
-// the provided hash.
-func maybeDownloadArtifact(kind, uri, knownHash string) string {
+// the hash provided in the URI fragment.
+func maybeDownloadArtifact(kind, uri string) string {
 	fmt.Printf("Downloading %s artifact...\n", kind)
 	fmt.Printf("  URI: %s\n", uri)
-	if knownHash != "" {
-		fmt.Printf("  Hash: %s\n", knownHash)
-	}
 
 	url, err := url.Parse(uri)
 	if err != nil {
 		cobra.CheckErr(fmt.Errorf("failed to parse %s artifact URL: %w", kind, err))
 	}
 
-	// In case the URI represents a local file, just return it.
+	// In case the URI represents a local file, check that it exists and return it.
 	if url.Host == "" {
+		_, err = os.Stat(url.Path)
+		cobra.CheckErr(err)
 		return url.Path
+	}
+
+	// If the URI contains a fragment and the known hash is empty, treat it as a known hash.
+	var knownHash string
+	if url.Fragment != "" {
+		knownHash = url.Fragment
+	}
+	if knownHash != "" {
+		fmt.Printf("  Hash: %s\n", knownHash)
 	}
 
 	// TODO: Prune cache.
@@ -192,6 +200,11 @@ FILES:
 
 // copyFile copies the file at path src to a file at path dst using the given mode.
 func copyFile(src, dst string, mode os.FileMode) error {
+	err := os.MkdirAll(filepath.Dir(dst), 0o755)
+	if err != nil {
+		return fmt.Errorf("failed to create destination directory for '%s': %w", dst, err)
+	}
+
 	sf, err := os.Open(src)
 	if err != nil {
 		return fmt.Errorf("failed to open '%s': %w", src, err)
@@ -204,28 +217,16 @@ func copyFile(src, dst string, mode os.FileMode) error {
 	}
 	defer df.Close()
 
-	_, err = io.Copy(df, sf)
-	return err
-}
-
-// computeDirSize computes the size of the given directory.
-func computeDirSize(path string) (int64, error) {
-	var size int64
-	err := filepath.WalkDir(path, func(_ string, d fs.DirEntry, derr error) error {
-		if derr != nil {
-			return derr
-		}
-		fi, err := d.Info()
-		if err != nil {
-			return err
-		}
-		size += fi.Size()
-		return nil
-	})
-	if err != nil {
-		return 0, err
+	if _, err = io.Copy(df, sf); err != nil {
+		return fmt.Errorf("failed to copy '%s': %w", src, err)
 	}
-	return size, nil
+
+	// Ensure times are constant for deterministic builds.
+	if err = extractChtimes(dst, time.Time{}, time.Time{}); err != nil {
+		return fmt.Errorf("failed to change atime/mtime for '%s': %w", dst, err)
+	}
+
+	return nil
 }
 
 // ensureBinaryExists checks whether the given binary name exists in path and returns a nice error
@@ -237,35 +238,33 @@ func ensureBinaryExists(name, pkg string) error {
 	return nil
 }
 
-// createExt4Fs creates an ext4 filesystem in the given file using directory dir to populate it.
+// createSquashFs creates a squashfs filesystem in the given file using directory dir to populate
+// it.
 //
 // Returns the size of the created filesystem image in bytes.
-func createExt4Fs(fn, dir string) (int64, error) {
-	const mkfsExt4Bin = "mkfs.ext4"
-	if err := ensureBinaryExists(mkfsExt4Bin, "e2fsprogs"); err != nil {
+func createSquashFs(fn, dir string) (int64, error) {
+	const mkSquashFsBin = "mksquashfs"
+	if err := ensureBinaryExists(mkSquashFsBin, "squashfs-tools"); err != nil {
 		return 0, err
 	}
-
-	// Compute filesystem size in bytes.
-	fsSize, err := computeDirSize(dir)
-	if err != nil {
-		return 0, err
-	}
-	fsSize /= 1024                // Convert to kilobytes.
-	fsSize = (fsSize * 150) / 100 // Scale by overhead factor of 1.5.
 
 	// Execute mkfs.ext4.
 	cmd := exec.Command( //nolint:gosec
-		mkfsExt4Bin,
-		"-E", "root_owner=0:0",
-		"-d", dir,
+		mkSquashFsBin,
+		dir,
 		fn,
-		fmt.Sprintf("%dK", fsSize),
+		"-comp", "gzip",
+		"-noappend",
+		"-mkfs-time", "1234",
+		"-all-time", "1234",
+		"-root-time", "1234",
+		"-all-root",
+		"-reproducible",
 	)
 	var out strings.Builder
 	cmd.Stderr = &out
 	cmd.Stdout = &out
-	if err = cmd.Run(); err != nil {
+	if err := cmd.Run(); err != nil {
 		return 0, fmt.Errorf("%w\n%s", err, out.String())
 	}
 
@@ -285,12 +284,26 @@ func createVerityHashTree(fsFn, hashFn string) (string, error) {
 		return "", err
 	}
 
+	// Generate a deterministic salt by hashing the filesystem.
+	f, err := os.Open(fsFn)
+	if err != nil {
+		return "", fmt.Errorf("failed to open filesystem file: %w", err)
+	}
+	defer f.Close()
+	h := sha256.New()
+	if _, err = io.Copy(h, f); err != nil {
+		return "", fmt.Errorf("failed to read filesystem file: %w", err)
+	}
+	salt := h.Sum([]byte{})
+
 	rootHashFn := hashFn + ".roothash"
 
 	cmd := exec.Command( //nolint:gosec
 		veritysetupBin, "format",
 		"--data-block-size=4096",
 		"--hash-block-size=4096",
+		"--uuid=00000000-0000-0000-0000-000000000000",
+		"--salt="+hex.EncodeToString(salt),
 		"--root-hash-file="+rootHashFn,
 		fsFn,
 		hashFn,
@@ -298,7 +311,7 @@ func createVerityHashTree(fsFn, hashFn string) (string, error) {
 	var out strings.Builder
 	cmd.Stderr = &out
 	cmd.Stdout = &out
-	if err := cmd.Run(); err != nil {
+	if err = cmd.Run(); err != nil {
 		return "", fmt.Errorf("%w\n%s", err, out.String())
 	}
 
@@ -325,4 +338,36 @@ func concatFiles(a, b string) error {
 
 	_, err = io.Copy(df, sf)
 	return err
+}
+
+// appendEmptySpace appends empty space to the given file. If the filesystem supports sparse files,
+// this should not actually take any extra space.
+//
+// The function ensures that the given space respects alignment by adding padding as needed.
+//
+// Returns the offset where the empty space starts.
+func appendEmptySpace(fn string, size uint64, align uint64) (uint64, error) {
+	f, err := os.OpenFile(fn, os.O_RDWR, 0o644)
+	if err != nil {
+		return 0, err
+	}
+	defer f.Close()
+
+	fi, err := f.Stat()
+	if err != nil {
+		return 0, err
+	}
+	offset := uint64(fi.Size())
+
+	// Ensure proper alignment.
+	if size%align != 0 {
+		return 0, fmt.Errorf("size is not properly aligned")
+	}
+	offset += (align - (offset % align)) % align
+
+	if err = f.Truncate(int64(offset + size)); err != nil {
+		return 0, err
+	}
+
+	return offset, nil
 }

@@ -33,15 +33,10 @@ import (
 type propertySelector int
 
 const (
-	selRoundLatest = "latest"
-	formatText     = "text"
-	formatJSON     = "json"
-)
-
-const (
 	selInvalid propertySelector = iota
 	selParameters
 	selEvents
+	selRoundLatest = "latest"
 )
 
 var eventDecoders = []func(*types.Event) ([]client.DecodedEvent, error){
@@ -54,7 +49,6 @@ var eventDecoders = []func(*types.Event) ([]client.DecodedEvent, error){
 }
 
 var (
-	outputFormat  string
 	selectedRound uint64
 
 	showCmd = &cobra.Command{
@@ -98,7 +92,7 @@ var (
 			conn, err := connection.Connect(ctx, npa.Network)
 			cobra.CheckErr(err)
 
-			if outputFormat == formatText {
+			if common.OutputFormat() == common.FormatText {
 				fmt.Printf("Network:        %s", npa.NetworkName)
 				if len(npa.Network.Description) > 0 {
 					fmt.Printf(" (%s)", npa.Network.Description)
@@ -496,7 +490,7 @@ func showParameters(ctx context.Context, npa *common.NPASelection, round uint64,
 	doc := make(map[string]interface{})
 
 	doSection := func(name string, params interface{}) {
-		if outputFormat == formatJSON {
+		if common.OutputFormat() == common.FormatJSON {
 			doc[name] = params
 		} else {
 			fmt.Printf("\n=== %s PARAMETERS ===\n", strings.ToUpper(name))
@@ -507,7 +501,7 @@ func showParameters(ctx context.Context, npa *common.NPASelection, round uint64,
 
 	doSection("rofl", stakeThresholds)
 
-	if outputFormat == formatJSON {
+	if common.OutputFormat() == common.FormatJSON {
 		pp, err := json.MarshalIndent(doc, "", "  ")
 		cobra.CheckErr(err)
 		fmt.Printf("%s\n", pp)
@@ -519,7 +513,7 @@ func showEvents(ctx context.Context, round uint64, rt connection.RuntimeClient) 
 	cobra.CheckErr(err)
 
 	if len(evs) == 0 {
-		if outputFormat == formatJSON {
+		if common.OutputFormat() == common.FormatJSON {
 			fmt.Printf("[]\n")
 		} else {
 			fmt.Println("No events emitted in this block.")
@@ -527,7 +521,7 @@ func showEvents(ctx context.Context, round uint64, rt connection.RuntimeClient) 
 		return
 	}
 
-	if outputFormat == formatJSON {
+	if common.OutputFormat() == common.FormatJSON {
 		jsonPrintEvents(evs)
 	} else {
 		for evIndex, ev := range evs {
@@ -538,13 +532,10 @@ func showEvents(ctx context.Context, round uint64, rt connection.RuntimeClient) 
 }
 
 func init() {
-	formatFlag := flag.NewFlagSet("", flag.ContinueOnError)
-	formatFlag.StringVar(&outputFormat, "format", formatText, "output format ["+strings.Join([]string{formatText, formatJSON}, ",")+"]")
-
 	roundFlag := flag.NewFlagSet("", flag.ContinueOnError)
 	roundFlag.Uint64Var(&selectedRound, "round", client.RoundLatest, "explicitly set block round to use")
 
+	showCmd.Flags().AddFlagSet(common.FormatFlag)
 	showCmd.Flags().AddFlagSet(common.SelectorNPFlags)
 	showCmd.Flags().AddFlagSet(roundFlag)
-	showCmd.Flags().AddFlagSet(formatFlag)
 }

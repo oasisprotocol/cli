@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	consensusPretty "github.com/oasisprotocol/oasis-core/go/common/prettyprint"
@@ -428,7 +427,7 @@ func showParameters(ctx context.Context, npa *common.NPASelection, height int64,
 	doc := make(map[string]interface{})
 
 	doSection := func(name string, params interface{}) {
-		if outputFormat == formatJSON {
+		if common.OutputFormat() == common.FormatJSON {
 			doc[name] = params
 		} else {
 			fmt.Printf("=== %s PARAMETERS ===\n", strings.ToUpper(name))
@@ -446,7 +445,7 @@ func showParameters(ctx context.Context, npa *common.NPASelection, height int64,
 	doSection("beacon", beaconParams)
 	doSection("governance", governanceParams)
 
-	if outputFormat == formatJSON {
+	if common.OutputFormat() == common.FormatJSON {
 		pp, err := json.MarshalIndent(doc, "", "  ")
 		cobra.CheckErr(err)
 		fmt.Printf("%s\n", pp)
@@ -454,10 +453,7 @@ func showParameters(ctx context.Context, npa *common.NPASelection, height int64,
 }
 
 func init() {
-	formatFlag := flag.NewFlagSet("", flag.ContinueOnError)
-	formatFlag.StringVar(&outputFormat, "format", formatText, "output format ["+strings.Join([]string{formatText, formatJSON}, ",")+"]")
-	showCmd.Flags().AddFlagSet(formatFlag)
-
 	showCmd.Flags().AddFlagSet(common.SelectorNFlags)
 	showCmd.Flags().AddFlagSet(common.HeightFlag)
+	showCmd.Flags().AddFlagSet(common.FormatFlag)
 }

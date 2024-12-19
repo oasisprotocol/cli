@@ -6,11 +6,9 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
-	"github.com/oasisprotocol/oasis-core/go/common/sgx"
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle"
-	"github.com/oasisprotocol/oasis-core/go/runtime/bundle/component"
 
-	"github.com/oasisprotocol/cli/build/measurement"
+	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
 )
 
 var (
@@ -29,53 +27,12 @@ var (
 				cobra.CheckErr(fmt.Errorf("failed to open bundle: %w", err))
 			}
 
-			var cid component.ID
-			if compID != "" {
-				if err = cid.UnmarshalText([]byte(compID)); err != nil {
-					cobra.CheckErr(fmt.Errorf("malformed component ID: %w", err))
-				}
-			}
+			eids, err := roflCommon.ComputeEnclaveIdentity(bnd, compID)
+			cobra.CheckErr(err)
 
-			for _, comp := range bnd.Manifest.GetAvailableComponents() {
-				if comp.Kind != component.ROFL {
-					continue // Skip non-ROFL components.
-				}
-				switch compID {
-				case "":
-					// When not specified we use the first ROFL app.
-				default:
-					if !comp.Matches(cid) {
-						continue
-					}
-				}
-
-				var eids []*sgx.EnclaveIdentity
-				switch teeKind := comp.TEEKind(); teeKind {
-				case component.TEEKindSGX:
-					var enclaveID *sgx.EnclaveIdentity
-					enclaveID, err = bnd.EnclaveIdentity(comp.ID())
-					eids = append(eids, enclaveID)
-				case component.TEEKindTDX:
-					eids, err = measurement.MeasureTdxQemu(bnd, comp)
-				default:
-					cobra.CheckErr(fmt.Errorf("identity computation for TEE kind '%s' not supported", teeKind))
-				}
-				if err != nil {
-					cobra.CheckErr(fmt.Errorf("failed to generate enclave identity of '%s': %w", comp.ID(), err))
-				}
-
-				for _, enclaveID := range eids {
-					data, _ := enclaveID.MarshalText()
-					fmt.Println(string(data))
-				}
-				return
-			}
-
-			switch compID {
-			case "":
-				cobra.CheckErr("no ROFL apps found in bundle")
-			default:
-				cobra.CheckErr(fmt.Errorf("ROFL app '%s' not found in bundle", compID))
+			for _, enclaveID := range eids {
+				data, _ := enclaveID.MarshalText()
+				fmt.Println(string(data))
 			}
 		},
 	}

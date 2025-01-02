@@ -75,4 +75,4 @@ the configuration folder containing `cli.toml` and `.wallet` files.
 
 [cli-releases]: https://github.com/oasisprotocol/cli/releases
 [cli-source]: https://github.com/oasisprotocol/cli
-[paratimes]: https://github.com/oasisprotocol/docs/blob/main/docs/dapp/README.mdx
+[paratimes]: https://github.com/oasisprotocol/docs/blob/main/docs/build/tools/other-paratimes/README.mdx

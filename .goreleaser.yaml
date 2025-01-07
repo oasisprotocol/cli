@@ -58,6 +58,16 @@ builds:
       - darwin
     goarch:
       - arm64
+  - <<: *build-common
+    id: oasis-windows-amd64
+    binary: oasis.exe
+    env:
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+    goos:
+      - windows
+    goarch:
+      - amd64
 
 archives:
   - name_template: "{{replace .ProjectName \" \" \"_\" | tolower}}_{{.Version}}_{{.Os}}_{{.Arch}}"
@@ -66,6 +76,10 @@ archives:
       - oasis-linux-amd64
       - oasis-linux-arm64
       - oasis-darwin-universal
+      - oasis-windows-amd64
+    format_overrides:
+      - goos: windows
+        format: zip
 
 checksum:
   name_template: SHA256SUMS-{{.Version}}.txt

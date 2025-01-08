@@ -248,8 +248,8 @@ func createSquashFs(fn, dir string) (int64, error) {
 		return 0, err
 	}
 
-	// Execute mkfs.ext4.
-	cmd := exec.Command( //nolint:gosec
+	// Execute mksquashfs.
+	cmd := exec.Command(
 		mkSquashFsBin,
 		dir,
 		fn,

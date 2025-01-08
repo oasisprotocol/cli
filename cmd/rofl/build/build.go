@@ -11,11 +11,15 @@ import (
 
 	coreCommon "github.com/oasisprotocol/oasis-core/go/common"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
+	"github.com/oasisprotocol/oasis-core/go/common/version"
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
+	"github.com/oasisprotocol/oasis-core/go/runtime/bundle"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 
 	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/cmd/common"
+	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
+	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
 // Build modes.
@@ -33,6 +37,92 @@ var (
 	Cmd = &cobra.Command{
 		Use:   "build",
 		Short: "Build a ROFL application",
+		Args:  cobra.NoArgs,
+		Run: func(_ *cobra.Command, _ []string) {
+			cfg := cliConfig.Global()
+			npa := common.GetNPASelection(cfg)
+			manifest := roflCommon.LoadManifestAndSetNPA(cfg, npa)
+
+			fmt.Println("Building a ROFL application...")
+			fmt.Printf("App ID:  %s\n", manifest.AppID)
+			fmt.Printf("Name:    %s\n", manifest.Name)
+			fmt.Printf("Version: %s\n", manifest.Version)
+			fmt.Printf("TEE:     %s\n", manifest.TEE)
+			fmt.Printf("Kind:    %s\n", manifest.Kind)
+
+			// Prepare temporary build directory.
+			tmpDir, err := os.MkdirTemp("", "oasis-build")
+			if err != nil {
+				cobra.CheckErr(fmt.Errorf("failed to create temporary build directory: %w", err))
+			}
+			defer os.RemoveAll(tmpDir)
+
+			bnd := &bundle.Bundle{
+				Manifest: &bundle.Manifest{
+					Name: manifest.AppID,
+					ID:   npa.ParaTime.Namespace(),
+				},
+			}
+			bnd.Manifest.Version, err = version.FromString(manifest.Version)
+			if err != nil {
+				fmt.Printf("unsupported package version format: %s\n", err)
+				return
+			}
+
+			switch manifest.TEE {
+			case buildRofl.TEETypeSGX:
+				// SGX.
+				if manifest.Kind != buildRofl.AppKindRaw {
+					fmt.Printf("unsupported app kind for SGX TEE: %s\n", manifest.Kind)
+					return
+				}
+
+				sgxBuild(npa, manifest, bnd)
+			case buildRofl.TEETypeTDX:
+				// TDX.
+				switch manifest.Kind {
+				case buildRofl.AppKindRaw:
+					err = tdxBuildRaw(tmpDir, npa, manifest, bnd)
+				case buildRofl.AppKindContainer:
+					err = tdxBuildContainer(tmpDir, npa, manifest, bnd)
+				}
+			default:
+				fmt.Printf("unsupported TEE kind: %s\n", manifest.TEE)
+				return
+			}
+			if err != nil {
+				fmt.Printf("%s\n", err)
+				return
+			}
+
+			// Write the bundle out.
+			outFn := fmt.Sprintf("%s.orc", manifest.Name)
+			if outputFn != "" {
+				outFn = outputFn
+			}
+			if err = bnd.Write(outFn); err != nil {
+				fmt.Printf("failed to write output bundle: %s\n", err)
+				return
+			}
+
+			fmt.Println("Computing enclave identity...")
+
+			eids, err := roflCommon.ComputeEnclaveIdentity(bnd, "")
+			if err != nil {
+				fmt.Printf("%s\n", err)
+				return
+			}
+
+			fmt.Println("Update the manifest with the following identities to use the new app:")
+			fmt.Println()
+			for _, enclaveID := range eids {
+				data, _ := enclaveID.MarshalText()
+				fmt.Printf("- \"%s\"\n", string(data))
+			}
+			fmt.Println()
+
+			fmt.Printf("ROFL app built and bundle written to '%s'.\n", outFn)
+		},
 	}
 )
 
@@ -60,10 +150,6 @@ func detectBuildMode(npa *common.NPASelection) {
 }
 
 func setupBuildEnv(manifest *buildRofl.Manifest, npa *common.NPASelection) {
-	if manifest == nil {
-		return
-	}
-
 	// Configure app ID.
 	os.Setenv("ROFL_APP_ID", manifest.AppID)
 
@@ -141,6 +227,4 @@ func init() {
 	globalFlags.StringVar(&outputFn, "output", "", "output bundle filename")
 
 	Cmd.PersistentFlags().AddFlagSet(globalFlags)
-	Cmd.AddCommand(sgxCmd)
-	Cmd.AddCommand(tdxCmd)
 }

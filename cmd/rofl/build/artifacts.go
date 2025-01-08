@@ -58,33 +58,48 @@ func maybeDownloadArtifact(kind, uri string) string {
 		cobra.CheckErr(fmt.Errorf("failed to create cache directory for %s artifact: %w", kind, err))
 	}
 
-	f, err := os.Create(cacheFn)
-	if err != nil {
-		cobra.CheckErr(fmt.Errorf("failed to create file for %s artifact: %w", kind, err))
-	}
-	defer f.Close()
+	// First attempt to use the cached artifact.
+	f, err := os.Open(cacheFn)
+	switch {
+	case err == nil:
+		// Already exists in cache.
+		// TODO: Verify checksum and discard if invalid.
+		f.Close()
 
-	// Download the remote artifact.
-	res, err := http.Get(uri) //nolint:gosec,noctx
-	if err != nil {
-		cobra.CheckErr(fmt.Errorf("failed to download %s artifact: %w", kind, err))
-	}
-	defer res.Body.Close()
-
-	// Compute the SHA256 hash while downloading the artifact.
-	h := sha256.New()
-	rd := io.TeeReader(res.Body, h)
-
-	if _, err = io.Copy(f, rd); err != nil {
-		cobra.CheckErr(fmt.Errorf("failed to download %s artifact: %w", kind, err))
-	}
-
-	// Verify integrity if available.
-	if knownHash != "" {
-		artifactHash := fmt.Sprintf("%x", h.Sum(nil))
-		if artifactHash != knownHash {
-			cobra.CheckErr(fmt.Errorf("hash mismatch for %s artifact (expected: %s got: %s)", kind, knownHash, artifactHash))
+		fmt.Printf("  (using cached artifact)\n")
+	case errors.Is(err, os.ErrNotExist):
+		// Does not exist in cache, download.
+		f, err = os.Create(cacheFn)
+		if err != nil {
+			cobra.CheckErr(fmt.Errorf("failed to create file for %s artifact: %w", kind, err))
 		}
+		defer f.Close()
+
+		// Download the remote artifact.
+		var res *http.Response
+		res, err = http.Get(uri) //nolint:gosec,noctx
+		if err != nil {
+			cobra.CheckErr(fmt.Errorf("failed to download %s artifact: %w", kind, err))
+		}
+		defer res.Body.Close()
+
+		// Compute the SHA256 hash while downloading the artifact.
+		h := sha256.New()
+		rd := io.TeeReader(res.Body, h)
+
+		if _, err = io.Copy(f, rd); err != nil {
+			cobra.CheckErr(fmt.Errorf("failed to download %s artifact: %w", kind, err))
+		}
+
+		// Verify integrity if available.
+		if knownHash != "" {
+			artifactHash := fmt.Sprintf("%x", h.Sum(nil))
+			if artifactHash != knownHash {
+				cobra.CheckErr(fmt.Errorf("hash mismatch for %s artifact (expected: %s got: %s)", kind, knownHash, artifactHash))
+			}
+		}
+	default:
+		cobra.CheckErr(fmt.Errorf("failed to open cached %s artifact: %w", kind, err))
 	}
 
 	return cacheFn

@@ -22,9 +22,9 @@ const (
 	artifactKernel   = "kernel"
 	artifactStage2   = "stage 2 template"
 
-	defaultFirmwareURI       = "https://github.com/oasisprotocol/oasis-boot/releases/download/v0.2.0/ovmf.tdx.fd#db47100a7d6a0c1f6983be224137c3f8d7cb09b63bb1c7a5ee7829d8e994a42f"
-	defaultKernelURI         = "https://github.com/oasisprotocol/oasis-boot/releases/download/v0.2.0/stage1.bin#0c4a74af5e3860e1b9c79b38aff9de8c59aa92f14da715fbfd04a9362ee4cd59"
-	defaultStage2TemplateURI = "https://github.com/oasisprotocol/oasis-boot/releases/download/v0.2.0/stage2-basic.tar.bz2#8cbc67e4a05b01e6fc257a3ef378db50ec230bc4c7aacbfb9abf0f5b17dcb8fd"
+	defaultFirmwareURI       = "https://github.com/oasisprotocol/oasis-boot/releases/download/v0.3.0/ovmf.tdx.fd#db47100a7d6a0c1f6983be224137c3f8d7cb09b63bb1c7a5ee7829d8e994a42f"
+	defaultKernelURI         = "https://github.com/oasisprotocol/oasis-boot/releases/download/v0.3.0/stage1.bin#029255ff97cd0e6e3be04372578e7c980a8b8c0138b8153afc047cca98fe6008"
+	defaultStage2TemplateURI = "https://github.com/oasisprotocol/oasis-boot/releases/download/v0.3.0/stage2-basic.tar.bz2#2dfbc01d62744052afa95feb737d5a0d6a68e2b58d71743751c4e3fc5faf4d36"
 )
 
 var (

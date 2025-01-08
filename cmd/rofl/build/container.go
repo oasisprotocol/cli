@@ -13,9 +13,9 @@ const (
 	artifactContainerRuntime = "rofl-container runtime"
 	artifactContainerCompose = "compose.yaml"
 
-	defaultContainerStage2TemplateURI = "https://github.com/oasisprotocol/oasis-boot/releases/download/v0.3.0/stage2-podman.tar.bz2"
+	defaultContainerStage2TemplateURI = "https://github.com/oasisprotocol/oasis-boot/releases/download/v0.3.0/stage2-podman.tar.bz2#d84e0ca961fb0913b73a50ed90eb743af24b3d0acecdbe2594650e2801b41171"
 
-	defaultContainerRuntimeURI = "https://github.com/oasisprotocol/oasis-sdk/releases/download/rofl-containers/v0.1.0/runtime"
+	defaultContainerRuntimeURI = "https://github.com/oasisprotocol/oasis-sdk/releases/download/rofl-containers%2Fv0.1.0/rofl-containers#89d533f8c2c0a8015fdc269ae350ab5b6a271c3aa6b17dd2c1ea49b3ffff2e06"
 
 	defaultContainerComposeURI = "compose.yaml"
 )

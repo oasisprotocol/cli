@@ -133,30 +133,24 @@ var statusCmd = &cobra.Command{
 			sort.Slice(keys, func(i, j int) bool {
 				var iParatimeName, jParatimeName string
 
-				iDescriptor := nodeStatus.Runtimes[keys[i]].Descriptor
-				jDescriptor := nodeStatus.Runtimes[keys[j]].Descriptor
+				iKey := keys[i].String()
+				jKey := keys[j].String()
 
-				if iDescriptor != nil {
-					iDescriptorID := iDescriptor.ID.String()
-					iParatimeName = getParatimeName(cfg, iDescriptorID) + iDescriptorID
-				}
-
-				if jDescriptor != nil {
-					jDescriptorID := jDescriptor.ID.String()
-					jParatimeName = getParatimeName(cfg, jDescriptorID) + jDescriptorID
-				}
+				iParatimeName = getParatimeName(cfg, iKey) + iKey
+				jParatimeName = getParatimeName(cfg, jKey) + jKey
 
 				return iParatimeName < jParatimeName
 			})
 
 			for _, key := range keys {
 				runtime := nodeStatus.Runtimes[key]
+
+				paratimeName := getParatimeName(cfg, key.String())
+				fmt.Printf("%s (%s):", paratimeName, key.String())
+				fmt.Println()
+
 				descriptor := runtime.Descriptor
 				if descriptor != nil {
-					paratimeName := getParatimeName(cfg, descriptor.ID.String())
-					fmt.Printf("%s (%s):", paratimeName, descriptor.ID)
-					fmt.Println()
-
 					fmt.Printf("  Kind:                 %s", descriptor.Kind)
 					fmt.Println()
 

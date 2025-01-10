@@ -13,6 +13,11 @@ all: build
 
 # Build.
 build: oasis
+
+build-windows: $(shell find . -name "*.go" -type f) go.sum go.mod
+	@$(PRINT) "$(MAGENTA)*** Building for Windows...$(OFF)\n"
+	GOOS=windows GOARCH=amd64 $(GO) build -v -o oasis.exe $(GOFLAGS) $(GO_EXTRA_FLAGS)
+
 oasis: $(shell find . -name "*.go" -type f) go.sum go.mod
 	@$(PRINT) "$(MAGENTA)*** Building Go code...$(OFF)\n"
 	@$(GO) build -v -o oasis $(GOFLAGS) $(GO_EXTRA_FLAGS)
@@ -83,3 +88,4 @@ clean:
 	$(lint-targets) lint \
 	$(test-targets) test \
 	clean
+	windows

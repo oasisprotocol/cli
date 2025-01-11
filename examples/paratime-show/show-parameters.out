@@ -2,7 +2,6 @@ Network:        testnet
 ParaTime:       sapphire
 
 === ROFL PARAMETERS ===
-  app_create:
-    Amount: 10000000000000000000000
-    Denomination:
+  Stake thresholds:
+    App create: 10000.0 TEST
 

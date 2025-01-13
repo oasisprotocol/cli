@@ -34,7 +34,7 @@ configure all [ParaTimes supported by the Oasis Foundation][paratimes].
 The configuration folder of Oasis CLI is located:
 
 - on Windows:
-  - `%USERPROFILE%\AppData\Roaming\oasis\`
+  - `%USERPROFILE%\AppData\Local\oasis\`
 - on macOS:
   - `/Users/$USER/Library/Application Support/oasis/`
 - on Linux:

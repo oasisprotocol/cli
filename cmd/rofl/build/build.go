@@ -8,9 +8,11 @@ import (
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+	"gopkg.in/yaml.v3"
 
 	coreCommon "github.com/oasisprotocol/oasis-core/go/common"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
+	"github.com/oasisprotocol/oasis-core/go/common/sgx"
 	"github.com/oasisprotocol/oasis-core/go/common/version"
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle"
@@ -33,6 +35,7 @@ var (
 	outputFn  string
 	buildMode string
 	offline   bool
+	doUpdate  bool
 
 	Cmd = &cobra.Command{
 		Use:   "build",
@@ -105,6 +108,8 @@ var (
 				return
 			}
 
+			fmt.Printf("ROFL app built and bundle written to '%s'.\n", outFn)
+
 			fmt.Println("Computing enclave identity...")
 
 			eids, err := roflCommon.ComputeEnclaveIdentity(bnd, "")
@@ -113,15 +118,34 @@ var (
 				return
 			}
 
-			fmt.Println("Update the manifest with the following identities to use the new app:")
-			fmt.Println()
-			for _, enclaveID := range eids {
-				data, _ := enclaveID.MarshalText()
-				fmt.Printf("- \"%s\"\n", string(data))
+			// Override the update manifest flag in case the policy does not exist.
+			if manifest.Policy == nil {
+				doUpdate = false
 			}
-			fmt.Println()
 
-			fmt.Printf("ROFL app built and bundle written to '%s'.\n", outFn)
+			switch doUpdate {
+			case false:
+				// Ask the user to update the manifest manually.
+				fmt.Println("Update the manifest with the following identities to use the new app:")
+				fmt.Println()
+				for _, enclaveID := range eids {
+					data, _ := enclaveID.MarshalText()
+					fmt.Printf("- \"%s\"\n", string(data))
+				}
+				fmt.Println()
+			case true:
+				// Update the manifest with the given enclave identities, overwriting existing ones.
+				manifest.Policy.Enclaves = make([]sgx.EnclaveIdentity, 0, len(eids))
+				for _, eid := range eids {
+					manifest.Policy.Enclaves = append(manifest.Policy.Enclaves, *eid)
+				}
+
+				// Serialize manifest and write it to file.
+				data, _ := yaml.Marshal(manifest)
+				if err = os.WriteFile(manifest.SourceFileName(), data, 0o644); err != nil { //nolint: gosec
+					cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
+				}
+			}
 		},
 	}
 )
@@ -221,10 +245,11 @@ func fetchTrustRoot(npa *common.NPASelection, cfg *buildRofl.TrustRootConfig) (s
 }
 
 func init() {
-	globalFlags := flag.NewFlagSet("", flag.ContinueOnError)
-	globalFlags.StringVar(&buildMode, "mode", "auto", "build mode [production, unsafe, auto]")
-	globalFlags.BoolVar(&offline, "offline", false, "do not perform any operations requiring network access")
-	globalFlags.StringVar(&outputFn, "output", "", "output bundle filename")
+	buildFlags := flag.NewFlagSet("", flag.ContinueOnError)
+	buildFlags.StringVar(&buildMode, "mode", "auto", "build mode [production, unsafe, auto]")
+	buildFlags.BoolVar(&offline, "offline", false, "do not perform any operations requiring network access")
+	buildFlags.StringVar(&outputFn, "output", "", "output bundle filename")
+	buildFlags.BoolVar(&doUpdate, "update-manifest", false, "automatically update the manifest")
 
-	Cmd.PersistentFlags().AddFlagSet(globalFlags)
+	Cmd.Flags().AddFlagSet(buildFlags)
 }

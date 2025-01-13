@@ -14,7 +14,7 @@ OFfchain Logic (ROFL)][rofl] apps:
 - show information about the registered ROFL apps,
 - other convenient tooling for ROFL app developers.
 
-[rofl]: https://github.com/oasisprotocol/docs/blob/main/docs/rofl/README.mdx
+[rofl]: https://github.com/oasisprotocol/docs/blob/main/docs/build/rofl/README.mdx
 
 ## Build ROFL {#build}
 
@@ -64,7 +64,7 @@ The following SGX-specific flags are supported:
   Core runtime], otherwise the app may crash during the execution under actual
   SGX. It can be greater, if the app needs to spawn more threads.
 
-[Sapphire Localnet]: https://github.com/oasisprotocol/docs/blob/main/docs/dapp/tools/localnet.mdx
+[Sapphire Localnet]: https://github.com/oasisprotocol/docs/blob/main/docs/build/tools/localnet.mdx
 [Oasis Core runtime]: https://github.com/oasisprotocol/oasis-core/blob/master/runtime/THREADS.md
 
 <!-- TODO

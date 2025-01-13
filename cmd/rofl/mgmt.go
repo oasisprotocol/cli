@@ -10,11 +10,14 @@ import (
 	flag "github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
 
+	"github.com/oasisprotocol/oasis-core/go/common/sgx/pcs"
+	"github.com/oasisprotocol/oasis-core/go/common/sgx/quote"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 
+	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/cmd/common"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
@@ -29,6 +32,117 @@ var (
 	policyFn     string
 	scheme       string
 	adminAddress string
+
+	appTEE  string
+	appKind string
+
+	initCmd = &cobra.Command{
+		Use:   "init <name> [--tee TEE] [--kind KIND]",
+		Short: "Create a new ROFL app and initialize the manifest",
+		Args:  cobra.ExactArgs(1),
+		Run: func(_ *cobra.Command, args []string) {
+			cfg := cliConfig.Global()
+			npa := common.GetNPASelection(cfg)
+			txCfg := common.GetTransactionConfig()
+
+			if npa.Account == nil {
+				cobra.CheckErr("no accounts configured in your wallet")
+			}
+			if npa.ParaTime == nil {
+				cobra.CheckErr("no ParaTime selected")
+			}
+			if txCfg.Offline {
+				cobra.CheckErr("offline mode currently not supported")
+			}
+
+			// TODO: Support an interactive mode.
+			appName := args[0]
+			// Fail in case there is an existing manifest.
+			if buildRofl.ManifestExists() {
+				cobra.CheckErr("refusing to overwrite existing manifest")
+			}
+
+			ctx := context.Background()
+			conn, err := connection.Connect(ctx, npa.Network)
+			cobra.CheckErr(err)
+
+			// Determine latest height for the trust root.
+			height, err := common.GetActualHeight(ctx, conn.Consensus())
+			cobra.CheckErr(err)
+
+			// Generate manifest and a default policy which does not accept any enclaves.
+			manifest := buildRofl.Manifest{
+				AppID:    rofl.NewAppIDGlobalName("").String(), // Temporary for initial validation.
+				Name:     appName,
+				Version:  "0.1.0",
+				Network:  npa.NetworkName,
+				ParaTime: npa.ParaTimeName,
+				Admin:    npa.AccountName,
+				TEE:      appTEE,
+				Kind:     appKind,
+				Policy: &rofl.AppAuthPolicy{
+					Quotes: quote.Policy{
+						PCS: &pcs.QuotePolicy{
+							TCBValidityPeriod:          30,
+							MinTCBEvaluationDataNumber: 17,
+							TDX:                        &pcs.TdxQuotePolicy{},
+						},
+					},
+					Endorsements: []rofl.AllowedEndorsement{
+						{Any: &struct{}{}},
+					},
+					Fees:          rofl.FeePolicyEndorsingNodePays,
+					MaxExpiration: 3,
+				},
+				TrustRoot: &buildRofl.TrustRootConfig{
+					Height: uint64(height),
+				},
+				Resources: buildRofl.ResourcesConfig{
+					Memory:   512,
+					CPUCount: 1,
+					EphemeralStorage: &buildRofl.EphemeralStorageConfig{
+						Kind: buildRofl.EphemeralStorageKindDisk,
+						Size: 512,
+					},
+				},
+			}
+			err = manifest.Validate()
+			cobra.CheckErr(err)
+
+			fmt.Printf("Creating a new ROFL app with default policy...\n")
+			fmt.Printf("Name:    %s\n", manifest.Name)
+			fmt.Printf("Version: %s\n", manifest.Version)
+			fmt.Printf("TEE:     %s\n", manifest.TEE)
+			fmt.Printf("Kind:    %s\n", manifest.Kind)
+
+			idScheme, ok := identifierSchemes[scheme]
+			if !ok {
+				cobra.CheckErr(fmt.Errorf("unknown scheme %s", scheme))
+			}
+
+			// Register a new ROFL application to determine the identifier.
+			tx := rofl.NewCreateTx(nil, &rofl.Create{
+				Policy: *manifest.Policy,
+				Scheme: idScheme,
+			})
+
+			acc := common.LoadAccount(cfg, npa.AccountName)
+			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
+			cobra.CheckErr(err)
+
+			var appID rofl.AppID
+			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &appID)
+			manifest.AppID = appID.String()
+
+			fmt.Printf("Created ROFL application: %s\n", appID)
+
+			// Serialize manifest and write it to file.
+			data, _ := yaml.Marshal(manifest)
+			if err = os.WriteFile("rofl.yml", data, 0o644); err != nil { //nolint: gosec
+				cobra.CheckErr(fmt.Errorf("failed to write manifest: %w", err))
+			}
+		},
+	}
 
 	createCmd = &cobra.Command{
 		Use:   "create [<policy.yml>]",
@@ -295,6 +409,12 @@ func init() {
 	updateFlags := flag.NewFlagSet("", flag.ContinueOnError)
 	updateFlags.StringVar(&policyFn, "policy", "", "set the ROFL application policy")
 	updateFlags.StringVar(&adminAddress, "admin", "", "set the administrator address")
+
+	initCmd.Flags().AddFlagSet(common.SelectorFlags)
+	initCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
+	initCmd.Flags().StringVar(&appTEE, "tee", "tdx", "TEE kind [tdx, sgx]")
+	initCmd.Flags().StringVar(&appKind, "kind", "container", "ROFL app kind [container, raw]")
+	initCmd.Flags().StringVar(&scheme, "scheme", "cn", "app ID generation scheme: creator+round+index [cri] or creator+nonce [cn]")
 
 	createCmd.Flags().AddFlagSet(common.SelectorFlags)
 	createCmd.Flags().AddFlagSet(common.RuntimeTxFlags)

@@ -43,6 +43,8 @@ type Manifest struct {
 	Network string `yaml:"network,omitempty" json:"network,omitempty"`
 	// ParaTime is the identifier of the paratime to deploy to by default.
 	ParaTime string `yaml:"paratime,omitempty" json:"paratime,omitempty"`
+	// Admin is the identifier of the admin account.
+	Admin string `yaml:"admin,omitempty" json:"admin,omitempty"`
 	// TEE is the type of TEE to build for.
 	TEE string `yaml:"tee" json:"tee"`
 	// Kind is the kind of ROFL app to build.
@@ -56,8 +58,21 @@ type Manifest struct {
 
 	// Policy is the ROFL app policy to deploy by default.
 	Policy *rofl.AppAuthPolicy `yaml:"policy,omitempty" json:"policy,omitempty"`
-	// Admin is the identifier of the admin account.
-	Admin string `yaml:"admin,omitempty" json:"admin,omitempty"`
+}
+
+// ManifestExists checks whether a manifest file exist. No attempt is made to load, parse or
+// validate any of the found manifest files.
+func ManifestExists() bool {
+	for _, fn := range ManifestFileNames {
+		_, err := os.Stat(fn)
+		switch {
+		case errors.Is(err, os.ErrNotExist):
+			continue
+		default:
+			return true
+		}
+	}
+	return false
 }
 
 // LoadManifest attempts to find and load the ROFL app manifest from a local file.

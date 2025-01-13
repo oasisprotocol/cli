@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -58,6 +59,9 @@ type Manifest struct {
 
 	// Policy is the ROFL app policy to deploy by default.
 	Policy *rofl.AppAuthPolicy `yaml:"policy,omitempty" json:"policy,omitempty"`
+
+	// sourceFn is the filename from which the manifest has been loaded.
+	sourceFn string
 }
 
 // ManifestExists checks whether a manifest file exist. No attempt is made to load, parse or
@@ -97,6 +101,7 @@ func LoadManifest() (*Manifest, error) {
 			f.Close()
 			return nil, fmt.Errorf("invalid manifest '%s': %w", fn, err)
 		}
+		m.sourceFn, _ = filepath.Abs(f.Name()) // Record source filename.
 
 		f.Close()
 		return &m, nil
@@ -146,6 +151,12 @@ func (m *Manifest) Validate() error {
 	}
 
 	return nil
+}
+
+// SourceFileName returns the filename of the manifest file from which the manifest was loaded or
+// an empty string in case the filename is not available.
+func (m *Manifest) SourceFileName() string {
+	return m.sourceFn
 }
 
 // TrustRootConfig is the trust root configuration.

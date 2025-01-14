@@ -100,8 +100,8 @@ var (
 				Resources: buildRofl.ResourcesConfig{
 					Memory:   512,
 					CPUCount: 1,
-					EphemeralStorage: &buildRofl.EphemeralStorageConfig{
-						Kind: buildRofl.EphemeralStorageKindDisk,
+					Storage: &buildRofl.StorageConfig{
+						Kind: buildRofl.StorageKindDiskEphemeral,
 						Size: 512,
 					},
 				},

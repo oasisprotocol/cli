@@ -225,26 +225,28 @@ func tdxBundleComponent(
 		},
 	}
 
-	tmpStorageKind := buildRofl.EphemeralStorageKindNone
-	if manifest.Resources.EphemeralStorage != nil {
-		tmpStorageKind = manifest.Resources.EphemeralStorage.Kind
+	tmpStorageKind := buildRofl.StorageKindNone
+	if manifest.Resources.Storage != nil {
+		tmpStorageKind = manifest.Resources.Storage.Kind
 	}
 
 	switch tmpStorageKind {
-	case buildRofl.EphemeralStorageKindNone:
-	case buildRofl.EphemeralStorageKindRAM:
+	case buildRofl.StorageKindNone:
+	case buildRofl.StorageKindRAM:
 		comp.TDX.ExtraKernelOptions = append(comp.TDX.ExtraKernelOptions,
 			"oasis.stage2.storage_mode=ram",
-			fmt.Sprintf("oasis.stage2.storage_size=%d", manifest.Resources.EphemeralStorage.Size*1024*1024),
+			fmt.Sprintf("oasis.stage2.storage_size=%d", manifest.Resources.Storage.Size*1024*1024),
 		)
-	case buildRofl.EphemeralStorageKindDisk:
+	case buildRofl.StorageKindDiskEphemeral, buildRofl.StorageKindDiskPersistent:
 		// Allocate some space after regular stage2.
 		const sectorSize = 512
-		storageSize := manifest.Resources.EphemeralStorage.Size * 1024 * 1024
+		storageSize := manifest.Resources.Storage.Size * 1024 * 1024
 		storageOffset, err := appendEmptySpace(stage2.fn, storageSize, sectorSize)
 		if err != nil {
 			return err
 		}
+
+		// TODO: For persistent disk, configure Stage2Persist flag and storage mode.
 
 		comp.TDX.ExtraKernelOptions = append(comp.TDX.ExtraKernelOptions,
 			"oasis.stage2.storage_mode=disk",
@@ -252,7 +254,7 @@ func tdxBundleComponent(
 			fmt.Sprintf("oasis.stage2.storage_offset=%d", storageOffset/sectorSize),
 		)
 	default:
-		return fmt.Errorf("unsupported ephemeral storage mode: %s", tmpStorageKind)
+		return fmt.Errorf("unsupported storage mode: %s", tmpStorageKind)
 	}
 
 	// TODO: (Oasis Core 25.0+) Use qcow2 image format to support sparse files.

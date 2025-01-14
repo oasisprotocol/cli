@@ -173,8 +173,8 @@ type ResourcesConfig struct {
 	Memory uint64 `yaml:"memory" json:"memory"`
 	// CPUCount is the number of vCPUs needed by the app.
 	CPUCount uint8 `yaml:"cpus" json:"cpus"`
-	// EphemeralStorage is the ephemeral storage configuration.
-	EphemeralStorage *EphemeralStorageConfig `yaml:"ephemeral_storage,omitempty" json:"ephemeral_storage,omitempty"`
+	// Storage is the storage configuration.
+	Storage *StorageConfig `yaml:"storage,omitempty" json:"storage,omitempty"`
 }
 
 // Validate validates the resources configuration for correctness.
@@ -185,40 +185,41 @@ func (r *ResourcesConfig) Validate() error {
 	if r.CPUCount < 1 {
 		return fmt.Errorf("vCPU count must be at least 1")
 	}
-	if r.EphemeralStorage != nil {
-		err := r.EphemeralStorage.Validate()
+	if r.Storage != nil {
+		err := r.Storage.Validate()
 		if err != nil {
-			return fmt.Errorf("bad ephemeral storage config: %w", err)
+			return fmt.Errorf("bad storage config: %w", err)
 		}
 	}
 	return nil
 }
 
-// Supported ephemeral storage kinds.
+// Supported storage kinds.
 const (
-	EphemeralStorageKindNone = "none"
-	EphemeralStorageKindDisk = "disk"
-	EphemeralStorageKindRAM  = "ram"
+	StorageKindNone           = "none"
+	StorageKindDiskEphemeral  = "disk-ephemeral"
+	StorageKindDiskPersistent = "disk-persistent"
+	StorageKindRAM            = "ram"
 )
 
-// EphemeralStorageConfig is the ephemeral storage configuration.
-type EphemeralStorageConfig struct {
+// StorageConfig is the storage configuration.
+type StorageConfig struct {
 	// Kind is the storage kind.
 	Kind string `yaml:"kind" json:"kind"`
-	// Size is the amount of ephemeral storage in megabytes.
+	// Size is the amount of storage in megabytes.
 	Size uint64 `yaml:"size" json:"size"`
 }
 
-// Validate validates the ephemeral storage configuration for correctness.
-func (e *EphemeralStorageConfig) Validate() error {
+// Validate validates the storage configuration for correctness.
+func (e *StorageConfig) Validate() error {
 	switch e.Kind {
-	case EphemeralStorageKindNone, EphemeralStorageKindDisk, EphemeralStorageKindRAM:
+	case StorageKindNone, StorageKindDiskEphemeral, StorageKindDiskPersistent, StorageKindRAM:
 	default:
-		return fmt.Errorf("unsupported ephemeral storage kind: %s", e.Kind)
+		return fmt.Errorf("unsupported storage kind: %s", e.Kind)
 	}
 
 	if e.Size < 16 {
-		return fmt.Errorf("ephemeral storage size must be at least 16M")
+		return fmt.Errorf("storage size must be at least 16M")
 	}
 	return nil
 }

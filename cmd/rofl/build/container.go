@@ -21,7 +21,13 @@ const (
 )
 
 // tdxBuildContainer builds a TDX-based container ROFL app.
-func tdxBuildContainer(tmpDir string, npa *common.NPASelection, manifest *buildRofl.Manifest, bnd *bundle.Bundle) error {
+func tdxBuildContainer(
+	tmpDir string,
+	npa *common.NPASelection,
+	manifest *buildRofl.Manifest,
+	deployment *buildRofl.Deployment,
+	bnd *bundle.Bundle,
+) error {
 	fmt.Println("Building a container-based TDX ROFL application...")
 
 	tdxStage2TemplateURI = defaultContainerStage2TemplateURI
@@ -54,11 +60,11 @@ func tdxBuildContainer(tmpDir string, npa *common.NPASelection, manifest *buildR
 	// Configure app ID.
 	var extraKernelOpts []string
 	extraKernelOpts = append(extraKernelOpts,
-		fmt.Sprintf("ROFL_APP_ID=%s", manifest.AppID),
+		fmt.Sprintf("ROFL_APP_ID=%s", deployment.AppID),
 	)
 
 	// Obtain and configure trust root.
-	trustRoot, err := fetchTrustRoot(npa, manifest.TrustRoot)
+	trustRoot, err := fetchTrustRoot(npa, deployment.TrustRoot)
 	if err != nil {
 		return err
 	}

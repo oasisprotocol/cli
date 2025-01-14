@@ -34,31 +34,21 @@ const (
 
 // Manifest is the ROFL app manifest that configures various aspects of the app in a single place.
 type Manifest struct {
-	// AppID is the Bech32-encoded ROFL app ID.
-	AppID string `yaml:"app_id" json:"app_id"`
 	// Name is the human readable ROFL app name.
 	Name string `yaml:"name" json:"name"`
 	// Version is the ROFL app version.
 	Version string `yaml:"version" json:"version"`
-	// Network is the identifier of the network to deploy to by default.
-	Network string `yaml:"network,omitempty" json:"network,omitempty"`
-	// ParaTime is the identifier of the paratime to deploy to by default.
-	ParaTime string `yaml:"paratime,omitempty" json:"paratime,omitempty"`
-	// Admin is the identifier of the admin account.
-	Admin string `yaml:"admin,omitempty" json:"admin,omitempty"`
 	// TEE is the type of TEE to build for.
 	TEE string `yaml:"tee" json:"tee"`
 	// Kind is the kind of ROFL app to build.
 	Kind string `yaml:"kind" json:"kind"`
-	// TrustRoot is the optional trust root configuration.
-	TrustRoot *TrustRootConfig `yaml:"trust_root,omitempty" json:"trust_root,omitempty"`
 	// Resources are the requested ROFL app resources.
 	Resources ResourcesConfig `yaml:"resources" json:"resources"`
 	// Artifacts are the optional artifact location overrides.
 	Artifacts *ArtifactsConfig `yaml:"artifacts,omitempty" json:"artifacts,omitempty"`
 
-	// Policy is the ROFL app policy to deploy by default.
-	Policy *rofl.AppAuthPolicy `yaml:"policy,omitempty" json:"policy,omitempty"`
+	// Deployments are the ROFL app deployments.
+	Deployments map[string]*Deployment `yaml:"deployments" json:"deployments"`
 
 	// sourceFn is the filename from which the manifest has been loaded.
 	sourceFn string
@@ -111,14 +101,6 @@ func LoadManifest() (*Manifest, error) {
 
 // Validate validates the manifest for correctness.
 func (m *Manifest) Validate() error {
-	if len(m.AppID) == 0 {
-		return fmt.Errorf("app ID cannot be empty")
-	}
-	var appID rofl.AppID
-	if err := appID.UnmarshalText([]byte(m.AppID)); err != nil {
-		return fmt.Errorf("malformed app ID: %w", err)
-	}
-
 	if len(m.Name) == 0 {
 		return fmt.Errorf("name cannot be empty")
 	}
@@ -150,6 +132,18 @@ func (m *Manifest) Validate() error {
 		return fmt.Errorf("bad resources config: %w", err)
 	}
 
+	for name, d := range m.Deployments {
+		if d == nil {
+			return fmt.Errorf("bad deployment: %s", name)
+		}
+		if err := d.Validate(); err != nil {
+			return fmt.Errorf("bad deployment '%s': %w", name, err)
+		}
+	}
+	if _, ok := m.Deployments[DefaultDeploymentName]; !ok {
+		return fmt.Errorf("must define at least the '%s' deployment", DefaultDeploymentName)
+	}
+
 	return nil
 }
 
@@ -157,6 +151,44 @@ func (m *Manifest) Validate() error {
 // an empty string in case the filename is not available.
 func (m *Manifest) SourceFileName() string {
 	return m.sourceFn
+}
+
+// DefaultDeploymentName is the name of the default deployment that must always be defined and is
+// used in case no deployment is passed.
+const DefaultDeploymentName = "default"
+
+// Deployment describes a single ROFL app deployment.
+type Deployment struct {
+	// AppID is the Bech32-encoded ROFL app ID.
+	AppID string `yaml:"app_id" json:"app_id"`
+	// Network is the identifier of the network to deploy to.
+	Network string `yaml:"network" json:"network"`
+	// ParaTime is the identifier of the paratime to deploy to.
+	ParaTime string `yaml:"paratime" json:"paratime"`
+	// Admin is the identifier of the admin account.
+	Admin string `yaml:"admin,omitempty" json:"admin,omitempty"`
+	// TrustRoot is the optional trust root configuration.
+	TrustRoot *TrustRootConfig `yaml:"trust_root,omitempty" json:"trust_root,omitempty"`
+	// Policy is the ROFL app policy.
+	Policy *rofl.AppAuthPolicy `yaml:"policy,omitempty" json:"policy,omitempty"`
+}
+
+// Validate validates the manifest for correctness.
+func (d *Deployment) Validate() error {
+	if len(d.AppID) == 0 {
+		return fmt.Errorf("app ID cannot be empty")
+	}
+	var appID rofl.AppID
+	if err := appID.UnmarshalText([]byte(d.AppID)); err != nil {
+		return fmt.Errorf("malformed app ID: %w", err)
+	}
+	if d.Network == "" {
+		return fmt.Errorf("network cannot be empty")
+	}
+	if d.ParaTime == "" {
+		return fmt.Errorf("paratime cannot be empty")
+	}
+	return nil
 }
 
 // TrustRootConfig is the trust root configuration.

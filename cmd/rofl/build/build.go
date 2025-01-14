@@ -32,10 +32,11 @@ const (
 )
 
 var (
-	outputFn  string
-	buildMode string
-	offline   bool
-	doUpdate  bool
+	outputFn       string
+	buildMode      string
+	offline        bool
+	doUpdate       bool
+	deploymentName string
 
 	Cmd = &cobra.Command{
 		Use:   "build",
@@ -44,14 +45,17 @@ var (
 		Run: func(_ *cobra.Command, _ []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
-			manifest := roflCommon.LoadManifestAndSetNPA(cfg, npa)
+			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName)
 
 			fmt.Println("Building a ROFL application...")
-			fmt.Printf("App ID:  %s\n", manifest.AppID)
-			fmt.Printf("Name:    %s\n", manifest.Name)
-			fmt.Printf("Version: %s\n", manifest.Version)
-			fmt.Printf("TEE:     %s\n", manifest.TEE)
-			fmt.Printf("Kind:    %s\n", manifest.Kind)
+			fmt.Printf("Deployment: %s\n", deploymentName)
+			fmt.Printf("Network:    %s\n", deployment.Network)
+			fmt.Printf("ParaTime:   %s\n", deployment.ParaTime)
+			fmt.Printf("App ID:     %s\n", deployment.AppID)
+			fmt.Printf("Name:       %s\n", manifest.Name)
+			fmt.Printf("Version:    %s\n", manifest.Version)
+			fmt.Printf("TEE:        %s\n", manifest.TEE)
+			fmt.Printf("Kind:       %s\n", manifest.Kind)
 
 			// Prepare temporary build directory.
 			tmpDir, err := os.MkdirTemp("", "oasis-build")
@@ -62,7 +66,7 @@ var (
 
 			bnd := &bundle.Bundle{
 				Manifest: &bundle.Manifest{
-					Name: manifest.AppID,
+					Name: deployment.AppID,
 					ID:   npa.ParaTime.Namespace(),
 				},
 			}
@@ -80,14 +84,14 @@ var (
 					return
 				}
 
-				sgxBuild(npa, manifest, bnd)
+				sgxBuild(npa, manifest, deployment, bnd)
 			case buildRofl.TEETypeTDX:
 				// TDX.
 				switch manifest.Kind {
 				case buildRofl.AppKindRaw:
-					err = tdxBuildRaw(tmpDir, npa, manifest, bnd)
+					err = tdxBuildRaw(tmpDir, npa, manifest, deployment, bnd)
 				case buildRofl.AppKindContainer:
-					err = tdxBuildContainer(tmpDir, npa, manifest, bnd)
+					err = tdxBuildContainer(tmpDir, npa, manifest, deployment, bnd)
 				}
 			default:
 				fmt.Printf("unsupported TEE kind: %s\n", manifest.TEE)
@@ -99,7 +103,7 @@ var (
 			}
 
 			// Write the bundle out.
-			outFn := fmt.Sprintf("%s.orc", manifest.Name)
+			outFn := fmt.Sprintf("%s.%s.orc", manifest.Name, deploymentName)
 			if outputFn != "" {
 				outFn = outputFn
 			}
@@ -119,7 +123,7 @@ var (
 			}
 
 			// Override the update manifest flag in case the policy does not exist.
-			if manifest.Policy == nil {
+			if deployment.Policy == nil {
 				doUpdate = false
 			}
 
@@ -135,9 +139,9 @@ var (
 				fmt.Println()
 			case true:
 				// Update the manifest with the given enclave identities, overwriting existing ones.
-				manifest.Policy.Enclaves = make([]sgx.EnclaveIdentity, 0, len(eids))
+				deployment.Policy.Enclaves = make([]sgx.EnclaveIdentity, 0, len(eids))
 				for _, eid := range eids {
-					manifest.Policy.Enclaves = append(manifest.Policy.Enclaves, *eid)
+					deployment.Policy.Enclaves = append(deployment.Policy.Enclaves, *eid)
 				}
 
 				// Serialize manifest and write it to file.
@@ -173,12 +177,12 @@ func detectBuildMode(npa *common.NPASelection) {
 	}
 }
 
-func setupBuildEnv(manifest *buildRofl.Manifest, npa *common.NPASelection) {
+func setupBuildEnv(deployment *buildRofl.Deployment, npa *common.NPASelection) {
 	// Configure app ID.
-	os.Setenv("ROFL_APP_ID", manifest.AppID)
+	os.Setenv("ROFL_APP_ID", deployment.AppID)
 
 	// Obtain and configure trust root.
-	trustRoot, err := fetchTrustRoot(npa, manifest.TrustRoot)
+	trustRoot, err := fetchTrustRoot(npa, deployment.TrustRoot)
 	cobra.CheckErr(err)
 	os.Setenv("ROFL_CONSENSUS_TRUST_ROOT", trustRoot)
 }
@@ -250,6 +254,7 @@ func init() {
 	buildFlags.BoolVar(&offline, "offline", false, "do not perform any operations requiring network access")
 	buildFlags.StringVar(&outputFn, "output", "", "output bundle filename")
 	buildFlags.BoolVar(&doUpdate, "update-manifest", false, "automatically update the manifest")
+	buildFlags.StringVar(&deploymentName, "deployment", buildRofl.DefaultDeploymentName, "deployment name")
 
 	Cmd.Flags().AddFlagSet(buildFlags)
 }

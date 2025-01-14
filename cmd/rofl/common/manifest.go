@@ -14,55 +14,60 @@ import (
 // selection.
 //
 // In case there is an error in loading the manifest, it aborts the application.
-func LoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection) *rofl.Manifest {
-	manifest, err := MaybeLoadManifestAndSetNPA(cfg, npa)
+func LoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection, deployment string) (*rofl.Manifest, *rofl.Deployment) {
+	manifest, d, err := MaybeLoadManifestAndSetNPA(cfg, npa, deployment)
 	cobra.CheckErr(err)
-	return manifest
+	return manifest, d
 }
 
 // MaybeLoadManifestAndSetNPA loads the ROFL app manifest and reconfigures the
 // network/paratime/account selection.
 //
 // In case there is an error in loading the manifest, it is returned.
-func MaybeLoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection) (*rofl.Manifest, error) {
+func MaybeLoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection, deployment string) (*rofl.Manifest, *rofl.Deployment, error) {
 	manifest, err := rofl.LoadManifest()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	switch manifest.Network {
+	d, ok := manifest.Deployments[deployment]
+	if !ok {
+		return nil, nil, fmt.Errorf("deployment '%s' does not exist", deployment)
+	}
+
+	switch d.Network {
 	case "":
 		if npa.Network == nil {
-			return nil, fmt.Errorf("no network selected")
+			return nil, nil, fmt.Errorf("no network selected")
 		}
 	default:
-		npa.Network = cfg.Networks.All[manifest.Network]
+		npa.Network = cfg.Networks.All[d.Network]
 		if npa.Network == nil {
-			return nil, fmt.Errorf("network '%s' does not exist", manifest.Network)
+			return nil, nil, fmt.Errorf("network '%s' does not exist", d.Network)
 		}
-		npa.NetworkName = manifest.Network
+		npa.NetworkName = d.Network
 	}
-	switch manifest.ParaTime {
+	switch d.ParaTime {
 	case "":
 		if npa.ParaTime == nil {
-			return nil, fmt.Errorf("no ParaTime selected")
+			return nil, nil, fmt.Errorf("no ParaTime selected")
 		}
 	default:
-		npa.ParaTime = npa.Network.ParaTimes.All[manifest.ParaTime]
+		npa.ParaTime = npa.Network.ParaTimes.All[d.ParaTime]
 		if npa.ParaTime == nil {
-			return nil, fmt.Errorf("paratime '%s' does not exist", manifest.ParaTime)
+			return nil, nil, fmt.Errorf("paratime '%s' does not exist", d.ParaTime)
 		}
-		npa.ParaTimeName = manifest.ParaTime
+		npa.ParaTimeName = d.ParaTime
 	}
-	switch manifest.Admin {
+	switch d.Admin {
 	case "":
 	default:
-		accCfg, err := common.LoadAccountConfig(cfg, manifest.Admin)
+		accCfg, err := common.LoadAccountConfig(cfg, d.Admin)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		npa.Account = accCfg
-		npa.AccountName = manifest.Admin
+		npa.AccountName = d.Admin
 	}
-	return manifest, nil
+	return manifest, d, nil
 }

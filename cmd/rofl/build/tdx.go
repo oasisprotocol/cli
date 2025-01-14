@@ -34,7 +34,13 @@ var (
 )
 
 // tdxBuildRaw builds a TDX-based "raw" ROFL app.
-func tdxBuildRaw(tmpDir string, npa *common.NPASelection, manifest *buildRofl.Manifest, bnd *bundle.Bundle) error {
+func tdxBuildRaw(
+	tmpDir string,
+	npa *common.NPASelection,
+	manifest *buildRofl.Manifest,
+	deployment *buildRofl.Deployment,
+	bnd *bundle.Bundle,
+) error {
 	wantedArtifacts := tdxGetDefaultArtifacts()
 	tdxOverrideArtifacts(manifest, wantedArtifacts)
 	artifacts := tdxFetchArtifacts(wantedArtifacts)
@@ -42,7 +48,7 @@ func tdxBuildRaw(tmpDir string, npa *common.NPASelection, manifest *buildRofl.Ma
 	fmt.Println("Building a TDX-based Rust ROFL application...")
 
 	detectBuildMode(npa)
-	tdxSetupBuildEnv(manifest, npa)
+	tdxSetupBuildEnv(deployment, npa)
 
 	// Obtain package metadata.
 	pkgMeta, err := cargo.GetMetadata()
@@ -246,7 +252,10 @@ func tdxBundleComponent(
 			return err
 		}
 
-		// TODO: For persistent disk, configure Stage2Persist flag and storage mode.
+		if tmpStorageKind == buildRofl.StorageKindDiskPersistent {
+			// TODO: For persistent disk, configure Stage2Persist flag and storage mode.
+			return fmt.Errorf("persistent disk not yet supported, use 'disk-ephemeral'")
+		}
 
 		comp.TDX.ExtraKernelOptions = append(comp.TDX.ExtraKernelOptions,
 			"oasis.stage2.storage_mode=disk",
@@ -282,8 +291,8 @@ func tdxBundleComponent(
 }
 
 // tdxSetupBuildEnv sets up the TDX build environment.
-func tdxSetupBuildEnv(manifest *buildRofl.Manifest, npa *common.NPASelection) {
-	setupBuildEnv(manifest, npa)
+func tdxSetupBuildEnv(deployment *buildRofl.Deployment, npa *common.NPASelection) {
+	setupBuildEnv(deployment, npa)
 
 	switch buildMode {
 	case buildModeProduction, buildModeAuto:

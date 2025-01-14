@@ -33,8 +33,9 @@ var (
 	scheme       string
 	adminAddress string
 
-	appTEE  string
-	appKind string
+	appTEE         string
+	appKind        string
+	deploymentName string
 
 	initCmd = &cobra.Command{
 		Use:   "init <name> [--tee TEE] [--kind KIND]",
@@ -71,15 +72,11 @@ var (
 			cobra.CheckErr(err)
 
 			// Generate manifest and a default policy which does not accept any enclaves.
-			manifest := buildRofl.Manifest{
+			deployment := &buildRofl.Deployment{
 				AppID:    rofl.NewAppIDGlobalName("").String(), // Temporary for initial validation.
-				Name:     appName,
-				Version:  "0.1.0",
 				Network:  npa.NetworkName,
 				ParaTime: npa.ParaTimeName,
 				Admin:    npa.AccountName,
-				TEE:      appTEE,
-				Kind:     appKind,
 				Policy: &rofl.AppAuthPolicy{
 					Quotes: quote.Policy{
 						PCS: &pcs.QuotePolicy{
@@ -97,6 +94,12 @@ var (
 				TrustRoot: &buildRofl.TrustRootConfig{
 					Height: uint64(height),
 				},
+			}
+			manifest := buildRofl.Manifest{
+				Name:    appName,
+				Version: "0.1.0",
+				TEE:     appTEE,
+				Kind:    appKind,
 				Resources: buildRofl.ResourcesConfig{
 					Memory:   512,
 					CPUCount: 1,
@@ -105,15 +108,22 @@ var (
 						Size: 512,
 					},
 				},
+				Deployments: map[string]*buildRofl.Deployment{
+					buildRofl.DefaultDeploymentName: deployment,
+				},
 			}
 			err = manifest.Validate()
 			cobra.CheckErr(err)
 
 			fmt.Printf("Creating a new ROFL app with default policy...\n")
-			fmt.Printf("Name:    %s\n", manifest.Name)
-			fmt.Printf("Version: %s\n", manifest.Version)
-			fmt.Printf("TEE:     %s\n", manifest.TEE)
-			fmt.Printf("Kind:    %s\n", manifest.Kind)
+			fmt.Printf("Name:     %s\n", manifest.Name)
+			fmt.Printf("Version:  %s\n", manifest.Version)
+			fmt.Printf("TEE:      %s\n", manifest.TEE)
+			fmt.Printf("Kind:     %s\n", manifest.Kind)
+			fmt.Printf("Deployment '%s':\n", buildRofl.DefaultDeploymentName)
+			fmt.Printf("  Network:  %s\n", deployment.Network)
+			fmt.Printf("  ParaTime: %s\n", deployment.ParaTime)
+			fmt.Printf("  Admin:    %s\n", deployment.Admin)
 
 			idScheme, ok := identifierSchemes[scheme]
 			if !ok {
@@ -122,7 +132,7 @@ var (
 
 			// Register a new ROFL application to determine the identifier.
 			tx := rofl.NewCreateTx(nil, &rofl.Create{
-				Policy: *manifest.Policy,
+				Policy: *deployment.Policy,
 				Scheme: idScheme,
 			})
 
@@ -132,7 +142,7 @@ var (
 
 			var appID rofl.AppID
 			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &appID)
-			manifest.AppID = appID.String()
+			deployment.AppID = appID.String()
 
 			fmt.Printf("Created ROFL application: %s\n", appID)
 
@@ -157,8 +167,8 @@ var (
 			if len(args) > 0 {
 				policy = loadPolicy(args[0])
 			} else {
-				manifest := roflCommon.LoadManifestAndSetNPA(cfg, npa)
-				policy = manifest.Policy
+				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName)
+				policy = deployment.Policy
 			}
 
 			if npa.Account == nil {
@@ -218,13 +228,13 @@ var (
 				rawAppID = args[0]
 				policy = loadPolicy(policyFn)
 			} else {
-				manifest := roflCommon.LoadManifestAndSetNPA(cfg, npa)
-				rawAppID = manifest.AppID
+				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName)
+				rawAppID = deployment.AppID
 
-				if adminAddress == "" && manifest.Admin != "" {
+				if adminAddress == "" && deployment.Admin != "" {
 					adminAddress = "self"
 				}
-				policy = manifest.Policy
+				policy = deployment.Policy
 			}
 			var appID rofl.AppID
 			if err := appID.UnmarshalText([]byte(rawAppID)); err != nil {
@@ -295,8 +305,8 @@ var (
 			if len(args) > 0 {
 				rawAppID = args[0]
 			} else {
-				manifest := roflCommon.LoadManifestAndSetNPA(cfg, npa)
-				rawAppID = manifest.AppID
+				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName)
+				rawAppID = deployment.AppID
 			}
 			var appID rofl.AppID
 			if err := appID.UnmarshalText([]byte(rawAppID)); err != nil {
@@ -344,8 +354,8 @@ var (
 			if len(args) > 0 {
 				rawAppID = args[0]
 			} else {
-				manifest := roflCommon.LoadManifestAndSetNPA(cfg, npa)
-				rawAppID = manifest.AppID
+				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName)
+				rawAppID = deployment.AppID
 			}
 			var appID rofl.AppID
 			if err := appID.UnmarshalText([]byte(rawAppID)); err != nil {
@@ -406,26 +416,35 @@ func loadPolicy(fn string) *rofl.AppAuthPolicy {
 }
 
 func init() {
+	deploymentFlags := flag.NewFlagSet("", flag.ContinueOnError)
+	deploymentFlags.StringVar(&deploymentName, "deployment", buildRofl.DefaultDeploymentName, "deployment name")
+
 	updateFlags := flag.NewFlagSet("", flag.ContinueOnError)
 	updateFlags.StringVar(&policyFn, "policy", "", "set the ROFL application policy")
 	updateFlags.StringVar(&adminAddress, "admin", "", "set the administrator address")
+	updateCmd.Flags().AddFlagSet(deploymentFlags)
 
 	initCmd.Flags().AddFlagSet(common.SelectorFlags)
 	initCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
+	initCmd.Flags().AddFlagSet(deploymentFlags)
 	initCmd.Flags().StringVar(&appTEE, "tee", "tdx", "TEE kind [tdx, sgx]")
 	initCmd.Flags().StringVar(&appKind, "kind", "container", "ROFL app kind [container, raw]")
 	initCmd.Flags().StringVar(&scheme, "scheme", "cn", "app ID generation scheme: creator+round+index [cri] or creator+nonce [cn]")
 
 	createCmd.Flags().AddFlagSet(common.SelectorFlags)
 	createCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
+	createCmd.Flags().AddFlagSet(deploymentFlags)
 	createCmd.Flags().StringVar(&scheme, "scheme", "cn", "app ID generation scheme: creator+round+index [cri] or creator+nonce [cn]")
 
 	updateCmd.Flags().AddFlagSet(common.SelectorFlags)
 	updateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
+	updateCmd.Flags().AddFlagSet(deploymentFlags)
 	updateCmd.Flags().AddFlagSet(updateFlags)
 
 	removeCmd.Flags().AddFlagSet(common.SelectorFlags)
 	removeCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
+	removeCmd.Flags().AddFlagSet(deploymentFlags)
 
 	showCmd.Flags().AddFlagSet(common.SelectorFlags)
+	showCmd.Flags().AddFlagSet(deploymentFlags)
 }

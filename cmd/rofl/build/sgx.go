@@ -24,11 +24,16 @@ import (
 )
 
 // sgxBuild builds an SGX-based "raw" ROFL app.
-func sgxBuild(npa *common.NPASelection, manifest *buildRofl.Manifest, bnd *bundle.Bundle) {
+func sgxBuild(
+	npa *common.NPASelection,
+	manifest *buildRofl.Manifest,
+	deployment *buildRofl.Deployment,
+	bnd *bundle.Bundle,
+) {
 	fmt.Println("Building an SGX-based Rust ROFL application...")
 
 	detectBuildMode(npa)
-	features := sgxSetupBuildEnv(manifest, npa)
+	features := sgxSetupBuildEnv(deployment, npa)
 
 	// First build for the default target.
 	fmt.Println("Building ELF binary...")
@@ -209,8 +214,8 @@ NextSetOfPrimes:
 }
 
 // sgxSetupBuildEnv sets up the SGX build environment and returns the list of features to enable.
-func sgxSetupBuildEnv(manifest *buildRofl.Manifest, npa *common.NPASelection) []string {
-	setupBuildEnv(manifest, npa)
+func sgxSetupBuildEnv(deployment *buildRofl.Deployment, npa *common.NPASelection) []string {
+	setupBuildEnv(deployment, npa)
 
 	switch buildMode {
 	case buildModeProduction, buildModeAuto:

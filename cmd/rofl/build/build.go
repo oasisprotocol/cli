@@ -76,6 +76,15 @@ var (
 				return
 			}
 
+			// Setup some build environment variables.
+			os.Setenv("ROFL_MANIFEST", manifest.SourceFileName())
+			os.Setenv("ROFL_DEPLOYMENT", deploymentName)
+			os.Setenv("ROFL_DEPLOYMENT_NETWORK", deployment.Network)
+			os.Setenv("ROFL_DEPLOYMENT_PARATIME", deployment.ParaTime)
+			os.Setenv("ROFL_TMPDIR", tmpDir)
+
+			runScript(manifest, buildRofl.ScriptBuildPre)
+
 			switch manifest.TEE {
 			case buildRofl.TEETypeSGX:
 				// SGX.
@@ -101,6 +110,8 @@ var (
 				fmt.Printf("%s\n", err)
 				return
 			}
+
+			runScript(manifest, buildRofl.ScriptBuildPost)
 
 			// Write the bundle out.
 			outFn := fmt.Sprintf("%s.%s.orc", manifest.Name, deploymentName)

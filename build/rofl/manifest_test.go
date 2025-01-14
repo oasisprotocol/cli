@@ -129,6 +129,9 @@ deployments:
                 - any: {}
             fees: endorsing_node
             max_expiration: 3
+scripts:
+    pre-build: foo
+    post-build: bar
 `
 
 func TestManifestSerialization(t *testing.T) {
@@ -155,6 +158,8 @@ func TestManifestSerialization(t *testing.T) {
 	require.Equal("bar", m.Deployments["default"].ParaTime)
 	require.Equal("blah", m.Deployments["default"].Admin)
 	require.EqualValues(24805610, m.Deployments["default"].TrustRoot.Height)
+	require.Equal("foo", m.Scripts["pre-build"])
+	require.Equal("bar", m.Scripts["post-build"])
 
 	enc, err := yaml.Marshal(m)
 	require.NoError(err, "yaml.Marshal")

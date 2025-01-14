@@ -32,6 +32,12 @@ const (
 	TEETypeTDX = "tdx"
 )
 
+// Well-known scripts.
+const (
+	ScriptBuildPre  = "build-pre"
+	ScriptBuildPost = "build-post"
+)
+
 // Manifest is the ROFL app manifest that configures various aspects of the app in a single place.
 type Manifest struct {
 	// Name is the human readable ROFL app name.
@@ -49,6 +55,9 @@ type Manifest struct {
 
 	// Deployments are the ROFL app deployments.
 	Deployments map[string]*Deployment `yaml:"deployments" json:"deployments"`
+
+	// Scripts are custom scripts that are executed by the build system at specific stages.
+	Scripts map[string]string `yaml:"scripts,omitempty" json:"scripts,omitempty"`
 
 	// sourceFn is the filename from which the manifest has been loaded.
 	sourceFn string

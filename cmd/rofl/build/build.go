@@ -77,7 +77,7 @@ var (
 
 			// Setup some build environment variables.
 			os.Setenv("ROFL_MANIFEST", manifest.SourceFileName())
-			os.Setenv("ROFL_DEPLOYMENT", deploymentName)
+			os.Setenv("ROFL_DEPLOYMENT_NAME", deploymentName)
 			os.Setenv("ROFL_DEPLOYMENT_NETWORK", deployment.Network)
 			os.Setenv("ROFL_DEPLOYMENT_PARATIME", deployment.ParaTime)
 			os.Setenv("ROFL_TMPDIR", tmpDir)
@@ -131,6 +131,15 @@ var (
 				fmt.Printf("%s\n", err)
 				return
 			}
+
+			// Setup some post-bundle environment variables.
+			os.Setenv("ROFL_BUNDLE", outFn)
+			for idx, enclaveID := range eids {
+				data, _ := enclaveID.MarshalText()
+				os.Setenv(fmt.Sprintf("ROFL_ENCLAVE_ID_%d", idx), string(data))
+			}
+
+			runScript(manifest, buildRofl.ScriptBundlePost)
 
 			// Override the update manifest flag in case the policy does not exist.
 			if deployment.Policy == nil {

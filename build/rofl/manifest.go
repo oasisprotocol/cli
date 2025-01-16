@@ -34,8 +34,9 @@ const (
 
 // Well-known scripts.
 const (
-	ScriptBuildPre  = "build-pre"
-	ScriptBuildPost = "build-post"
+	ScriptBuildPre   = "build-pre"
+	ScriptBuildPost  = "build-post"
+	ScriptBundlePost = "bundle-post"
 )
 
 // Manifest is the ROFL app manifest that configures various aspects of the app in a single place.

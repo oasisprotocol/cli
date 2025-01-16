@@ -63,7 +63,16 @@ func maybeDownloadArtifact(kind, uri string) string {
 	switch {
 	case err == nil:
 		// Already exists in cache.
-		// TODO: Verify checksum and discard if invalid.
+		if knownHash != "" {
+			h := sha256.New()
+			if _, err = io.Copy(h, f); err != nil {
+				cobra.CheckErr(fmt.Errorf("failed to verify cached %s artifact: %w", kind, err))
+			}
+			artifactHash := fmt.Sprintf("%x", h.Sum(nil))
+			if artifactHash != knownHash {
+				cobra.CheckErr(fmt.Errorf("corrupted cached %s artifact file '%s' (expected: %s got: %s)", kind, cacheFn, knownHash, artifactHash))
+			}
+		}
 		f.Close()
 
 		fmt.Printf("  (using cached artifact)\n")

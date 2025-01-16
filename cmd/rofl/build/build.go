@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	"gopkg.in/yaml.v3"
 
 	coreCommon "github.com/oasisprotocol/oasis-core/go/common"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
@@ -45,7 +44,7 @@ var (
 		Run: func(_ *cobra.Command, _ []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
-			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName)
+			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, true)
 
 			fmt.Println("Building a ROFL application...")
 			fmt.Printf("Deployment: %s\n", deploymentName)
@@ -143,11 +142,16 @@ var (
 				// Ask the user to update the manifest manually.
 				fmt.Println("Update the manifest with the following identities to use the new app:")
 				fmt.Println()
+				fmt.Printf("deployments:\n")
+				fmt.Printf("  %s:\n", deploymentName)
+				fmt.Printf("    policy:\n")
+				fmt.Printf("      enclaves:\n")
 				for _, enclaveID := range eids {
 					data, _ := enclaveID.MarshalText()
-					fmt.Printf("- \"%s\"\n", string(data))
+					fmt.Printf("        - \"%s\"\n", string(data))
 				}
 				fmt.Println()
+				fmt.Println("Next time you can also use the --update-manifest flag to apply changes.")
 			case true:
 				// Update the manifest with the given enclave identities, overwriting existing ones.
 				deployment.Policy.Enclaves = make([]sgx.EnclaveIdentity, 0, len(eids))
@@ -155,9 +159,7 @@ var (
 					deployment.Policy.Enclaves = append(deployment.Policy.Enclaves, *eid)
 				}
 
-				// Serialize manifest and write it to file.
-				data, _ := yaml.Marshal(manifest)
-				if err = os.WriteFile(manifest.SourceFileName(), data, 0o644); err != nil { //nolint: gosec
+				if err = manifest.Save(); err != nil {
 					cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
 				}
 			}

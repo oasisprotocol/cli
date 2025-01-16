@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -36,11 +37,12 @@ var (
 	appTEE         string
 	appKind        string
 	deploymentName string
+	doUpdate       bool
 
 	initCmd = &cobra.Command{
-		Use:   "init <name> [--tee TEE] [--kind KIND]",
-		Short: "Create a new ROFL app and initialize the manifest",
-		Args:  cobra.ExactArgs(1),
+		Use:   "init [<name>] [--tee TEE] [--kind KIND]",
+		Short: "Initialize a ROFL app manifest",
+		Args:  cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
@@ -57,7 +59,15 @@ var (
 			}
 
 			// TODO: Support an interactive mode.
-			appName := args[0]
+			var appName string
+			if len(args) > 0 {
+				appName = args[0]
+			} else {
+				// Infer from current directory.
+				wd, err := os.Getwd()
+				cobra.CheckErr(err)
+				appName = filepath.Base(wd)
+			}
 			// Fail in case there is an existing manifest.
 			if buildRofl.ManifestExists() {
 				cobra.CheckErr("refusing to overwrite existing manifest")
@@ -73,7 +83,6 @@ var (
 
 			// Generate manifest and a default policy which does not accept any enclaves.
 			deployment := &buildRofl.Deployment{
-				AppID:    rofl.NewAppIDGlobalName("").String(), // Temporary for initial validation.
 				Network:  npa.NetworkName,
 				ParaTime: npa.ParaTimeName,
 				Admin:    npa.AccountName,
@@ -104,7 +113,7 @@ var (
 					Memory:   512,
 					CPUCount: 1,
 					Storage: &buildRofl.StorageConfig{
-						Kind: buildRofl.StorageKindDiskEphemeral,
+						Kind: buildRofl.StorageKindDiskPersistent,
 						Size: 512,
 					},
 				},
@@ -125,32 +134,15 @@ var (
 			fmt.Printf("  ParaTime: %s\n", deployment.ParaTime)
 			fmt.Printf("  Admin:    %s\n", deployment.Admin)
 
-			idScheme, ok := identifierSchemes[scheme]
-			if !ok {
-				cobra.CheckErr(fmt.Errorf("unknown scheme %s", scheme))
-			}
-
-			// Register a new ROFL application to determine the identifier.
-			tx := rofl.NewCreateTx(nil, &rofl.Create{
-				Policy: *deployment.Policy,
-				Scheme: idScheme,
-			})
-
-			acc := common.LoadAccount(cfg, npa.AccountName)
-			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
-			cobra.CheckErr(err)
-
-			var appID rofl.AppID
-			common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &appID)
-			deployment.AppID = appID.String()
-
-			fmt.Printf("Created ROFL application: %s\n", appID)
-
 			// Serialize manifest and write it to file.
+			const manifestFn = "rofl.yaml"
 			data, _ := yaml.Marshal(manifest)
-			if err = os.WriteFile("rofl.yml", data, 0o644); err != nil { //nolint: gosec
+			if err = os.WriteFile(manifestFn, data, 0o644); err != nil { //nolint: gosec
 				cobra.CheckErr(fmt.Errorf("failed to write manifest: %w", err))
 			}
+
+			fmt.Printf("Created manifest in '%s'.\n", manifestFn)
+			fmt.Printf("Run `oasis rofl create --update-manifest` to register your ROFL app and configure an app ID.\n")
 		},
 	}
 
@@ -163,11 +155,15 @@ var (
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
 
-			var policy *rofl.AppAuthPolicy
+			var (
+				policy     *rofl.AppAuthPolicy
+				manifest   *buildRofl.Manifest
+				deployment *buildRofl.Deployment
+			)
 			if len(args) > 0 {
 				policy = loadPolicy(args[0])
 			} else {
-				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName)
+				manifest, deployment = roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, false)
 				policy = deployment.Policy
 			}
 
@@ -208,6 +204,27 @@ var (
 			}
 
 			fmt.Printf("Created ROFL application: %s\n", appID)
+
+			if deployment != nil {
+				switch doUpdate {
+				case false:
+					// Ask the user to update the manifest manually.
+					fmt.Println("Update the manifest with the following app identifier to use the new app:")
+					fmt.Println()
+					fmt.Printf("deployments:\n")
+					fmt.Printf("  %s:\n", deploymentName)
+					fmt.Printf("    app_id: %s\n", appID)
+					fmt.Println()
+					fmt.Println("Next time you can also use the --update-manifest flag to apply changes.")
+				case true:
+					// Update the manifest with the given enclave identities, overwriting existing ones.
+					deployment.AppID = appID.String()
+
+					if err = manifest.Save(); err != nil {
+						cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
+					}
+				}
+			}
 		},
 	}
 
@@ -228,7 +245,7 @@ var (
 				rawAppID = args[0]
 				policy = loadPolicy(policyFn)
 			} else {
-				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName)
+				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, true)
 				rawAppID = deployment.AppID
 
 				if adminAddress == "" && deployment.Admin != "" {
@@ -305,7 +322,7 @@ var (
 			if len(args) > 0 {
 				rawAppID = args[0]
 			} else {
-				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName)
+				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, true)
 				rawAppID = deployment.AppID
 			}
 			var appID rofl.AppID
@@ -354,7 +371,7 @@ var (
 			if len(args) > 0 {
 				rawAppID = args[0]
 			} else {
-				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName)
+				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, true)
 				rawAppID = deployment.AppID
 			}
 			var appID rofl.AppID
@@ -435,6 +452,7 @@ func init() {
 	createCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	createCmd.Flags().AddFlagSet(deploymentFlags)
 	createCmd.Flags().StringVar(&scheme, "scheme", "cn", "app ID generation scheme: creator+round+index [cri] or creator+nonce [cn]")
+	createCmd.Flags().BoolVar(&doUpdate, "update-manifest", false, "automatically update the manifest")
 
 	updateCmd.Flags().AddFlagSet(common.SelectorFlags)
 	updateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)

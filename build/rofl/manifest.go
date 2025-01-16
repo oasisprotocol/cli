@@ -162,6 +162,16 @@ func (m *Manifest) SourceFileName() string {
 	return m.sourceFn
 }
 
+// Save serializes the manifest and writes it to the file returned by `SourceFileName`, overwriting
+// any previous manifest.
+func (m *Manifest) Save() error {
+	data, err := yaml.Marshal(m)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(m.SourceFileName(), data, 0o644) //nolint: gosec
+}
+
 // DefaultDeploymentName is the name of the default deployment that must always be defined and is
 // used in case no deployment is passed.
 const DefaultDeploymentName = "default"
@@ -169,7 +179,7 @@ const DefaultDeploymentName = "default"
 // Deployment describes a single ROFL app deployment.
 type Deployment struct {
 	// AppID is the Bech32-encoded ROFL app ID.
-	AppID string `yaml:"app_id" json:"app_id"`
+	AppID string `yaml:"app_id,omitempty" json:"app_id,omitempty"`
 	// Network is the identifier of the network to deploy to.
 	Network string `yaml:"network" json:"network"`
 	// ParaTime is the identifier of the paratime to deploy to.
@@ -184,12 +194,11 @@ type Deployment struct {
 
 // Validate validates the manifest for correctness.
 func (d *Deployment) Validate() error {
-	if len(d.AppID) == 0 {
-		return fmt.Errorf("app ID cannot be empty")
-	}
-	var appID rofl.AppID
-	if err := appID.UnmarshalText([]byte(d.AppID)); err != nil {
-		return fmt.Errorf("malformed app ID: %w", err)
+	if len(d.AppID) > 0 {
+		var appID rofl.AppID
+		if err := appID.UnmarshalText([]byte(d.AppID)); err != nil {
+			return fmt.Errorf("malformed app ID: %w", err)
+		}
 	}
 	if d.Network == "" {
 		return fmt.Errorf("network cannot be empty")
@@ -198,6 +207,11 @@ func (d *Deployment) Validate() error {
 		return fmt.Errorf("paratime cannot be empty")
 	}
 	return nil
+}
+
+// HasAppID returns true iff the deployment has an application identifier set.
+func (d *Deployment) HasAppID() bool {
+	return len(d.AppID) > 0
 }
 
 // TrustRootConfig is the trust root configuration.

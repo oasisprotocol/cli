@@ -56,12 +56,12 @@ func TestManifestValidation(t *testing.T) {
 	err = m.Validate()
 	require.ErrorContains(err, "must define at least the 'default' deployment")
 
-	// Missing app ID in deployment.
+	// Missing network in deployment.
 	m.Deployments = map[string]*Deployment{
 		"default": {},
 	}
 	err = m.Validate()
-	require.ErrorContains(err, "bad deployment 'default': app ID cannot be empty")
+	require.ErrorContains(err, "bad deployment 'default': network cannot be empty")
 
 	// Invalid app ID.
 	m.Deployments["default"].AppID = "foo"

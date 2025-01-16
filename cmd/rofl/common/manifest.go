@@ -14,9 +14,12 @@ import (
 // selection.
 //
 // In case there is an error in loading the manifest, it aborts the application.
-func LoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection, deployment string) (*rofl.Manifest, *rofl.Deployment) {
+func LoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection, deployment string, needAppID bool) (*rofl.Manifest, *rofl.Deployment) {
 	manifest, d, err := MaybeLoadManifestAndSetNPA(cfg, npa, deployment)
 	cobra.CheckErr(err)
+	if needAppID && !d.HasAppID() {
+		cobra.CheckErr(fmt.Errorf("deployment '%s' does not have an app ID set, maybe you need to run `oasis rofl create`", deployment))
+	}
 	return manifest, d
 }
 

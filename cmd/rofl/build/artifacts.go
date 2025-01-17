@@ -364,6 +364,22 @@ func concatFiles(a, b string) error {
 	return err
 }
 
+// padWithEmptySpace pads the given file with empty space to make it the given size. See
+// `appendEmptySpace` for details.
+func padWithEmptySpace(fn string, size uint64) error {
+	fi, err := os.Stat(fn)
+	if err != nil {
+		return err
+	}
+
+	currentSize := uint64(fi.Size())
+	if currentSize >= size {
+		return nil
+	}
+	_, err = appendEmptySpace(fn, size-currentSize, 1)
+	return err
+}
+
 // appendEmptySpace appends empty space to the given file. If the filesystem supports sparse files,
 // this should not actually take any extra space.
 //

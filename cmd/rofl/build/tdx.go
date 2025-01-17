@@ -244,24 +244,30 @@ func tdxBundleComponent(
 			fmt.Sprintf("oasis.stage2.storage_size=%d", manifest.Resources.Storage.Size*1024*1024),
 		)
 	case buildRofl.StorageKindDiskEphemeral, buildRofl.StorageKindDiskPersistent:
-		// Allocate some space after regular stage2.
-		const sectorSize = 512
-		storageSize := manifest.Resources.Storage.Size * 1024 * 1024
-		storageOffset, err := appendEmptySpace(stage2.fn, storageSize, sectorSize)
-		if err != nil {
-			return err
-		}
-
 		var storageMode string
 		switch storageKind {
 		case buildRofl.StorageKindDiskPersistent:
 			// Persistent storage needs to be set up by stage 2.
 			storageMode = "custom"
 
+			// Add some sparse padding to allow for growth of the root partition during upgrades.
+			// Note that this will not actually take any space so it could be arbitrarily large.
+			if err := padWithEmptySpace(stage2.fn, 256*1024*1024); err != nil {
+				return err
+			}
+
 			// TODO: (Oasis Core 25.0+) Set comp.TDX.Stage2Persist = true
 		case buildRofl.StorageKindDiskEphemeral:
 			// Ephemeral storage can be set up by stage 1 directly.
 			storageMode = "disk"
+		}
+
+		// Allocate some space after regular stage2.
+		const sectorSize = 512
+		storageSize := manifest.Resources.Storage.Size * 1024 * 1024
+		storageOffset, err := appendEmptySpace(stage2.fn, storageSize, sectorSize)
+		if err != nil {
+			return err
 		}
 
 		comp.TDX.ExtraKernelOptions = append(comp.TDX.ExtraKernelOptions,

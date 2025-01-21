@@ -187,6 +187,8 @@ type Deployment struct {
 	ParaTime string `yaml:"paratime" json:"paratime"`
 	// Admin is the identifier of the admin account.
 	Admin string `yaml:"admin,omitempty" json:"admin,omitempty"`
+	// Debug is a flag denoting whether this is a debuggable deployment.
+	Debug bool `yaml:"debug,omitempty" json:"debug,omitempty"`
 	// TrustRoot is the optional trust root configuration.
 	TrustRoot *TrustRootConfig `yaml:"trust_root,omitempty" json:"trust_root,omitempty"`
 	// Policy is the ROFL app policy.

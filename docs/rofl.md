@@ -22,16 +22,12 @@ The `build` command will execute a series of build commands depending on the
 target Trusted Execution Environment (TEE) and produce the Oasis Runtime
 Container (ORC) bundle.
 
-Building a ROFL bundle requires a ROFL app manifest (`rofl.yml`) to be present
+Building a ROFL bundle requires a ROFL app manifest (`rofl.yaml`) to be present
 in the current working directory. All information about what kind of ROFL app
 to build is specified in the manifest.
 
 Additionally, the following flags are available:
 
-- `--mode` specifies a `production` (enabled SGX attestations suitable for the
-  Mainnet and Testnet) or `unsafe` build (using mocked SGX for debugging
-  and testing). The default behavior is set to `auto` which, based on the
-  selected [Network and ParaTime][npa], determines the build mode.
 - `--output` the filename of the output ORC bundle. Defaults to the package name
   inside `Cargo.toml` and the `.orc` extension.
 

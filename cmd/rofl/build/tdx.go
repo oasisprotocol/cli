@@ -47,7 +47,6 @@ func tdxBuildRaw(
 
 	fmt.Println("Building a TDX-based Rust ROFL application...")
 
-	detectBuildMode(npa)
 	tdxSetupBuildEnv(deployment, npa)
 
 	// Obtain package metadata.
@@ -308,7 +307,7 @@ func tdxSetupBuildEnv(deployment *buildRofl.Deployment, npa *common.NPASelection
 	setupBuildEnv(deployment, npa)
 
 	switch buildMode {
-	case buildModeProduction, buildModeAuto:
+	case buildModeProduction:
 		// Production builds.
 		fmt.Println("Building in production mode.")
 

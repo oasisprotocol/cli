@@ -32,7 +32,6 @@ func sgxBuild(
 ) {
 	fmt.Println("Building an SGX-based Rust ROFL application...")
 
-	detectBuildMode(npa)
 	features := sgxSetupBuildEnv(deployment, npa)
 
 	// First build for the default target.
@@ -218,7 +217,7 @@ func sgxSetupBuildEnv(deployment *buildRofl.Deployment, npa *common.NPASelection
 	setupBuildEnv(deployment, npa)
 
 	switch buildMode {
-	case buildModeProduction, buildModeAuto:
+	case buildModeProduction:
 		// Production builds.
 		fmt.Println("Building in production mode.")
 

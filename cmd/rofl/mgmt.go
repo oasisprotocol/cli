@@ -83,11 +83,19 @@ var (
 			height, err := common.GetActualHeight(ctx, conn.Consensus())
 			cobra.CheckErr(err)
 
+			// Determine debug mode.
+			var debugMode bool
+			params, err := conn.Consensus().Registry().ConsensusParameters(ctx, height)
+			if err == nil {
+				debugMode = params.DebugAllowTestRuntimes
+			}
+
 			// Generate manifest and a default policy which does not accept any enclaves.
 			deployment := &buildRofl.Deployment{
 				Network:  npa.NetworkName,
 				ParaTime: npa.ParaTimeName,
 				Admin:    npa.AccountName,
+				Debug:    debugMode,
 				Policy: &rofl.AppAuthPolicy{
 					Quotes: quote.Policy{
 						PCS: &pcs.QuotePolicy{
@@ -134,6 +142,7 @@ var (
 			fmt.Printf("Deployment '%s':\n", buildRofl.DefaultDeploymentName)
 			fmt.Printf("  Network:  %s\n", deployment.Network)
 			fmt.Printf("  ParaTime: %s\n", deployment.ParaTime)
+			fmt.Printf("  Debug:    %v\n", deployment.Debug)
 			fmt.Printf("  Admin:    %s\n", deployment.Admin)
 
 			// Serialize manifest and write it to file.

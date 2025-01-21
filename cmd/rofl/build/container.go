@@ -45,7 +45,6 @@ func tdxBuildContainer(
 	)
 	tdxOverrideArtifacts(manifest, wantedArtifacts)
 	artifacts := tdxFetchArtifacts(wantedArtifacts)
-	detectBuildMode(npa)
 
 	// Use the pre-built container runtime.
 	initPath := artifacts[artifactContainerRuntime]

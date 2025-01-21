@@ -13,7 +13,6 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx"
 	"github.com/oasisprotocol/oasis-core/go/common/version"
-	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 
@@ -27,7 +26,6 @@ import (
 const (
 	buildModeProduction = "production"
 	buildModeUnsafe     = "unsafe"
-	buildModeAuto       = "auto"
 )
 
 var (
@@ -50,11 +48,19 @@ var (
 			fmt.Printf("Deployment: %s\n", deploymentName)
 			fmt.Printf("Network:    %s\n", deployment.Network)
 			fmt.Printf("ParaTime:   %s\n", deployment.ParaTime)
+			fmt.Printf("Debug:      %v\n", deployment.Debug)
 			fmt.Printf("App ID:     %s\n", deployment.AppID)
 			fmt.Printf("Name:       %s\n", manifest.Name)
 			fmt.Printf("Version:    %s\n", manifest.Version)
 			fmt.Printf("TEE:        %s\n", manifest.TEE)
 			fmt.Printf("Kind:       %s\n", manifest.Kind)
+
+			switch deployment.Debug {
+			case true:
+				buildMode = buildModeUnsafe
+			case false:
+				buildMode = buildModeProduction
+			}
 
 			// Prepare temporary build directory.
 			tmpDir, err := os.MkdirTemp("", "oasis-build")
@@ -176,29 +182,6 @@ var (
 	}
 )
 
-func detectBuildMode(npa *common.NPASelection) {
-	// Configure build mode. In case auto is selected and not offline, query the network. If
-	// autodetection fails, default to production mode.
-	switch {
-	case buildMode == buildModeAuto && !offline:
-		ctx := context.Background()
-		conn, err := connection.Connect(ctx, npa.Network)
-		if err != nil {
-			cobra.CheckErr(fmt.Errorf("unable to autodetect build mode, please provide --mode flag manually (failed to connect to GRPC endpoint: %w)", err))
-		}
-
-		params, err := conn.Consensus().Registry().ConsensusParameters(ctx, consensus.HeightLatest)
-		if err != nil {
-			cobra.CheckErr(fmt.Errorf("unable to autodetect build mode, please provide --mode flag manually (failed to get consensus parameters: %w)", err))
-		}
-
-		if params.DebugAllowTestRuntimes {
-			buildMode = buildModeUnsafe
-		}
-	default:
-	}
-}
-
 func setupBuildEnv(deployment *buildRofl.Deployment, npa *common.NPASelection) {
 	// Configure app ID.
 	os.Setenv("ROFL_APP_ID", deployment.AppID)
@@ -272,7 +255,6 @@ func fetchTrustRoot(npa *common.NPASelection, cfg *buildRofl.TrustRootConfig) (s
 
 func init() {
 	buildFlags := flag.NewFlagSet("", flag.ContinueOnError)
-	buildFlags.StringVar(&buildMode, "mode", "auto", "build mode [production, unsafe, auto]")
 	buildFlags.BoolVar(&offline, "offline", false, "do not perform any operations requiring network access")
 	buildFlags.StringVar(&outputFn, "output", "", "output bundle filename")
 	buildFlags.BoolVar(&doUpdate, "update-manifest", false, "automatically update the manifest")

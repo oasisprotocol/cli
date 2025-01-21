@@ -2,6 +2,8 @@ package network
 
 import (
 	"context"
+	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -21,6 +23,21 @@ var addCmd = &cobra.Command{
 
 		// Validate initial network configuration early.
 		cobra.CheckErr(config.ValidateIdentifier(name))
+
+		isLocal := strings.HasPrefix(rpc, "unix:")
+		if !isLocal {
+			// Check if a local file name was given without protocol.
+			if info, err := os.Stat(rpc); err == nil {
+				isLocal = !info.IsDir()
+				if isLocal {
+					rpc = "unix:" + rpc
+				}
+			}
+		}
+		if isLocal {
+			AddLocalNetwork(name, rpc)
+			return
+		}
 
 		net := config.Network{
 			RPC: rpc,

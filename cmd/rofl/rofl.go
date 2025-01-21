@@ -21,4 +21,5 @@ func init() {
 	Cmd.AddCommand(trustRootCmd)
 	Cmd.AddCommand(build.Cmd)
 	Cmd.AddCommand(identityCmd)
+	Cmd.AddCommand(secretCmd)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -33,6 +34,7 @@ var (
 	policyFn     string
 	scheme       string
 	adminAddress string
+	pubName      string
 
 	appTEE         string
 	appKind        string
@@ -229,7 +231,7 @@ var (
 	}
 
 	updateCmd = &cobra.Command{
-		Use:   "update [<app-id> --policy <policy.yml> --admin <address>]",
+		Use:   "update [<app-id>]",
 		Short: "Update an existing ROFL application",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
@@ -240,6 +242,8 @@ var (
 			var (
 				rawAppID string
 				policy   *rofl.AppAuthPolicy
+				metadata map[string]string
+				secrets  map[string][]byte
 			)
 			if len(args) > 0 {
 				rawAppID = args[0]
@@ -252,6 +256,8 @@ var (
 					adminAddress = "self"
 				}
 				policy = deployment.Policy
+				metadata = deployment.Metadata
+				secrets = buildRofl.PrepareSecrets(deployment.Secrets)
 			}
 			var appID rofl.AppID
 			if err := appID.UnmarshalText([]byte(rawAppID)); err != nil {
@@ -284,8 +290,10 @@ var (
 			}
 
 			updateBody := rofl.Update{
-				ID:     appID,
-				Policy: *policy,
+				ID:       appID,
+				Policy:   *policy,
+				Metadata: metadata,
+				Secrets:  secrets,
 			}
 
 			// Update administrator address.
@@ -397,6 +405,21 @@ var (
 			}
 			stakedAmnt := helpers.FormatParaTimeDenomination(npa.ParaTime, appCfg.Stake)
 			fmt.Printf("Staked amount: %s\n", stakedAmnt)
+
+			if len(appCfg.Metadata) > 0 {
+				fmt.Printf("Metadata:\n")
+				for key, value := range appCfg.Metadata {
+					fmt.Printf("  %s: %s\n", key, value)
+				}
+			}
+
+			if len(appCfg.Secrets) > 0 {
+				fmt.Printf("Secrets:\n")
+				for key, value := range appCfg.Secrets {
+					fmt.Printf("  %s: [%d bytes]\n", key, len(value))
+				}
+			}
+
 			fmt.Printf("Policy:\n")
 			policyJSON, _ := json.MarshalIndent(appCfg.Policy, "  ", "  ")
 			fmt.Printf("  %s\n", string(policyJSON))
@@ -415,6 +438,145 @@ var (
 				}
 			} else {
 				fmt.Println("No registered app instances.")
+			}
+		},
+	}
+
+	secretCmd = &cobra.Command{
+		Use:   "secret",
+		Short: "Encrypted secret management commands",
+	}
+
+	secretSetCmd = &cobra.Command{
+		Use:   "set <name> <file>|- [--public-name <public-name>]",
+		Short: "Encrypt the given secret into the manifest, reading the value from file or stdin",
+		Args:  cobra.ExactArgs(2),
+		Run: func(_ *cobra.Command, args []string) {
+			cfg := cliConfig.Global()
+			npa := common.GetNPASelection(cfg)
+			secretName := args[0]
+			secretFn := args[1]
+
+			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, true)
+			var appID rofl.AppID
+			if err := appID.UnmarshalText([]byte(deployment.AppID)); err != nil {
+				cobra.CheckErr(fmt.Errorf("malformed ROFL app ID: %w", err))
+			}
+
+			// Establish connection with the target network.
+			ctx := context.Background()
+			conn, err := connection.Connect(ctx, npa.Network)
+			cobra.CheckErr(err)
+
+			appCfg, err := conn.Runtime(npa.ParaTime).ROFL.App(ctx, client.RoundLatest, appID)
+			cobra.CheckErr(err)
+
+			// Read secret.
+			var secretValue []byte
+			if secretFn == "-" {
+				secretValue, err = io.ReadAll(os.Stdin)
+				if err != nil {
+					cobra.CheckErr(fmt.Errorf("failed to read secrets from standard input: %w", err))
+				}
+			} else {
+				secretValue, err = os.ReadFile(secretFn)
+				if err != nil {
+					cobra.CheckErr(fmt.Errorf("failed to read secrets from file: %w", err))
+				}
+			}
+
+			// Encrypt the secret.
+			encValue, err := buildRofl.EncryptSecret(secretName, secretValue, appCfg.SEK)
+			if err != nil {
+				cobra.CheckErr(fmt.Errorf("failed to encrypt secret: %w", err))
+			}
+
+			secretCfg := buildRofl.SecretConfig{
+				Name:  secretName,
+				Value: encValue,
+			}
+			if pubName != "" {
+				secretCfg.PublicName = pubName
+			}
+			for _, sc := range deployment.Secrets {
+				if sc.Name == secretName {
+					cobra.CheckErr(fmt.Errorf("secret named '%s' already exists for deployment '%s'", secretName, deploymentName))
+				}
+			}
+			deployment.Secrets = append(deployment.Secrets, &secretCfg)
+
+			// Update manifest.
+			if err = manifest.Save(); err != nil {
+				cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
+			}
+		},
+	}
+
+	secretGetCmd = &cobra.Command{
+		Use:   "get <name>",
+		Short: "Show metadata about the given secret",
+		Args:  cobra.ExactArgs(1),
+		Run: func(_ *cobra.Command, args []string) {
+			cfg := cliConfig.Global()
+			npa := common.GetNPASelection(cfg)
+			secretName := args[0]
+
+			_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, true)
+			var secret *buildRofl.SecretConfig
+			for _, sc := range deployment.Secrets {
+				if sc.Name != secretName {
+					continue
+				}
+				secret = sc
+				break
+			}
+			if secret == nil {
+				cobra.CheckErr(fmt.Errorf("secret named '%s' does not exist for deployment '%s'", secretName, deploymentName))
+				return // Lint doesn't know that cobra.CheckErr never returns.
+			}
+
+			fmt.Printf("Name:        %s\n", secret.Name)
+			if secret.PublicName != "" {
+				fmt.Printf("Public name: %s\n", secret.PublicName)
+			}
+			fmt.Printf("Size:        %d bytes\n", len(secret.Value))
+		},
+	}
+
+	secretRmCmd = &cobra.Command{
+		Use:   "rm <name>",
+		Short: "Remove the given secret from the manifest",
+		Args:  cobra.ExactArgs(1),
+		Run: func(_ *cobra.Command, args []string) {
+			cfg := cliConfig.Global()
+			npa := common.GetNPASelection(cfg)
+			secretName := args[0]
+
+			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, true)
+			var appID rofl.AppID
+			if err := appID.UnmarshalText([]byte(deployment.AppID)); err != nil {
+				cobra.CheckErr(fmt.Errorf("malformed ROFL app ID: %w", err))
+			}
+
+			var (
+				newSecrets []*buildRofl.SecretConfig
+				found      bool
+			)
+			for _, sc := range deployment.Secrets {
+				if sc.Name == secretName {
+					found = true
+					continue
+				}
+				newSecrets = append(newSecrets, sc)
+			}
+			if !found {
+				cobra.CheckErr(fmt.Errorf("secret named '%s' does not exist for deployment '%s'", secretName, deploymentName))
+			}
+			deployment.Secrets = newSecrets
+
+			// Update manifest.
+			if err := manifest.Save(); err != nil {
+				cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
 			}
 		},
 	}
@@ -465,4 +627,14 @@ func init() {
 
 	showCmd.Flags().AddFlagSet(common.SelectorFlags)
 	showCmd.Flags().AddFlagSet(deploymentFlags)
+
+	secretSetCmd.Flags().AddFlagSet(deploymentFlags)
+	secretSetCmd.Flags().StringVar(&pubName, "public-name", "", "public secret name")
+	secretCmd.AddCommand(secretSetCmd)
+
+	secretGetCmd.Flags().AddFlagSet(deploymentFlags)
+	secretCmd.AddCommand(secretGetCmd)
+
+	secretRmCmd.Flags().AddFlagSet(deploymentFlags)
+	secretCmd.AddCommand(secretRmCmd)
 }

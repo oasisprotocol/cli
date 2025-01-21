@@ -191,6 +191,10 @@ type Deployment struct {
 	TrustRoot *TrustRootConfig `yaml:"trust_root,omitempty" json:"trust_root,omitempty"`
 	// Policy is the ROFL app policy.
 	Policy *rofl.AppAuthPolicy `yaml:"policy,omitempty" json:"policy,omitempty"`
+	// Metadata contains custom metadata.
+	Metadata map[string]string `yaml:"metadata,omitempty" json:"metadata,omitempty"`
+	// Secrets contains encrypted secrets.
+	Secrets []*SecretConfig `yaml:"secrets,omitempty" json:"secrets,omitempty"`
 }
 
 // Validate validates the manifest for correctness.
@@ -206,6 +210,11 @@ func (d *Deployment) Validate() error {
 	}
 	if d.ParaTime == "" {
 		return fmt.Errorf("paratime cannot be empty")
+	}
+	for _, s := range d.Secrets {
+		if err := s.Validate(); err != nil {
+			return fmt.Errorf("bad secret: %w", err)
+		}
 	}
 	return nil
 }

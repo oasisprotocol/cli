@@ -60,16 +60,20 @@ var (
 				cobra.CheckErr("offline mode currently not supported")
 			}
 
-			// TODO: Support an interactive mode.
-			var appName string
+			// Determine the application directory.
+			appPath := "."
 			if len(args) > 0 {
-				appName = args[0]
-			} else {
-				// Infer from current directory.
-				wd, err := os.Getwd()
-				cobra.CheckErr(err)
-				appName = filepath.Base(wd)
+				appPath = args[0]
 			}
+			appPath, err := filepath.Abs(appPath)
+			cobra.CheckErr(err)
+			appName := filepath.Base(appPath)
+			if err = os.MkdirAll(appPath, 0o755); err != nil {
+				cobra.CheckErr(err)
+			}
+			err = os.Chdir(appPath)
+			cobra.CheckErr(err)
+
 			// Fail in case there is an existing manifest.
 			if buildRofl.ManifestExists() {
 				cobra.CheckErr("refusing to overwrite existing manifest")

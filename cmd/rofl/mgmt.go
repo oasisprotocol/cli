@@ -149,6 +149,15 @@ var (
 			fmt.Printf("  Debug:    %v\n", deployment.Debug)
 			fmt.Printf("  Admin:    %s\n", deployment.Admin)
 
+			// For container app kind also create an en empty compose.yaml file if it doesn't exist.
+			if appKind == buildRofl.AppKindContainer {
+				var f *os.File
+				f, err = os.OpenFile("compose.yaml", os.O_RDONLY|os.O_CREATE, 0o644)
+				if err == nil {
+					f.Close()
+				}
+			}
+
 			// Serialize manifest and write it to file.
 			err = manifest.Save()
 			if err != nil {

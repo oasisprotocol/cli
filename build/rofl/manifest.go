@@ -16,8 +16,8 @@ import (
 
 // ManifestFileNames are the manifest file names that are tried when loading the manifest.
 var ManifestFileNames = []string{
-	"rofl.yml",
 	"rofl.yaml",
+	"rofl.yml",
 }
 
 // Supported ROFL app kinds.
@@ -165,12 +165,22 @@ func (m *Manifest) SourceFileName() string {
 
 // Save serializes the manifest and writes it to the file returned by `SourceFileName`, overwriting
 // any previous manifest.
+//
+// If no previous source filename is available, a default one is set.
 func (m *Manifest) Save() error {
-	data, err := yaml.Marshal(m)
+	if m.sourceFn == "" {
+		m.sourceFn = ManifestFileNames[0]
+	}
+
+	f, err := os.Create(m.sourceFn)
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(m.SourceFileName(), data, 0o644) //nolint: gosec
+	defer f.Close()
+
+	enc := yaml.NewEncoder(f)
+	enc.SetIndent(2)
+	return enc.Encode(m)
 }
 
 // DefaultDeploymentName is the name of the default deployment that must always be defined and is

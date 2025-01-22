@@ -150,13 +150,12 @@ var (
 			fmt.Printf("  Admin:    %s\n", deployment.Admin)
 
 			// Serialize manifest and write it to file.
-			const manifestFn = "rofl.yaml"
-			data, _ := yaml.Marshal(manifest)
-			if err = os.WriteFile(manifestFn, data, 0o644); err != nil { //nolint: gosec
+			err = manifest.Save()
+			if err != nil {
 				cobra.CheckErr(fmt.Errorf("failed to write manifest: %w", err))
 			}
 
-			fmt.Printf("Created manifest in '%s'.\n", manifestFn)
+			fmt.Printf("Created manifest in '%s'.\n", manifest.SourceFileName())
 			fmt.Printf("Run `oasis rofl create --update-manifest` to register your ROFL app and configure an app ID.\n")
 		},
 	}

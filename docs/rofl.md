@@ -22,13 +22,12 @@ The `build` command will execute a series of build commands depending on the
 target Trusted Execution Environment (TEE) and produce the Oasis Runtime
 Container (ORC) bundle.
 
-Building a ROFL bundle requires the [Network and ParaTime][npa] selectors.
+Building a ROFL bundle requires a ROFL app manifest (`rofl.yaml`) to be present
+in the current working directory. All information about what kind of ROFL app
+to build is specified in the manifest.
+
 Additionally, the following flags are available:
 
-- `--mode` specifies a `production` (enabled SGX attestations suitable for the
-  Mainnet and Testnet) or `unsafe` build (using mocked SGX for debugging
-  and testing). The default behavior is set to `auto` which, based on the
-  selected [Network and ParaTime][npa], determines the build mode.
 - `--output` the filename of the output ORC bundle. Defaults to the package name
   inside `Cargo.toml` and the `.orc` extension.
 
@@ -42,38 +41,6 @@ and toolchains. Check out the [ROFL Prerequisites] chapter for details.
 
 [ROFL Prerequisites]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/prerequisites.md
 [npa]: ./account.md#npa
-
-### For SGX {#build-sgx}
-
-To build an SGX-based ROFL for the default [Network and ParaTime][npa], run
-`build sgx`.
-
-![code shell](../examples/rofl/build-sgx.in.static)
-
-If you want to build a version for debugging and you're not running a [Sapphire
-Localnet] at build time, you can force the *unsafe* build mode:
-
-![code shell](../examples/rofl/build-sgx-unsafe.in.static)
-
-The following SGX-specific flags are supported:
-
-- `--sgx-heap-size` is the heap size in bytes.
-- `--sgx-stack-size` is the stack size in bytes.
-- `--sgx-threads` is the maximum number of threads that an enclave can spawn.
-  This number must be at least the number of threads required by the [Oasis
-  Core runtime], otherwise the app may crash during the execution under actual
-  SGX. It can be greater, if the app needs to spawn more threads.
-
-[Sapphire Localnet]: https://github.com/oasisprotocol/docs/blob/main/docs/build/tools/localnet.mdx
-[Oasis Core runtime]: https://github.com/oasisprotocol/oasis-core/blob/master/runtime/THREADS.md
-
-<!-- TODO
-### For TDX {#build-tdx}
-
-To build an TDX container for the default [Network and ParaTime][npa], run
-`build tdx`.
-
--->
 
 ## Show ROFL identity {#identity}
 

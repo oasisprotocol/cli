@@ -22,4 +22,5 @@ func init() {
 	Cmd.AddCommand(build.Cmd)
 	Cmd.AddCommand(identityCmd)
 	Cmd.AddCommand(secretCmd)
+	Cmd.AddCommand(upgradeCmd)
 }

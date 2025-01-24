@@ -87,6 +87,9 @@ var (
 			height, err := common.GetActualHeight(ctx, conn.Consensus())
 			cobra.CheckErr(err)
 
+			blk, err := conn.Consensus().GetBlock(ctx, height)
+			cobra.CheckErr(err)
+
 			// Determine debug mode.
 			var debugMode bool
 			params, err := conn.Consensus().Registry().ConsensusParameters(ctx, height)
@@ -116,6 +119,7 @@ var (
 				},
 				TrustRoot: &buildRofl.TrustRootConfig{
 					Height: uint64(height),
+					Hash:   blk.Hash.Hex(),
 				},
 			}
 			manifest := buildRofl.Manifest{
@@ -149,13 +153,25 @@ var (
 			fmt.Printf("  Debug:    %v\n", deployment.Debug)
 			fmt.Printf("  Admin:    %s\n", deployment.Admin)
 
-			// For container app kind also create an en empty compose.yaml file if it doesn't exist.
-			if appKind == buildRofl.AppKindContainer {
-				var f *os.File
-				f, err = os.OpenFile("compose.yaml", os.O_RDONLY|os.O_CREATE, 0o644)
-				if err == nil {
-					f.Close()
+			switch manifest.TEE {
+			case buildRofl.TEETypeTDX:
+				switch appKind {
+				case buildRofl.AppKindRaw:
+					artifacts := buildRofl.LatestBasicArtifacts // Copy.
+					manifest.Artifacts = &artifacts
+				case buildRofl.AppKindContainer:
+					// For container app kind also create an en empty compose.yaml file if it doesn't exist.
+					var f *os.File
+					f, err = os.OpenFile("compose.yaml", os.O_RDONLY|os.O_CREATE, 0o644)
+					if err == nil {
+						f.Close()
+					}
+
+					artifacts := buildRofl.LatestContainerArtifacts // Copy.
+					manifest.Artifacts = &artifacts
+				default:
 				}
+			default:
 			}
 
 			// Serialize manifest and write it to file.
@@ -459,6 +475,37 @@ var (
 				}
 			} else {
 				fmt.Println("No registered app instances.")
+			}
+		},
+	}
+
+	upgradeCmd = &cobra.Command{
+		Use:   "upgrade",
+		Short: "Upgrade all artifacts to their latest default versions",
+		Args:  cobra.NoArgs,
+		Run: func(_ *cobra.Command, _ []string) {
+			cfg := cliConfig.Global()
+			npa := common.GetNPASelection(cfg)
+
+			manifest, _ := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, false)
+
+			switch manifest.TEE {
+			case buildRofl.TEETypeTDX:
+				switch manifest.Kind {
+				case buildRofl.AppKindRaw:
+					artifacts := buildRofl.LatestBasicArtifacts // Copy.
+					manifest.Artifacts = &artifacts
+				case buildRofl.AppKindContainer:
+					artifacts := buildRofl.LatestContainerArtifacts // Copy.
+					manifest.Artifacts = &artifacts
+				default:
+				}
+			default:
+			}
+
+			// Update manifest.
+			if err := manifest.Save(); err != nil {
+				cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
 			}
 		},
 	}

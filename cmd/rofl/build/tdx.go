@@ -16,21 +16,13 @@ import (
 	"github.com/oasisprotocol/cli/cmd/common"
 )
 
-// TODO: Replace these URIs with a better mechanism for managing releases.
+// Artifact kinds.
 const (
-	artifactFirmware = "firmware"
-	artifactKernel   = "kernel"
-	artifactStage2   = "stage 2 template"
-
-	defaultFirmwareURI       = "https://github.com/oasisprotocol/oasis-boot/releases/download/v0.3.3/ovmf.tdx.fd#db47100a7d6a0c1f6983be224137c3f8d7cb09b63bb1c7a5ee7829d8e994a42f"
-	defaultKernelURI         = "https://github.com/oasisprotocol/oasis-boot/releases/download/v0.3.3/stage1.bin#539f25c66a27b2ca3c6b4d3333b88c64e531fcc96776c37a12c9ce06dd7fbac9"
-	defaultStage2TemplateURI = "https://github.com/oasisprotocol/oasis-boot/releases/download/v0.3.3/stage2-basic.tar.bz2#72c84d2566959799fdd98fae08c143a8572a5a09ee426be376f9a8bbd1675f2b"
-)
-
-var (
-	tdxFirmwareURI       = defaultFirmwareURI
-	tdxKernelURI         = defaultKernelURI
-	tdxStage2TemplateURI = defaultStage2TemplateURI
+	artifactFirmware         = "firmware"
+	artifactKernel           = "kernel"
+	artifactStage2           = "stage 2 template"
+	artifactContainerRuntime = "rofl-container runtime"
+	artifactContainerCompose = "compose.yaml"
 )
 
 // tdxBuildRaw builds a TDX-based "raw" ROFL app.
@@ -41,8 +33,7 @@ func tdxBuildRaw(
 	deployment *buildRofl.Deployment,
 	bnd *bundle.Bundle,
 ) error {
-	wantedArtifacts := tdxGetDefaultArtifacts()
-	tdxOverrideArtifacts(manifest, wantedArtifacts)
+	wantedArtifacts := tdxWantedArtifacts(manifest, buildRofl.LatestBasicArtifacts)
 	artifacts := tdxFetchArtifacts(wantedArtifacts)
 
 	fmt.Println("Building a TDX-based Rust ROFL application...")
@@ -87,13 +78,32 @@ type artifact struct {
 	uri  string
 }
 
-// tdxGetDefaultArtifacts returns the list of default TDX artifacts.
-func tdxGetDefaultArtifacts() []*artifact {
-	return []*artifact{
-		{artifactFirmware, tdxFirmwareURI},
-		{artifactKernel, tdxKernelURI},
-		{artifactStage2, tdxStage2TemplateURI},
+// tdxWantedArtifacts returns the list of wanted artifacts based on the passed manifest and a set of
+// defaults. In case an artifact is not defined in the manifest, it is taken from defaults.
+func tdxWantedArtifacts(manifest *buildRofl.Manifest, defaults buildRofl.ArtifactsConfig) []*artifact {
+	var artifacts []*artifact
+	for _, a := range []struct {
+		kind   string
+		getter func(*buildRofl.ArtifactsConfig) string
+	}{
+		{artifactFirmware, func(ac *buildRofl.ArtifactsConfig) string { return ac.Firmware }},
+		{artifactKernel, func(ac *buildRofl.ArtifactsConfig) string { return ac.Kernel }},
+		{artifactStage2, func(ac *buildRofl.ArtifactsConfig) string { return ac.Stage2 }},
+		{artifactContainerRuntime, func(ac *buildRofl.ArtifactsConfig) string { return ac.Container.Runtime }},
+		{artifactContainerCompose, func(ac *buildRofl.ArtifactsConfig) string { return ac.Container.Compose }},
+	} {
+		var uri string
+		if manifest.Artifacts != nil {
+			uri = a.getter(manifest.Artifacts)
+		}
+		if uri == "" {
+			uri = a.getter(&defaults)
+		}
+		if uri != "" {
+			artifacts = append(artifacts, &artifact{a.kind, uri})
+		}
 	}
+	return artifacts
 }
 
 // tdxFetchArtifacts obtains all of the required artifacts for a TDX image.
@@ -103,36 +113,6 @@ func tdxFetchArtifacts(artifacts []*artifact) map[string]string {
 		result[ar.kind] = maybeDownloadArtifact(ar.kind, ar.uri)
 	}
 	return result
-}
-
-// tdxOverrideArtifacts overrides artifacts based on the manifest.
-func tdxOverrideArtifacts(manifest *buildRofl.Manifest, artifacts []*artifact) {
-	if manifest == nil || manifest.Artifacts == nil {
-		return
-	}
-	overrides := manifest.Artifacts
-
-	for _, artifact := range artifacts {
-		var overrideURI string
-		switch artifact.kind {
-		case artifactFirmware:
-			overrideURI = overrides.Firmware
-		case artifactKernel:
-			overrideURI = overrides.Kernel
-		case artifactStage2:
-			overrideURI = overrides.Stage2
-		case artifactContainerRuntime:
-			overrideURI = overrides.Container.Runtime
-		case artifactContainerCompose:
-			overrideURI = overrides.Container.Compose
-		default:
-		}
-
-		if overrideURI == "" {
-			continue
-		}
-		artifact.uri = overrideURI
-	}
 }
 
 type tdxStage2 struct {

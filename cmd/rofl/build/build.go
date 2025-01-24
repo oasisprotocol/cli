@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"maps"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -14,7 +15,9 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/sgx"
 	"github.com/oasisprotocol/oasis-core/go/common/version"
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 
 	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/cmd/common"
@@ -33,6 +36,7 @@ var (
 	buildMode      string
 	offline        bool
 	doUpdate       bool
+	doVerify       bool
 	deploymentName string
 
 	Cmd = &cobra.Command{
@@ -43,6 +47,10 @@ var (
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, true)
+
+			if doVerify && doUpdate {
+				cobra.CheckErr("only one of --verify and --update-manifest may be passed")
+			}
 
 			fmt.Println("Building a ROFL application...")
 			fmt.Printf("Deployment: %s\n", deploymentName)
@@ -147,6 +155,70 @@ var (
 
 			runScript(manifest, buildRofl.ScriptBundlePost)
 
+			buildEnclaves := make(map[sgx.EnclaveIdentity]struct{})
+			for _, eid := range eids {
+				buildEnclaves[*eid] = struct{}{}
+			}
+
+			manifestEnclaves := make(map[sgx.EnclaveIdentity]struct{})
+			for _, eid := range deployment.Policy.Enclaves {
+				manifestEnclaves[eid] = struct{}{}
+			}
+
+			// Perform verification when requested.
+			if doVerify {
+				showIdentityDiff := func(build, other map[sgx.EnclaveIdentity]struct{}, otherName string) {
+					fmt.Println("Built enclave identities:")
+					for enclaveID := range build {
+						data, _ := enclaveID.MarshalText()
+						fmt.Printf("  - %s\n", string(data))
+					}
+
+					fmt.Printf("%s enclave identities:\n", otherName)
+					for enclaveID := range other {
+						data, _ := enclaveID.MarshalText()
+						fmt.Printf("  - %s\n", string(data))
+					}
+				}
+
+				if !maps.Equal(buildEnclaves, manifestEnclaves) {
+					fmt.Println("Built enclave identities DIFFER from manifest enclave identities!")
+					showIdentityDiff(buildEnclaves, manifestEnclaves, "Manifest")
+					cobra.CheckErr(fmt.Errorf("enclave identity verification failed"))
+				}
+
+				fmt.Println("Built enclave identities MATCH manifest enclave identities.")
+
+				// When not in offline mode, also verify on-chain enclave identities.
+				if !offline {
+					var conn connection.Connection
+					ctx := context.Background()
+					conn, err = connection.Connect(ctx, npa.Network)
+					cobra.CheckErr(err)
+
+					var appID rofl.AppID
+					_ = appID.UnmarshalText([]byte(deployment.AppID)) // Already verified.
+
+					var appCfg *rofl.AppConfig
+					appCfg, err = conn.Runtime(npa.ParaTime).ROFL.App(ctx, client.RoundLatest, appID)
+					cobra.CheckErr(err)
+
+					cfgEnclaves := make(map[sgx.EnclaveIdentity]struct{})
+					for _, eid := range appCfg.Policy.Enclaves {
+						cfgEnclaves[eid] = struct{}{}
+					}
+
+					if !maps.Equal(manifestEnclaves, cfgEnclaves) {
+						fmt.Println("Built enclave identities DIFFER from on-chain enclave identities!")
+						showIdentityDiff(buildEnclaves, cfgEnclaves, "On-chain")
+						cobra.CheckErr(fmt.Errorf("enclave identity verification failed"))
+					}
+
+					fmt.Println("Built enclave identities MATCH on-chain enclave identities.")
+				}
+				return
+			}
+
 			// Override the update manifest flag in case the policy does not exist.
 			if deployment.Policy == nil {
 				doUpdate = false
@@ -154,7 +226,12 @@ var (
 
 			switch doUpdate {
 			case false:
-				// Ask the user to update the manifest manually.
+				// Ask the user to update the manifest manually (if the manifest has changed).
+				if maps.Equal(buildEnclaves, manifestEnclaves) {
+					fmt.Println("Built enclave identities already match manifest enclave identities.")
+					break
+				}
+
 				fmt.Println("Update the manifest with the following identities to use the new app:")
 				fmt.Println()
 				fmt.Printf("deployments:\n")
@@ -177,6 +254,8 @@ var (
 				if err = manifest.Save(); err != nil {
 					cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
 				}
+
+				fmt.Printf("Run `oasis rofl update` to update your ROFL app's on-chain configuration.\n")
 			}
 		},
 	}
@@ -258,6 +337,7 @@ func init() {
 	buildFlags.BoolVar(&offline, "offline", false, "do not perform any operations requiring network access")
 	buildFlags.StringVar(&outputFn, "output", "", "output bundle filename")
 	buildFlags.BoolVar(&doUpdate, "update-manifest", false, "automatically update the manifest")
+	buildFlags.BoolVar(&doVerify, "verify", false, "verify build against manifest and on-chain state")
 	buildFlags.StringVar(&deploymentName, "deployment", buildRofl.DefaultDeploymentName, "deployment name")
 
 	Cmd.Flags().AddFlagSet(buildFlags)

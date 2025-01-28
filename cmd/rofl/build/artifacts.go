@@ -372,7 +372,7 @@ func padWithEmptySpace(fn string, size uint64) error {
 		return err
 	}
 
-	currentSize := uint64(fi.Size())
+	currentSize := uint64(fi.Size()) //nolint: gosec
 	if currentSize >= size {
 		return nil
 	}
@@ -397,7 +397,7 @@ func appendEmptySpace(fn string, size uint64, align uint64) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	offset := uint64(fi.Size())
+	offset := uint64(fi.Size()) //nolint: gosec
 
 	// Ensure proper alignment.
 	if size%align != 0 {
@@ -405,7 +405,7 @@ func appendEmptySpace(fn string, size uint64, align uint64) (uint64, error) {
 	}
 	offset += (align - (offset % align)) % align
 
-	if err = f.Truncate(int64(offset + size)); err != nil {
+	if err = f.Truncate(int64(offset + size)); err != nil { //nolint: gosec
 		return 0, err
 	}
 

@@ -110,7 +110,7 @@ func AddLocalNetwork(name string, rpc string) {
 	}
 
 	if numDecimals != 0 {
-		net.Denomination.Decimals = uint8(numDecimals)
+		net.Denomination.Decimals = uint8(numDecimals) //nolint: gosec
 	}
 
 	if description != "" {

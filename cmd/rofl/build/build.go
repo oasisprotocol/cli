@@ -157,7 +157,7 @@ var (
 
 			buildEnclaves := make(map[sgx.EnclaveIdentity]struct{})
 			for _, eid := range eids {
-				buildEnclaves[*eid] = struct{}{}
+				buildEnclaves[eid] = struct{}{}
 			}
 
 			manifestEnclaves := make(map[sgx.EnclaveIdentity]struct{})
@@ -246,10 +246,7 @@ var (
 				fmt.Println("Next time you can also use the --update-manifest flag to apply changes.")
 			case true:
 				// Update the manifest with the given enclave identities, overwriting existing ones.
-				deployment.Policy.Enclaves = make([]sgx.EnclaveIdentity, 0, len(eids))
-				for _, eid := range eids {
-					deployment.Policy.Enclaves = append(deployment.Policy.Enclaves, *eid)
-				}
+				deployment.Policy.Enclaves = eids
 
 				if err = manifest.Save(); err != nil {
 					cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
@@ -301,7 +298,7 @@ func fetchTrustRoot(npa *common.NPASelection, cfg *buildRofl.TrustRootConfig) (s
 			}
 		default:
 			// Use configured height.
-			height = int64(cfg.Height)
+			height = int64(cfg.Height) //nolint: gosec
 		}
 
 		blk, err := conn.Consensus().GetBlock(ctx, height)
@@ -311,7 +308,7 @@ func fetchTrustRoot(npa *common.NPASelection, cfg *buildRofl.TrustRootConfig) (s
 		hash = blk.Hash.Hex()
 	default:
 		// Hash is known, just use it.
-		height = int64(cfg.Height)
+		height = int64(cfg.Height) //nolint: gosec
 		hash = cfg.Hash
 	}
 
@@ -323,7 +320,7 @@ func fetchTrustRoot(npa *common.NPASelection, cfg *buildRofl.TrustRootConfig) (s
 		ChainContext string               `json:"chain_context"`
 	}
 	root := trustRoot{
-		Height:       uint64(height),
+		Height:       uint64(height), //nolint: gosec
 		Hash:         hash,
 		RuntimeID:    npa.ParaTime.Namespace(),
 		ChainContext: npa.Network.ChainContext,

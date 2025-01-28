@@ -57,7 +57,7 @@ func GenerateTablesQemu(resources *bundle.TDXResources) ([]byte, []byte, []byte,
 		binary.LittleEndian.PutUint32(tpl[od.Memory.RangeMinimumOffset:], 0x80000000)
 		binary.LittleEndian.PutUint32(tpl[od.Memory.LengthOffset:], 0x60000000)
 	} else {
-		memSizeBytes := uint32(resources.Memory * 1024 * 1024)
+		memSizeBytes := uint32(resources.Memory * 1024 * 1024) //nolint: gosec
 		binary.LittleEndian.PutUint32(tpl[od.Memory.RangeMinimumOffset:], memSizeBytes)
 		binary.LittleEndian.PutUint32(tpl[od.Memory.LengthOffset:], 0xe0000000-memSizeBytes)
 	}
@@ -140,7 +140,7 @@ func findAcpiTable(tables []byte, signature string) (uint32, uint32, uint32, err
 		tblSig := string(tables[offset : offset+4])
 		tblLen := int(binary.LittleEndian.Uint32(tables[offset+4 : offset+8]))
 		if tblSig == signature {
-			return uint32(offset), uint32(offset + 9), uint32(tblLen), nil
+			return uint32(offset), uint32(offset + 9), uint32(tblLen), nil //nolint: gosec
 		}
 
 		// Skip other tables.

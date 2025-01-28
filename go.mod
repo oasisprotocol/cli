@@ -1,8 +1,8 @@
 module github.com/oasisprotocol/cli
 
-go 1.22.2
+go 1.23.2
 
-toolchain go1.22.4
+toolchain go1.23.5
 
 // v1.5.0 has broken uint parsing, use a commit with the fix until the
 // the maintainers merge the PR: https://github.com/spf13/cast/pull/144
@@ -22,7 +22,7 @@ require (
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a
 	github.com/oasisprotocol/deoxysii v0.0.0-20220228165953-2091330c22b7
 	github.com/oasisprotocol/metadata-registry-tools v0.0.0-20220406100644-7e9a2b991920
-	github.com/oasisprotocol/oasis-core/go v0.2403.1
+	github.com/oasisprotocol/oasis-core/go v0.2403.1-0.20250127102726-60cb98ea741d
 	github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.12.1
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/spf13/cobra v1.8.1
@@ -151,7 +151,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c // indirect
-	golang.org/x/net v0.30.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/term v0.28.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect

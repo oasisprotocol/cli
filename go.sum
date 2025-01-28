@@ -426,8 +426,8 @@ github.com/oasisprotocol/deoxysii v0.0.0-20220228165953-2091330c22b7 h1:1102pQc2
 github.com/oasisprotocol/deoxysii v0.0.0-20220228165953-2091330c22b7/go.mod h1:UqoUn6cHESlliMhOnKLWr+CBH+e3bazUPvFj1XZwAjs=
 github.com/oasisprotocol/metadata-registry-tools v0.0.0-20220406100644-7e9a2b991920 h1:rugJRYKamNl6WGBaU+b0wLQFkYcsnBr0ycX5QmB+AYU=
 github.com/oasisprotocol/metadata-registry-tools v0.0.0-20220406100644-7e9a2b991920/go.mod h1:MKr/giwakLyCCjSWh0W9Pbaf7rDD1K96Wr57OhNoUK0=
-github.com/oasisprotocol/oasis-core/go v0.2403.1 h1:WS9upKZ5S53lMc9eRcLdNOC4X0IKILFf/6GwlOvdpS0=
-github.com/oasisprotocol/oasis-core/go v0.2403.1/go.mod h1:H0wKb3CmUGVSioHjLCtzphc6MKODWcZs+YYAegoUT4g=
+github.com/oasisprotocol/oasis-core/go v0.2403.1-0.20250127102726-60cb98ea741d h1:wIOYHrigF7OrRuMBxryv33Bt0YXWQcZWgxApBvTnKkA=
+github.com/oasisprotocol/oasis-core/go v0.2403.1-0.20250127102726-60cb98ea741d/go.mod h1:vRpCznerj8DGbhoHlRnADZUhrarNikX2sB/TkabSOxM=
 github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.12.1 h1:4F/9liMod+uDT7FYj1X92LtB18UQxD0aTpklNFiCNrs=
 github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.12.1/go.mod h1:HZcEGQc/XnfJkDTj/bnfHxch3J9AxFKrCU4iQo1w3Gw=
 github.com/oklog/run v1.0.0 h1:Ru7dDtJNOyC66gQ5dQmaCa0qIsAUFY3sFpK1Xk8igrw=
@@ -702,8 +702,8 @@ golang.org/x/net v0.0.0-20220722155237-a158d28d115b/go.mod h1:XRhObCWvk6IyKnWLug
 golang.org/x/net v0.2.0/go.mod h1:KqCZLdyyvdV855qA2rE3GC2aiw5xGR5TEjj8smXukLY=
 golang.org/x/net v0.6.0/go.mod h1:2Tu9+aMcznHK/AK1HMvgo6xiTLG5rD5rZLDS+rp2Bjs=
 golang.org/x/net v0.8.0/go.mod h1:QVkue5JL9kW//ek3r6jTKnTFis1tRmNAW2P1shuFdJc=
-golang.org/x/net v0.30.0 h1:AcW1SDZMkb8IpzCdQUaIq2sP4sZ4zw+55h6ynffypl4=
-golang.org/x/net v0.30.0/go.mod h1:2wGyMJ5iFasEhkwi13ChkO/t1ECNC4X4eBKkVFyYFlU=
+golang.org/x/net v0.33.0 h1:74SYHlV8BIgHIFC/LrYkOGIwL19eTYXQ5wc6TBuO36I=
+golang.org/x/net v0.33.0/go.mod h1:HXLR5J+9DxmrqMwG9qjGCxZ+zKXxBru04zlTvWlWuN4=
 golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be/go.mod h1:N/0e6XlmueqKjAGxoOufVs8QHGRruUQn6yWY3a++T0U=
 golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421/go.mod h1:gOpvHmFTYa4IltrdGE7lF6nIHvwfUNPOp7c8zoXwtLw=
 golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45/go.mod h1:gOpvHmFTYa4IltrdGE7lF6nIHvwfUNPOp7c8zoXwtLw=

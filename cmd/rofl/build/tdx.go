@@ -235,7 +235,7 @@ func tdxBundleComponent(
 				return err
 			}
 
-			// TODO: (Oasis Core 25.0+) Set comp.TDX.Stage2Persist = true
+			comp.TDX.Stage2Persist = true
 		case buildRofl.StorageKindDiskEphemeral:
 			// Ephemeral storage can be set up by stage 1 directly.
 			storageMode = "disk"

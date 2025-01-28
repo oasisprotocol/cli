@@ -231,7 +231,7 @@ func tdxBundleComponent(
 
 			// Add some sparse padding to allow for growth of the root partition during upgrades.
 			// Note that this will not actually take any space so it could be arbitrarily large.
-			if err := padWithEmptySpace(stage2.fn, 256*1024*1024); err != nil {
+			if err := padWithEmptySpace(stage2.fn, 2*1024*1024*1024); err != nil {
 				return err
 			}
 
@@ -258,7 +258,11 @@ func tdxBundleComponent(
 		return fmt.Errorf("unsupported storage mode: %s", storageKind)
 	}
 
-	// TODO: (Oasis Core 25.0+) Use qcow2 image format to support sparse files.
+	// Use qcow2 image format to support sparse files.
+	if err := convertToQcow2(stage2.fn); err != nil {
+		return fmt.Errorf("failed to convert to qcow2 image: %w", err)
+	}
+	comp.TDX.Stage2Format = "qcow2"
 
 	// Add extra kernel options.
 	comp.TDX.ExtraKernelOptions = append(comp.TDX.ExtraKernelOptions, extraKernelOpts...)

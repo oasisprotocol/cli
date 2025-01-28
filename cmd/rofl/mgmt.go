@@ -264,6 +264,8 @@ var (
 					}
 				}
 			}
+
+			fmt.Printf("Run `oasis rofl build --update-manifest` to build your ROFL app.\n")
 		},
 	}
 
@@ -577,6 +579,8 @@ var (
 			if err = manifest.Save(); err != nil {
 				cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
 			}
+
+			fmt.Printf("Run `oasis rofl update` to update your ROFL app's on-chain configuration.\n")
 		},
 	}
 

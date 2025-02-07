@@ -372,7 +372,7 @@ func padWithEmptySpace(fn string, size uint64) error {
 		return err
 	}
 
-	currentSize := uint64(fi.Size())
+	currentSize := uint64(fi.Size()) //nolint: gosec
 	if currentSize >= size {
 		return nil
 	}
@@ -397,7 +397,7 @@ func appendEmptySpace(fn string, size uint64, align uint64) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
-	offset := uint64(fi.Size())
+	offset := uint64(fi.Size()) //nolint: gosec
 
 	// Ensure proper alignment.
 	if size%align != 0 {
@@ -405,9 +405,39 @@ func appendEmptySpace(fn string, size uint64, align uint64) (uint64, error) {
 	}
 	offset += (align - (offset % align)) % align
 
-	if err = f.Truncate(int64(offset + size)); err != nil {
+	if err = f.Truncate(int64(offset + size)); err != nil { //nolint: gosec
 		return 0, err
 	}
 
 	return offset, nil
+}
+
+// convertToQcow2 converts a raw image to qcow2 format.
+func convertToQcow2(fn string) error {
+	const qemuImgBin = "qemu-img"
+	if err := ensureBinaryExists(qemuImgBin, "qemu-utils"); err != nil {
+		return err
+	}
+
+	tmpOutFn := fn + ".qcow2"
+
+	// Execute qemu-img.
+	cmd := exec.Command(
+		qemuImgBin,
+		"convert",
+		"-O", "qcow2",
+		fn,
+		tmpOutFn,
+	)
+	var out strings.Builder
+	cmd.Stderr = &out
+	cmd.Stdout = &out
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("%w\n%s", err, out.String())
+	}
+
+	if err := os.Rename(tmpOutFn, fn); err != nil {
+		return fmt.Errorf("failed to rename temporary file: %w", err)
+	}
+	return nil
 }

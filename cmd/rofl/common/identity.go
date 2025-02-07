@@ -12,7 +12,7 @@ import (
 
 // ComputeEnclaveIdentity computes the enclave identity of the given ROFL components. If no specific
 // component ID is passed, it uses the first ROFL component.
-func ComputeEnclaveIdentity(bnd *bundle.Bundle, compID string) ([]*sgx.EnclaveIdentity, error) {
+func ComputeEnclaveIdentity(bnd *bundle.Bundle, compID string) ([]sgx.EnclaveIdentity, error) {
 	var cid component.ID
 	if compID != "" {
 		if err := cid.UnmarshalText([]byte(compID)); err != nil {
@@ -35,12 +35,7 @@ func ComputeEnclaveIdentity(bnd *bundle.Bundle, compID string) ([]*sgx.EnclaveId
 
 		switch teeKind := comp.TEEKind(); teeKind {
 		case component.TEEKindSGX:
-			var enclaveID *sgx.EnclaveIdentity
-			enclaveID, err := bnd.EnclaveIdentity(comp.ID())
-			if err != nil {
-				return nil, err
-			}
-			return []*sgx.EnclaveIdentity{enclaveID}, nil
+			return bnd.EnclaveIdentities(comp.ID())
 		case component.TEEKindTDX:
 			return measurement.MeasureTdxQemu(bnd, comp)
 		default:

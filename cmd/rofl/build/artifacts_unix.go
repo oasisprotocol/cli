@@ -10,7 +10,7 @@ import (
 )
 
 func extractHandleSpecialNode(path string, header *tar.Header) error {
-	mode := uint32(header.Mode & 0o7777)
+	mode := uint32(header.Mode & 0o7777) //nolint: gosec
 	switch header.Typeflag {
 	case tar.TypeBlock:
 		mode |= unix.S_IFBLK
@@ -20,7 +20,7 @@ func extractHandleSpecialNode(path string, header *tar.Header) error {
 		mode |= unix.S_IFIFO
 	}
 
-	return unix.Mknod(path, mode, int(unix.Mkdev(uint32(header.Devmajor), uint32(header.Devminor))))
+	return unix.Mknod(path, mode, int(unix.Mkdev(uint32(header.Devmajor), uint32(header.Devminor)))) //nolint: gosec
 }
 
 func extractChtimes(path string, atime, mtime time.Time) error {

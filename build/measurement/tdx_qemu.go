@@ -268,11 +268,11 @@ func (m *tdvfMetadata) computeMrtd(fw []byte, variant int) []byte {
 				// All the other bytes contain 0.
 				var buf [128]byte
 				copy(buf[:9], []byte("MR.EXTEND"))
-				binary.LittleEndian.PutUint64(buf[16:24], s.memoryAddress+page*pageSize+uint64(i*mrExtendGranularity))
+				binary.LittleEndian.PutUint64(buf[16:24], s.memoryAddress+page*pageSize+uint64(i*mrExtendGranularity)) //nolint: gosec
 				_, _ = h.Write(buf[:])
 
 				// The other two extension buffers contain the chunk’s content.
-				chunkOffset := int(s.dataOffset) + int(page*pageSize) + i*mrExtendGranularity
+				chunkOffset := int(s.dataOffset) + int(page*pageSize) + i*mrExtendGranularity //nolint: gosec
 				_, _ = h.Write(fw[chunkOffset : chunkOffset+mrExtendGranularity])
 			}
 		}
@@ -427,7 +427,7 @@ func computeEnclaveIdentity(
 	rtmr1 []byte,
 	rtmr2 []byte,
 	rtmr3 []byte,
-) *sgx.EnclaveIdentity {
+) sgx.EnclaveIdentity {
 	var (
 		zeroMrSigner sgx.MrSigner
 		mrEnclave    sgx.MrEnclave
@@ -441,7 +441,7 @@ func computeEnclaveIdentity(
 	rawMrEnclave := h.Sum(nil)
 	copy(mrEnclave[:], rawMrEnclave)
 
-	return &sgx.EnclaveIdentity{
+	return sgx.EnclaveIdentity{
 		MrEnclave: mrEnclave,
 		MrSigner:  zeroMrSigner, // All-zero MRSIGNER (invalid in SGX).
 	}
@@ -453,7 +453,7 @@ func computeEnclaveIdentity(
 //
 // It may return multiple identities because there may be differences between QEMU versions that can
 // cause differences in measurements (e.g. with MRTD).
-func MeasureTdxQemu(bnd *bundle.Bundle, comp *bundle.Component) ([]*sgx.EnclaveIdentity, error) {
+func MeasureTdxQemu(bnd *bundle.Bundle, comp *bundle.Component) ([]sgx.EnclaveIdentity, error) {
 	if comp.TDX == nil {
 		return nil, fmt.Errorf("component does not support TDX")
 	}
@@ -526,7 +526,7 @@ func MeasureTdxQemu(bnd *bundle.Bundle, comp *bundle.Component) ([]*sgx.EnclaveI
 
 	// Compute MRTD for all known QEMU variants as there are unfortunately different
 	// implementations.
-	eids := make([]*sgx.EnclaveIdentity, 0, 2)
+	eids := make([]sgx.EnclaveIdentity, 0, 2)
 	for _, variant := range []int{
 		mrtdVariantTwoPass,
 		mrtdVariantSinglePass,

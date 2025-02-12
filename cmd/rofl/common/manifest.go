@@ -10,14 +10,23 @@ import (
 	"github.com/oasisprotocol/cli/config"
 )
 
+// ManifestOptions configures the manifest options.
+type ManifestOptions struct {
+	// NeedAppID specifies whether a configured app ID is required in the manifest.
+	NeedAppID bool
+	// NeedAdmin specifies whether a valid admin is required in the manifest. In case this is set to
+	// false and the admin account does not exist, the account will not be modified.
+	NeedAdmin bool
+}
+
 // LoadManifestAndSetNPA loads the ROFL app manifest and reconfigures the network/paratime/account
 // selection.
 //
 // In case there is an error in loading the manifest, it aborts the application.
-func LoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection, deployment string, needAppID bool) (*rofl.Manifest, *rofl.Deployment) {
-	manifest, d, err := MaybeLoadManifestAndSetNPA(cfg, npa, deployment)
+func LoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection, deployment string, opts *ManifestOptions) (*rofl.Manifest, *rofl.Deployment) {
+	manifest, d, err := MaybeLoadManifestAndSetNPA(cfg, npa, deployment, opts)
 	cobra.CheckErr(err)
-	if needAppID && !d.HasAppID() {
+	if opts != nil && opts.NeedAppID && !d.HasAppID() {
 		cobra.CheckErr(fmt.Errorf("deployment '%s' does not have an app ID set, maybe you need to run `oasis rofl create`", deployment))
 	}
 	return manifest, d
@@ -27,7 +36,7 @@ func LoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection, deploym
 // network/paratime/account selection.
 //
 // In case there is an error in loading the manifest, it is returned.
-func MaybeLoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection, deployment string) (*rofl.Manifest, *rofl.Deployment, error) {
+func MaybeLoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection, deployment string, opts *ManifestOptions) (*rofl.Manifest, *rofl.Deployment, error) {
 	manifest, err := rofl.LoadManifest()
 	if err != nil {
 		return nil, nil, err
@@ -66,11 +75,15 @@ func MaybeLoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection, de
 	case "":
 	default:
 		accCfg, err := common.LoadAccountConfig(cfg, d.Admin)
-		if err != nil {
+		switch {
+		case err == nil:
+			npa.Account = accCfg
+			npa.AccountName = d.Admin
+		case opts != nil && opts.NeedAdmin:
 			return nil, nil, err
+		default:
+			// Admin account is not valid, but it is also not required, so do not override.
 		}
-		npa.Account = accCfg
-		npa.AccountName = d.Admin
 	}
 	return manifest, d, nil
 }

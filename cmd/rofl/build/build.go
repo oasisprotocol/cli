@@ -46,7 +46,10 @@ var (
 		Run: func(_ *cobra.Command, _ []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
-			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, true)
+			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+				NeedAppID: true,
+				NeedAdmin: false,
+			})
 
 			if doVerify && doUpdate {
 				cobra.CheckErr("only one of --verify and --update-manifest may be passed")

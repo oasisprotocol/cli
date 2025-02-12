@@ -213,6 +213,11 @@ var (
 				cobra.CheckErr("no ParaTime selected")
 			}
 
+			// In case an app ID is already assigned, refuse to overwrite.
+			if deployment != nil && deployment.AppID != "" {
+				cobra.CheckErr(fmt.Errorf("ROFL app identifier already defined (%s) for deployment '%s', refusing to overwrite", deployment.AppID, deploymentName))
+			}
+
 			// When not in offline mode, connect to the given network endpoint.
 			ctx := context.Background()
 			var conn connection.Connection
@@ -242,7 +247,7 @@ var (
 				return
 			}
 
-			fmt.Printf("Created ROFL application: %s\n", appID)
+			fmt.Printf("Created ROFL app: %s\n", appID)
 
 			if deployment != nil {
 				switch doUpdate {

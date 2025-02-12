@@ -202,7 +202,10 @@ var (
 			if len(args) > 0 {
 				policy = loadPolicy(args[0])
 			} else {
-				manifest, deployment = roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, false)
+				manifest, deployment = roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+					NeedAppID: false,
+					NeedAdmin: true,
+				})
 				policy = deployment.Policy
 			}
 
@@ -293,7 +296,10 @@ var (
 				rawAppID = args[0]
 				policy = loadPolicy(policyFn)
 			} else {
-				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, true)
+				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+					NeedAppID: true,
+					NeedAdmin: true,
+				})
 				rawAppID = deployment.AppID
 
 				if adminAddress == "" && deployment.Admin != "" {
@@ -374,7 +380,10 @@ var (
 			if len(args) > 0 {
 				rawAppID = args[0]
 			} else {
-				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, true)
+				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+					NeedAppID: true,
+					NeedAdmin: true,
+				})
 				rawAppID = deployment.AppID
 			}
 			var appID rofl.AppID
@@ -423,7 +432,10 @@ var (
 			if len(args) > 0 {
 				rawAppID = args[0]
 			} else {
-				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, true)
+				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+					NeedAppID: true,
+					NeedAdmin: false,
+				})
 				rawAppID = deployment.AppID
 			}
 			var appID rofl.AppID
@@ -494,7 +506,10 @@ var (
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 
-			manifest, _ := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, false)
+			manifest, _ := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+				NeedAppID: false,
+				NeedAdmin: false,
+			})
 
 			switch manifest.TEE {
 			case buildRofl.TEETypeTDX:
@@ -532,7 +547,10 @@ var (
 			secretName := args[0]
 			secretFn := args[1]
 
-			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, true)
+			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+				NeedAppID: true,
+				NeedAdmin: false,
+			})
 			var appID rofl.AppID
 			if err := appID.UnmarshalText([]byte(deployment.AppID)); err != nil {
 				cobra.CheckErr(fmt.Errorf("malformed ROFL app ID: %w", err))
@@ -598,7 +616,10 @@ var (
 			npa := common.GetNPASelection(cfg)
 			secretName := args[0]
 
-			_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, true)
+			_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+				NeedAppID: false,
+				NeedAdmin: false,
+			})
 			var secret *buildRofl.SecretConfig
 			for _, sc := range deployment.Secrets {
 				if sc.Name != secretName {
@@ -629,11 +650,10 @@ var (
 			npa := common.GetNPASelection(cfg)
 			secretName := args[0]
 
-			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, true)
-			var appID rofl.AppID
-			if err := appID.UnmarshalText([]byte(deployment.AppID)); err != nil {
-				cobra.CheckErr(fmt.Errorf("malformed ROFL app ID: %w", err))
-			}
+			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+				NeedAppID: false,
+				NeedAdmin: false,
+			})
 
 			var (
 				newSecrets []*buildRofl.SecretConfig

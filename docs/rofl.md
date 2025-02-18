@@ -16,33 +16,118 @@ OFfchain Logic (ROFL)][rofl] apps:
 
 [rofl]: https://github.com/oasisprotocol/docs/blob/main/docs/build/rofl/README.mdx
 
-## Build ROFL {#build}
+## Initialize a new ROFL app manifest {#init}
 
-The `build` command will execute a series of build commands depending on the
-target Trusted Execution Environment (TEE) and produce the Oasis Runtime
-Container (ORC) bundle.
+The `rofl init` command will prepare a new ROFL app manifest in the given
+directory (defaults to the current directory). The manifest is a YAML file named
+`rofl.yaml` which defines the versions of all components, upgrade policies, etc.
+needed to manage, build and deploy the ROFL app.
 
-Building a ROFL bundle requires a ROFL app manifest (`rofl.yaml`) to be present
-in the current working directory. All information about what kind of ROFL app
-to build is specified in the manifest.
+You can also define specific [Network, ParaTime and Account][npa] parameters
+as those get recorded into the manfiest so you don't need to specify them on
+each invocation:
 
-Additionally, the following flags are available:
+![code shell](../examples/rofl/init.in.static)
 
-- `--output` the filename of the output ORC bundle. Defaults to the package name
-  inside `Cargo.toml` and the `.orc` extension.
+![code](../examples/rofl/init.out.static)
+
+## Create a new ROFL app on the network {#create}
+
+Use `rofl create` to register a new ROFL app on the network using an existing
+manifest.
+
+![code shell](../examples/rofl/create.in.static)
+
+![code](../examples/rofl/create.out.static)
+
+Returned is the unique ROFL app ID starting with `rofl1` and which you
+will refer to for managing your ROFL app in the future. If you specify the
+`--update-manifest` parameter the manifest will be automatically updated with
+the newly assigned app identifier.
 
 :::info
 
-Building ROFL apps involves **cross compilation**, so you do not need a working
-TEE on your machine. However, you do need to install all corresponding compilers
-and toolchains. Check out the [ROFL Prerequisites] chapter for details.
+In order to prevent spam attacks registering a ROFL app requires a
+certain amount to be deposited from your account until you decide to
+[remove it](#remove). The deposit remains locked for the lifetime of the app.
+Check out the [ROFL chapter][app] to view the current staking requirements.
+
+:::
+
+With the `--scheme` parameter, you can select one of the following ROFL app ID
+derivation schemes:
+
+- `cn` for the ROFL app creator address (the account you're using to sign the
+  transaction) combined with the account's nonce (default). This behavior is
+  similar to the one of the Ethereum [smart contract address derivation] and is
+  deterministic.
+- `cri` uses the ROFL app creator address combined with the block round the
+  transaction will be validated in and its position inside that block.
+
+[app]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/app.mdx
+[smart contract address derivation]: https://ethereum.org/en/developers/docs/accounts/#contract-accounts
+
+## Build ROFL {#build}
+
+The `rofl build` command will execute a series of build commands depending on
+the target Trusted Execution Environment (TEE) and produce the Oasis Runtime
+Container (ORC) bundle.
+
+Additionally, the following flags are available:
+
+- `--update-manifest` updates the enclave identity in the app manifest with the
+  identity of the locally built app.
+
+- `--output` the filename of the output ORC bundle. Defaults to the pattern
+  `<name>.<deployment>.orc` where `<name>` is the app name from the manifest and
+  `<deployment>` is the deployment name from the manifest.
+
+- `--verify` also verifies the locally built enclave identity against the
+  identity that is currently defined in the manifest and also against the
+  identity that is currently set in the on-chain policy.
+
+:::info
+
+Building ROFL apps does not require a working TEE on your machine. However, you
+do need to install all corresponding tools. Check out the [ROFL Prerequisites]
+chapter for details.
 
 :::
 
 [ROFL Prerequisites]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/prerequisites.md
 [npa]: ./account.md#npa
 
-## Show ROFL identity {#identity}
+## Update ROFL app config {#update}
+
+Use `rofl update` command to update the ROFL app's configuration on chain:
+
+![code shell](../examples/rofl/update.in.static)
+
+![code shell](../examples/rofl/update.out.static)
+
+## Remove ROFL app from the network {#remove}
+
+Run `rofl remove` to deregister your ROFL app:
+
+![code shell](../examples/rofl/remove.in.static)
+
+![code](../examples/rofl/remove.out.static)
+
+The deposit required to register the ROFL app will be returned to the current
+administrator account.
+
+## Show ROFL information {#show}
+
+Run `rofl show` to obtain the information from the network on the ROFL admin
+account, staked amount, current ROFL policy and running instances:
+
+![code shell](../examples/rofl/show.in.static)
+
+![code](../examples/rofl/show.out.static)
+
+## Advanced
+
+### Show ROFL identity {#identity}
 
 Run `rofl identity` to compute the **cryptographic identity** of the ROFL app:
 
@@ -56,94 +141,6 @@ on any computer and are used to prove and verify the integrity of ROFL binaries
 on the network. See the [Reproducibility] chapter to learn more.
 
 [Reproducibility]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/runtime/reproducibility.md
-
-## Create a new ROFL app on the network {#create}
-
-Use `rofl create` to register a new ROFL app on the network using a
-specific [policy] file:
-
-![code shell](../examples/rofl/create.in.static)
-
-![code](../examples/rofl/create.out.static)
-
-Returned is the unique ROFL app ID starting with `rofl1` and which you
-will refer to for managing your ROFL app in the future.
-
-:::info
-
-In order to prevent spam attacks registering a ROFL app requires a
-certain amount to be deposited from your account until you decide to
-[remove it](#remove). The deposit remains locked for the lifetime of the app.
-Check out the [ROFL chapter][policy] to view the current staking requirements.
-
-:::
-
-You can also define specific [Network, ParaTime and Account][npa] parameters:
-
-![code shell](../examples/rofl/create-npa.in.static)
-
-With the `--scheme` parameter, you can select one of the following ROFL app ID
-derivation schemes:
-
-- `cn` for the ROFL app creator address (the account you're using to sign the
-  transaction) combined with the account's nonce (default). This behavior is
-  similar to the one of the Ethereum [smart contract address derivation] and is
-  deterministic.
-- `cri` uses the ROFL app creator address combined with the block round the
-  transaction will be validated in and its position inside that block.
-
-[policy]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/deployment.md#register-the-app
-[smart contract address derivation]: https://ethereum.org/en/developers/docs/accounts/#contract-accounts
-
-## Update ROFL policy {#update}
-
-Use `rofl update` command to set the new policy and the new administrator of the
-ROFL app:
-
-![code shell](../examples/rofl/update.in.static)
-
-![code shell](../examples/rofl/update.out.static)
-
-For the administrator, you can also specify an account name in your wallet or
-address book.
-
-To keep the existing administrator, pass `self`:
-
-![code shell](../examples/rofl/update-self.in.static)
-
-You can also define specific [Network, ParaTime and Account][npa] parameters:
-
-![code shell](../examples/rofl/update-npa.in.static)
-
-## Remove ROFL app from the network {#remove}
-
-Run `rofl remove` to deregister your ROFL app:
-
-![code shell](../examples/rofl/remove.in.static)
-
-![code](../examples/rofl/remove.out.static)
-
-The deposit required to register the ROFL app will be returned to the current
-administrator account.
-
-You can also define specific [Network, ParaTime and Account][npa] parameters:
-
-![code shell](../examples/rofl/remove-npa.in.static)
-
-## Show ROFL information {#show}
-
-Run `rofl show` to obtain the information from the network on the ROFL admin
-account, staked amount, current ROFL policy and running instances:
-
-![code shell](../examples/rofl/show.in.static)
-
-![code](../examples/rofl/show.out.static)
-
-You can also define specific [Network and ParaTime][npa] parameters:
-
-![code shell](../examples/rofl/show-np.in.static)
-
-## Advanced
 
 ### Show the current trust-root {#trust-root}
 

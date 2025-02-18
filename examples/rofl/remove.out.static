@@ -3,23 +3,23 @@ Format: plain
 Method: rofl.Remove
 Body:
   {
-    "id": "rofl1qqn9xndja7e2pnxhttktmecvwzz0yqwxsquqyxdf"
+    "id": "rofl1qzd82n99vtwesvcqjfyur4tcm45varz2due7s635"
   }
 Authorized signer(s):
-  1. YgkEiVSR4SMQdfXw+ppuFYlqH0seutnCKk8KG8PyAx0= (ed25519)
-     Nonce: 1
+  1. sk5kvBHaZ/si0xXRdjllIOxOgr7o2d1K+ckVaU3ndG4= (ed25519)
+     Nonce: 321
 Fee:
-  Amount: 0.0011285
-  Gas limit: 11285
-  (gas price: 0.0000001  per gas unit)
+  Amount: 0.0011288 TEST
+  Gas limit: 11288
+  (gas price: 0.0000001 TEST per gas unit)
 
-Network:  localnet
-ParaTime: sapphire
-Account:  test:bob
+Network:  testnet
+ParaTime: sapphire (Sapphire Testnet)
+Account:  test:alice
 ? Sign this transaction? Yes
 (In case you are using a hardware-based signer you may need to confirm on device.)
 Broadcasting transaction...
 Transaction included in block successfully.
-Round:            18692
-Transaction hash: d6f738868b9b0e5bfb55e9baa5ed2f23ac8bf8bcb6eb679179a895fd726b0fc2
+Round:            510
+Transaction hash: b3a6f36c7a846dcf3f28c2dd3d2383cc2c3f7c1e05cea4be92fff2338849d825
 Execution successful.

@@ -7,12 +7,11 @@ Body:
       "quotes": {
         "pcs": {
           "tcb_validity_period": 30,
-          "min_tcb_evaluation_data_number": 16
+          "min_tcb_evaluation_data_number": 17,
+          "tdx": {}
         }
       },
-      "enclaves": [
-        "0+tTmlVjUvP0eIHXH7Dld3svPppCUdKDwYxnzplndLea/8+uR7hI7CyvHEm0soNTHhzEJfk1grNoBuUqQ9eNGg=="
-      ],
+      "enclaves": [],
       "endorsements": [
         {
           "any": {}
@@ -24,21 +23,22 @@ Body:
     "scheme": 1
   }
 Authorized signer(s):
-  1. YgkEiVSR4SMQdfXw+ppuFYlqH0seutnCKk8KG8PyAx0= (ed25519)
-     Nonce: 2
+  1. sk5kvBHaZ/si0xXRdjllIOxOgr7o2d1K+ckVaU3ndG4= (ed25519)
+     Nonce: 319
 Fee:
-  Amount: 0.0101487
-  Gas limit: 101487
-  (gas price: 0.0000001  per gas unit)
+  Amount: 0.0101405 TEST
+  Gas limit: 101405
+  (gas price: 0.0000001 TEST per gas unit)
 
-Network:  localnet
-ParaTime: sapphire
-Account:  test:bob
+Network:  testnet
+ParaTime: sapphire (Sapphire Testnet)
+Account:  test:alice
 ? Sign this transaction? Yes
 (In case you are using a hardware-based signer you may need to confirm on device.)
 Broadcasting transaction...
 Transaction included in block successfully.
-Round:            18715
-Transaction hash: 91d86ededa202bce7fb6fd8b5db10f0284a90d3e61ce5f73ea8031c1c1cce342
+Round:            412
+Transaction hash: 2d8ef6e832256986a19d7b92dcf182976205c5247aff71487832877ff4d72edd
 Execution successful.
-Created ROFL application: rofl1qqn9xndja7e2pnxhttktmecvwzz0yqwxsquqyxdf
+Created ROFL app: rofl1qzd82n99vtwesvcqjfyur4tcm45varz2due7s635
+Run `oasis rofl build --update-manifest` to build your ROFL app.

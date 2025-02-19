@@ -1,1 +1,1 @@
-oasis rofl create policy.yml
+oasis rofl create --update-manifest

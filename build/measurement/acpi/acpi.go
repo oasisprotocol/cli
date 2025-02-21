@@ -5,24 +5,13 @@ import (
 	"embed"
 	"encoding/binary"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle"
 )
 
-//go:embed *.hex *.json
+//go:embed *.hex
 var templates embed.FS
-
-// OffsetData is the offset data file format.
-type OffsetData struct {
-	Memory MemoryOffsetData `json:"memory"`
-}
-
-type MemoryOffsetData struct {
-	RangeMinimumOffset int `json:"range_minimum_offset"`
-	LengthOffset       int `json:"length_offset"`
-}
 
 // GenerateTablesQemu generates ACPI tables for the given TD configuration.
 //
@@ -38,28 +27,6 @@ func GenerateTablesQemu(resources *bundle.TDXResources) ([]byte, []byte, []byte,
 	tpl, err := hex.DecodeString(string(tplHex))
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("malformed ACPI table template")
-	}
-
-	// Fetch corresponding offset data.
-	fn = fmt.Sprintf("template_qemu_cpu%d.json", resources.CPUCount)
-	offsetData, err := templates.ReadFile(fn)
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("offset data for ACPI tables is not available")
-	}
-
-	var od OffsetData
-	if err = json.Unmarshal(offsetData, &od); err != nil {
-		return nil, nil, nil, fmt.Errorf("malformed ACPI table offset data")
-	}
-
-	// Handle memory split at 2816 MiB (0xB0000000).
-	if resources.Memory >= 2816 {
-		binary.LittleEndian.PutUint32(tpl[od.Memory.RangeMinimumOffset:], 0x80000000)
-		binary.LittleEndian.PutUint32(tpl[od.Memory.LengthOffset:], 0x60000000)
-	} else {
-		memSizeBytes := uint32(resources.Memory * 1024 * 1024) //nolint: gosec
-		binary.LittleEndian.PutUint32(tpl[od.Memory.RangeMinimumOffset:], memSizeBytes)
-		binary.LittleEndian.PutUint32(tpl[od.Memory.LengthOffset:], 0xe0000000-memSizeBytes)
 	}
 
 	// Generate RSDP.
@@ -94,6 +61,19 @@ func GenerateTablesQemu(resources *bundle.TDXResources) ([]byte, []byte, []byte,
 	rsdtOffset, rsdtCsum, rsdtLen, err := findAcpiTable(tpl, "RSDT")
 	if err != nil {
 		return nil, nil, nil, err
+	}
+
+	// Handle memory split at 2816 MiB (0xB0000000).
+	lengthOffset := dsdtLen - 684           // Offset of the length field inside the DSDT table.
+	rangeMinimumOffset := lengthOffset - 12 // Offset of the range minimum field inside the DSDT table.
+
+	if resources.Memory >= 2816 {
+		binary.LittleEndian.PutUint32(tpl[rangeMinimumOffset:], 0x80000000)
+		binary.LittleEndian.PutUint32(tpl[lengthOffset:], 0x60000000)
+	} else {
+		memSizeBytes := uint32(resources.Memory * 1024 * 1024) //nolint: gosec
+		binary.LittleEndian.PutUint32(tpl[rangeMinimumOffset:], memSizeBytes)
+		binary.LittleEndian.PutUint32(tpl[lengthOffset:], 0xe0000000-memSizeBytes)
 	}
 
 	// Update RSDP with RSDT address.

@@ -31,7 +31,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/zondax/ledger-go v0.15.0
-	golang.org/x/crypto v0.33.0
+	golang.org/x/crypto v0.35.0
 	golang.org/x/sys v0.30.0
 	golang.org/x/text v0.22.0
 	gopkg.in/yaml.v3 v3.0.1

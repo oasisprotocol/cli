@@ -600,8 +600,8 @@ github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 github.com/zondax/hid v0.9.2 h1:WCJFnEDMiqGF64nlZz28E9qLVZ0KSJ7xpc5DLEyma2U=
 github.com/zondax/hid v0.9.2/go.mod h1:l5wttcP0jwtdLjqjMMWFVEE7d1zO0jvSPA9OPZxWpEM=
-github.com/zondax/ledger-go v0.15.0 h1:5XJvuUf91dHLGo4tGK5pQXnxo538JXMhxkBXHXRJI6o=
-github.com/zondax/ledger-go v0.15.0/go.mod h1:HpgkgFh3Jkwi9iYLDATdyRxc8CxqxcywsFj6QerWzvo=
+github.com/zondax/ledger-go v1.0.0 h1:BvNoksIyRqyQTW78rIZP9A44WwAminKiomQa7jXp9EI=
+github.com/zondax/ledger-go v1.0.0/go.mod h1:HpgkgFh3Jkwi9iYLDATdyRxc8CxqxcywsFj6QerWzvo=
 go.mozilla.org/pkcs7 v0.0.0-20200128120323-432b2356ecb1 h1:A/5uWzF44DlIgdm/PQFwfMkW0JX+cIcQi/SwLAmZP5M=
 go.mozilla.org/pkcs7 v0.0.0-20200128120323-432b2356ecb1/go.mod h1:SNgMg+EgDFwmvSmLRTNKC5fegJjB7v23qTQ0XLGUNHk=
 go.opencensus.io v0.21.0/go.mod h1:mSImk1erAIZhrmZN+AvHh14ztQfjbGwt4TtuofqLduU=

@@ -3,10 +3,5 @@ Name:     myapp
 Version:  0.1.0
 TEE:      tdx
 Kind:     container
-Deployment 'default':
-  Network:  testnet
-  ParaTime: sapphire
-  Debug:    false
-  Admin:    test_a
 Created manifest in 'rofl.yaml'.
-Run `oasis rofl create --update-manifest` to register your ROFL app and configure an app ID.
+Run `oasis rofl create` to register your ROFL app and configure an app ID.

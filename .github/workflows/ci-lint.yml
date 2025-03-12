@@ -61,7 +61,7 @@ jobs:
         # NOTE: Using the official golangci-lint GitHub Action should give
         # better performance than manually installing golangci-lint and running
         # 'make lint-go'.
-        uses: golangci/golangci-lint-action@v6.1.0
+        uses: golangci/golangci-lint-action@v6.5.1
         with:
           version: v1.61
         # Always run this step so that all linting errors can be seen at once.

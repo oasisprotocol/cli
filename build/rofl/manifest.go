@@ -3,12 +3,16 @@ package rofl
 import (
 	"errors"
 	"fmt"
+	"maps"
+	"net/mail"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/github/go-spdx/v2/spdxexp"
 	"github.com/oasisprotocol/oasis-core/go/common/version"
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
@@ -45,6 +49,16 @@ type Manifest struct {
 	Name string `yaml:"name" json:"name"`
 	// Version is the ROFL app version.
 	Version string `yaml:"version" json:"version"`
+	// Repository is the ROFL app repository URL.
+	Repository string `yaml:"repository,omitempty" json:"repository,omitempty"`
+	// Author is the ROFL app author full name and e-mail.
+	Author string `yaml:"author,omitempty" json:"author,omitempty"`
+	// License is the ROFL app SPDX license expression.
+	License string `yaml:"license,omitempty" json:"license,omitempty"`
+	// Homepage is the ROFL app homepage.
+	Homepage string `yaml:"homepage,omitempty" json:"homepage,omitempty"`
+	// Description is the ROFL app description.
+	Description string `yaml:"description,omitempty" json:"description,omitempty"`
 	// TEE is the type of TEE to build for.
 	TEE string `yaml:"tee" json:"tee"`
 	// Kind is the kind of ROFL app to build.
@@ -122,6 +136,19 @@ func (m *Manifest) Validate() error {
 		return fmt.Errorf("malformed version: %w", err)
 	}
 
+	if _, err := url.Parse(m.Repository); err != nil && m.Repository != "" {
+		return fmt.Errorf("malformed repository URL: %w", err)
+	}
+	if _, err := mail.ParseAddress(m.Author); err != nil && m.Author != "" {
+		return fmt.Errorf("malformed author: %w", err)
+	}
+	if _, err := spdxexp.ExtractLicenses(m.License); err != nil && m.License != "" {
+		return fmt.Errorf("malformed license: %w", err)
+	}
+	if _, err := url.Parse(m.Homepage); err != nil && m.Homepage != "" {
+		return fmt.Errorf("malformed homepage URL: %w", err)
+	}
+
 	switch m.TEE {
 	case TEETypeSGX, TEETypeTDX:
 	default:
@@ -152,6 +179,38 @@ func (m *Manifest) Validate() error {
 	}
 
 	return nil
+}
+
+// globalMetadataPrefix is the prefix used for all global metadata.
+const globalMetadataPrefix = "net.oasis.rofl."
+
+// GetMetadata derives metadata from the attributes defined in the manifest and combines it with
+// the metadata for the specified deployment.
+func (m *Manifest) GetMetadata(deployment string) map[string]string {
+	meta := make(map[string]string)
+	for _, md := range []struct {
+		name  string
+		value string
+	}{
+		{"name", m.Name},
+		{"version", m.Version},
+		{"repository", m.Repository},
+		{"author", m.Author},
+		{"license", m.License},
+		{"homepage", m.Homepage},
+		{"description", m.Description},
+	} {
+		if md.value == "" {
+			continue
+		}
+		meta[globalMetadataPrefix+md.name] = md.value
+	}
+
+	d, ok := m.Deployments[deployment]
+	if ok {
+		maps.Copy(meta, d.Metadata)
+	}
+	return meta
 }
 
 // SourceFileName returns the filename of the manifest file from which the manifest was loaded or

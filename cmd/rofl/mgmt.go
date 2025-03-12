@@ -66,6 +66,7 @@ var (
 			}
 
 			// Create a default manifest without any deployments.
+			// TODO: Extract author and repository from Git configuration if available.
 			manifest := buildRofl.Manifest{
 				Name:    appName,
 				Version: "0.1.0",
@@ -225,8 +226,9 @@ var (
 
 			// Prepare transaction.
 			tx := rofl.NewCreateTx(nil, &rofl.Create{
-				Policy: *deployment.Policy,
-				Scheme: idScheme,
+				Policy:   *deployment.Policy,
+				Scheme:   idScheme,
+				Metadata: manifest.GetMetadata(deploymentName),
 			})
 
 			acc := common.LoadAccount(cfg, npa.AccountName)
@@ -260,7 +262,7 @@ var (
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
 
-			_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
 				NeedAppID: true,
 				NeedAdmin: true,
 			})
@@ -303,7 +305,7 @@ var (
 			updateBody := rofl.Update{
 				ID:       appID,
 				Policy:   *deployment.Policy,
-				Metadata: deployment.Metadata,
+				Metadata: manifest.GetMetadata(deploymentName),
 				Secrets:  secrets,
 			}
 

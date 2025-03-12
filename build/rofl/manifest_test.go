@@ -51,10 +51,10 @@ func TestManifestValidation(t *testing.T) {
 	err = m.Validate()
 	require.ErrorContains(err, "bad resources config: vCPU count must be at least 1")
 
-	// No default deployment.
+	// Should be valid without deployments.
 	m.Resources.CPUCount = 1
 	err = m.Validate()
-	require.ErrorContains(err, "must define at least the 'default' deployment")
+	require.NoError(err, "must work without deployments")
 
 	// Missing network in deployment.
 	m.Deployments = map[string]*Deployment{

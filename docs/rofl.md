@@ -23,27 +23,29 @@ directory (defaults to the current directory). The manifest is a YAML file named
 `rofl.yaml` which defines the versions of all components, upgrade policies, etc.
 needed to manage, build and deploy the ROFL app.
 
-You can also define specific [Network, ParaTime and Account][npa] parameters
-as those get recorded into the manfiest so you don't need to specify them on
-each invocation:
-
 ![code shell](../examples/rofl/init.in.static)
 
 ![code](../examples/rofl/init.out.static)
+
+Note that by default the manifest will not contain any deployments. In order to
+create deployments, use `rofl create`.
 
 ## Create a new ROFL app on the network {#create}
 
 Use `rofl create` to register a new ROFL app on the network using an existing
 manifest.
 
+You can also define specific [Network, ParaTime and Account][npa] parameters
+as those get recorded into the manfiest so you don't need to specify them on
+each invocation:
+
 ![code shell](../examples/rofl/create.in.static)
 
 ![code](../examples/rofl/create.out.static)
 
 Returned is the unique ROFL app ID starting with `rofl1` and which you
-will refer to for managing your ROFL app in the future. If you specify the
-`--update-manifest` parameter the manifest will be automatically updated with
-the newly assigned app identifier.
+will refer to for managing your ROFL app in the future. The manifest is
+automatically updated with the newly assigned app identifier.
 
 :::info
 

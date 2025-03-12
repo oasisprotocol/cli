@@ -1,1 +1,1 @@
-oasis rofl create --update-manifest
+oasis rofl create --network testnet --account my_rofl_acc

@@ -55,7 +55,7 @@ type Manifest struct {
 	Artifacts *ArtifactsConfig `yaml:"artifacts,omitempty" json:"artifacts,omitempty"`
 
 	// Deployments are the ROFL app deployments.
-	Deployments map[string]*Deployment `yaml:"deployments" json:"deployments"`
+	Deployments map[string]*Deployment `yaml:"deployments,omitempty" json:"deployments,omitempty"`
 
 	// Scripts are custom scripts that are executed by the build system at specific stages.
 	Scripts map[string]string `yaml:"scripts,omitempty" json:"scripts,omitempty"`
@@ -149,9 +149,6 @@ func (m *Manifest) Validate() error {
 		if err := d.Validate(); err != nil {
 			return fmt.Errorf("bad deployment '%s': %w", name, err)
 		}
-	}
-	if _, ok := m.Deployments[DefaultDeploymentName]; !ok {
-		return fmt.Errorf("must define at least the '%s' deployment", DefaultDeploymentName)
 	}
 
 	return nil

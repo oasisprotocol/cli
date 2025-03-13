@@ -455,6 +455,35 @@ var (
 		},
 	}
 
+	deployCmd = &cobra.Command{
+		Use:   "deploy",
+		Short: "Deploy ROFL to a specified instance",
+		Args:  cobra.NoArgs,
+		Run: func(_ *cobra.Command, _ []string) {
+			cfg := cliConfig.Global()
+			npa := common.GetNPASelection(cfg)
+			txCfg := common.GetTransactionConfig()
+
+			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+				NeedAppID: true,
+				NeedAdmin: true,
+			})
+
+			// TODO: Check if Enclave ID matches on-chain and generate Update TX if not.
+
+			cfgSnippet := "" // TODO
+			fmt.Printf(
+				"To deploy your ROFL app, you can decide between one of the two options:\n" +
+					"1. You can run your own node, see https://docs.oasis.io/node/run-your-node/paratime-client-node#configuring-tee-paratime-client-node\n" +
+					"   Add the following snippet into your oasis-node.yml config:\n" + cfgSnippet +
+					"   Copy .orc file to your node\n" +
+					"   Restart the node\n" +
+					"2. Upload .orc file to a publicly accessible file server.\n" +
+					"   Reach out to us at https://oasis.io/discord #dev-central channel to whitelist" +
+					"   your Rofl APP ID on our infra.\n")
+		},
+	}
+
 	upgradeCmd = &cobra.Command{
 		Use:   "upgrade",
 		Short: "Upgrade all artifacts to their latest default versions",
@@ -675,6 +704,10 @@ func init() {
 	updateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	updateCmd.Flags().AddFlagSet(deploymentFlags)
 	updateCmd.Flags().AddFlagSet(updateFlags)
+
+	deployCmd.Flags().AddFlagSet(common.SelectorFlags)
+	deployCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
+	deployCmd.Flags().AddFlagSet(deploymentFlags)
 
 	removeCmd.Flags().AddFlagSet(common.SelectorFlags)
 	removeCmd.Flags().AddFlagSet(common.RuntimeTxFlags)

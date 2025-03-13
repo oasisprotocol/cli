@@ -97,14 +97,8 @@ var (
 					artifacts := buildRofl.LatestBasicArtifacts // Copy.
 					manifest.Artifacts = &artifacts
 				case buildRofl.AppKindContainer:
-					// For container app kind also create an en empty compose.yaml file if it doesn't exist.
-					var f *os.File
-					f, err = os.OpenFile("compose.yaml", os.O_RDONLY|os.O_CREATE, 0o644)
-					if err == nil {
-						f.Close()
-					}
-
 					artifacts := buildRofl.LatestContainerArtifacts // Copy.
+					artifacts.Container.Compose = detectOrCreateComposeFile()
 					manifest.Artifacts = &artifacts
 				default:
 				}
@@ -641,6 +635,24 @@ var (
 		},
 	}
 )
+
+// detectAndCreateComposeFile detects the existing compose.yaml-like file and returns its filename. Otherwise, creates an empty default compose.yaml.
+func detectOrCreateComposeFile() string {
+	for _, filename := range []string{"docker-compose.yaml", "docker-compose.yml", "compose.yml"} {
+		if _, err := os.Stat(filename); err == nil {
+			return filename
+		}
+	}
+
+	filename := "compose.yaml"
+	f, err := os.OpenFile(filename, os.O_RDONLY|os.O_CREATE, 0o644)
+	if err != nil {
+		return ""
+	}
+
+	f.Close()
+	return filename
+}
 
 func init() {
 	deploymentFlags := flag.NewFlagSet("", flag.ContinueOnError)

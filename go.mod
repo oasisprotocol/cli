@@ -14,7 +14,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/adrg/xdg v0.5.3
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4
-	github.com/compose-spec/compose-go/v2 v2.4.8
+	github.com/compose-spec/compose-go/v2 v2.4.9
 	github.com/ethereum/go-ethereum v1.15.0
 	github.com/foxboron/go-uefi v0.0.0-20241017190036-fab4fdf2f2f3
 	github.com/github/go-spdx/v2 v2.3.2
@@ -146,6 +146,7 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
+	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	github.com/zondax/hid v0.9.2 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect

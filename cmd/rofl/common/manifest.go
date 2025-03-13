@@ -87,3 +87,8 @@ func MaybeLoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection, de
 	}
 	return manifest, d, nil
 }
+
+// GetOrcFilename generates a filename based on the project name and deployment.
+func GetOrcFilename(manifest *rofl.Manifest, deploymentName string) string {
+	return fmt.Sprintf("%s.%s.orc", manifest.Name, deploymentName)
+}

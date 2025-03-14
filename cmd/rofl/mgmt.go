@@ -97,14 +97,8 @@ var (
 					artifacts := buildRofl.LatestBasicArtifacts // Copy.
 					manifest.Artifacts = &artifacts
 				case buildRofl.AppKindContainer:
-					// For container app kind also create an en empty compose.yaml file if it doesn't exist.
-					var f *os.File
-					f, err = os.OpenFile("compose.yaml", os.O_RDONLY|os.O_CREATE, 0o644)
-					if err == nil {
-						f.Close()
-					}
-
 					artifacts := buildRofl.LatestContainerArtifacts // Copy.
+					artifacts.Container.Compose = detectOrCreateComposeFile()
 					manifest.Artifacts = &artifacts
 				default:
 				}
@@ -461,6 +455,35 @@ var (
 		},
 	}
 
+	deployCmd = &cobra.Command{
+		Use:   "deploy",
+		Short: "Deploy ROFL to a specified instance",
+		Args:  cobra.NoArgs,
+		Run: func(_ *cobra.Command, _ []string) {
+			cfg := cliConfig.Global()
+			npa := common.GetNPASelection(cfg)
+			txCfg := common.GetTransactionConfig()
+
+			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+				NeedAppID: true,
+				NeedAdmin: true,
+			})
+
+			// TODO: Check if Enclave ID matches on-chain and generate Update TX if not.
+
+			cfgSnippet := "" // TODO
+			fmt.Printf(
+				"To deploy your ROFL app, you can decide between one of the two options:\n" +
+					"1. You can run your own node, see https://docs.oasis.io/node/run-your-node/paratime-client-node#configuring-tee-paratime-client-node\n" +
+					"   Add the following snippet into your oasis-node.yml config:\n" + cfgSnippet +
+					"   Copy .orc file to your node\n" +
+					"   Restart the node\n" +
+					"2. Upload .orc file to a publicly accessible file server.\n" +
+					"   Reach out to us at https://oasis.io/discord #dev-central channel to whitelist" +
+					"   your Rofl APP ID on our infra.\n")
+		},
+	}
+
 	upgradeCmd = &cobra.Command{
 		Use:   "upgrade",
 		Short: "Upgrade all artifacts to their latest default versions",
@@ -642,6 +665,24 @@ var (
 	}
 )
 
+// detectAndCreateComposeFile detects the existing compose.yaml-like file and returns its filename. Otherwise, creates an empty default compose.yaml.
+func detectOrCreateComposeFile() string {
+	for _, filename := range []string{"docker-compose.yaml", "docker-compose.yml", "compose.yml"} {
+		if _, err := os.Stat(filename); err == nil {
+			return filename
+		}
+	}
+
+	filename := "compose.yaml"
+	f, err := os.OpenFile(filename, os.O_RDONLY|os.O_CREATE, 0o644)
+	if err != nil {
+		return ""
+	}
+
+	f.Close()
+	return filename
+}
+
 func init() {
 	deploymentFlags := flag.NewFlagSet("", flag.ContinueOnError)
 	deploymentFlags.StringVar(&deploymentName, "deployment", buildRofl.DefaultDeploymentName, "deployment name")
@@ -663,6 +704,10 @@ func init() {
 	updateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	updateCmd.Flags().AddFlagSet(deploymentFlags)
 	updateCmd.Flags().AddFlagSet(updateFlags)
+
+	deployCmd.Flags().AddFlagSet(common.SelectorFlags)
+	deployCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
+	deployCmd.Flags().AddFlagSet(deploymentFlags)
 
 	removeCmd.Flags().AddFlagSet(common.SelectorFlags)
 	removeCmd.Flags().AddFlagSet(common.RuntimeTxFlags)

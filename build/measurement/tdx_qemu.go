@@ -453,7 +453,7 @@ func computeEnclaveIdentity(
 //
 // It may return multiple identities because there may be differences between QEMU versions that can
 // cause differences in measurements (e.g. with MRTD).
-func MeasureTdxQemu(bnd *bundle.Bundle, comp *bundle.Component) ([]sgx.EnclaveIdentity, error) {
+func MeasureTdxQemu(bnd *bundle.Bundle, comp *bundle.Component) ([]bundle.Identity, error) {
 	if comp.TDX == nil {
 		return nil, fmt.Errorf("component does not support TDX")
 	}
@@ -526,14 +526,18 @@ func MeasureTdxQemu(bnd *bundle.Bundle, comp *bundle.Component) ([]sgx.EnclaveId
 
 	// Compute MRTD for all known QEMU variants as there are unfortunately different
 	// implementations.
-	eids := make([]sgx.EnclaveIdentity, 0, 2)
+	ids := make([]bundle.Identity, 0, 2)
 	for _, variant := range []int{
 		mrtdVariantTwoPass,
 		mrtdVariantSinglePass,
 	} {
 		mrtd := tdvfMeta.computeMrtd(fw, variant)
+		eid := computeEnclaveIdentity(mrtd, rtmr0, rtmr1, rtmr2, rtmr3[:])
 
-		eids = append(eids, computeEnclaveIdentity(mrtd, rtmr0, rtmr1, rtmr2, rtmr3[:]))
+		ids = append(ids, bundle.Identity{
+			Hypervisor: fmt.Sprintf("qemu/v%d", variant),
+			Enclave:    eid,
+		})
 	}
-	return eids, nil
+	return ids, nil
 }

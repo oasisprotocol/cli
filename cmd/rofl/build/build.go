@@ -143,7 +143,7 @@ var (
 
 			fmt.Println("Computing enclave identity...")
 
-			eids, err := roflCommon.ComputeEnclaveIdentity(bnd, "")
+			ids, err := roflCommon.ComputeEnclaveIdentity(bnd, "")
 			if err != nil {
 				fmt.Printf("%s\n", err)
 				return
@@ -151,16 +151,16 @@ var (
 
 			// Setup some post-bundle environment variables.
 			os.Setenv("ROFL_BUNDLE", outFn)
-			for idx, enclaveID := range eids {
-				data, _ := enclaveID.MarshalText()
+			for idx, id := range ids {
+				data, _ := id.Enclave.MarshalText()
 				os.Setenv(fmt.Sprintf("ROFL_ENCLAVE_ID_%d", idx), string(data))
 			}
 
 			runScript(manifest, buildRofl.ScriptBundlePost)
 
 			buildEnclaves := make(map[sgx.EnclaveIdentity]struct{})
-			for _, eid := range eids {
-				buildEnclaves[eid] = struct{}{}
+			for _, id := range ids {
+				buildEnclaves[id.Enclave] = struct{}{}
 			}
 
 			manifestEnclaves := make(map[sgx.EnclaveIdentity]struct{})
@@ -241,15 +241,18 @@ var (
 				fmt.Printf("  %s:\n", deploymentName)
 				fmt.Printf("    policy:\n")
 				fmt.Printf("      enclaves:\n")
-				for _, enclaveID := range eids {
-					data, _ := enclaveID.MarshalText()
+				for _, id := range ids {
+					data, _ := id.Enclave.MarshalText()
 					fmt.Printf("        - \"%s\"\n", string(data))
 				}
 				fmt.Println()
 				fmt.Println("Next time you can also use the --update-manifest flag to apply changes.")
 			case true:
 				// Update the manifest with the given enclave identities, overwriting existing ones.
-				deployment.Policy.Enclaves = eids
+				deployment.Policy.Enclaves = make([]sgx.EnclaveIdentity, len(ids))
+				for _, id := range ids {
+					deployment.Policy.Enclaves = append(deployment.Policy.Enclaves, id.Enclave)
+				}
 
 				if err = manifest.Save(); err != nil {
 					cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))

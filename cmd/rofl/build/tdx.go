@@ -14,6 +14,7 @@ import (
 	"github.com/oasisprotocol/cli/build/cargo"
 	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/cmd/common"
+	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
 )
 
 // Artifact kinds.
@@ -282,6 +283,13 @@ func tdxBundleComponent(
 	for dst, src := range fileMap {
 		_ = bnd.Add(dst, bundle.NewFileData(src))
 	}
+
+	// Compute expected component identity and include it in the manifest.
+	ids, err := roflCommon.ComputeComponentIdentity(bnd, &comp)
+	if err != nil {
+		return fmt.Errorf("failed to compute component identity: %w", err)
+	}
+	comp.Identities = ids
 
 	return nil
 }

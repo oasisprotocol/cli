@@ -27,11 +27,11 @@ var (
 				cobra.CheckErr(fmt.Errorf("failed to open bundle: %w", err))
 			}
 
-			eids, err := roflCommon.ComputeEnclaveIdentity(bnd, compID)
+			ids, err := roflCommon.ComputeEnclaveIdentity(bnd, compID)
 			cobra.CheckErr(err)
 
-			for _, enclaveID := range eids {
-				data, _ := enclaveID.MarshalText()
+			for _, id := range ids {
+				data, _ := id.Enclave.MarshalText()
 				fmt.Println(string(data))
 			}
 		},

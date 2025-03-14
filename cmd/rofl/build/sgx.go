@@ -21,6 +21,7 @@ import (
 	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/build/sgxs"
 	"github.com/oasisprotocol/cli/cmd/common"
+	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
 )
 
 // sgxBuild builds an SGX-based "raw" ROFL app.
@@ -132,6 +133,13 @@ func sgxBuild(
 		_ = bnd.Add(dst, bundle.NewBytesData(b))
 	}
 	_ = bnd.Add(sigName, bundle.NewBytesData(sigData))
+
+	// Compute expected component identity and include it in the manifest.
+	ids, err := roflCommon.ComputeComponentIdentity(bnd, &comp)
+	if err != nil {
+		cobra.CheckErr(fmt.Errorf("failed to compute component identity: %w", err))
+	}
+	comp.Identities = ids
 }
 
 // sgxGenerateKey generates a 3072-bit RSA key with public exponent 3 as required for SGX.

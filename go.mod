@@ -15,7 +15,7 @@ require (
 	github.com/adrg/xdg v0.5.3
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4
 	github.com/compose-spec/compose-go/v2 v2.4.9
-	github.com/ethereum/go-ethereum v1.15.0
+	github.com/ethereum/go-ethereum v1.15.5
 	github.com/foxboron/go-uefi v0.0.0-20241017190036-fab4fdf2f2f3
 	github.com/github/go-spdx/v2 v2.3.2
 	github.com/miguelmota/go-ethereum-hdwallet v0.1.2
@@ -139,7 +139,7 @@ require (
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
-	github.com/supranational/blst v0.3.13 // indirect
+	github.com/supranational/blst v0.3.14 // indirect
 	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect

@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/oasisprotocol/oasis-core/go/common/version"
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle"
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle/component"
 
@@ -211,6 +212,12 @@ func tdxBundleComponent(
 		},
 	}
 
+	var err error
+	comp.Version, err = version.FromString(manifest.Version)
+	if err != nil {
+		return fmt.Errorf("unsupported package version format: %w", err)
+	}
+
 	storageKind := buildRofl.StorageKindNone
 	if manifest.Resources.Storage != nil {
 		storageKind = manifest.Resources.Storage.Kind
@@ -232,7 +239,7 @@ func tdxBundleComponent(
 
 			// Add some sparse padding to allow for growth of the root partition during upgrades.
 			// Note that this will not actually take any space so it could be arbitrarily large.
-			if err := padWithEmptySpace(stage2.fn, 2*1024*1024*1024); err != nil {
+			if err = padWithEmptySpace(stage2.fn, 2*1024*1024*1024); err != nil {
 				return err
 			}
 
@@ -245,7 +252,8 @@ func tdxBundleComponent(
 		// Allocate some space after regular stage2.
 		const sectorSize = 512
 		storageSize := manifest.Resources.Storage.Size * 1024 * 1024
-		storageOffset, err := appendEmptySpace(stage2.fn, storageSize, sectorSize)
+		var storageOffset uint64
+		storageOffset, err = appendEmptySpace(stage2.fn, storageSize, sectorSize)
 		if err != nil {
 			return err
 		}
@@ -260,7 +268,7 @@ func tdxBundleComponent(
 	}
 
 	// Use qcow2 image format to support sparse files.
-	if err := convertToQcow2(stage2.fn); err != nil {
+	if err = convertToQcow2(stage2.fn); err != nil {
 		return fmt.Errorf("failed to convert to qcow2 image: %w", err)
 	}
 	comp.TDX.Stage2Format = "qcow2"
@@ -270,7 +278,7 @@ func tdxBundleComponent(
 
 	bnd.Manifest.Components = append(bnd.Manifest.Components, &comp)
 
-	if err := bnd.Manifest.Validate(); err != nil {
+	if err = bnd.Manifest.Validate(); err != nil {
 		return fmt.Errorf("failed to validate manifest: %w", err)
 	}
 

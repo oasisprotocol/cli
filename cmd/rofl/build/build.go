@@ -13,7 +13,6 @@ import (
 	coreCommon "github.com/oasisprotocol/oasis-core/go/common"
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx"
-	"github.com/oasisprotocol/oasis-core/go/common/version"
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
@@ -85,11 +84,6 @@ var (
 					Name: deployment.AppID,
 					ID:   npa.ParaTime.Namespace(),
 				},
-			}
-			bnd.Manifest.Version, err = version.FromString(manifest.Version)
-			if err != nil {
-				fmt.Printf("unsupported package version format: %s\n", err)
-				return
 			}
 
 			// Setup some build environment variables.

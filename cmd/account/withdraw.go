@@ -32,9 +32,7 @@ var withdrawCmd = &cobra.Command{
 			to = args[1]
 		}
 
-		if npa.Account == nil {
-			cobra.CheckErr("no accounts configured in your wallet")
-		}
+		npa.MustHaveAccount()
 		if npa.ParaTime == nil {
 			cobra.CheckErr("no ParaTimes to withdraw from")
 		}

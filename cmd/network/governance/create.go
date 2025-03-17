@@ -71,9 +71,7 @@ var (
 			txCfg := common.GetTransactionConfig()
 			filename := args[0]
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
+			npa.MustHaveAccount()
 
 			// When not in offline mode, connect to the given network endpoint.
 			ctx := context.Background()
@@ -124,9 +122,7 @@ var (
 			module := args[0]
 			changesFile := args[1]
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
+			npa.MustHaveAccount()
 
 			// When not in offline mode, connect to the given network endpoint.
 			ctx := context.Background()
@@ -177,9 +173,7 @@ var (
 			txCfg := common.GetTransactionConfig()
 			rawProposalID := args[0]
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
+			npa.MustHaveAccount()
 
 			// When not in offline mode, connect to the given network endpoint.
 			ctx := context.Background()

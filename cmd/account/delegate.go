@@ -27,9 +27,7 @@ var delegateCmd = &cobra.Command{
 		txCfg := common.GetTransactionConfig()
 		amount, to := args[0], args[1]
 
-		if npa.Account == nil {
-			cobra.CheckErr("no accounts configured in your wallet")
-		}
+		npa.MustHaveAccount()
 
 		// When not in offline mode, connect to the given network endpoint.
 		ctx := context.Background()

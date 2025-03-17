@@ -88,6 +88,13 @@ func GetNPASelection(cfg *cliConfig.Config) *NPASelection {
 	return &s
 }
 
+// MustHaveAccount checks whether Account is populated and fails if it is not.
+func (npa *NPASelection) MustHaveAccount() {
+	if npa.Account == nil {
+		cobra.CheckErr("no accounts configured in your wallet. Run `oasis wallet` to create or import an account")
+	}
+}
+
 // PrettyPrintNetwork formats the network name and description, if one exists.
 func (npa *NPASelection) PrettyPrintNetwork() (out string) {
 	out = npa.NetworkName

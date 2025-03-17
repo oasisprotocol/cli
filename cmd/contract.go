@@ -240,9 +240,7 @@ otherwise as Base64.`,
 			txCfg := common.GetTransactionConfig()
 			wasmFilename := args[0]
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
+			npa.MustHaveAccount()
 			if npa.ParaTime == nil {
 				cobra.CheckErr("no ParaTime configured")
 			}
@@ -295,9 +293,7 @@ otherwise as Base64.`,
 			strCodeID := args[0]
 			strData := args[1]
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
+			npa.MustHaveAccount()
 			if npa.ParaTime == nil {
 				cobra.CheckErr("no ParaTime configured")
 			}
@@ -354,9 +350,7 @@ otherwise as Base64.`,
 			strInstanceID := args[0]
 			strData := args[1]
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
+			npa.MustHaveAccount()
 			if npa.ParaTime == nil {
 				cobra.CheckErr("no ParaTime configured")
 			}
@@ -419,9 +413,7 @@ otherwise as Base64.`,
 			strInstanceID := args[0]
 			strPolicy := args[1]
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
+			npa.MustHaveAccount()
 			if npa.ParaTime == nil {
 				cobra.CheckErr("no ParaTime configured")
 			}

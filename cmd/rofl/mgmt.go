@@ -155,9 +155,7 @@ var (
 				})
 			case false:
 				// No deployment defined, create a new default one.
-				if npa.Account == nil {
-					cobra.CheckErr("no accounts configured in your wallet")
-				}
+				npa.MustHaveAccount()
 				if npa.ParaTime == nil {
 					cobra.CheckErr("no ParaTime selected")
 				}
@@ -273,9 +271,7 @@ var (
 				cobra.CheckErr(fmt.Errorf("malformed ROFL app ID: %w", err))
 			}
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
+			npa.MustHaveAccount()
 			if npa.ParaTime == nil {
 				cobra.CheckErr("no ParaTime selected")
 			}
@@ -350,9 +346,7 @@ var (
 				cobra.CheckErr(fmt.Errorf("malformed ROFL app ID: %w", err))
 			}
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
+			npa.MustHaveAccount()
 			if npa.ParaTime == nil {
 				cobra.CheckErr("no ParaTime selected")
 			}

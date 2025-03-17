@@ -156,9 +156,7 @@ var (
 			case false:
 				// No deployment defined, create a new default one.
 				npa.MustHaveAccount()
-				if npa.ParaTime == nil {
-					cobra.CheckErr("no ParaTime selected")
-				}
+				npa.MustHaveParaTime()
 				if txCfg.Offline {
 					cobra.CheckErr("offline mode currently not supported")
 				}
@@ -272,9 +270,7 @@ var (
 			}
 
 			npa.MustHaveAccount()
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime selected")
-			}
+			npa.MustHaveParaTime()
 
 			if adminAddress == "" {
 				fmt.Println("You must specify --admin or configure an admin in the manifest.")
@@ -347,9 +343,7 @@ var (
 			}
 
 			npa.MustHaveAccount()
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime selected")
-			}
+			npa.MustHaveParaTime()
 
 			// When not in offline mode, connect to the given network endpoint.
 			ctx := context.Background()

@@ -91,7 +91,14 @@ func GetNPASelection(cfg *cliConfig.Config) *NPASelection {
 // MustHaveAccount checks whether Account is populated and fails if it is not.
 func (npa *NPASelection) MustHaveAccount() {
 	if npa.Account == nil {
-		cobra.CheckErr("no accounts configured in your wallet. Run `oasis wallet` to create or import an account")
+		cobra.CheckErr("no accounts configured in your wallet. Run `oasis wallet` to create or import an account. Then use --account <name> to specify the account")
+	}
+}
+
+// MustHaveParaTime checks whether ParaTime is populated and fails if it is not.
+func (npa *NPASelection) MustHaveParaTime() {
+	if npa.ParaTime == nil {
+		cobra.CheckErr("no ParaTimes selected. Run `oasis paratime` to configure a ParaTime first. Then use --paratime <name> to specify the ParaTime")
 	}
 }
 

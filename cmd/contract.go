@@ -47,9 +47,7 @@ var (
 			npa := common.GetNPASelection(cfg)
 			strInstanceID := args[0]
 
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveParaTime()
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
 			cobra.CheckErr(err)
@@ -77,9 +75,7 @@ var (
 			npa := common.GetNPASelection(cfg)
 			strCodeID := args[0]
 
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveParaTime()
 
 			codeID, err := strconv.ParseUint(strCodeID, 10, 64)
 			cobra.CheckErr(err)
@@ -115,9 +111,7 @@ encoded as strings, or otherwise as Base64.`,
 			npa := common.GetNPASelection(cfg)
 			strInstanceID := args[0]
 
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveParaTime()
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
 			cobra.CheckErr(err)
@@ -162,9 +156,7 @@ otherwise as Base64.`,
 			strInstanceID := args[0]
 			strKey := args[1]
 
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveParaTime()
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
 			cobra.CheckErr(err)
@@ -207,9 +199,7 @@ otherwise as Base64.`,
 			npa := common.GetNPASelection(cfg)
 			strCodeID := args[0]
 
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveParaTime()
 
 			codeID, err := strconv.ParseUint(strCodeID, 10, 64)
 			cobra.CheckErr(err)
@@ -241,9 +231,7 @@ otherwise as Base64.`,
 			wasmFilename := args[0]
 
 			npa.MustHaveAccount()
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveParaTime()
 
 			// When not in offline mode, connect to the given network endpoint.
 			ctx := context.Background()
@@ -294,9 +282,7 @@ otherwise as Base64.`,
 			strData := args[1]
 
 			npa.MustHaveAccount()
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveParaTime()
 
 			codeID, err := strconv.ParseUint(strCodeID, 10, 64)
 			cobra.CheckErr(err)
@@ -351,9 +337,7 @@ otherwise as Base64.`,
 			strData := args[1]
 
 			npa.MustHaveAccount()
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveParaTime()
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
 			cobra.CheckErr(err)
@@ -414,9 +398,7 @@ otherwise as Base64.`,
 			strPolicy := args[1]
 
 			npa.MustHaveAccount()
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveParaTime()
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
 			cobra.CheckErr(err)

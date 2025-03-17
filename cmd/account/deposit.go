@@ -33,9 +33,7 @@ var depositCmd = &cobra.Command{
 		}
 
 		npa.MustHaveAccount()
-		if npa.ParaTime == nil {
-			cobra.CheckErr("no ParaTimes to deposit into")
-		}
+		npa.MustHaveParaTime()
 
 		// When not in offline mode, connect to the given network endpoint.
 		ctx := context.Background()

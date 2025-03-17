@@ -61,9 +61,7 @@ var (
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTimes to investigate")
-			}
+			npa.MustHaveParaTime()
 
 			p, err := parseBlockNum(args[0])
 			cobra.CheckErr(err)

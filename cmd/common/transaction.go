@@ -282,9 +282,7 @@ func SignParaTimeTransaction(
 	tx *types.Transaction,
 	txDetails *signature.TxDetails,
 ) (interface{}, interface{}, error) {
-	if npa.ParaTime == nil {
-		return nil, nil, fmt.Errorf("no ParaTime configured for ParaTime transaction signing")
-	}
+	npa.MustHaveParaTime()
 
 	gas, fee, feeDenom, err := PrepareParatimeTransaction(ctx, npa, account, conn, tx)
 	if err != nil {

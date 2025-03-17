@@ -249,7 +249,7 @@ var (
 				fmt.Println("Next time you can also use the --update-manifest flag to apply changes.")
 			case true:
 				// Update the manifest with the given enclave identities, overwriting existing ones.
-				deployment.Policy.Enclaves = make([]sgx.EnclaveIdentity, len(ids))
+				deployment.Policy.Enclaves = make([]sgx.EnclaveIdentity, 0, len(ids))
 				for _, id := range ids {
 					deployment.Policy.Enclaves = append(deployment.Policy.Enclaves, id.Enclave)
 				}

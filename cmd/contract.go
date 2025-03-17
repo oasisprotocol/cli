@@ -261,7 +261,7 @@ otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			var result contracts.UploadResult
-			if !common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result) {
+			if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, &result) {
 				return
 			}
 
@@ -317,7 +317,7 @@ otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			var result contracts.InstantiateResult
-			if !common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result) {
+			if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, &result) {
 				return
 			}
 
@@ -368,7 +368,7 @@ otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			var result contracts.CallResult
-			if !common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result) {
+			if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, &result) {
 				return
 			}
 
@@ -424,7 +424,7 @@ otherwise as Base64.`,
 			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
-			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil)
+			common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil)
 		},
 	}
 )

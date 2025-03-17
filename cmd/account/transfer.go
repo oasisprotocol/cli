@@ -114,7 +114,7 @@ var transferCmd = &cobra.Command{
 			cobra.CheckErr(err)
 		}
 
-		common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil)
+		common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil)
 	},
 }
 

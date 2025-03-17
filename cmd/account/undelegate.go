@@ -88,7 +88,7 @@ var undelegateCmd = &cobra.Command{
 			}
 		}
 
-		if !common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil) {
+		if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil) {
 			return
 		}
 

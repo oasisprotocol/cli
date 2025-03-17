@@ -23,6 +23,7 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/accounts"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
 	"github.com/oasisprotocol/cli/wallet"
@@ -432,7 +433,7 @@ func ExportTransaction(sigTx interface{}) {
 // it broadcasts the transaction and returns true.
 func BroadcastOrExportTransaction(
 	ctx context.Context,
-	pt *config.ParaTime,
+	npa *NPASelection,
 	conn connection.Connection,
 	tx interface{},
 	meta interface{},
@@ -443,7 +444,7 @@ func BroadcastOrExportTransaction(
 		return false
 	}
 
-	BroadcastTransaction(ctx, pt, conn, tx, meta, result)
+	BroadcastTransaction(ctx, npa, conn, tx, meta, result)
 	return true
 }
 
@@ -452,7 +453,7 @@ func BroadcastOrExportTransaction(
 // When in offline mode, it outputs the transaction instead.
 func BroadcastTransaction(
 	ctx context.Context,
-	pt *config.ParaTime,
+	npa *NPASelection,
 	conn connection.Connection,
 	tx interface{},
 	meta interface{},
@@ -469,12 +470,12 @@ func BroadcastTransaction(
 		fmt.Printf("Transaction hash: %s\n", sigTx.Hash())
 	case *types.UnverifiedTransaction:
 		// ParaTime transaction.
-		if pt == nil {
+		if npa == nil || npa.ParaTime == nil {
 			cobra.CheckErr("no ParaTime configured for ParaTime transaction submission")
 		}
 
 		fmt.Printf("Broadcasting transaction...\n")
-		rawMeta, err := conn.Runtime(pt).SubmitTxRawMeta(ctx, sigTx)
+		rawMeta, err := conn.Runtime(npa.ParaTime).SubmitTxRawMeta(ctx, sigTx)
 		cobra.CheckErr(err)
 
 		if rawMeta.CheckTxError != nil {
@@ -508,7 +509,7 @@ func BroadcastTransaction(
 				cobra.CheckErr(err)
 			}
 		default:
-			cobra.CheckErr(fmt.Sprintf("Execution failed with error: %s", decResult.Failed.Error()))
+			TriggerPrettyError(ctx, npa, conn, tx, meta, decResult.Failed)
 		}
 	default:
 		panic(fmt.Errorf("unsupported transaction kind: %T", tx))
@@ -562,6 +563,24 @@ func WaitForEvent(
 	}()
 
 	return resultCh
+}
+
+func TriggerPrettyError(
+	_ context.Context,
+	npa *NPASelection,
+	_ connection.Connection,
+	_ interface{},
+	_ interface{},
+	failedRes *types.FailedCallResult,
+) {
+	errMsg := fmt.Sprintf("Execution failed with error: %s", failedRes.Error())
+	if failedRes.Code == 2 && failedRes.Module == accounts.ModuleName &&
+		npa != nil && npa.ParaTime != nil &&
+		npa.Network.ChainContext == config.DefaultNetworks.All["testnet"].ChainContext &&
+		npa.ParaTime.ID == config.DefaultNetworks.All["testnet"].ParaTimes.All["sapphire"].ID {
+		errMsg += "\nTip: You can get TEST tokens at https://faucet.testnet.oasis.io or #dev-central at https://oasis.io/discord."
+	}
+	cobra.CheckErr(errMsg)
 }
 
 func init() {

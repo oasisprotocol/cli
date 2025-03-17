@@ -228,7 +228,7 @@ var (
 			cobra.CheckErr(err)
 
 			var appID rofl.AppID
-			if !common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &appID) {
+			if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, &appID) {
 				return
 			}
 
@@ -314,7 +314,7 @@ var (
 			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
-			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil)
+			common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil)
 		},
 	}
 
@@ -363,7 +363,7 @@ var (
 			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
-			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil)
+			common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil)
 		},
 	}
 

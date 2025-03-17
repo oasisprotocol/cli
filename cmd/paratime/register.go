@@ -52,7 +52,7 @@ var registerCmd = &cobra.Command{
 		sigTx, err := common.SignConsensusTransaction(ctx, npa, acc, conn, tx)
 		cobra.CheckErr(err)
 
-		common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
+		common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, nil, nil)
 	},
 }
 

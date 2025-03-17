@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
+	"github.com/oasisprotocol/oasis-core/go/common/errors"
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
@@ -90,7 +91,7 @@ var depositCmd = &cobra.Command{
 			return ce.Deposit
 		})
 
-		common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil)
+		common.BroadcastTransaction(ctx, npa, conn, sigTx, meta, nil)
 
 		fmt.Printf("Waiting for deposit result...\n")
 
@@ -104,10 +105,12 @@ var depositCmd = &cobra.Command{
 		case true:
 			fmt.Printf("Deposit succeeded.\n")
 		case false:
-			cobra.CheckErr(fmt.Errorf("deposit failed with error code %d from module %s",
-				we.Error.Code,
-				we.Error.Module,
-			))
+			failedRes := types.FailedCallResult{
+				Module:  we.Error.Module,
+				Code:    we.Error.Code,
+				Message: errors.FromCode(we.Error.Module, we.Error.Code, "").Error(),
+			}
+			common.TriggerPrettyError(ctx, npa, conn, tx, meta, &failedRes)
 		}
 	},
 }

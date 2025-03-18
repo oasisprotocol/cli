@@ -7,6 +7,8 @@ import (
 	"math"
 	"os"
 
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/accounts"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/core"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -16,6 +18,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	consensusTx "github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
+	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/callformat"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
@@ -23,7 +26,6 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/accounts"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
 	"github.com/oasisprotocol/cli/wallet"
@@ -479,11 +481,12 @@ func BroadcastTransaction(
 		cobra.CheckErr(err)
 
 		if rawMeta.CheckTxError != nil {
-			cobra.CheckErr(fmt.Sprintf("Transaction check failed with error: module: %s code: %d message: %s",
-				rawMeta.CheckTxError.Module,
-				rawMeta.CheckTxError.Code,
-				rawMeta.CheckTxError.Message,
-			))
+			cobra.CheckErr(fmt.Sprintf("Transaction check failed with error: %s",
+				PrettyErrorHints(ctx, npa, conn, tx, meta, &types.FailedCallResult{
+					Module:  rawMeta.CheckTxError.Module,
+					Code:    rawMeta.CheckTxError.Code,
+					Message: rawMeta.CheckTxError.Message,
+				})))
 		}
 
 		fmt.Printf("Transaction included in block successfully.\n")
@@ -509,7 +512,7 @@ func BroadcastTransaction(
 				cobra.CheckErr(err)
 			}
 		default:
-			TriggerPrettyError(ctx, npa, conn, tx, meta, decResult.Failed)
+			cobra.CheckErr(fmt.Sprintf("Execution failed with error: %s", PrettyErrorHints(ctx, npa, conn, tx, meta, decResult.Failed)))
 		}
 	default:
 		panic(fmt.Errorf("unsupported transaction kind: %T", tx))
@@ -565,22 +568,30 @@ func WaitForEvent(
 	return resultCh
 }
 
-func TriggerPrettyError(
+// PrettyErrorHints adds any hints based on the error and the transaction context.
+func PrettyErrorHints(
 	_ context.Context,
 	npa *NPASelection,
 	_ connection.Connection,
 	_ interface{},
 	_ interface{},
 	failedRes *types.FailedCallResult,
-) {
-	errMsg := fmt.Sprintf("Execution failed with error: %s", failedRes.Error())
-	if failedRes.Code == 2 && failedRes.Module == accounts.ModuleName &&
-		npa != nil && npa.ParaTime != nil &&
+) string {
+	errMsg := failedRes.Error()
+	if npa != nil && npa.ParaTime != nil &&
 		npa.Network.ChainContext == config.DefaultNetworks.All["testnet"].ChainContext &&
-		npa.ParaTime.ID == config.DefaultNetworks.All["testnet"].ParaTimes.All["sapphire"].ID {
+		npa.ParaTime.ID == config.DefaultNetworks.All["testnet"].ParaTimes.All["sapphire"].ID &&
+		(failedRes.Module == accounts.ModuleName && failedRes.Code == 2 || failedRes.Module == core.ModuleName && failedRes.Code == 5) {
 		errMsg += "\nTip: You can get TEST tokens at https://faucet.testnet.oasis.io or #dev-central at https://oasis.io/discord."
 	}
-	cobra.CheckErr(errMsg)
+	if failedRes.Module == staking.ModuleName {
+		if failedRes.Code == 5 {
+			errMsg += "\nTip: Did you forget to run `oasis account allow`?"
+		} else if failedRes.Code == 9 {
+			errMsg += "\nTip: You can see minimum staking transfer amount by running `oasis network show parameters`"
+		}
+	}
+	return errMsg
 }
 
 func init() {

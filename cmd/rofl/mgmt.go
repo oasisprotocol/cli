@@ -243,7 +243,7 @@ var (
 				cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
 			}
 
-			fmt.Printf("Run `oasis rofl build --update-manifest` to build your ROFL app.\n")
+			fmt.Printf("Run `oasis rofl build` to build your ROFL app.\n")
 		},
 	}
 

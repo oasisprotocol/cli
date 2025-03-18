@@ -34,7 +34,7 @@ var (
 	outputFn       string
 	buildMode      string
 	offline        bool
-	doUpdate       bool
+	noUpdate       bool
 	doVerify       bool
 	deploymentName string
 
@@ -49,10 +49,6 @@ var (
 				NeedAppID: true,
 				NeedAdmin: false,
 			})
-
-			if doVerify && doUpdate {
-				cobra.CheckErr("only one of --verify and --update-manifest may be passed")
-			}
 
 			fmt.Println("Building a ROFL application...")
 			fmt.Printf("Deployment: %s\n", deploymentName)
@@ -218,11 +214,11 @@ var (
 
 			// Override the update manifest flag in case the policy does not exist.
 			if deployment.Policy == nil {
-				doUpdate = false
+				noUpdate = true
 			}
 
-			switch doUpdate {
-			case false:
+			switch noUpdate {
+			case true:
 				// Ask the user to update the manifest manually (if the manifest has changed).
 				if maps.Equal(buildEnclaves, manifestEnclaves) {
 					fmt.Println("Built enclave identities already match manifest enclave identities.")
@@ -239,9 +235,7 @@ var (
 					data, _ := id.Enclave.MarshalText()
 					fmt.Printf("        - \"%s\"\n", string(data))
 				}
-				fmt.Println()
-				fmt.Println("Next time you can also use the --update-manifest flag to apply changes.")
-			case true:
+			case false:
 				// Update the manifest with the given enclave identities, overwriting existing ones.
 				deployment.Policy.Enclaves = make([]sgx.EnclaveIdentity, 0, len(ids))
 				for _, id := range ids {
@@ -333,9 +327,14 @@ func init() {
 	buildFlags := flag.NewFlagSet("", flag.ContinueOnError)
 	buildFlags.BoolVar(&offline, "offline", false, "do not perform any operations requiring network access")
 	buildFlags.StringVar(&outputFn, "output", "", "output bundle filename")
-	buildFlags.BoolVar(&doUpdate, "update-manifest", false, "automatically update the manifest")
+	buildFlags.BoolVar(&noUpdate, "no-update-manifest", false, "do not update the manifest")
 	buildFlags.BoolVar(&doVerify, "verify", false, "verify build against manifest and on-chain state")
 	buildFlags.StringVar(&deploymentName, "deployment", buildRofl.DefaultDeploymentName, "deployment name")
+
+	// TODO: Remove when all the examples, demos and docs are updated.
+	var dummy bool
+	buildFlags.BoolVar(&dummy, "update-manifest", true, "not update the manifest")
+	_ = buildFlags.MarkDeprecated("update-manifest", "the app manifest is now updated by default. Pass --no-update-manifest to prevent updating it.")
 
 	Cmd.Flags().AddFlagSet(buildFlags)
 }

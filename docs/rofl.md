@@ -77,9 +77,6 @@ Container (ORC) bundle.
 
 Additionally, the following flags are available:
 
-- `--update-manifest` updates the enclave identity in the app manifest with the
-  identity of the locally built app.
-
 - `--output` the filename of the output ORC bundle. Defaults to the pattern
   `<name>.<deployment>.orc` where `<name>` is the app name from the manifest and
   `<deployment>` is the deployment name from the manifest.
@@ -87,6 +84,9 @@ Additionally, the following flags are available:
 - `--verify` also verifies the locally built enclave identity against the
   identity that is currently defined in the manifest and also against the
   identity that is currently set in the on-chain policy.
+
+- `--no-update-manifest` do not update the enclave identity stored in the app
+  manifest.
 
 :::info
 

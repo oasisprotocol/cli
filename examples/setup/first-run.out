@@ -16,7 +16,7 @@ Available Commands:
   wallet      Manage accounts in the local wallet
 
 Flags:
-      --config string   config file to use
+      --config string   config file to use (instead of the default ~/.config/oasis/cli.toml)
   -h, --help            help for oasis
   -v, --version         version for oasis
 

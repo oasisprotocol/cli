@@ -127,6 +127,10 @@ account, staked amount, current ROFL policy and running instances:
 
 ![code](../examples/rofl/show.out.static)
 
+## Deploy ROFL app {#deploy}
+
+Run `rofl deploy` to automatically deploy your app to the provider on-chain.
+
 ## Advanced
 
 ### Show ROFL identity {#identity}

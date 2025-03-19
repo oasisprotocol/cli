@@ -14,9 +14,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx"
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle"
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 
 	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/cmd/common"
@@ -120,7 +118,7 @@ var (
 			runScript(manifest, buildRofl.ScriptBuildPost)
 
 			// Write the bundle out.
-			outFn := fmt.Sprintf("%s.%s.orc", manifest.Name, deploymentName)
+			outFn := roflCommon.GetOrcFilename(manifest, deploymentName)
 			if outputFn != "" {
 				outFn = outputFn
 			}
@@ -184,24 +182,12 @@ var (
 
 				// When not in offline mode, also verify on-chain enclave identities.
 				if !offline {
-					var conn connection.Connection
 					ctx := context.Background()
-					conn, err = connection.Connect(ctx, npa.Network)
+					var cfgEnclaves map[sgx.EnclaveIdentity]struct{}
+					cfgEnclaves, err = roflCommon.GetRegisteredEnclaves(ctx, deployment.AppID, npa)
 					cobra.CheckErr(err)
 
-					var appID rofl.AppID
-					_ = appID.UnmarshalText([]byte(deployment.AppID)) // Already verified.
-
-					var appCfg *rofl.AppConfig
-					appCfg, err = conn.Runtime(npa.ParaTime).ROFL.App(ctx, client.RoundLatest, appID)
-					cobra.CheckErr(err)
-
-					cfgEnclaves := make(map[sgx.EnclaveIdentity]struct{})
-					for _, eid := range appCfg.Policy.Enclaves {
-						cfgEnclaves[eid] = struct{}{}
-					}
-
-					if !maps.Equal(manifestEnclaves, cfgEnclaves) {
+					if !maps.Equal(buildEnclaves, cfgEnclaves) {
 						fmt.Println("Built enclave identities DIFFER from on-chain enclave identities!")
 						showIdentityDiff(buildEnclaves, cfgEnclaves, "On-chain")
 						cobra.CheckErr(fmt.Errorf("enclave identity verification failed"))

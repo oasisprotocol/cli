@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
+	"github.com/oasisprotocol/oasis-core/go/common/sgx"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx/pcs"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx/quote"
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
@@ -455,6 +457,53 @@ var (
 		},
 	}
 
+	deployCmd = &cobra.Command{
+		Use:   "deploy",
+		Short: "Deploy ROFL to a specified instance",
+		Args:  cobra.NoArgs,
+		Run: func(_ *cobra.Command, _ []string) {
+			cfg := cliConfig.Global()
+			npa := common.GetNPASelection(cfg)
+
+			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+				NeedAppID: true,
+				NeedAdmin: true,
+			})
+
+			manifestEnclaves := make(map[sgx.EnclaveIdentity]struct{})
+			for _, eid := range deployment.Policy.Enclaves {
+				manifestEnclaves[eid] = struct{}{}
+			}
+
+			ctx := context.Background()
+			cfgEnclaves, err := roflCommon.GetRegisteredEnclaves(ctx, deployment.AppID, npa)
+			cobra.CheckErr(err)
+
+			if !maps.Equal(manifestEnclaves, cfgEnclaves) {
+				// TODO: Generate and run Update TX automatically.
+				cobra.CheckErr("Local enclave identities DIFFER from on-chain enclave identities! Run `oasis rofl update` first")
+			}
+
+			orcFilename := roflCommon.GetOrcFilename(manifest, deploymentName)
+			cfgSnippet := "      runtime:\n" +
+				"        paths:\n" +
+				"          - /node/rofls/" + orcFilename + "\n"
+			fmt.Printf(
+				"To deploy your ROFL app, you can decide between one of the two options:\n"+
+					"\nA. RUN YOUR OWN OASIS NODE\n\n"+
+					"   1. Follow https://docs.oasis.io/node/run-your-node/paratime-client-node\n"+
+					"      and configure your TDX Oasis node\n"+
+					"   2. Copy '%s' to your node, for example:\n\n"+
+					"      scp %s mynode.com:/node/rofls\n\n"+
+					"   3. Add the following snippet to your Oasis node config.yml:\n\n%s\n"+
+					"   4. Restart your node\n"+
+					"\nB. DEPLOY YOUR ROFL TO THE OASIS PROVIDER\n\n"+
+					"   1. Upload '%s' to a publicly accessible file server\n"+
+					"   2. Reach out to us at https://oasis.io/discord #dev-central channel and we\n"+
+					"      will run your ROFL app on our TDX Oasis nodes\n", orcFilename, orcFilename, cfgSnippet, orcFilename)
+		},
+	}
+
 	upgradeCmd = &cobra.Command{
 		Use:   "upgrade",
 		Short: "Upgrade all artifacts to their latest default versions",
@@ -675,6 +724,10 @@ func init() {
 	updateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	updateCmd.Flags().AddFlagSet(deploymentFlags)
 	updateCmd.Flags().AddFlagSet(updateFlags)
+
+	deployCmd.Flags().AddFlagSet(common.SelectorFlags)
+	deployCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
+	deployCmd.Flags().AddFlagSet(deploymentFlags)
 
 	removeCmd.Flags().AddFlagSet(common.SelectorFlags)
 	removeCmd.Flags().AddFlagSet(common.RuntimeTxFlags)

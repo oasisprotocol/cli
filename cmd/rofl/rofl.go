@@ -16,6 +16,7 @@ func init() {
 	Cmd.AddCommand(initCmd)
 	Cmd.AddCommand(createCmd)
 	Cmd.AddCommand(updateCmd)
+	Cmd.AddCommand(deployCmd)
 	Cmd.AddCommand(removeCmd)
 	Cmd.AddCommand(showCmd)
 	Cmd.AddCommand(trustRootCmd)

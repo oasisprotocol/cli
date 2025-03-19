@@ -32,12 +32,8 @@ var withdrawCmd = &cobra.Command{
 			to = args[1]
 		}
 
-		if npa.Account == nil {
-			cobra.CheckErr("no accounts configured in your wallet")
-		}
-		if npa.ParaTime == nil {
-			cobra.CheckErr("no ParaTimes to withdraw from")
-		}
+		npa.MustHaveAccount()
+		npa.MustHaveParaTime()
 
 		// When not in offline mode, connect to the given network endpoint.
 		ctx := context.Background()
@@ -112,7 +108,7 @@ var withdrawCmd = &cobra.Command{
 			return ce.Withdraw
 		})
 
-		common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil)
+		common.BroadcastTransaction(ctx, npa, conn, sigTx, meta, nil)
 
 		fmt.Printf("Waiting for withdraw result...\n")
 

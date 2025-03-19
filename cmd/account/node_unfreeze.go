@@ -23,9 +23,7 @@ var nodeUnfreezeCmd = &cobra.Command{
 		txCfg := common.GetTransactionConfig()
 		rawNodeID := args[0]
 
-		if npa.Account == nil {
-			cobra.CheckErr("no accounts configured in your wallet")
-		}
+		npa.MustHaveAccount()
 
 		// When not in offline mode, connect to the given network endpoint.
 		ctx := context.Background()
@@ -50,7 +48,7 @@ var nodeUnfreezeCmd = &cobra.Command{
 		sigTx, err := common.SignConsensusTransaction(ctx, npa, acc, conn, tx)
 		cobra.CheckErr(err)
 
-		common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
+		common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, nil, nil)
 	},
 }
 

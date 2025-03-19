@@ -34,9 +34,7 @@ var (
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
+			npa.MustHaveAccount()
 
 			// Load the account and ensure it corresponds to the entity.
 			acc := common.LoadAccount(cfg, npa.AccountName)
@@ -81,9 +79,7 @@ var (
 			txCfg := common.GetTransactionConfig()
 			filename := args[0]
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
+			npa.MustHaveAccount()
 
 			// When not in offline mode, connect to the given network endpoint.
 			ctx := context.Background()
@@ -127,7 +123,7 @@ var (
 			sigTx, err := common.SignConsensusTransaction(ctx, npa, acc, conn, tx)
 			cobra.CheckErr(err)
 
-			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
+			common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, nil, nil)
 		},
 	}
 
@@ -140,9 +136,7 @@ var (
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
+			npa.MustHaveAccount()
 
 			// When not in offline mode, connect to the given network endpoint.
 			ctx := context.Background()
@@ -160,7 +154,7 @@ var (
 			sigTx, err := common.SignConsensusTransaction(ctx, npa, acc, conn, tx)
 			cobra.CheckErr(err)
 
-			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, nil, nil)
+			common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, nil, nil)
 		},
 	}
 
@@ -174,9 +168,7 @@ var (
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
+			npa.MustHaveAccount()
 
 			var fsRegistry metadataRegistry.MutableProvider
 			switch registryPath {

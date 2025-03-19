@@ -61,9 +61,7 @@ func MaybeLoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection, de
 	}
 	switch d.ParaTime {
 	case "":
-		if npa.ParaTime == nil {
-			return nil, nil, fmt.Errorf("no ParaTime selected")
-		}
+		npa.MustHaveParaTime()
 	default:
 		npa.ParaTime = npa.Network.ParaTimes.All[d.ParaTime]
 		if npa.ParaTime == nil {

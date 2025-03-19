@@ -7,6 +7,7 @@ import (
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
 
+	"github.com/oasisprotocol/oasis-core/go/common/errors"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	sdkSignature "github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
@@ -32,12 +33,8 @@ var depositCmd = &cobra.Command{
 			to = args[1]
 		}
 
-		if npa.Account == nil {
-			cobra.CheckErr("no accounts configured in your wallet")
-		}
-		if npa.ParaTime == nil {
-			cobra.CheckErr("no ParaTimes to deposit into")
-		}
+		npa.MustHaveAccount()
+		npa.MustHaveParaTime()
 
 		// When not in offline mode, connect to the given network endpoint.
 		ctx := context.Background()
@@ -94,7 +91,7 @@ var depositCmd = &cobra.Command{
 			return ce.Deposit
 		})
 
-		common.BroadcastTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil)
+		common.BroadcastTransaction(ctx, npa, conn, sigTx, meta, nil)
 
 		fmt.Printf("Waiting for deposit result...\n")
 
@@ -108,10 +105,12 @@ var depositCmd = &cobra.Command{
 		case true:
 			fmt.Printf("Deposit succeeded.\n")
 		case false:
-			cobra.CheckErr(fmt.Errorf("deposit failed with error code %d from module %s",
-				we.Error.Code,
-				we.Error.Module,
-			))
+			cobra.CheckErr(fmt.Sprintf("Deposit failed with error: %s",
+				common.PrettyErrorHints(ctx, npa, conn, tx, meta, &types.FailedCallResult{
+					Module:  we.Error.Module,
+					Code:    we.Error.Code,
+					Message: errors.FromCode(we.Error.Module, we.Error.Code, "").Error(),
+				})))
 		}
 	},
 }

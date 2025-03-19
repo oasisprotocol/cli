@@ -19,10 +19,7 @@ var trustRootCmd = &cobra.Command{
 	Run: func(_ *cobra.Command, _ []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
-
-		if npa.ParaTime == nil {
-			cobra.CheckErr("no ParaTime selected")
-		}
+		npa.MustHaveParaTime()
 
 		// Establish connection with the target network.
 		ctx := context.Background()

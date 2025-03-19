@@ -96,9 +96,7 @@ var statsCmd = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
-		if npa.ParaTime == nil {
-			cobra.CheckErr("no ParaTimes configured")
-		}
+		npa.MustHaveParaTime()
 		runtimeID := npa.ParaTime.Namespace()
 
 		// Parse command line arguments

@@ -155,12 +155,8 @@ var (
 				})
 			case false:
 				// No deployment defined, create a new default one.
-				if npa.Account == nil {
-					cobra.CheckErr("no accounts configured in your wallet")
-				}
-				if npa.ParaTime == nil {
-					cobra.CheckErr("no ParaTime selected")
-				}
+				npa.MustHaveAccount()
+				npa.MustHaveParaTime()
 				if txCfg.Offline {
 					cobra.CheckErr("offline mode currently not supported")
 				}
@@ -232,7 +228,7 @@ var (
 			cobra.CheckErr(err)
 
 			var appID rofl.AppID
-			if !common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &appID) {
+			if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, &appID) {
 				return
 			}
 
@@ -273,12 +269,8 @@ var (
 				cobra.CheckErr(fmt.Errorf("malformed ROFL app ID: %w", err))
 			}
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime selected")
-			}
+			npa.MustHaveAccount()
+			npa.MustHaveParaTime()
 
 			if adminAddress == "" {
 				fmt.Println("You must specify --admin or configure an admin in the manifest.")
@@ -322,7 +314,7 @@ var (
 			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
-			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil)
+			common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil)
 		},
 	}
 
@@ -350,12 +342,8 @@ var (
 				cobra.CheckErr(fmt.Errorf("malformed ROFL app ID: %w", err))
 			}
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime selected")
-			}
+			npa.MustHaveAccount()
+			npa.MustHaveParaTime()
 
 			// When not in offline mode, connect to the given network endpoint.
 			ctx := context.Background()
@@ -375,7 +363,7 @@ var (
 			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
-			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil)
+			common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil)
 		},
 	}
 

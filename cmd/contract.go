@@ -47,9 +47,7 @@ var (
 			npa := common.GetNPASelection(cfg)
 			strInstanceID := args[0]
 
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveParaTime()
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
 			cobra.CheckErr(err)
@@ -77,9 +75,7 @@ var (
 			npa := common.GetNPASelection(cfg)
 			strCodeID := args[0]
 
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveParaTime()
 
 			codeID, err := strconv.ParseUint(strCodeID, 10, 64)
 			cobra.CheckErr(err)
@@ -115,9 +111,7 @@ encoded as strings, or otherwise as Base64.`,
 			npa := common.GetNPASelection(cfg)
 			strInstanceID := args[0]
 
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveParaTime()
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
 			cobra.CheckErr(err)
@@ -162,9 +156,7 @@ otherwise as Base64.`,
 			strInstanceID := args[0]
 			strKey := args[1]
 
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveParaTime()
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
 			cobra.CheckErr(err)
@@ -207,9 +199,7 @@ otherwise as Base64.`,
 			npa := common.GetNPASelection(cfg)
 			strCodeID := args[0]
 
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveParaTime()
 
 			codeID, err := strconv.ParseUint(strCodeID, 10, 64)
 			cobra.CheckErr(err)
@@ -240,12 +230,8 @@ otherwise as Base64.`,
 			txCfg := common.GetTransactionConfig()
 			wasmFilename := args[0]
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveAccount()
+			npa.MustHaveParaTime()
 
 			// When not in offline mode, connect to the given network endpoint.
 			ctx := context.Background()
@@ -275,7 +261,7 @@ otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			var result contracts.UploadResult
-			if !common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result) {
+			if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, &result) {
 				return
 			}
 
@@ -295,12 +281,8 @@ otherwise as Base64.`,
 			strCodeID := args[0]
 			strData := args[1]
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveAccount()
+			npa.MustHaveParaTime()
 
 			codeID, err := strconv.ParseUint(strCodeID, 10, 64)
 			cobra.CheckErr(err)
@@ -335,7 +317,7 @@ otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			var result contracts.InstantiateResult
-			if !common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result) {
+			if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, &result) {
 				return
 			}
 
@@ -354,12 +336,8 @@ otherwise as Base64.`,
 			strInstanceID := args[0]
 			strData := args[1]
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveAccount()
+			npa.MustHaveParaTime()
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
 			cobra.CheckErr(err)
@@ -390,7 +368,7 @@ otherwise as Base64.`,
 			cobra.CheckErr(err)
 
 			var result contracts.CallResult
-			if !common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, &result) {
+			if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, &result) {
 				return
 			}
 
@@ -419,12 +397,8 @@ otherwise as Base64.`,
 			strInstanceID := args[0]
 			strPolicy := args[1]
 
-			if npa.Account == nil {
-				cobra.CheckErr("no accounts configured in your wallet")
-			}
-			if npa.ParaTime == nil {
-				cobra.CheckErr("no ParaTime configured")
-			}
+			npa.MustHaveAccount()
+			npa.MustHaveParaTime()
 
 			instanceID, err := strconv.ParseUint(strInstanceID, 10, 64)
 			cobra.CheckErr(err)
@@ -450,7 +424,7 @@ otherwise as Base64.`,
 			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
-			common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil)
+			common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil)
 		},
 	}
 )

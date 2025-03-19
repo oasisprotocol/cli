@@ -36,9 +36,7 @@ var transferCmd = &cobra.Command{
 			cobra.CheckErr("unexpected number of arguments") // Should never happen.
 		}
 
-		if npa.Account == nil {
-			cobra.CheckErr("no accounts configured in your wallet")
-		}
+		npa.MustHaveAccount()
 
 		// When not in offline mode, connect to the given network endpoint.
 		ctx := context.Background()
@@ -116,7 +114,7 @@ var transferCmd = &cobra.Command{
 			cobra.CheckErr(err)
 		}
 
-		common.BroadcastOrExportTransaction(ctx, npa.ParaTime, conn, sigTx, meta, nil)
+		common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil)
 	},
 }
 

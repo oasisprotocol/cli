@@ -7,6 +7,8 @@ import (
 	"math"
 	"os"
 
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/accounts"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/core"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -16,6 +18,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	consensusTx "github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
+	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/callformat"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
@@ -282,9 +285,7 @@ func SignParaTimeTransaction(
 	tx *types.Transaction,
 	txDetails *signature.TxDetails,
 ) (interface{}, interface{}, error) {
-	if npa.ParaTime == nil {
-		return nil, nil, fmt.Errorf("no ParaTime configured for ParaTime transaction signing")
-	}
+	npa.MustHaveParaTime()
 
 	gas, fee, feeDenom, err := PrepareParatimeTransaction(ctx, npa, account, conn, tx)
 	if err != nil {
@@ -434,7 +435,7 @@ func ExportTransaction(sigTx interface{}) {
 // it broadcasts the transaction and returns true.
 func BroadcastOrExportTransaction(
 	ctx context.Context,
-	pt *config.ParaTime,
+	npa *NPASelection,
 	conn connection.Connection,
 	tx interface{},
 	meta interface{},
@@ -445,7 +446,7 @@ func BroadcastOrExportTransaction(
 		return false
 	}
 
-	BroadcastTransaction(ctx, pt, conn, tx, meta, result)
+	BroadcastTransaction(ctx, npa, conn, tx, meta, result)
 	return true
 }
 
@@ -454,7 +455,7 @@ func BroadcastOrExportTransaction(
 // When in offline mode, it outputs the transaction instead.
 func BroadcastTransaction(
 	ctx context.Context,
-	pt *config.ParaTime,
+	npa *NPASelection,
 	conn connection.Connection,
 	tx interface{},
 	meta interface{},
@@ -471,20 +472,21 @@ func BroadcastTransaction(
 		fmt.Printf("Transaction hash: %s\n", sigTx.Hash())
 	case *types.UnverifiedTransaction:
 		// ParaTime transaction.
-		if pt == nil {
+		if npa == nil || npa.ParaTime == nil {
 			cobra.CheckErr("no ParaTime configured for ParaTime transaction submission")
 		}
 
 		fmt.Printf("Broadcasting transaction...\n")
-		rawMeta, err := conn.Runtime(pt).SubmitTxRawMeta(ctx, sigTx)
+		rawMeta, err := conn.Runtime(npa.ParaTime).SubmitTxRawMeta(ctx, sigTx)
 		cobra.CheckErr(err)
 
 		if rawMeta.CheckTxError != nil {
-			cobra.CheckErr(fmt.Sprintf("Transaction check failed with error: module: %s code: %d message: %s",
-				rawMeta.CheckTxError.Module,
-				rawMeta.CheckTxError.Code,
-				rawMeta.CheckTxError.Message,
-			))
+			cobra.CheckErr(fmt.Sprintf("Transaction check failed with error: %s",
+				PrettyErrorHints(ctx, npa, conn, tx, meta, &types.FailedCallResult{
+					Module:  rawMeta.CheckTxError.Module,
+					Code:    rawMeta.CheckTxError.Code,
+					Message: rawMeta.CheckTxError.Message,
+				})))
 		}
 
 		fmt.Printf("Transaction included in block successfully.\n")
@@ -510,7 +512,7 @@ func BroadcastTransaction(
 				cobra.CheckErr(err)
 			}
 		default:
-			cobra.CheckErr(fmt.Sprintf("Execution failed with error: %s", decResult.Failed.Error()))
+			cobra.CheckErr(fmt.Sprintf("Execution failed with error: %s", PrettyErrorHints(ctx, npa, conn, tx, meta, decResult.Failed)))
 		}
 	default:
 		panic(fmt.Errorf("unsupported transaction kind: %T", tx))
@@ -564,6 +566,32 @@ func WaitForEvent(
 	}()
 
 	return resultCh
+}
+
+// PrettyErrorHints adds any hints based on the error and the transaction context.
+func PrettyErrorHints(
+	_ context.Context,
+	npa *NPASelection,
+	_ connection.Connection,
+	_ interface{},
+	_ interface{},
+	failedRes *types.FailedCallResult,
+) string {
+	errMsg := failedRes.Error()
+	if npa != nil && npa.ParaTime != nil &&
+		npa.Network.ChainContext == config.DefaultNetworks.All["testnet"].ChainContext &&
+		npa.ParaTime.ID == config.DefaultNetworks.All["testnet"].ParaTimes.All["sapphire"].ID &&
+		(failedRes.Module == accounts.ModuleName && failedRes.Code == 2 || failedRes.Module == core.ModuleName && failedRes.Code == 5) {
+		errMsg += "\nTip: You can get TEST tokens at https://faucet.testnet.oasis.io or #dev-central at https://oasis.io/discord."
+	}
+	if failedRes.Module == staking.ModuleName {
+		if failedRes.Code == 5 {
+			errMsg += "\nTip: Did you forget to run `oasis account allow`?"
+		} else if failedRes.Code == 9 {
+			errMsg += "\nTip: You can see minimum staking transfer amount by running `oasis network show parameters`"
+		}
+	}
+	return errMsg
 }
 
 func init() {

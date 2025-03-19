@@ -53,15 +53,18 @@ func GetMetadata() (*Metadata, error) {
 	}
 
 	dec := json.NewDecoder(stdout)
+	type pkgMeta struct {
+		Name         string `json:"name"`
+		ID           string `json:"id"`
+		Version      string `json:"version"`
+		Dependencies []struct {
+			Name     string   `json:"name"`
+			Features []string `json:"features"`
+		} `json:"dependencies"`
+	}
 	var rawMeta struct {
-		Packages []struct {
-			Name         string `json:"name"`
-			Version      string `json:"version"`
-			Dependencies []struct {
-				Name     string   `json:"name"`
-				Features []string `json:"features"`
-			} `json:"dependencies"`
-		} `json:"packages"`
+		Packages                []*pkgMeta `json:"packages"`
+		WorkspaceDefaultMembers []string   `json:"workspace_default_members"`
 	}
 	if err = dec.Decode(&rawMeta); err != nil {
 		return nil, fmt.Errorf("malformed cargo metadata: %w", err)
@@ -69,15 +72,28 @@ func GetMetadata() (*Metadata, error) {
 	if err = cmd.Wait(); err != nil {
 		return nil, fmt.Errorf("metadata process failed: %w", err)
 	}
-	if len(rawMeta.Packages) == 0 {
+	if len(rawMeta.Packages) == 0 || len(rawMeta.WorkspaceDefaultMembers) == 0 {
 		return nil, fmt.Errorf("no cargo packages found")
 	}
 
-	meta := &Metadata{
-		Name:    rawMeta.Packages[0].Name,
-		Version: rawMeta.Packages[0].Version,
+	// Find the package as there can be multiple when workspaces are involved.
+	var pkg *pkgMeta
+	for _, maybePkg := range rawMeta.Packages {
+		if maybePkg.ID != rawMeta.WorkspaceDefaultMembers[0] {
+			continue
+		}
+		pkg = maybePkg
+		break
 	}
-	for _, dep := range rawMeta.Packages[0].Dependencies {
+	if pkg == nil {
+		return nil, fmt.Errorf("cannot resolve main package: %s", rawMeta.WorkspaceDefaultMembers[0])
+	}
+
+	meta := &Metadata{
+		Name:    pkg.Name,
+		Version: pkg.Version,
+	}
+	for _, dep := range pkg.Dependencies {
 		d := Dependency{
 			Name:     dep.Name,
 			Features: dep.Features,

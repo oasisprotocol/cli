@@ -20,6 +20,18 @@ func DefaultDirectory() string {
 	return filepath.Join(xdg.ConfigHome, "oasis")
 }
 
+// DefaultFilename returns the default configuration filename.
+func DefaultFilename() string {
+	return "cli.toml"
+}
+
+// DefaultPath returns the path to the default configuration file.
+func DefaultPath() string {
+	configDir := DefaultDirectory()
+	configPath := filepath.Join(configDir, DefaultFilename())
+	return configPath
+}
+
 // Global returns the global configuration structure.
 func Global() *Config {
 	return &global

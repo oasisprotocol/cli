@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -55,13 +54,12 @@ func initConfig() {
 		// Use config file from the flag.
 		v.SetConfigFile(cfgFile)
 	} else {
-		const configFilename = "cli.toml"
 		configDir := config.DefaultDirectory()
-		configPath := filepath.Join(configDir, configFilename)
+		configPath := config.DefaultPath()
 
 		v.AddConfigPath(configDir)
 		v.SetConfigType("toml")
-		v.SetConfigName(configFilename)
+		v.SetConfigName(config.DefaultFilename())
 
 		// Ensure the configuration file exists.
 		_ = os.MkdirAll(configDir, 0o700)
@@ -96,7 +94,9 @@ func init() {
 
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file to use")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "",
+		fmt.Sprintf("config file to use (instead of the default %s)", config.DefaultPath()),
+	)
 
 	rootCmd.AddCommand(network.Cmd)
 	rootCmd.AddCommand(paratime.Cmd)

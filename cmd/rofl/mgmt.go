@@ -675,7 +675,7 @@ var (
 
 // detectAndCreateComposeFile detects the existing compose.yaml-like file and returns its filename. Otherwise, creates an empty default compose.yaml.
 func detectOrCreateComposeFile() string {
-	for _, filename := range []string{"docker-compose.yaml", "docker-compose.yml", "compose.yml"} {
+	for _, filename := range []string{"rofl-compose.yaml", "rofl-compose.yml", "docker-compose.yaml", "docker-compose.yml", "compose.yml"} {
 		if _, err := os.Stat(filename); err == nil {
 			return filename
 		}

@@ -2,7 +2,7 @@ module github.com/oasisprotocol/cli
 
 go 1.23.2
 
-toolchain go1.23.5
+toolchain go1.24.1
 
 // v1.5.0 has broken uint parsing, use a commit with the fix until the
 // the maintainers merge the PR: https://github.com/spf13/cast/pull/144
@@ -24,7 +24,7 @@ require (
 	github.com/oasisprotocol/deoxysii v0.0.0-20220228165953-2091330c22b7
 	github.com/oasisprotocol/metadata-registry-tools v0.0.0-20220406100644-7e9a2b991920
 	github.com/oasisprotocol/oasis-core/go v0.2500.0
-	github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.12.2
+	github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.13.1
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6

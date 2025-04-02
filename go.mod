@@ -2,7 +2,7 @@ module github.com/oasisprotocol/cli
 
 go 1.23.2
 
-toolchain go1.23.5
+toolchain go1.24.1
 
 // v1.5.0 has broken uint parsing, use a commit with the fix until the
 // the maintainers merge the PR: https://github.com/spf13/cast/pull/144
@@ -14,7 +14,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/adrg/xdg v0.5.3
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4
-	github.com/compose-spec/compose-go/v2 v2.4.9
+	github.com/compose-spec/compose-go/v2 v2.5.0
 	github.com/ethereum/go-ethereum v1.15.0
 	github.com/foxboron/go-uefi v0.0.0-20241017190036-fab4fdf2f2f3
 	github.com/github/go-spdx/v2 v2.3.2

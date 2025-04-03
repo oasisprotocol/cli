@@ -77,6 +77,7 @@ linters-settings:
           - github.com/github/go-spdx/v2
           - github.com/opencontainers/image-spec/specs-go/v1
           - oras.land/oras-go/v2
+          - github.com/wI2L/jsondiff
   exhaustive:
     # Switch statements are to be considered exhaustive if a 'default' case is
     # present, even if all enum members aren't listed in the switch.

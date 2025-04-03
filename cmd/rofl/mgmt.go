@@ -5,14 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"maps"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
-	"github.com/oasisprotocol/oasis-core/go/common/sgx"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx/pcs"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx/quote"
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
@@ -34,7 +32,6 @@ var (
 		"cn":  rofl.CreatorNonce,
 	}
 
-	policyFn     string
 	scheme       string
 	adminAddress string
 	pubName      string
@@ -42,6 +39,8 @@ var (
 	appTEE         string
 	appKind        string
 	deploymentName string
+
+	deploymentFlags *flag.FlagSet
 
 	initCmd = &cobra.Command{
 		Use:   "init [<name>] [--tee TEE] [--kind KIND]",
@@ -428,67 +427,20 @@ var (
 			fmt.Printf("  %s\n", string(policyJSON))
 
 			fmt.Println()
-			fmt.Printf("=== Instances ===\n")
+			fmt.Printf("=== Replicas ===\n")
 
-			appInstances, err := conn.Runtime(npa.ParaTime).ROFL.AppInstances(ctx, client.RoundLatest, appID)
+			replicas, err := conn.Runtime(npa.ParaTime).ROFL.AppInstances(ctx, client.RoundLatest, appID)
 			cobra.CheckErr(err)
 
-			if len(appInstances) > 0 {
-				for _, ai := range appInstances {
+			if len(replicas) > 0 {
+				for _, ai := range replicas {
 					fmt.Printf("- RAK:        %s\n", ai.RAK)
 					fmt.Printf("  Node ID:    %s\n", ai.NodeID)
 					fmt.Printf("  Expiration: %d\n", ai.Expiration)
 				}
 			} else {
-				fmt.Println("No registered app instances.")
+				fmt.Println("No registered replicas.")
 			}
-		},
-	}
-
-	deployCmd = &cobra.Command{
-		Use:   "deploy",
-		Short: "Deploy ROFL to a specified instance",
-		Args:  cobra.NoArgs,
-		Run: func(_ *cobra.Command, _ []string) {
-			cfg := cliConfig.Global()
-			npa := common.GetNPASelection(cfg)
-
-			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
-				NeedAppID: true,
-				NeedAdmin: true,
-			})
-
-			manifestEnclaves := make(map[sgx.EnclaveIdentity]struct{})
-			for _, eid := range deployment.Policy.Enclaves {
-				manifestEnclaves[eid] = struct{}{}
-			}
-
-			ctx := context.Background()
-			cfgEnclaves, err := roflCommon.GetRegisteredEnclaves(ctx, deployment.AppID, npa)
-			cobra.CheckErr(err)
-
-			if !maps.Equal(manifestEnclaves, cfgEnclaves) {
-				// TODO: Generate and run Update TX automatically.
-				cobra.CheckErr("Local enclave identities DIFFER from on-chain enclave identities! Run `oasis rofl update` first")
-			}
-
-			orcFilename := roflCommon.GetOrcFilename(manifest, deploymentName)
-			cfgSnippet := "      runtime:\n" +
-				"        paths:\n" +
-				"          - /node/rofls/" + orcFilename + "\n"
-			fmt.Printf(
-				"To deploy your ROFL app, you can decide between one of the two options:\n"+
-					"\nA. RUN YOUR OWN OASIS NODE\n\n"+
-					"   1. Follow https://docs.oasis.io/node/run-your-node/paratime-client-node\n"+
-					"      and configure your TDX Oasis node\n"+
-					"   2. Copy '%s' to your node, for example:\n\n"+
-					"      scp %s mynode.com:/node/rofls\n\n"+
-					"   3. Add the following snippet to your Oasis node config.yml:\n\n%s\n"+
-					"   4. Restart your node\n"+
-					"\nB. DEPLOY YOUR ROFL TO THE OASIS PROVIDER\n\n"+
-					"   1. Upload '%s' to a publicly accessible file server\n"+
-					"   2. Reach out to us at https://oasis.io/discord #dev-central channel and we\n"+
-					"      will run your ROFL app on our TDX Oasis nodes\n", orcFilename, orcFilename, cfgSnippet, orcFilename)
 		},
 	}
 
@@ -692,11 +644,10 @@ func detectOrCreateComposeFile() string {
 }
 
 func init() {
-	deploymentFlags := flag.NewFlagSet("", flag.ContinueOnError)
+	deploymentFlags = flag.NewFlagSet("", flag.ContinueOnError)
 	deploymentFlags.StringVar(&deploymentName, "deployment", buildRofl.DefaultDeploymentName, "deployment name")
 
 	updateFlags := flag.NewFlagSet("", flag.ContinueOnError)
-	updateFlags.StringVar(&policyFn, "policy", "", "set the ROFL application policy")
 	updateFlags.StringVar(&adminAddress, "admin", "", "set the administrator address")
 	updateCmd.Flags().AddFlagSet(deploymentFlags)
 

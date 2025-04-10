@@ -11,6 +11,7 @@ import (
 
 	coreCommon "github.com/oasisprotocol/oasis-core/go/common"
 
+	sdkConfig "github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 
 	"github.com/oasisprotocol/cli/cmd/common"
@@ -23,6 +24,15 @@ func getParatimeName(cfg *cliConfig.Config, id string) string {
 			if id == pt.ID {
 				return (ptName)
 			}
+		}
+	}
+	return ("unknown")
+}
+
+func getNetworkName(context string) string {
+	for key, net := range sdkConfig.DefaultNetworks.All {
+		if context == net.ChainContext {
+			return (key)
 		}
 	}
 	return ("unknown")
@@ -75,7 +85,7 @@ var statusCmd = &cobra.Command{
 				fmt.Printf("Version:              %s", consensus.Version.String())
 				fmt.Println()
 
-				fmt.Printf("Chain context:        %s", consensus.ChainContext)
+				fmt.Printf("Chain context:        %s (%s)", getNetworkName(consensus.ChainContext), consensus.ChainContext)
 				fmt.Println()
 
 				date := time.Unix(nodeStatus.Consensus.LatestTime.Unix(), 0)

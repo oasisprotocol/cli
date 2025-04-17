@@ -18,6 +18,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle/component"
 
 	"github.com/oasisprotocol/cli/build/cargo"
+	"github.com/oasisprotocol/cli/build/env"
 	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/build/sgxs"
 	"github.com/oasisprotocol/cli/cmd/common"
@@ -26,6 +27,7 @@ import (
 
 // sgxBuild builds an SGX-based "raw" ROFL app.
 func sgxBuild(
+	buildEnv env.ExecEnv,
 	npa *common.NPASelection,
 	manifest *buildRofl.Manifest,
 	deployment *buildRofl.Deployment,
@@ -37,14 +39,14 @@ func sgxBuild(
 
 	// First build for the default target.
 	fmt.Println("Building ELF binary...")
-	elfPath, err := cargo.Build(true, "x86_64-unknown-linux-gnu", features)
+	elfPath, err := cargo.Build(buildEnv, true, "x86_64-unknown-linux-gnu", features)
 	if err != nil {
 		cobra.CheckErr(fmt.Errorf("failed to build ELF binary: %w", err))
 	}
 
 	// Then build for the SGX target.
 	fmt.Println("Building SGXS binary...")
-	elfSgxPath, err := cargo.Build(true, "x86_64-fortanix-unknown-sgx", nil)
+	elfSgxPath, err := cargo.Build(buildEnv, true, "x86_64-fortanix-unknown-sgx", nil)
 	if err != nil {
 		cobra.CheckErr(fmt.Errorf("failed to build SGXS binary: %w", err))
 	}
@@ -54,7 +56,7 @@ func sgxBuild(
 	sgxStackSize := uint64(2 * 1024 * 1024)
 
 	sgxsPath := fmt.Sprintf("%s.sgxs", elfSgxPath)
-	err = sgxs.Elf2Sgxs(elfSgxPath, sgxsPath, sgxHeapSize, sgxStackSize, sgxThreads)
+	err = sgxs.Elf2Sgxs(buildEnv, elfSgxPath, sgxsPath, sgxHeapSize, sgxStackSize, sgxThreads)
 	if err != nil {
 		cobra.CheckErr(fmt.Errorf("failed to generate SGXS binary: %w", err))
 	}

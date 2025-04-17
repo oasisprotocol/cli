@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"slices"
 	"strings"
+
+	"github.com/oasisprotocol/cli/build/env"
 )
 
 // Metadata is the cargo package metadata.
@@ -42,11 +44,14 @@ func (d *Dependency) HasFeature(feature string) bool {
 }
 
 // GetMetadata queries `cargo` for metadata of the package in the current working directory.
-func GetMetadata() (*Metadata, error) {
+func GetMetadata(env env.ExecEnv) (*Metadata, error) {
 	cmd := exec.Command("cargo", "metadata", "--no-deps", "--format-version", "1")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize metadata process: %w", err)
+	}
+	if err = env.WrapCommand(cmd); err != nil {
+		return nil, err
 	}
 	if err = cmd.Start(); err != nil {
 		return nil, fmt.Errorf("failed to start metadata process: %w", err)
@@ -105,8 +110,8 @@ func GetMetadata() (*Metadata, error) {
 }
 
 // Build builds a Rust program using `cargo` in the current working directory.
-func Build(release bool, target string, features []string) (string, error) {
-	args := []string{"build"}
+func Build(env env.ExecEnv, release bool, target string, features []string) (string, error) {
+	args := []string{"build", "--locked"}
 	if release {
 		args = append(args, "--release")
 	}
@@ -128,6 +133,9 @@ func Build(release bool, target string, features []string) (string, error) {
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 
+	if err = env.WrapCommand(cmd); err != nil {
+		return "", err
+	}
 	if err = cmd.Start(); err != nil {
 		return "", fmt.Errorf("failed to start build process: %w", err)
 	}
@@ -170,6 +178,10 @@ func Build(release bool, target string, features []string) (string, error) {
 
 	if executable == "" {
 		return "", fmt.Errorf("no executable generated")
+	}
+	executable, err = env.PathFromEnv(executable)
+	if err != nil {
+		return "", fmt.Errorf("failed to map executable path: %w", err)
 	}
 	return executable, nil
 }

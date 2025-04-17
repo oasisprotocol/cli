@@ -395,11 +395,13 @@ func (e *StorageConfig) Validate() error {
 
 // ArtifactsConfig is the artifact location override configuration.
 type ArtifactsConfig struct {
-	// Firmware is the URI/path to the firmware artifact (empty to use default).
+	// Builder is the OCI reference to the builder container image. Empty to not use a builder.
+	Builder string `yaml:"builder,omitempty" json:"builder,omitempty"`
+	// Firmware is the URI/path to the firmware artifact.
 	Firmware string `yaml:"firmware,omitempty" json:"firmware,omitempty"`
-	// Kernel is the URI/path to the kernel artifact (empty to use default).
+	// Kernel is the URI/path to the kernel artifact.
 	Kernel string `yaml:"kernel,omitempty" json:"kernel,omitempty"`
-	// Stage2 is the URI/path to the stage 2 disk artifact (empty to use default).
+	// Stage2 is the URI/path to the stage 2 disk artifact.
 	Stage2 string `yaml:"stage2,omitempty" json:"stage2,omitempty"`
 	// Container is the container artifacts configuration.
 	Container ContainerArtifactsConfig `yaml:"container,omitempty" json:"container,omitempty"`

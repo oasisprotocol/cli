@@ -13,6 +13,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle/component"
 
 	"github.com/oasisprotocol/cli/build/cargo"
+	"github.com/oasisprotocol/cli/build/env"
 	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/cmd/common"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
@@ -29,6 +30,7 @@ const (
 
 // tdxBuildRaw builds a TDX-based "raw" ROFL app.
 func tdxBuildRaw(
+	buildEnv env.ExecEnv,
 	tmpDir string,
 	npa *common.NPASelection,
 	manifest *buildRofl.Manifest,
@@ -43,7 +45,7 @@ func tdxBuildRaw(
 	tdxSetupBuildEnv(deployment, npa)
 
 	// Obtain package metadata.
-	pkgMeta, err := cargo.GetMetadata()
+	pkgMeta, err := cargo.GetMetadata(buildEnv)
 	if err != nil {
 		return fmt.Errorf("failed to obtain package metadata: %w", err)
 	}
@@ -60,19 +62,19 @@ func tdxBuildRaw(
 	}
 
 	fmt.Println("Building runtime binary...")
-	initPath, err := cargo.Build(true, "", nil)
+	initPath, err := cargo.Build(buildEnv, true, "", nil)
 	if err != nil {
 		return fmt.Errorf("failed to build runtime binary: %w", err)
 	}
 
-	stage2, err := tdxPrepareStage2(tmpDir, artifacts, initPath, nil)
+	stage2, err := tdxPrepareStage2(buildEnv, tmpDir, artifacts, initPath, nil)
 	if err != nil {
 		return err
 	}
 
 	fmt.Println("Creating ORC bundle...")
 
-	return tdxBundleComponent(manifest, artifacts, bnd, stage2, nil)
+	return tdxBundleComponent(buildEnv, manifest, artifacts, bnd, stage2, nil)
 }
 
 type artifact struct {
@@ -124,7 +126,13 @@ type tdxStage2 struct {
 }
 
 // tdxPrepareStage2 prepares the stage 2 rootfs.
-func tdxPrepareStage2(tmpDir string, artifacts map[string]string, initPath string, extraFiles map[string]string) (*tdxStage2, error) {
+func tdxPrepareStage2(
+	buildEnv env.ExecEnv,
+	tmpDir string,
+	artifacts map[string]string,
+	initPath string,
+	extraFiles map[string]string,
+) (*tdxStage2, error) {
 	// Create temporary directory and unpack stage 2 template into it.
 	fmt.Println("Preparing stage 2 root filesystem...")
 	rootfsDir := filepath.Join(tmpDir, "rootfs")
@@ -155,7 +163,7 @@ func tdxPrepareStage2(tmpDir string, artifacts map[string]string, initPath strin
 	// Create the root filesystem.
 	fmt.Println("Creating squashfs filesystem...")
 	rootfsImage := filepath.Join(tmpDir, "rootfs.squashfs")
-	rootfsSize, err := createSquashFs(rootfsImage, rootfsDir)
+	rootfsSize, err := createSquashFs(buildEnv, rootfsImage, rootfsDir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create rootfs image: %w", err)
 	}
@@ -163,7 +171,7 @@ func tdxPrepareStage2(tmpDir string, artifacts map[string]string, initPath strin
 	// Create dm-verity hash tree.
 	fmt.Println("Creating dm-verity hash tree...")
 	hashFile := filepath.Join(tmpDir, "rootfs.hash")
-	rootHash, err := createVerityHashTree(rootfsImage, hashFile)
+	rootHash, err := createVerityHashTree(buildEnv, rootfsImage, hashFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create verity hash tree: %w", err)
 	}
@@ -182,6 +190,7 @@ func tdxPrepareStage2(tmpDir string, artifacts map[string]string, initPath strin
 
 // tdxBundleComponent adds the ROFL component to the given bundle.
 func tdxBundleComponent(
+	buildEnv env.ExecEnv,
 	manifest *buildRofl.Manifest,
 	artifacts map[string]string,
 	bnd *bundle.Bundle,
@@ -268,7 +277,7 @@ func tdxBundleComponent(
 	}
 
 	// Use qcow2 image format to support sparse files.
-	if err = convertToQcow2(stage2.fn); err != nil {
+	if err = convertToQcow2(buildEnv, stage2.fn); err != nil {
 		return fmt.Errorf("failed to convert to qcow2 image: %w", err)
 	}
 	comp.TDX.Stage2Format = "qcow2"

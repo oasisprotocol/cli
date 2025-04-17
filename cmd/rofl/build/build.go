@@ -16,6 +16,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 
+	"github.com/oasisprotocol/cli/build/env"
 	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/cmd/common"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
@@ -35,6 +36,7 @@ var (
 	noUpdate       bool
 	doVerify       bool
 	deploymentName string
+	noDocker       bool
 
 	Cmd = &cobra.Command{
 		Use:   "build",
@@ -73,6 +75,30 @@ var (
 			}
 			defer os.RemoveAll(tmpDir)
 
+			var buildEnv env.ExecEnv
+			switch {
+			case manifest.Artifacts.Builder == "" || noDocker:
+				buildEnv = env.NewNativeEnv()
+			default:
+				var baseDir string
+				baseDir, err = env.GetBasedir()
+				if err != nil {
+					cobra.CheckErr(fmt.Sprintf("failed to determine base directory: %s", err))
+				}
+
+				dockerEnv := env.NewDockerEnv(
+					manifest.Artifacts.Builder,
+					baseDir,
+					"/src",
+				)
+				dockerEnv.AddDirectory(tmpDir)
+				buildEnv = dockerEnv
+			}
+
+			if !buildEnv.IsAvailable() {
+				cobra.CheckErr(fmt.Sprintf("Build environment '%s' is not available. Make sure it is installed.", buildEnv))
+			}
+
 			bnd := &bundle.Bundle{
 				Manifest: &bundle.Manifest{
 					Name: deployment.AppID,
@@ -97,14 +123,14 @@ var (
 					return
 				}
 
-				sgxBuild(npa, manifest, deployment, bnd)
+				sgxBuild(buildEnv, npa, manifest, deployment, bnd)
 			case buildRofl.TEETypeTDX:
 				// TDX.
 				switch manifest.Kind {
 				case buildRofl.AppKindRaw:
-					err = tdxBuildRaw(tmpDir, npa, manifest, deployment, bnd)
+					err = tdxBuildRaw(buildEnv, tmpDir, npa, manifest, deployment, bnd)
 				case buildRofl.AppKindContainer:
-					err = tdxBuildContainer(tmpDir, npa, manifest, deployment, bnd)
+					err = tdxBuildContainer(buildEnv, tmpDir, npa, manifest, deployment, bnd)
 				}
 			default:
 				fmt.Printf("unsupported TEE kind: %s\n", manifest.TEE)
@@ -316,6 +342,7 @@ func init() {
 	buildFlags.BoolVar(&noUpdate, "no-update-manifest", false, "do not update the manifest")
 	buildFlags.BoolVar(&doVerify, "verify", false, "verify build against manifest and on-chain state")
 	buildFlags.StringVar(&deploymentName, "deployment", buildRofl.DefaultDeploymentName, "deployment name")
+	buildFlags.BoolVar(&noDocker, "no-docker", false, "do not use the Dockerized builder")
 
 	// TODO: Remove when all the examples, demos and docs are updated.
 	var dummy bool

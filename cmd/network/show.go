@@ -12,6 +12,7 @@ import (
 
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	consensusPretty "github.com/oasisprotocol/oasis-core/go/common/prettyprint"
+	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	registry "github.com/oasisprotocol/oasis-core/go/registry/api"
@@ -62,6 +63,8 @@ var showCmd = &cobra.Command{
 		registryConn := consensusConn.Registry()
 		roothashConn := consensusConn.RootHash()
 
+		stake := consensusConn.Staking()
+
 		// Figure out the height to use if "latest".
 		height, err := common.GetActualHeight(
 			ctx,
@@ -84,14 +87,65 @@ var showCmd = &cobra.Command{
 
 		switch v := id.(type) {
 		case signature.PublicKey:
+			epoch, _ := consensusConn.Beacon().GetEpoch(ctx, height)
 			idQuery := &registry.IDQuery{
 				Height: height,
 				ID:     v,
 			}
 
 			if entity, err := registryConn.GetEntity(ctx, idQuery); err == nil {
-				err = prettyPrint(entity)
-				cobra.CheckErr(err)
+				fmt.Printf("=== ENTITY ===\n")
+				fmt.Println()
+				
+				entityAddr := staking.NewAddress(entity.ID)
+				fmt.Printf("Entity Addr: %s\n", entityAddr.String())
+				
+				fmt.Printf("Entity ID:   %s\n", entity.ID.String())
+
+				account, _ := stake.Account(
+					ctx,
+					&staking.OwnerQuery{Height: height, Owner: entityAddr},
+				)
+		
+				balance := &account.Escrow.Active.Balance
+				commision := account.Escrow.CommissionSchedule.CurrentRate(epoch)
+
+				q := quantity.NewFromUint64(uint64(1_000_000_000))
+				balance.Quo(q)
+
+				fmt.Printf("Stake:       %s ROSE\n", balance.String())
+				fmt.Printf("Commision:   %s\n", commision.String())
+
+				fmt.Println()
+				fmt.Printf("=== NODES ===\n")
+				for _, node := range entity.Nodes {
+					fmt.Println()
+					fmt.Printf("NODE ID: %s\n", node.String())
+					idQuery2 := &registry.IDQuery{
+						Height: height,
+						ID:     node,
+					}
+
+					if nodeStatus, err := registryConn.GetNodeStatus(ctx, idQuery2); err == nil {
+						if node, err2 := registryConn.GetNode(ctx, idQuery2); err2 == nil {
+							fmt.Printf("  Node Roles: %s\n", node.Roles.String())
+							fmt.Printf("  Oasis Core: %s\n", node.SoftwareVersion)
+							fmt.Println()
+							fmt.Printf("  Runtimes:\n")
+							for _, runtime := range node.Runtimes {
+								fmt.Printf("    Runtime ID: %s\n", runtime.ID)
+								fmt.Printf("      Runtime Version: %s\n", runtime.Version)
+							}
+							fmt.Println()
+							fmt.Printf("  Node Status:\n")
+							fmt.Printf("    Expiration Processed: %t\n", nodeStatus.ExpirationProcessed)
+							fmt.Printf("    Freeze End Time: %d\n", nodeStatus.FreezeEndTime)
+							fmt.Printf("    Election Eligible After: %d\n", nodeStatus.ElectionEligibleAfter)
+						}
+					} else {
+						fmt.Println("  Node is not active")
+					}
+				}
 				return
 			}
 

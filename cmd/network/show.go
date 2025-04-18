@@ -10,8 +10,11 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/oasisprotocol/oasis-core/go/beacon/api"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
+	"github.com/oasisprotocol/oasis-core/go/common/entity"
 	consensusPretty "github.com/oasisprotocol/oasis-core/go/common/prettyprint"
+	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	registry "github.com/oasisprotocol/oasis-core/go/registry/api"
@@ -40,6 +43,77 @@ const (
 	selParameters
 )
 
+func printEntityNodes(ctx context.Context, stakingConn staking.Backend, registryConn registry.Backend, beaconConn api.Backend, entity *entity.Entity, height int64) error {
+	epoch, err := beaconConn.GetEpoch(ctx, height)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("=== ENTITY ===\n")
+
+	entityAddr := staking.NewAddress(entity.ID)
+	fmt.Printf("Entity Address: %s\n", entityAddr.String())
+
+	fmt.Printf("Entity ID:      %s\n", entity.ID.String())
+
+	account, err := stakingConn.Account(
+		ctx,
+		&staking.OwnerQuery{Height: height, Owner: entityAddr},
+	)
+	if err != nil {
+		return err
+	}
+
+	balance := &account.Escrow.Active.Balance
+	commission := account.Escrow.CommissionSchedule.CurrentRate(epoch)
+
+	q := quantity.NewFromUint64(uint64(1_000_000_000))
+	err = balance.Quo(q)
+	cobra.CheckErr(err)
+
+	fmt.Printf("Stake:          %s ROSE\n", balance.String())
+	fmt.Printf("Commission:     %s\n", staking.PrettyPrintCommissionRatePercentage(*commission))
+
+	fmt.Println()
+	fmt.Printf("=== NODES ===\n")
+	for i, node := range entity.Nodes {
+		fmt.Printf("Node ID: %s\n", node.String())
+		idQuery2 := &registry.IDQuery{
+			Height: height,
+			ID:     node,
+		}
+
+		nodeStatus, err := registryConn.GetNodeStatus(ctx, idQuery2)
+		if err != nil {
+			fmt.Println("  Node is not active")
+			continue
+		}
+
+		if node, err2 := registryConn.GetNode(ctx, idQuery2); err2 == nil {
+			fmt.Printf("  Node Roles: %s\n", node.Roles.String())
+			fmt.Printf("  Software Version: %s\n", node.SoftwareVersion)
+			if len(node.Runtimes) > 0 {
+				fmt.Printf("  Runtimes:\n")
+			}
+			for _, runtime := range node.Runtimes {
+				fmt.Printf("    Runtime ID: %s\n", runtime.ID)
+				fmt.Printf("      Runtime Version: %s\n", runtime.Version)
+			}
+			fmt.Printf("  Node Status:\n")
+			fmt.Printf("    Expiration Processed: %t\n", nodeStatus.ExpirationProcessed)
+			fmt.Printf("    Freeze End Time: %d\n", nodeStatus.FreezeEndTime)
+			fmt.Printf("    Election Eligible After: %d\n", nodeStatus.ElectionEligibleAfter)
+		} else {
+			return fmt.Errorf("could not get a node: %s", err2)
+		}
+
+		if i < len(entity.Nodes)-1 {
+			fmt.Println()
+		}
+	}
+	return nil
+}
+
 var showCmd = &cobra.Command{
 	Use:     "show { <id> | committees | entities | gas-costs | native-token | nodes | parameters | paratimes | validators }",
 	Short:   "Show network properties",
@@ -63,6 +137,7 @@ var showCmd = &cobra.Command{
 		roothashConn := conn.Consensus().RootHash()
 		schedulerConn := conn.Consensus().Scheduler()
 		stakingConn := conn.Consensus().Staking()
+		beaconConn := conn.Consensus().Beacon()
 
 		// Figure out the height to use if "latest".
 		height, err := common.GetActualHeight(
@@ -92,7 +167,7 @@ var showCmd = &cobra.Command{
 			}
 
 			if entity, err := registryConn.GetEntity(ctx, idQuery); err == nil {
-				err = prettyPrint(entity)
+				err = printEntityNodes(ctx, stakingConn, registryConn, beaconConn, entity, height)
 				cobra.CheckErr(err)
 				return
 			}
@@ -125,7 +200,7 @@ var showCmd = &cobra.Command{
 			cobra.CheckErr(err) // If this doesn't work the other large queries won't either.
 			for _, entity := range entities {
 				if staking.NewAddress(entity.ID).Equal(addr) {
-					err = prettyPrint(entity)
+					err = printEntityNodes(ctx, stakingConn, registryConn, beaconConn, entity, height)
 					cobra.CheckErr(err)
 					return
 				}

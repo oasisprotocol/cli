@@ -410,9 +410,9 @@ The provided ID can be one of the following:
 - If the entity ID is provided, Oasis CLI shows information on the entity and
   its corresponding nodes in the network registry. For example:
 
-  ![code shell](../examples/network-show/id-entity.in)
+  ![code shell](../examples/network-show/id-entity.in.static)
 
-  ![code json](../examples/network-show/id-entity.out)
+  ![code json](../examples/network-show/id-entity.out.static)
 
 - If the node ID is provided, Oasis CLI shows detailed information of the node
   such as the Oasis Core software version, the node's role, supported

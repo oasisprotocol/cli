@@ -182,7 +182,16 @@ FILES:
 			}
 		case tar.TypeSymlink:
 			// Symbolic link.
-			if err = os.Symlink(header.Linkname, path); err != nil {
+			var resolvedLinkname string
+			resolvedLinkname, err = filepath.EvalSymlinks(filepath.Join(filepath.Dir(path), header.Linkname))
+			if err != nil {
+				return fmt.Errorf("failed to resolve symbolic link: %w", err)
+			}
+			relpath, err := filepath.Rel(filepath.Dir(path), resolvedLinkname)
+			if err != nil || strings.HasPrefix(filepath.Clean(relpath), "..") {
+				return fmt.Errorf("symbolic link points outside the target directory")
+			}
+			if err = os.Symlink(resolvedLinkname, path); err != nil {
 				return fmt.Errorf("failed to create soft link: %w", err)
 			}
 		case tar.TypeChar, tar.TypeBlock, tar.TypeFifo:

@@ -243,6 +243,10 @@ func (m *Manifest) Save() error {
 // used in case no deployment is passed.
 const DefaultDeploymentName = "default"
 
+// DefaultMachineName is the name of the default machine into which the app is deployed when no
+// specific machine is passed.
+const DefaultMachineName = "default"
+
 // Deployment describes a single ROFL app deployment.
 type Deployment struct {
 	// AppID is the Bech32-encoded ROFL app ID.
@@ -255,6 +259,8 @@ type Deployment struct {
 	Admin string `yaml:"admin,omitempty" json:"admin,omitempty"`
 	// Debug is a flag denoting whether this is a debuggable deployment.
 	Debug bool `yaml:"debug,omitempty" json:"debug,omitempty"`
+	// OCIRepository is the optional OCI repository where one can push the ORC to.
+	OCIRepository string `yaml:"oci_repository,omitempty" json:"oci_repository,omitempty"`
 	// TrustRoot is the optional trust root configuration.
 	TrustRoot *TrustRootConfig `yaml:"trust_root,omitempty" json:"trust_root,omitempty"`
 	// Policy is the ROFL app policy.
@@ -263,9 +269,12 @@ type Deployment struct {
 	Metadata map[string]string `yaml:"metadata,omitempty" json:"metadata,omitempty"`
 	// Secrets contains encrypted secrets.
 	Secrets []*SecretConfig `yaml:"secrets,omitempty" json:"secrets,omitempty"`
+
+	// Machines are the machines on which app replicas are deployed.
+	Machines map[string]*Machine `yaml:"machines,omitempty" json:"machines,omitempty"`
 }
 
-// Validate validates the manifest for correctness.
+// Validate validates the deployment for correctness.
 func (d *Deployment) Validate() error {
 	if len(d.AppID) > 0 {
 		var appID rofl.AppID
@@ -284,12 +293,39 @@ func (d *Deployment) Validate() error {
 			return fmt.Errorf("bad secret: %w", err)
 		}
 	}
+
+	for name, machine := range d.Machines {
+		if err := machine.Validate(); err != nil {
+			return fmt.Errorf("bad machine '%s': %w", name, err)
+		}
+	}
 	return nil
 }
 
 // HasAppID returns true iff the deployment has an application identifier set.
 func (d *Deployment) HasAppID() bool {
 	return len(d.AppID) > 0
+}
+
+// Machine is a hosted machine where a ROFL app is deployed.
+type Machine struct {
+	// Provider is the address of the ROFL market provider to deploy to.
+	Provider string `yaml:"provider,omitempty" json:"provider,omitempty"`
+	// Offer is the provider's offer identifier to provision.
+	Offer string `yaml:"offer,omitempty" json:"offer,omitempty"`
+	// ID is the identifier of the machine to deploy into.
+	ID string `yaml:"id,omitempty" json:"id,omitempty"`
+}
+
+// Validate validates the machine for correctness.
+func (m *Machine) Validate() error {
+	if m.Offer != "" && m.Provider == "" {
+		return fmt.Errorf("offer identifier cannot be specified without a provider")
+	}
+	if m.ID != "" && m.Provider == "" {
+		return fmt.Errorf("machine identifier cannot be specified without a provider")
+	}
+	return nil
 }
 
 // TrustRootConfig is the trust root configuration.
@@ -359,11 +395,13 @@ func (e *StorageConfig) Validate() error {
 
 // ArtifactsConfig is the artifact location override configuration.
 type ArtifactsConfig struct {
-	// Firmware is the URI/path to the firmware artifact (empty to use default).
+	// Builder is the OCI reference to the builder container image. Empty to not use a builder.
+	Builder string `yaml:"builder,omitempty" json:"builder,omitempty"`
+	// Firmware is the URI/path to the firmware artifact.
 	Firmware string `yaml:"firmware,omitempty" json:"firmware,omitempty"`
-	// Kernel is the URI/path to the kernel artifact (empty to use default).
+	// Kernel is the URI/path to the kernel artifact.
 	Kernel string `yaml:"kernel,omitempty" json:"kernel,omitempty"`
-	// Stage2 is the URI/path to the stage 2 disk artifact (empty to use default).
+	// Stage2 is the URI/path to the stage 2 disk artifact.
 	Stage2 string `yaml:"stage2,omitempty" json:"stage2,omitempty"`
 	// Container is the container artifacts configuration.
 	Container ContainerArtifactsConfig `yaml:"container,omitempty" json:"container,omitempty"`

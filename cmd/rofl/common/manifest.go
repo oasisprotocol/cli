@@ -44,6 +44,10 @@ func MaybeLoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection, de
 
 	d, ok := manifest.Deployments[deployment]
 	if !ok {
+		fmt.Println("The following deployments are configured in the app manifest:")
+		for name := range manifest.Deployments {
+			fmt.Printf("  - %s\n", name)
+		}
 		return nil, nil, fmt.Errorf("deployment '%s' does not exist", deployment)
 	}
 

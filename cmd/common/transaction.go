@@ -264,6 +264,9 @@ func PrepareParatimeTransaction(ctx context.Context, npa *NPASelection, account 
 		if err != nil {
 			return 0, nil, "", fmt.Errorf("failed to estimate gas: %w", err)
 		}
+
+		// Inflate the estimate by 20% for good measure.
+		gas = (120 * gas) / 100
 	}
 
 	// Compute fee.

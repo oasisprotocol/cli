@@ -20,6 +20,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
+
+	"github.com/oasisprotocol/cli/build/env"
 )
 
 const artifactCacheDir = "build_cache"
@@ -255,8 +257,8 @@ func copyFile(src, dst string, mode os.FileMode) error {
 
 // ensureBinaryExists checks whether the given binary name exists in path and returns a nice error
 // message suggesting to install a given package if it doesn't.
-func ensureBinaryExists(name, pkg string) error {
-	if path, err := exec.LookPath(name); err != nil || path == "" {
+func ensureBinaryExists(buildEnv env.ExecEnv, name, pkg string) error {
+	if !buildEnv.HasBinary(name) {
 		return fmt.Errorf("missing '%s' binary, please install %s or similar", name, pkg)
 	}
 	return nil
@@ -266,9 +268,9 @@ func ensureBinaryExists(name, pkg string) error {
 // it.
 //
 // Returns the size of the created filesystem image in bytes.
-func createSquashFs(fn, dir string) (int64, error) {
+func createSquashFs(buildEnv env.ExecEnv, fn, dir string) (int64, error) {
 	const mkSquashFsBin = "mksquashfs"
-	if err := ensureBinaryExists(mkSquashFsBin, "squashfs-tools"); err != nil {
+	if err := ensureBinaryExists(buildEnv, mkSquashFsBin, "squashfs-tools"); err != nil {
 		return 0, err
 	}
 
@@ -288,6 +290,9 @@ func createSquashFs(fn, dir string) (int64, error) {
 	var out strings.Builder
 	cmd.Stderr = &out
 	cmd.Stdout = &out
+	if err := buildEnv.WrapCommand(cmd); err != nil {
+		return 0, err
+	}
 	if err := cmd.Run(); err != nil {
 		return 0, fmt.Errorf("%w\n%s", err, out.String())
 	}
@@ -301,10 +306,10 @@ func createSquashFs(fn, dir string) (int64, error) {
 }
 
 // createVerityHashTree creates the verity Merkle hash tree and returns the root hash.
-func createVerityHashTree(fsFn, hashFn string) (string, error) {
+func createVerityHashTree(buildEnv env.ExecEnv, fsFn, hashFn string) (string, error) {
 	// Print a nicer error message in case veritysetup is missing.
 	const veritysetupBin = "veritysetup"
-	if err := ensureBinaryExists(veritysetupBin, "cryptsetup-bin"); err != nil {
+	if err := ensureBinaryExists(buildEnv, veritysetupBin, "cryptsetup-bin"); err != nil {
 		return "", err
 	}
 
@@ -335,8 +340,21 @@ func createVerityHashTree(fsFn, hashFn string) (string, error) {
 	var out strings.Builder
 	cmd.Stderr = &out
 	cmd.Stdout = &out
+	if err = buildEnv.WrapCommand(cmd); err != nil {
+		return "", err
+	}
 	if err = cmd.Run(); err != nil {
 		return "", fmt.Errorf("%w\n%s", err, out.String())
+	}
+
+	if err = buildEnv.FixPermissions(fsFn); err != nil {
+		return "", err
+	}
+	if err = buildEnv.FixPermissions(hashFn); err != nil {
+		return "", err
+	}
+	if err = buildEnv.FixPermissions(rootHashFn); err != nil {
+		return "", err
 	}
 
 	data, err := os.ReadFile(rootHashFn)
@@ -413,9 +431,9 @@ func appendEmptySpace(fn string, size uint64, align uint64) (uint64, error) {
 }
 
 // convertToQcow2 converts a raw image to qcow2 format.
-func convertToQcow2(fn string) error {
+func convertToQcow2(buildEnv env.ExecEnv, fn string) error {
 	const qemuImgBin = "qemu-img"
-	if err := ensureBinaryExists(qemuImgBin, "qemu-utils"); err != nil {
+	if err := ensureBinaryExists(buildEnv, qemuImgBin, "qemu-utils"); err != nil {
 		return err
 	}
 
@@ -432,6 +450,10 @@ func convertToQcow2(fn string) error {
 	var out strings.Builder
 	cmd.Stderr = &out
 	cmd.Stdout = &out
+
+	if err := buildEnv.WrapCommand(cmd); err != nil {
+		return err
+	}
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("%w\n%s", err, out.String())
 	}

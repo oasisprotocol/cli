@@ -482,8 +482,11 @@ func showParameters(ctx context.Context, npa *common.NPASelection, round uint64,
 		}
 	}
 
-	stakeThresholds, err := rt.ROFL.StakeThresholds(ctx, round)
+	roflStakeThresholds, err := rt.ROFL.StakeThresholds(ctx, round)
 	checkErr("ROFL StakeThresholds", err)
+
+	roflMarketStakeThresholds, err := rt.ROFLMarket.StakeThresholds(ctx, round)
+	checkErr("ROFL Market StakeThresholds", err)
 
 	doc := make(map[string]interface{})
 
@@ -497,7 +500,8 @@ func showParameters(ctx context.Context, npa *common.NPASelection, round uint64,
 		}
 	}
 
-	doSection("rofl", stakeThresholds)
+	doSection("rofl", roflStakeThresholds)
+	doSection("rofl market", roflMarketStakeThresholds)
 
 	if common.OutputFormat() == common.FormatJSON {
 		pp, err := json.MarshalIndent(doc, "", "  ")

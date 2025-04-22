@@ -8,12 +8,14 @@ import (
 
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle"
 
+	"github.com/oasisprotocol/cli/build/env"
 	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/cmd/common"
 )
 
 // tdxBuildContainer builds a TDX-based container ROFL app.
 func tdxBuildContainer(
+	buildEnv env.ExecEnv,
 	tmpDir string,
 	npa *common.NPASelection,
 	manifest *buildRofl.Manifest,
@@ -40,7 +42,7 @@ func tdxBuildContainer(
 	// Use the pre-built container runtime.
 	initPath := artifacts[artifactContainerRuntime]
 
-	stage2, err := tdxPrepareStage2(tmpDir, artifacts, initPath, map[string]string{
+	stage2, err := tdxPrepareStage2(buildEnv, tmpDir, artifacts, initPath, map[string]string{
 		artifacts[artifactContainerCompose]: "etc/oasis/containers/compose.yaml",
 	})
 	if err != nil {
@@ -64,5 +66,5 @@ func tdxBuildContainer(
 
 	fmt.Println("Creating ORC bundle...")
 
-	return tdxBundleComponent(manifest, artifacts, bnd, stage2, extraKernelOpts)
+	return tdxBundleComponent(buildEnv, manifest, artifacts, bnd, stage2, extraKernelOpts)
 }

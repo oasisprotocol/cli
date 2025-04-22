@@ -433,6 +433,7 @@ func showParameters(ctx context.Context, npa *common.NPASelection, height int64,
 			fmt.Printf("=== %s PARAMETERS ===\n", strings.ToUpper(name))
 			out := common.PrettyPrint(npa, "  ", params)
 			fmt.Printf("%s\n", out)
+			fmt.Println()
 		}
 	}
 

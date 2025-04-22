@@ -21,7 +21,12 @@ import (
 
 // PrettyJSONMarshal returns pretty-printed JSON encoding of v.
 func PrettyJSONMarshal(v interface{}) ([]byte, error) {
-	formatted, err := json.MarshalIndent(v, "", "  ")
+	return PrettyJSONMarshalIndent(v, "", "  ")
+}
+
+// PrettyJSONMarshal returns pretty-printed JSON encoding of v.
+func PrettyJSONMarshalIndent(v interface{}, prefix, indent string) ([]byte, error) {
+	formatted, err := json.MarshalIndent(v, prefix, indent)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal to pretty JSON: %w", err)
 	}
@@ -139,7 +144,7 @@ func PrettyPrint(npa *NPASelection, prefix string, blob interface{}) string {
 		rtx.PrettyPrint(ctx, prefix, &pp)
 		ret = pp.String()
 	default:
-		pp, err := PrettyJSONMarshal(blob)
+		pp, err := PrettyJSONMarshalIndent(blob, "", prefix)
 		cobra.CheckErr(err)
 
 		out := string(pp)
@@ -157,6 +162,7 @@ func PrettyPrint(npa *NPASelection, prefix string, blob interface{}) string {
 			}
 			ret += line + "\n"
 		}
+		ret = strings.TrimRight(ret, "\n")
 	}
 
 	return ret

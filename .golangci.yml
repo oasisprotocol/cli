@@ -17,7 +17,6 @@ linters:
     - dupl
     - errcheck
     - exhaustive
-    - exportloopref
     - goconst
     - gocritic
     - gocyclo
@@ -56,6 +55,9 @@ linters-settings:
           - $all
         allow:
           - $gostd
+          - golang.org/x/sys/unix
+          - golang.org/x/crypto/sha3
+          - golang.org/x/crypto/argon2
           - github.com/oasisprotocol
           - github.com/btcsuite/btcd
           - github.com/adrg/xdg
@@ -82,6 +84,3 @@ linters-settings:
     # Switch statements are to be considered exhaustive if a 'default' case is
     # present, even if all enum members aren't listed in the switch.
     default-signifies-exhaustive: true
-  govet:
-    # Enabled checking for shadowed variables.
-    check-shadowing: true

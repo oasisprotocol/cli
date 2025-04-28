@@ -396,8 +396,8 @@ func (af *fileAccountFactory) Remove(name string, _ map[string]interface{}) erro
 	return os.Remove(getAccountFilename(name))
 }
 
-func (af *fileAccountFactory) Rename(old, new string, _ map[string]interface{}) error {
-	return os.Rename(getAccountFilename(old), getAccountFilename(new))
+func (af *fileAccountFactory) Rename(oldName, newName string, _ map[string]interface{}) error {
+	return os.Rename(getAccountFilename(oldName), getAccountFilename(newName))
 }
 
 func (af *fileAccountFactory) Import(name string, passphrase string, rawCfg map[string]interface{}, src *wallet.ImportSource) (wallet.Account, error) {

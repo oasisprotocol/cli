@@ -49,25 +49,25 @@ func (ab *AddressBook) Remove(name string) error {
 }
 
 // Rename renames an existing address book entry.
-func (ab *AddressBook) Rename(old, new string) error {
-	cfg, exists := ab.All[old]
+func (ab *AddressBook) Rename(oldName, newName string) error {
+	cfg, exists := ab.All[oldName]
 	if !exists {
-		return fmt.Errorf("address named '%s' does not exist in the address book", old)
+		return fmt.Errorf("address named '%s' does not exist in the address book", oldName)
 	}
 
-	if _, exists = ab.All[new]; exists {
-		return fmt.Errorf("address named '%s' already exists in the address book", new)
+	if _, exists = ab.All[newName]; exists {
+		return fmt.Errorf("address named '%s' already exists in the address book", newName)
 	}
 
-	if err := config.ValidateIdentifier(old); err != nil {
-		return fmt.Errorf("malformed old address name '%s': %w", old, err)
+	if err := config.ValidateIdentifier(oldName); err != nil {
+		return fmt.Errorf("malformed old address name '%s': %w", oldName, err)
 	}
-	if err := config.ValidateIdentifier(new); err != nil {
-		return fmt.Errorf("malformed new address name '%s': %w", new, err)
+	if err := config.ValidateIdentifier(newName); err != nil {
+		return fmt.Errorf("malformed new address name '%s': %w", newName, err)
 	}
 
-	ab.All[new] = cfg
-	delete(ab.All, old)
+	ab.All[newName] = cfg
+	delete(ab.All, oldName)
 
 	return nil
 }

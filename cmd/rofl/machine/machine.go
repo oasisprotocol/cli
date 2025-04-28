@@ -13,7 +13,7 @@ var Cmd = &cobra.Command{
 func init() {
 	Cmd.AddCommand(showCmd)
 	Cmd.AddCommand(restartCmd)
-	Cmd.AddCommand(terminateCmd)
-	Cmd.AddCommand(cancelCmd)
+	Cmd.AddCommand(stopCmd)
+	Cmd.AddCommand(removeCmd)
 	Cmd.AddCommand(topUpCmd)
 }

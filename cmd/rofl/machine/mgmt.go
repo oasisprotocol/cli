@@ -161,7 +161,7 @@ var (
 
 	restartCmd = &cobra.Command{
 		Use:   "restart [<machine-name>]",
-		Short: "Restart a machine",
+		Short: "Restart a running machine or start a stopped one",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
 			queueCommand(
@@ -175,10 +175,11 @@ var (
 		},
 	}
 
-	terminateCmd = &cobra.Command{
-		Use:   "terminate [<machine-name>]",
-		Short: "Terminate a machine",
-		Args:  cobra.MaximumNArgs(1),
+	stopCmd = &cobra.Command{
+		Use:     "stop [<machine-name>]",
+		Short:   "Stop a machine",
+		Aliases: []string{"terminate"},
+		Args:    cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
 			queueCommand(
 				args,
@@ -191,10 +192,11 @@ var (
 		},
 	}
 
-	cancelCmd = &cobra.Command{
-		Use:   "cancel [<machine-name>]",
-		Short: "Cancel a machine",
-		Args:  cobra.MaximumNArgs(1),
+	removeCmd = &cobra.Command{
+		Use:     "remove [<machine-name>]",
+		Short:   "Cancel rental and remove the machine",
+		Aliases: []string{"cancel", "rm"},
+		Args:    cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
@@ -223,7 +225,7 @@ var (
 
 			fmt.Printf("Using provider:     %s (%s)\n", machine.Provider, providerAddr)
 			fmt.Printf("Canceling machine:  %s [%s]\n", machineName, machine.ID)
-			fmt.Printf("WARNING: Canceling a machine will permanently destroy it!\n")
+			fmt.Printf("WARNING: Canceling a machine will permanently destroy it including any persistent storage!\n")
 
 			// Prepare transaction.
 			tx := roflmarket.NewInstanceCancelTx(nil, &roflmarket.InstanceCancel{
@@ -239,7 +241,7 @@ var (
 				return
 			}
 
-			fmt.Printf("Machine cancelled.\n")
+			fmt.Printf("Machine removed.\n")
 
 			// Update manifest to clear the machine ID as it has been cancelled.
 			machine.ID = ""
@@ -429,14 +431,14 @@ func init() {
 	restartCmd.Flags().AddFlagSet(deploymentFlags)
 	restartCmd.Flags().AddFlagSet(wipeFlags)
 
-	terminateCmd.Flags().AddFlagSet(common.SelectorFlags)
-	terminateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
-	terminateCmd.Flags().AddFlagSet(deploymentFlags)
-	terminateCmd.Flags().AddFlagSet(wipeFlags)
+	stopCmd.Flags().AddFlagSet(common.SelectorFlags)
+	stopCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
+	stopCmd.Flags().AddFlagSet(deploymentFlags)
+	stopCmd.Flags().AddFlagSet(wipeFlags)
 
-	cancelCmd.Flags().AddFlagSet(common.SelectorFlags)
-	cancelCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
-	cancelCmd.Flags().AddFlagSet(deploymentFlags)
+	removeCmd.Flags().AddFlagSet(common.SelectorFlags)
+	removeCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
+	removeCmd.Flags().AddFlagSet(deploymentFlags)
 
 	topUpCmd.Flags().AddFlagSet(common.SelectorFlags)
 	topUpCmd.Flags().AddFlagSet(common.RuntimeTxFlags)

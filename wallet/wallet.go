@@ -97,7 +97,7 @@ type Factory interface {
 	Remove(name string, cfg map[string]interface{}) error
 
 	// Rename renames an existing account.
-	Rename(old, new string, cfg map[string]interface{}) error
+	Rename(oldName, newName string, cfg map[string]interface{}) error
 
 	// Import creates a new account from imported key material.
 	Import(name string, passphrase string, cfg map[string]interface{}, src *ImportSource) (Account, error)

@@ -24,13 +24,13 @@ const amountFieldName = "Amount:"
 
 // lenLongestString returns the length of the longest string passed to it.
 func lenLongestString(strs ...string) int {
-	max := 0
+	maxLen := 0
 	for _, s := range strs {
-		if len(s) > max {
-			max = len(s)
+		if len(s) > maxLen {
+			maxLen = len(s)
 		}
 	}
-	return max
+	return maxLen
 }
 
 // delegationDescription is a description of a (debonding) delegation.

@@ -156,21 +156,21 @@ func (w *Wallet) Remove(name string) error {
 }
 
 // Rename renames an existing account.
-func (w *Wallet) Rename(old, new string) error {
-	cfg, exists := w.All[old]
+func (w *Wallet) Rename(oldName, newName string) error {
+	cfg, exists := w.All[oldName]
 	if !exists {
-		return fmt.Errorf("account '%s' does not exist in the wallet", old)
+		return fmt.Errorf("account '%s' does not exist in the wallet", oldName)
 	}
 
-	if _, exists = w.All[new]; exists {
-		return fmt.Errorf("account '%s' already exists in the wallet", new)
+	if _, exists = w.All[newName]; exists {
+		return fmt.Errorf("account '%s' already exists in the wallet", newName)
 	}
 
-	if err := config.ValidateIdentifier(old); err != nil {
-		return fmt.Errorf("malformed old account name '%s': %w", old, err)
+	if err := config.ValidateIdentifier(oldName); err != nil {
+		return fmt.Errorf("malformed old account name '%s': %w", oldName, err)
 	}
-	if err := config.ValidateIdentifier(new); err != nil {
-		return fmt.Errorf("malformed new account name '%s': %w", new, err)
+	if err := config.ValidateIdentifier(newName); err != nil {
+		return fmt.Errorf("malformed new account name '%s': %w", newName, err)
 	}
 
 	af, err := wallet.Load(cfg.Kind)
@@ -178,16 +178,16 @@ func (w *Wallet) Rename(old, new string) error {
 		return err
 	}
 
-	if err := af.Rename(old, new, cfg.Config); err != nil {
+	if err := af.Rename(oldName, newName, cfg.Config); err != nil {
 		return err
 	}
 
-	w.All[new] = cfg
-	delete(w.All, old)
+	w.All[newName] = cfg
+	delete(w.All, oldName)
 
 	// Update default if set to this wallet.
-	if w.Default == old {
-		w.Default = new
+	if w.Default == oldName {
+		w.Default = newName
 	}
 
 	return nil

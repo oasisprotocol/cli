@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"net/http"
 	"os"
 	"path/filepath"
 	"slices"
@@ -26,6 +27,9 @@ const (
 	ociTypeOrcLayer    = "application/vnd.oasis.orc.layer.v1"
 	ociTypeOrcArtifact = "application/vnd.oasis.orc"
 )
+
+// DefaultOCIRegistry is the default OCI registry.
+const DefaultOCIRegistry = "rofl.sh"
 
 // PushBundleToOciRepository pushes an ORC bundle to the given remote OCI repository.
 //
@@ -118,11 +122,17 @@ func PushBundleToOciRepository(bundleFn, dst string) (string, hash.Hash, error) 
 	if err != nil {
 		return "", hash.Hash{}, fmt.Errorf("failed to init OCI credential store: %w", err)
 	}
-	repo.Client = &auth.Client{
+	client := &auth.Client{
 		Client:     retry.DefaultClient,
 		Cache:      auth.NewCache(),
 		Credential: credentials.Credential(creds),
 	}
+	if strings.Contains(dst, DefaultOCIRegistry) {
+		client.Header = http.Header{
+			"X-Rofl-Registry-Caller": []string{"cli"},
+		}
+	}
+	repo.Client = client
 
 	// Push to remote repository.
 	if _, err = oras.Copy(ctx, store, tag, repo, tag, oras.DefaultCopyOptions); err != nil {

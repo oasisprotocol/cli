@@ -1,11 +1,13 @@
 package rofl
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"maps"
 	"os"
+	"sort"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -27,12 +29,13 @@ import (
 )
 
 var (
-	deployProvider  string
-	deployOffer     string
-	deployMachine   string
-	deployTerm      string
-	deployTermCount uint64
-	deployForce     bool
+	deployProvider   string
+	deployOffer      string
+	deployMachine    string
+	deployTerm       string
+	deployTermCount  uint64
+	deployForce      bool
+	deployShowOffers bool
 
 	deployCmd = &cobra.Command{
 		Use:   "deploy",
@@ -106,6 +109,12 @@ var (
 
 			fmt.Printf("Using provider: %s (%s)\n", machine.Provider, providerAddr)
 
+			if deployShowOffers {
+				// Display all offers supported by the provider.
+				showProviderOffers(ctx, npa, conn, *providerAddr)
+				return
+			}
+
 			// Push ORC to OCI repository.
 			if deployment.OCIRepository == "" {
 				// TODO: Support default OCI repository.
@@ -137,24 +146,17 @@ var (
 				// When machine is not set, we need to obtain one.
 				fmt.Printf("No pre-existing machine configured, creating a new one...\n")
 
-				if machine.Offer == "" && deployOffer == "" {
-					// Display all offers supported by the provider.
-					showProviderOffers(ctx, npa, conn, *providerAddr)
-					cobra.CheckErr(fmt.Sprintf("Offer not configured for deployment '%s' machine '%s'. Please specify --offer.", deploymentName, deployMachine))
-				}
 				if deployOffer != "" {
 					machine.Offer = deployOffer
 				}
 
 				// Resolve offer.
-				var offers []*roflmarket.Offer
-				offers, err = conn.Runtime(npa.ParaTime).ROFLMarket.Offers(ctx, client.RoundLatest, *providerAddr)
-				if err != nil {
-					cobra.CheckErr(fmt.Sprintf("Failed to query provider: %s", err))
-				}
+				offers, err := fetchProviderOffers(ctx, npa, conn, *providerAddr)
+				cobra.CheckErr(err)
 				var offer *roflmarket.Offer
 				for _, of := range offers {
-					if of.Metadata[provider.SchedulerMetadataOfferKey] == machine.Offer {
+					if of.Metadata[provider.SchedulerMetadataOfferKey] == machine.Offer || machine.Offer == "" {
+						machine.Offer = of.Metadata[provider.SchedulerMetadataOfferKey]
 						offer = of
 						break
 					}
@@ -277,11 +279,22 @@ func detectTerm(offer *roflmarket.Offer) (term roflmarket.Term) {
 	return
 }
 
-func showProviderOffers(ctx context.Context, npa *common.NPASelection, conn connection.Connection, provider types.Address) {
-	offers, err := conn.Runtime(npa.ParaTime).ROFLMarket.Offers(ctx, client.RoundLatest, provider)
+func fetchProviderOffers(ctx context.Context, npa *common.NPASelection, conn connection.Connection, provider types.Address) (offers []*roflmarket.Offer, err error) {
+	offers, err = conn.Runtime(npa.ParaTime).ROFLMarket.Offers(ctx, client.RoundLatest, provider)
 	if err != nil {
+		err = fmt.Errorf("failed to query provider: %s", err)
 		return
 	}
+	// Order offers, newer first.
+	sort.Slice(offers, func(i, j int) bool {
+		return bytes.Compare(offers[i].ID[:], offers[j].ID[:]) > 0
+	})
+	return
+}
+
+func showProviderOffers(ctx context.Context, npa *common.NPASelection, conn connection.Connection, provider types.Address) {
+	offers, err := fetchProviderOffers(ctx, npa, conn, provider)
+	cobra.CheckErr(err)
 
 	fmt.Println()
 	fmt.Printf("Offers available from the selected provider:\n")
@@ -330,6 +343,7 @@ func init() {
 	providerFlags.StringVar(&deployTerm, "term", "", "term to pay for in advance")
 	providerFlags.Uint64Var(&deployTermCount, "term-count", 1, "number of terms to pay for in advance")
 	providerFlags.BoolVar(&deployForce, "force", false, "force deployment")
+	providerFlags.BoolVar(&deployShowOffers, "show-offers", false, "show all provider offers and quit")
 
 	deployCmd.Flags().AddFlagSet(common.SelectorFlags)
 	deployCmd.Flags().AddFlagSet(common.RuntimeTxFlags)

@@ -8,7 +8,9 @@ import (
 	"maps"
 	"os"
 	"sort"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -117,8 +119,10 @@ var (
 
 			// Push ORC to OCI repository.
 			if deployment.OCIRepository == "" {
-				// TODO: Support default OCI repository.
-				cobra.CheckErr(fmt.Sprintf("Missing OCI repository for deployment '%s'.", deploymentName))
+				// Use default OCI repository with random name and timestamp tag.
+				deployment.OCIRepository = fmt.Sprintf(
+					"%s/%s:%d", buildRofl.DefaultOCIRegistry, uuid.New(), time.Now().Unix(),
+				)
 			}
 			fmt.Printf("Pushing ROFL app to OCI repository '%s'...\n", deployment.OCIRepository)
 
@@ -126,6 +130,10 @@ var (
 			ociDigest, manifestHash, err := buildRofl.PushBundleToOciRepository(orcFilename, deployment.OCIRepository)
 			switch {
 			case err == nil:
+				// Save the OCI repository field to the configuration file so we avoid multiple uploads.
+				if err := manifest.Save(); err != nil {
+					cobra.CheckErr(fmt.Sprintf("Failed to update manifest with OCI repository: %s", err))
+				}
 			case errors.Is(err, os.ErrNotExist):
 				cobra.CheckErr(fmt.Sprintf("ROFL app bundle '%s' not found. Run `oasis rofl build` first.", orcFilename))
 			default:

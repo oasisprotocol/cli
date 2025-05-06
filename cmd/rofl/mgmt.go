@@ -185,7 +185,7 @@ var (
 					ParaTime: npa.ParaTimeName,
 					Admin:    npa.AccountName,
 					Debug:    debugMode,
-					Policy: &rofl.AppAuthPolicy{
+					Policy: &buildRofl.AppAuthPolicy{
 						Quotes: quote.Policy{
 							PCS: &pcs.QuotePolicy{
 								TCBValidityPeriod:          30,
@@ -217,7 +217,7 @@ var (
 
 			// Prepare transaction.
 			tx := rofl.NewCreateTx(nil, &rofl.Create{
-				Policy:   *deployment.Policy,
+				Policy:   *deployment.Policy.AsDescriptor(),
 				Scheme:   idScheme,
 				Metadata: manifest.GetMetadata(deploymentName),
 			})
@@ -291,7 +291,7 @@ var (
 
 			updateBody := rofl.Update{
 				ID:       appID,
-				Policy:   *deployment.Policy,
+				Policy:   *deployment.Policy.AsDescriptor(),
 				Metadata: manifest.GetMetadata(deploymentName),
 				Secrets:  secrets,
 			}

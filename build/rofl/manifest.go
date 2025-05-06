@@ -10,11 +10,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/github/go-spdx/v2/spdxexp"
 	"gopkg.in/yaml.v3"
 
-	"github.com/github/go-spdx/v2/spdxexp"
+	beacon "github.com/oasisprotocol/oasis-core/go/beacon/api"
+	"github.com/oasisprotocol/oasis-core/go/common/sgx"
+	"github.com/oasisprotocol/oasis-core/go/common/sgx/quote"
 	"github.com/oasisprotocol/oasis-core/go/common/version"
-
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 )
 
@@ -264,7 +266,7 @@ type Deployment struct {
 	// TrustRoot is the optional trust root configuration.
 	TrustRoot *TrustRootConfig `yaml:"trust_root,omitempty" json:"trust_root,omitempty"`
 	// Policy is the ROFL app policy.
-	Policy *rofl.AppAuthPolicy `yaml:"policy,omitempty" json:"policy,omitempty"`
+	Policy *AppAuthPolicy `yaml:"policy,omitempty" json:"policy,omitempty"`
 	// Metadata contains custom metadata.
 	Metadata map[string]string `yaml:"metadata,omitempty" json:"metadata,omitempty"`
 	// Secrets contains encrypted secrets.
@@ -288,6 +290,12 @@ func (d *Deployment) Validate() error {
 	if d.ParaTime == "" {
 		return fmt.Errorf("paratime cannot be empty")
 	}
+	if d.Policy != nil {
+		err := d.Policy.Validate()
+		if err != nil {
+			return fmt.Errorf("bad app policy: %w", err)
+		}
+	}
 	for _, s := range d.Secrets {
 		if err := s.Validate(); err != nil {
 			return fmt.Errorf("bad secret: %w", err)
@@ -305,6 +313,91 @@ func (d *Deployment) Validate() error {
 // HasAppID returns true iff the deployment has an application identifier set.
 func (d *Deployment) HasAppID() bool {
 	return len(d.AppID) > 0
+}
+
+// AppAuthPolicy is the per-application ROFL policy.
+//
+// This is a different type from `rofl.AppAuthPolicy` in order to add extra structure that makes it
+// easier to configure without changing the on-chain representation.
+type AppAuthPolicy struct {
+	// Quotes is a quote policy.
+	Quotes quote.Policy `json:"quotes" yaml:"quotes"`
+	// Enclaves is the set of allowed enclave identities.
+	Enclaves []*EnclaveIdentity `json:"enclaves" yaml:"enclaves"`
+	// Endorsements is the set of allowed endorsements.
+	Endorsements []rofl.AllowedEndorsement `json:"endorsements" yaml:"endorsements"`
+	// Fees is the gas fee payment policy.
+	Fees rofl.FeePolicy `json:"fees" yaml:"fees"`
+	// MaxExpiration is the maximum number of future epochs for which one can register.
+	MaxExpiration beacon.EpochTime `json:"max_expiration" yaml:"max_expiration"`
+}
+
+// Validate validates the policy for correctness.
+func (p *AppAuthPolicy) Validate() error {
+	for idx, ei := range p.Enclaves {
+		if err := ei.Validate(); err != nil {
+			return fmt.Errorf("bad enclave identity %d: %w", idx, err)
+		}
+	}
+	return nil
+}
+
+// AsDescriptor converts the structure into an on-chain policy descriptor.
+func (p *AppAuthPolicy) AsDescriptor() *rofl.AppAuthPolicy {
+	enclaves := make([]sgx.EnclaveIdentity, 0, len(p.Enclaves))
+	for _, ei := range p.Enclaves {
+		enclaves = append(enclaves, ei.ID)
+	}
+
+	return &rofl.AppAuthPolicy{
+		Quotes:        p.Quotes,
+		Enclaves:      enclaves,
+		Endorsements:  p.Endorsements,
+		Fees:          p.Fees,
+		MaxExpiration: p.MaxExpiration,
+	}
+}
+
+// EnclaveIdentity is the cryptographic enclave identity.
+type EnclaveIdentity struct {
+	// ID is the enclave identity.
+	ID sgx.EnclaveIdentity `json:"id" yaml:"id"`
+	// Version is an optional version this enclave identity is for, with an empty value indicating
+	// the latest version.
+	//
+	// This can be used to keep historic versions in the current policy.
+	Version string `json:"version,omitempty" yaml:"version,omitempty"`
+	// Description is an optional description of an enclave identity.
+	Description string `json:"description,omitempty" yaml:"description,omitempty"`
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (ei *EnclaveIdentity) UnmarshalYAML(value *yaml.Node) error {
+	switch value.ShortTag() {
+	case "!!str":
+		// Simple mode with just the enclave identity and no other information.
+		ei.Description = ""
+		ei.Version = ""
+		return value.Decode(&ei.ID)
+	default:
+		type enclaveIdentity EnclaveIdentity
+		return value.Decode((*enclaveIdentity)(ei))
+	}
+}
+
+// Validate validates the enclave identity for correctness.
+func (ei *EnclaveIdentity) Validate() error {
+	if len(ei.Version) > 0 {
+		if _, err := version.FromString(ei.Version); err != nil {
+			return fmt.Errorf("malformed version: %w", err)
+		}
+	}
+	return nil
+}
+
+// IsLatest returns true iff the enclave identity is for the latest app version.
+func (ei *EnclaveIdentity) IsLatest() bool {
+	return ei.Version == ""
 }
 
 // Machine is a hosted machine where a ROFL app is deployed.

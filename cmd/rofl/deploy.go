@@ -66,7 +66,7 @@ var (
 
 			manifestEnclaves := make(map[sgx.EnclaveIdentity]struct{})
 			for _, eid := range deployment.Policy.Enclaves {
-				manifestEnclaves[eid] = struct{}{}
+				manifestEnclaves[eid.ID] = struct{}{}
 			}
 
 			cfgEnclaves, err := roflCommon.GetRegisteredEnclaves(ctx, deployment.AppID, npa)

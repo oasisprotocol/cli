@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"maps"
 	"os"
+	"slices"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -177,16 +178,20 @@ var (
 				buildEnclaves[id.Enclave] = struct{}{}
 			}
 
-			manifestEnclaves := make(map[sgx.EnclaveIdentity]struct{})
+			allManifestEnclaves := make(map[sgx.EnclaveIdentity]struct{})
+			latestManifestEnclaves := make(map[sgx.EnclaveIdentity]struct{})
 			for _, eid := range deployment.Policy.Enclaves {
-				manifestEnclaves[eid] = struct{}{}
+				if eid.IsLatest() {
+					latestManifestEnclaves[eid.ID] = struct{}{}
+				}
+				allManifestEnclaves[eid.ID] = struct{}{}
 			}
 
 			// Perform verification when requested.
 			if doVerify {
-				showIdentityDiff := func(build, other map[sgx.EnclaveIdentity]struct{}, otherName string) {
-					fmt.Println("Built enclave identities:")
-					for enclaveID := range build {
+				showIdentityDiff := func(this, other map[sgx.EnclaveIdentity]struct{}, thisName, otherName string) {
+					fmt.Printf("%s enclave identities:\n", thisName)
+					for enclaveID := range this {
 						data, _ := enclaveID.MarshalText()
 						fmt.Printf("  - %s\n", string(data))
 					}
@@ -198,13 +203,16 @@ var (
 					}
 				}
 
-				if !maps.Equal(buildEnclaves, manifestEnclaves) {
-					fmt.Println("Built enclave identities DIFFER from manifest enclave identities!")
-					showIdentityDiff(buildEnclaves, manifestEnclaves, "Manifest")
+				if !maps.Equal(buildEnclaves, latestManifestEnclaves) {
+					fmt.Println("Built enclave identities DIFFER from latest manifest enclave identities!")
+					showIdentityDiff(buildEnclaves, latestManifestEnclaves, "Built", "Manifest")
 					cobra.CheckErr(fmt.Errorf("enclave identity verification failed"))
 				}
 
-				fmt.Println("Built enclave identities MATCH manifest enclave identities.")
+				fmt.Println("Built enclave identities MATCH latest manifest enclave identities.")
+				if len(latestManifestEnclaves) != len(allManifestEnclaves) {
+					fmt.Println("NOTE: Non-latest enclave identities present in manifest!")
+				}
 
 				// When not in offline mode, also verify on-chain enclave identities.
 				if !offline {
@@ -213,13 +221,13 @@ var (
 					cfgEnclaves, err = roflCommon.GetRegisteredEnclaves(ctx, deployment.AppID, npa)
 					cobra.CheckErr(err)
 
-					if !maps.Equal(buildEnclaves, cfgEnclaves) {
-						fmt.Println("Built enclave identities DIFFER from on-chain enclave identities!")
-						showIdentityDiff(buildEnclaves, cfgEnclaves, "On-chain")
+					if !maps.Equal(allManifestEnclaves, cfgEnclaves) {
+						fmt.Println("Manifest enclave identities DIFFER from on-chain enclave identities!")
+						showIdentityDiff(allManifestEnclaves, cfgEnclaves, "Manifest", "On-chain")
 						cobra.CheckErr(fmt.Errorf("enclave identity verification failed"))
 					}
 
-					fmt.Println("Built enclave identities MATCH on-chain enclave identities.")
+					fmt.Println("Manifest enclave identities MATCH on-chain enclave identities.")
 				}
 				return
 			}
@@ -232,7 +240,7 @@ var (
 			switch noUpdate {
 			case true:
 				// Ask the user to update the manifest manually (if the manifest has changed).
-				if maps.Equal(buildEnclaves, manifestEnclaves) {
+				if maps.Equal(buildEnclaves, latestManifestEnclaves) {
 					fmt.Println("Built enclave identities already match manifest enclave identities.")
 					break
 				}
@@ -249,9 +257,13 @@ var (
 				}
 			case false:
 				// Update the manifest with the given enclave identities, overwriting existing ones.
-				deployment.Policy.Enclaves = make([]sgx.EnclaveIdentity, 0, len(ids))
+				deployment.Policy.Enclaves = slices.DeleteFunc(deployment.Policy.Enclaves, func(ei *buildRofl.EnclaveIdentity) bool {
+					return ei.IsLatest()
+				})
 				for _, id := range ids {
-					deployment.Policy.Enclaves = append(deployment.Policy.Enclaves, id.Enclave)
+					deployment.Policy.Enclaves = append(deployment.Policy.Enclaves, &buildRofl.EnclaveIdentity{
+						ID: id.Enclave,
+					})
 				}
 
 				if err = manifest.Save(); err != nil {

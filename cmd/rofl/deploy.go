@@ -106,12 +106,6 @@ var (
 
 			fmt.Printf("Using provider: %s (%s)\n", machine.Provider, providerAddr)
 
-			// Parse machine payment term.
-			term := roflCommon.ParseMachineTerm(deployTerm)
-			if deployTermCount < 1 {
-				cobra.CheckErr("Number of terms must be at least 1.")
-			}
-
 			// Push ORC to OCI repository.
 			if deployment.OCIRepository == "" {
 				// TODO: Support default OCI repository.
@@ -172,6 +166,11 @@ var (
 				}
 
 				fmt.Printf("Taking offer: %s [%s]\n", machine.Offer, offer.ID)
+
+				term := detectTerm(offer)
+				if deployTermCount < 1 {
+					cobra.CheckErr("Number of terms must be at least 1.")
+				}
 
 				// Prepare transaction.
 				tx := roflmarket.NewInstanceCreateTx(nil, &roflmarket.InstanceCreate{
@@ -249,6 +248,35 @@ var (
 	}
 )
 
+// detectTerm returns the preferred (longest) period of the given offer.
+func detectTerm(offer *roflmarket.Offer) (term roflmarket.Term) {
+	if offer == nil {
+		cobra.CheckErr(fmt.Errorf("no offers exist to determine payment term"))
+		return // Linter complains otherwise.
+	}
+	if offer.Payment.Native == nil {
+		cobra.CheckErr(fmt.Errorf("no payment terms available for offer '%s'", offer.ID))
+	}
+
+	if deployTerm != "" {
+		// Custom deploy term.
+		term = roflCommon.ParseMachineTerm(deployTerm)
+		if _, ok := offer.Payment.Native.Terms[term]; !ok {
+			cobra.CheckErr(fmt.Errorf("term '%s' is not available for offer '%s'", deployTerm, offer.ID))
+		}
+		return
+	}
+
+	// Take the longest payment period.
+	// TODO: Sort by actual periods (e.g. seconds) instead of internal roflmarket.Term index.
+	for t := range offer.Payment.Native.Terms {
+		if t > term {
+			term = t
+		}
+	}
+	return
+}
+
 func showProviderOffers(ctx context.Context, npa *common.NPASelection, conn connection.Connection, provider types.Address) {
 	offers, err := conn.Runtime(npa.ParaTime).ROFLMarket.Offers(ctx, client.RoundLatest, provider)
 	if err != nil {
@@ -299,7 +327,7 @@ func init() {
 	providerFlags.StringVar(&deployProvider, "provider", "oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz", "set the provider address")
 	providerFlags.StringVar(&deployOffer, "offer", "", "set the provider's offer identifier")
 	providerFlags.StringVar(&deployMachine, "machine", buildRofl.DefaultMachineName, "machine to deploy into")
-	providerFlags.StringVar(&deployTerm, "term", roflCommon.TermMonth, "term to pay for in advance")
+	providerFlags.StringVar(&deployTerm, "term", "", "term to pay for in advance")
 	providerFlags.Uint64Var(&deployTermCount, "term-count", 1, "number of terms to pay for in advance")
 	providerFlags.BoolVar(&deployForce, "force", false, "force deployment")
 

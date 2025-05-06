@@ -295,7 +295,8 @@ func showProviderOffer(offer *roflmarket.Offer) {
 
 func init() {
 	providerFlags := flag.NewFlagSet("", flag.ContinueOnError)
-	providerFlags.StringVar(&deployProvider, "provider", "", "set the provider address")
+	// Default to Testnet playground provider.
+	providerFlags.StringVar(&deployProvider, "provider", "oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz", "set the provider address")
 	providerFlags.StringVar(&deployOffer, "offer", "", "set the provider's offer identifier")
 	providerFlags.StringVar(&deployMachine, "machine", buildRofl.DefaultMachineName, "machine to deploy into")
 	providerFlags.StringVar(&deployTerm, "term", roflCommon.TermMonth, "term to pay for in advance")

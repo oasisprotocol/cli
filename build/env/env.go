@@ -100,6 +100,7 @@ func (de *DockerEnv) AddDirectory(path string) {
 
 // WrapCommand implements ExecEnv.
 func (de *DockerEnv) WrapCommand(cmd *exec.Cmd) error {
+	cmd.Err = nil // May be set by a previous exec.Command invocation.
 	origArgs := cmd.Args
 
 	var err error

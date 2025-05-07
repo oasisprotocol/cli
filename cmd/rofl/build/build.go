@@ -43,7 +43,7 @@ var (
 		Use:   "build",
 		Short: "Build a ROFL application",
 		Args:  cobra.NoArgs,
-		Run: func(_ *cobra.Command, _ []string) {
+		RunE: func(_ *cobra.Command, _ []string) error {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
@@ -72,7 +72,7 @@ var (
 			// Prepare temporary build directory.
 			tmpDir, err := os.MkdirTemp("", "oasis-build")
 			if err != nil {
-				cobra.CheckErr(fmt.Errorf("failed to create temporary build directory: %w", err))
+				return fmt.Errorf("failed to create temporary build directory: %w", err)
 			}
 			defer os.RemoveAll(tmpDir)
 
@@ -84,7 +84,7 @@ var (
 				var baseDir string
 				baseDir, err = env.GetBasedir()
 				if err != nil {
-					cobra.CheckErr(fmt.Sprintf("failed to determine base directory: %s", err))
+					return fmt.Errorf("failed to determine base directory: %w", err)
 				}
 
 				dockerEnv := env.NewDockerEnv(
@@ -97,7 +97,7 @@ var (
 			}
 
 			if !buildEnv.IsAvailable() {
-				cobra.CheckErr(fmt.Sprintf("Build environment '%s' is not available. Make sure it is installed.", buildEnv))
+				return fmt.Errorf("build environment '%s' is not available", buildEnv)
 			}
 
 			bnd := &bundle.Bundle{
@@ -120,8 +120,7 @@ var (
 			case buildRofl.TEETypeSGX:
 				// SGX.
 				if manifest.Kind != buildRofl.AppKindRaw {
-					fmt.Printf("unsupported app kind for SGX TEE: %s\n", manifest.Kind)
-					return
+					return fmt.Errorf("unsupported app kind for SGX TEE: %s", manifest.Kind)
 				}
 
 				sgxBuild(buildEnv, npa, manifest, deployment, bnd)
@@ -134,12 +133,10 @@ var (
 					err = tdxBuildContainer(buildEnv, tmpDir, npa, manifest, deployment, bnd)
 				}
 			default:
-				fmt.Printf("unsupported TEE kind: %s\n", manifest.TEE)
-				return
+				return fmt.Errorf("unsupported TEE kind: %s", manifest.TEE)
 			}
 			if err != nil {
-				fmt.Printf("%s\n", err)
-				return
+				return err
 			}
 
 			runScript(manifest, buildRofl.ScriptBuildPost)
@@ -150,8 +147,7 @@ var (
 				outFn = outputFn
 			}
 			if err = bnd.Write(outFn); err != nil {
-				fmt.Printf("failed to write output bundle: %s\n", err)
-				return
+				return fmt.Errorf("failed to write output bundle: %s", err)
 			}
 
 			fmt.Printf("ROFL app built and bundle written to '%s'.\n", outFn)
@@ -160,8 +156,7 @@ var (
 
 			ids, err := roflCommon.ComputeEnclaveIdentity(bnd, "")
 			if err != nil {
-				fmt.Printf("%s\n", err)
-				return
+				return err
 			}
 
 			// Setup some post-bundle environment variables.
@@ -206,7 +201,7 @@ var (
 				if !maps.Equal(buildEnclaves, latestManifestEnclaves) {
 					fmt.Println("Built enclave identities DIFFER from latest manifest enclave identities!")
 					showIdentityDiff(buildEnclaves, latestManifestEnclaves, "Built", "Manifest")
-					cobra.CheckErr(fmt.Errorf("enclave identity verification failed"))
+					return fmt.Errorf("enclave identity verification failed")
 				}
 
 				fmt.Println("Built enclave identities MATCH latest manifest enclave identities.")
@@ -219,17 +214,19 @@ var (
 					ctx := context.Background()
 					var cfgEnclaves map[sgx.EnclaveIdentity]struct{}
 					cfgEnclaves, err = roflCommon.GetRegisteredEnclaves(ctx, deployment.AppID, npa)
-					cobra.CheckErr(err)
+					if err != nil {
+						return err
+					}
 
 					if !maps.Equal(allManifestEnclaves, cfgEnclaves) {
 						fmt.Println("Manifest enclave identities DIFFER from on-chain enclave identities!")
 						showIdentityDiff(allManifestEnclaves, cfgEnclaves, "Manifest", "On-chain")
-						cobra.CheckErr(fmt.Errorf("enclave identity verification failed"))
+						return fmt.Errorf("enclave identity verification failed")
 					}
 
 					fmt.Println("Manifest enclave identities MATCH on-chain enclave identities.")
 				}
-				return
+				return nil
 			}
 
 			// Override the update manifest flag in case the policy does not exist.
@@ -267,11 +264,12 @@ var (
 				}
 
 				if err = manifest.Save(); err != nil {
-					cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
+					return fmt.Errorf("failed to update manifest: %w", err)
 				}
 
 				fmt.Printf("Run `oasis rofl update` to update your ROFL app's on-chain configuration.\n")
 			}
+			return nil
 		},
 	}
 )

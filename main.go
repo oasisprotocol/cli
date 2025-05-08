@@ -1,7 +1,13 @@
 package main
 
-import "github.com/oasisprotocol/cli/cmd"
+import (
+	"os"
+
+	"github.com/oasisprotocol/cli/cmd"
+)
 
 func main() {
-	_ = cmd.Execute()
+	if err := cmd.Execute(); err != nil {
+		os.Exit(1)
+	}
 }

@@ -43,7 +43,8 @@ var (
 		Use:   "build",
 		Short: "Build a ROFL application",
 		Args:  cobra.NoArgs,
-		RunE: func(_ *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			cmd.SilenceUsage = true
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
 			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{

@@ -148,6 +148,13 @@ func tdxPrepareStage2(
 
 	// Add runtime as init.
 	fmt.Println("Adding runtime as init...")
+
+	initHash, err := sha256File(initPath)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("Runtime hash: %s\n", initHash)
+
 	if err := copyFile(initPath, filepath.Join(rootfsDir, "init"), 0o755); err != nil {
 		return nil, err
 	}

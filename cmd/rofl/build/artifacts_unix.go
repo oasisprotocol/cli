@@ -28,3 +28,7 @@ func extractChtimes(path string, atime, mtime time.Time) error {
 	mtv := unix.NsecToTimeval(mtime.UnixNano())
 	return unix.Lutimes(path, []unix.Timeval{atv, mtv})
 }
+
+func setUmask(mask int) {
+	unix.Umask(mask)
+}

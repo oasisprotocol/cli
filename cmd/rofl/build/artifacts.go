@@ -305,6 +305,22 @@ func createSquashFs(buildEnv env.ExecEnv, fn, dir string) (int64, error) {
 	return fi.Size(), nil
 }
 
+// sha256File computes a SHA-256 digest of the file with the given filename and returns a
+// hex-encoded hash.
+func sha256File(fn string) (string, error) {
+	f, err := os.Open(fn)
+	if err != nil {
+		return "", fmt.Errorf("failed to open filesystem file: %w", err)
+	}
+	defer f.Close()
+
+	h := sha256.New()
+	if _, err = io.Copy(h, f); err != nil {
+		return "", fmt.Errorf("failed to read filesystem file: %w", err)
+	}
+	return hex.EncodeToString(h.Sum([]byte{})), nil
+}
+
 // createVerityHashTree creates the verity Merkle hash tree and returns the root hash.
 func createVerityHashTree(buildEnv env.ExecEnv, fsFn, hashFn string) (string, error) {
 	// Print a nicer error message in case veritysetup is missing.
@@ -314,16 +330,10 @@ func createVerityHashTree(buildEnv env.ExecEnv, fsFn, hashFn string) (string, er
 	}
 
 	// Generate a deterministic salt by hashing the filesystem.
-	f, err := os.Open(fsFn)
+	salt, err := sha256File(fsFn)
 	if err != nil {
-		return "", fmt.Errorf("failed to open filesystem file: %w", err)
+		return "", err
 	}
-	defer f.Close()
-	h := sha256.New()
-	if _, err = io.Copy(h, f); err != nil {
-		return "", fmt.Errorf("failed to read filesystem file: %w", err)
-	}
-	salt := h.Sum([]byte{})
 
 	rootHashFn := hashFn + ".roothash"
 
@@ -332,7 +342,7 @@ func createVerityHashTree(buildEnv env.ExecEnv, fsFn, hashFn string) (string, er
 		"--data-block-size=4096",
 		"--hash-block-size=4096",
 		"--uuid=00000000-0000-0000-0000-000000000000",
-		"--salt="+hex.EncodeToString(salt),
+		"--salt="+salt,
 		"--root-hash-file="+rootHashFn,
 		fsFn,
 		hashFn,

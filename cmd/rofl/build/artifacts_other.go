@@ -15,3 +15,6 @@ func extractHandleSpecialNode(path string, header *tar.Header) error {
 func extractChtimes(path string, atime, mtime time.Time) error {
 	return os.Chtimes(path, atime, mtime)
 }
+
+func setUmask(mask int) {
+}

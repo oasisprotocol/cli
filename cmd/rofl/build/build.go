@@ -76,6 +76,9 @@ var (
 			}
 			defer os.RemoveAll(tmpDir)
 
+			// Ensure deterministic umask for builds.
+			setUmask(0o002)
+
 			var buildEnv env.ExecEnv
 			switch {
 			case manifest.Artifacts.Builder == "" || noDocker:

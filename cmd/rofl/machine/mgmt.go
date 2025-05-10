@@ -443,4 +443,5 @@ func init() {
 	topUpCmd.Flags().AddFlagSet(common.SelectorFlags)
 	topUpCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	topUpCmd.Flags().AddFlagSet(deploymentFlags)
+	topUpCmd.Flags().AddFlagSet(topUpFlags)
 }

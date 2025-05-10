@@ -33,7 +33,7 @@ require (
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
 	github.com/tyler-smith/go-bip39 v1.1.0
-	github.com/wI2L/jsondiff v0.6.1
+	github.com/wI2L/jsondiff v0.7.0
 	github.com/zondax/ledger-go v1.0.0
 	golang.org/x/crypto v0.38.0
 	golang.org/x/sys v0.33.0

@@ -17,6 +17,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/roflmarket"
@@ -90,16 +91,20 @@ var (
 
 			switch machine.Provider {
 			case "":
-				// Not yet set, require the provider to be specified.
+				// Not yet set, obtain a new machine from the provider.
 				if deployProvider == "" {
-					cobra.CheckErr(fmt.Sprintf("Provider not configured for deployment '%s' machine '%s'. Please specify --provider.", deploymentName, deployMachine))
+					if npa.ParaTime.ID == config.DefaultNetworks.All["testnet"].ParaTimes.All["sapphire"].ID {
+						deployProvider = provider.DefaultRoflServices[npa.ParaTime.ID].Provider
+					} else {
+						cobra.CheckErr(fmt.Sprintf("Provider not configured for deployment '%s' machine '%s'. Please specify --provider.", deploymentName, deployMachine))
+					}
 				}
 
 				machine.Provider = deployProvider
 			default:
-				// Already set, require the provider to be omitted.
-				if deployProvider != "" {
-					cobra.CheckErr(fmt.Sprintf("Provider already configured for deployment '%s' machine '%s'. Omit --provider.", deploymentName, deployMachine))
+				// Already set, require the provider to be omitted or equal.
+				if deployProvider != "" && deployProvider != machine.Provider {
+					cobra.CheckErr(fmt.Sprintf("Provider '%s' conflicts with existing provider '%s' for deployment '%s' machine '%s'. Omit --provider.", deployProvider, machine.Provider, deploymentName, deployMachine))
 				}
 			}
 
@@ -345,7 +350,7 @@ func showProviderOffer(offer *roflmarket.Offer) {
 func init() {
 	providerFlags := flag.NewFlagSet("", flag.ContinueOnError)
 	// Default to Testnet playground provider.
-	providerFlags.StringVar(&deployProvider, "provider", "oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz", "set the provider address")
+	providerFlags.StringVar(&deployProvider, "provider", "", "set the provider address")
 	providerFlags.StringVar(&deployOffer, "offer", "", "set the provider's offer identifier")
 	providerFlags.StringVar(&deployMachine, "machine", buildRofl.DefaultMachineName, "machine to deploy into")
 	providerFlags.StringVar(&deployTerm, "term", "", "term to pay for in advance")

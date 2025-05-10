@@ -36,8 +36,8 @@ var (
 			}
 
 			var schedulerApp rofl.AppID
-			rawSchedulerApp, ok := provider.DefaultSchedulerApp[npa.NetworkName][npa.ParaTimeName]
-			if ok {
+			rawSchedulerApp := provider.DefaultRoflServices[npa.ParaTime.ID].Scheduler
+			if rawSchedulerApp != "" {
 				err := schedulerApp.UnmarshalText([]byte(rawSchedulerApp))
 				cobra.CheckErr(err)
 			}

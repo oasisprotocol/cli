@@ -13,7 +13,7 @@ var LatestContainerArtifacts = ArtifactsConfig{
 	Kernel:   "https://github.com/oasisprotocol/oasis-boot/releases/download/v0.4.2/stage1.bin#02903bd0ddfe1e3552e95767f1be17e801690d73d90bb1e800aa4879ba46c4d7",
 	Stage2:   "https://github.com/oasisprotocol/oasis-boot/releases/download/v0.4.2/stage2-podman.tar.bz2#6f2487aa064460384309a58c858ffea9316e739331b5c36789bb2f61117869d6",
 	Container: ContainerArtifactsConfig{
-		Runtime: "https://github.com/oasisprotocol/oasis-sdk/releases/download/rofl-containers%2Fv0.5.0/rofl-containers#800be74e543f1d10d12ef6fadce89dd0a0ce7bc798dbab4f8d7aa012d82fbff1",
+		Runtime: "https://github.com/oasisprotocol/oasis-sdk/releases/download/rofl-containers%2Fv0.5.1/rofl-containers#9afa712b939528d758294bf49181466fc2066bbe507f92777ddc3bce8af6ee37",
 		Compose: "compose.yaml",
 	},
 }

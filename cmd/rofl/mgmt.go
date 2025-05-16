@@ -449,13 +449,8 @@ var (
 		Short: "Upgrade all artifacts to their latest default versions",
 		Args:  cobra.NoArgs,
 		Run: func(_ *cobra.Command, _ []string) {
-			cfg := cliConfig.Global()
-			npa := common.GetNPASelection(cfg)
-
-			manifest, _ := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
-				NeedAppID: false,
-				NeedAdmin: false,
-			})
+			manifest, err := buildRofl.LoadManifest()
+			cobra.CheckErr(err)
 
 			switch manifest.TEE {
 			case buildRofl.TEETypeTDX:

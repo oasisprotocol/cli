@@ -326,11 +326,15 @@ var (
 			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
 
-			var rawAppID string
+			var (
+				rawAppID   string
+				manifest   *buildRofl.Manifest
+				deployment *buildRofl.Deployment
+			)
 			if len(args) > 0 {
 				rawAppID = args[0]
 			} else {
-				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+				manifest, deployment = roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
 					NeedAppID: true,
 					NeedAdmin: true,
 				})
@@ -353,6 +357,12 @@ var (
 				cobra.CheckErr(err)
 			}
 
+			fmt.Printf("WARNING: Removing this ROFL app will DEREGISTER it, ERASE any on-chain secrets and local configuration!\n")
+			fmt.Printf("WARNING: THIS ACTION IS IRREVERSIBLE!\n")
+			if !common.GetAnswerYes() {
+				common.Confirm(fmt.Sprintf("Remove ROFL app '%s' deployed on network '%s'", appID, npa.NetworkName), "not removing")
+			}
+
 			// Prepare transaction.
 			tx := rofl.NewRemoveTx(nil, &rofl.Remove{
 				ID: appID,
@@ -363,6 +373,14 @@ var (
 			cobra.CheckErr(err)
 
 			common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil)
+
+			// Update manifest to clear the corresponding deployment section.
+			if manifest != nil {
+				delete(manifest.Deployments, deploymentName)
+				if err = manifest.Save(); err != nil {
+					cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
+				}
+			}
 		},
 	}
 

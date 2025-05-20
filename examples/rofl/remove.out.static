@@ -1,3 +1,8 @@
+WARNING: Removing this ROFL app will DEREGISTER it, ERASE any on-chain secrets and local configuration!
+WARNING: THIS ACTION IS IRREVERSIBLE!
+? Remove ROFL app 'rofl1qzd82n99vtwesvcqjfyur4tcm45varz2due7s635' deployed on network 'testnet' Yes
+Unlock your account.
+? Passphrase:
 You are about to sign the following transaction:
 Format: plain
 Method: rofl.Remove

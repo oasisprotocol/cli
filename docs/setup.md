@@ -2,8 +2,8 @@
 
 ## Download and Run
 
-Download the latest release [here][cli-releases] and extract it to your
-favorite application folder.
+Download the latest release from our [GitHub repository][cli-releases] and
+extract it to your favorite application folder.
 
 :::info
 

@@ -118,6 +118,13 @@ Run `rofl remove` to deregister your ROFL app:
 The deposit required to register the ROFL app will be returned to the current
 administrator account.
 
+:::danger Secrets will be permanently lost
+
+All secrets stored on-chain will be permanently lost when the ROFL app will be
+deregistered.
+
+:::
+
 ## Show ROFL information {#show}
 
 Run `rofl show` to obtain the information from the network on the ROFL admin

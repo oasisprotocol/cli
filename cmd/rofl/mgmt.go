@@ -1,11 +1,14 @@
 package rofl
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -110,6 +113,40 @@ var (
 			err = manifest.Save()
 			if err != nil {
 				cobra.CheckErr(fmt.Errorf("failed to write manifest: %w", err))
+			}
+
+			// Initialize git repository if not already present.
+			_, err = os.Stat(".git")
+			if err != nil && errors.Is(err, os.ErrNotExist) {
+				// Git directory doesn't exist, try to initialize.
+				gitInitCmd := exec.Command("git", "init")
+				if err = gitInitCmd.Run(); err != nil {
+					fmt.Printf("Git repository not initialized: %s.\n", err)
+				} else {
+					fmt.Printf("Git repository initialized.\n")
+				}
+			}
+
+			// Initialize .gitignore.
+			needToAddOrcIgnore := true
+			gitignore, err := os.Open(".gitignore")
+			if err == nil {
+				s := bufio.NewScanner(gitignore)
+				for s.Scan() {
+					line := s.Text()
+					if line == "*.orc" {
+						needToAddOrcIgnore = false
+						break
+					}
+				}
+				_ = gitignore.Close()
+			}
+			if needToAddOrcIgnore {
+				gitignore, err := os.OpenFile(".gitignore", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+				if err == nil {
+					_, _ = gitignore.Write([]byte("*.orc\n"))
+					_ = gitignore.Close()
+				}
 			}
 
 			fmt.Printf("Created manifest in '%s'.\n", manifest.SourceFileName())

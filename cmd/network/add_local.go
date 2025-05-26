@@ -3,7 +3,6 @@ package network
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -60,23 +59,11 @@ func AddLocalNetwork(name string, rpc string) {
 	}
 
 	// Extract absolute path for given local endpoint.
-	parsedRPC, err := url.Parse(net.RPC)
+	var err error
+	net.RPC, err = extractAbsPath(net.RPC)
 	if err != nil {
-		cobra.CheckErr(fmt.Errorf("malformed RPC endpoint: %w", err))
+		cobra.CheckErr(err)
 	}
-	if strings.HasPrefix(parsedRPC.Opaque, "~/") {
-		// Expand to user's home directory.
-		home, grr := os.UserHomeDir()
-		if grr != nil {
-			cobra.CheckErr(fmt.Errorf("unable to get user's home directory: %w", grr))
-		}
-		parsedRPC.Opaque = filepath.Join(home, parsedRPC.Opaque[2:])
-	}
-	parsedRPC.Opaque, err = filepath.Abs(parsedRPC.Opaque)
-	if err != nil {
-		cobra.CheckErr(fmt.Errorf("malformed path in RPC endpoint: %w", err))
-	}
-	net.RPC = parsedRPC.String()
 
 	// Connect to the network and query the chain context.
 	ctx := context.Background()
@@ -128,6 +115,36 @@ func AddLocalNetwork(name string, rpc string) {
 
 	err = cfg.Save()
 	cobra.CheckErr(err)
+}
+
+// Extract absolute path for given local RPC endpoint.
+func extractAbsPath(rpc string) (string, error) {
+	// First split the input local RPC enpoint into scheme and path.
+	extracted := strings.Split(rpc, ":")
+	if len(extracted) != 2 {
+		return "", fmt.Errorf("malformed local RPC endpoint")
+	}
+	scheme := extracted[0]
+	path := extracted[1]
+
+	// Expand home directory shorthand if applicable.
+	if strings.HasPrefix(path, "~/") {
+		// Expand to user's home directory.
+		home, grr := os.UserHomeDir()
+		if grr != nil {
+			return "", fmt.Errorf("unable to get user's home directory: %w", grr)
+		}
+		path = filepath.Join(home, path[2:])
+	}
+
+	// Get absolute path.
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return "", fmt.Errorf("malformed path in RPC endpoint: %w", err)
+	}
+
+	// Assemble path back into valid local RPC enpoint.
+	return strings.Join([]string{scheme, absPath}, ":"), nil
 }
 
 func init() {

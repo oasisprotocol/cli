@@ -14,7 +14,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/adrg/xdg v0.5.3
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4
-	github.com/compose-spec/compose-go/v2 v2.6.3
+	github.com/compose-spec/compose-go/v2 v2.6.4
 	github.com/ethereum/go-ethereum v1.15.11
 	github.com/foxboron/go-uefi v0.0.0-20241017190036-fab4fdf2f2f3
 	github.com/github/go-spdx/v2 v2.3.3

@@ -168,15 +168,14 @@ func SignConsensusTransaction(
 
 	// Query nonce if not specified.
 	if !txOffline && tx.Nonce == invalidNonce {
-		var nonce uint64
-		nonce, err = conn.Consensus().GetSignerNonce(ctx, &consensus.GetSignerNonceRequest{
-			AccountAddress: account.Address().ConsensusAddress(),
-			Height:         consensus.HeightLatest,
+		account, err := conn.Consensus().Staking().Account(ctx, &staking.OwnerQuery{
+			Height: consensus.HeightLatest,
+			Owner:  account.Address().ConsensusAddress(),
 		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to query nonce: %w", err)
+			return nil, fmt.Errorf("failed to query account: %w", err)
 		}
-		tx.Nonce = nonce
+		tx.Nonce = account.General.Nonce
 	}
 
 	// If we are using offline mode and either nonce or gas limit is not specified, abort.

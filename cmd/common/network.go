@@ -10,7 +10,7 @@ import (
 )
 
 type NodeLookup struct {
-	consensus consensus.ClientBackend
+	consensus consensus.Backend
 	registry  registry.Backend
 	nodeMap   map[signature.PublicKey]*node.Node
 
@@ -80,7 +80,7 @@ func (nl *NodeLookup) ByID(
 
 func NewNodeLookup(
 	ctx context.Context,
-	consensus consensus.ClientBackend,
+	consensus consensus.Backend,
 	registry registry.Backend,
 	height int64,
 ) (*NodeLookup, error) {

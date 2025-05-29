@@ -64,12 +64,12 @@ var (
 			conn, err := connection.Connect(ctx, npa.Network)
 			cobra.CheckErr(err)
 
-			consensusConn := conn.Consensus()
-			governanceConn := consensusConn.Governance()
-			beaconConn := consensusConn.Beacon()
-			schedulerConn := consensusConn.Scheduler()
-			registryConn := consensusConn.Registry()
-			stakingConn := consensusConn.Staking()
+			consensusConn := conn.Consensus().Core()
+			governanceConn := conn.Consensus().Governance()
+			beaconConn := conn.Consensus().Beacon()
+			schedulerConn := conn.Consensus().Scheduler()
+			registryConn := conn.Consensus().Registry()
+			stakingConn := conn.Consensus().Staking()
 
 			// Figure out the height to use if "latest".
 			height, err := common.GetActualHeight(

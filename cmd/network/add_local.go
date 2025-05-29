@@ -70,7 +70,7 @@ func AddLocalNetwork(name string, rpc string) {
 	conn, err := connection.ConnectNoVerify(ctx, &net)
 	cobra.CheckErr(err)
 
-	chainContext, err := conn.Consensus().GetChainContext(ctx)
+	chainContext, err := conn.Consensus().Core().GetChainContext(ctx)
 	cobra.CheckErr(err)
 	net.ChainContext = chainContext
 	cobra.CheckErr(net.Validate())

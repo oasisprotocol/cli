@@ -29,11 +29,11 @@ var trustRootCmd = &cobra.Command{
 		// Fetch latest consensus block.
 		height, err := common.GetActualHeight(
 			ctx,
-			conn.Consensus(),
+			conn.Consensus().Core(),
 		)
 		cobra.CheckErr(err)
 
-		blk, err := conn.Consensus().GetBlock(ctx, height)
+		blk, err := conn.Consensus().Core().GetBlock(ctx, height)
 		cobra.CheckErr(err)
 
 		// TODO: Support different output formats.

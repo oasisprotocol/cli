@@ -199,11 +199,11 @@ var (
 
 				// Determine latest height for the trust root.
 				var height int64
-				height, err = common.GetActualHeight(ctx, conn.Consensus())
+				height, err = common.GetActualHeight(ctx, conn.Consensus().Core())
 				cobra.CheckErr(err)
 
 				var blk *consensus.Block
-				blk, err = conn.Consensus().GetBlock(ctx, height)
+				blk, err = conn.Consensus().Core().GetBlock(ctx, height)
 				cobra.CheckErr(err)
 
 				// Determine debug mode.

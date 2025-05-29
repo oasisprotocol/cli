@@ -467,7 +467,7 @@ func BroadcastTransaction(
 	case *consensusTx.SignedTransaction:
 		// Consensus transaction.
 		fmt.Printf("Broadcasting transaction...\n")
-		err := conn.Consensus().SubmitTx(ctx, sigTx)
+		err := conn.Consensus().Core().SubmitTx(ctx, sigTx)
 		cobra.CheckErr(err)
 
 		fmt.Printf("Transaction executed successfully.\n")

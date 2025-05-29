@@ -88,7 +88,7 @@ func OutputFormat() FormatType {
 // specified, or the current latest height.
 func GetActualHeight(
 	ctx context.Context,
-	consensusConn consensus.ClientBackend,
+	consensusConn consensus.Backend,
 ) (int64, error) {
 	height := GetHeight()
 	if height != consensus.HeightLatest {

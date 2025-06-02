@@ -3,6 +3,9 @@ package build
 import (
 	"context"
 	"fmt"
+	"strings"
+
+	"golang.org/x/net/idna"
 
 	"github.com/compose-spec/compose-go/v2/cli"
 
@@ -33,10 +36,35 @@ func tdxBuildContainer(
 	if err != nil {
 		return fmt.Errorf("failed to set up compose options: %w", err)
 	}
-	_, err = options.LoadProject(context.Background())
+	proj, err := options.LoadProject(context.Background())
 	if err != nil {
 		fmt.Println(err)
-		return fmt.Errorf("pre-build compose validation failed")
+		return fmt.Errorf("compose file validation failed")
+	}
+
+	// Make sure that the image fields for all services contain a FQDN or it will cause
+	// Podman errors when trying to run it.
+	for serviceName, service := range proj.Services {
+		image := service.Image
+		validationFailedErr := fmt.Errorf("compose file validation failed: image '%s' of service '%s' is not a fully-qualified domain name", image, serviceName)
+
+		if !strings.Contains(image, "/") {
+			return validationFailedErr
+		}
+		s := strings.Split(image, "/")
+		if len(s[0]) == 0 || len(s[1]) == 0 {
+			return validationFailedErr
+		}
+
+		domain := s[0]
+		if !strings.Contains(domain, ".") {
+			return validationFailedErr
+		}
+
+		_, err := idna.Lookup.ToASCII(domain)
+		if err != nil {
+			return validationFailedErr
+		}
 	}
 
 	// Use the pre-built container runtime.

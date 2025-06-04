@@ -492,6 +492,12 @@ var (
 					fmt.Printf("- RAK:        %s\n", ai.RAK)
 					fmt.Printf("  Node ID:    %s\n", ai.NodeID)
 					fmt.Printf("  Expiration: %d\n", ai.Expiration)
+					if len(ai.Metadata) > 0 {
+						fmt.Printf("  Metadata:\n")
+						for key, value := range ai.Metadata {
+							fmt.Printf("    %s: %s\n", key, value)
+						}
+					}
 				}
 			} else {
 				fmt.Println("No registered replicas.")

@@ -53,7 +53,7 @@ var addCmd = &cobra.Command{
 			ctx := context.Background()
 			conn, err := connection.ConnectNoVerify(ctx, &network)
 			cobra.CheckErr(err)
-			chainCtx, err := conn.Consensus().GetChainContext(ctx)
+			chainCtx, err := conn.Consensus().Core().GetChainContext(ctx)
 			cobra.CheckErr(err)
 			net.ChainContext = chainCtx
 			cobra.CheckErr(net.Validate())

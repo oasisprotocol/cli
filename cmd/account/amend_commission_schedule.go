@@ -51,7 +51,7 @@ var (
 				var height int64
 				height, err = common.GetActualHeight(
 					ctx,
-					conn.Consensus(),
+					conn.Consensus().Core(),
 				)
 				cobra.CheckErr(err)
 

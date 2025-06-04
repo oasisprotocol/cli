@@ -58,9 +58,11 @@ var showCmd = &cobra.Command{
 		conn, err := connection.Connect(ctx, npa.Network)
 		cobra.CheckErr(err)
 
-		consensusConn := conn.Consensus()
-		registryConn := consensusConn.Registry()
-		roothashConn := consensusConn.RootHash()
+		consensusConn := conn.Consensus().Core()
+		registryConn := conn.Consensus().Registry()
+		roothashConn := conn.Consensus().RootHash()
+		schedulerConn := conn.Consensus().Scheduler()
+		stakingConn := conn.Consensus().Staking()
 
 		// Figure out the height to use if "latest".
 		height, err := common.GetActualHeight(
@@ -170,7 +172,6 @@ var showCmd = &cobra.Command{
 				}
 				return
 			case selValidators:
-				schedulerConn := consensusConn.Scheduler()
 				validators, err := schedulerConn.GetValidators(ctx, height)
 				cobra.CheckErr(err)
 				for _, validator := range validators {
@@ -179,11 +180,9 @@ var showCmd = &cobra.Command{
 				}
 				return
 			case selNativeToken:
-				stakingConn := consensusConn.Staking()
 				showNativeToken(ctx, height, npa, stakingConn)
 				return
 			case selGasCosts:
-				stakingConn := consensusConn.Staking()
 				consensusParams, err := stakingConn.ConsensusParameters(ctx, height)
 				cobra.CheckErr(err)
 
@@ -236,7 +235,7 @@ var showCmd = &cobra.Command{
 							ID:     member.PublicKey,
 						}
 
-						node, err := consensusConn.Registry().GetNode(ctx, nodeQuery)
+						node, err := registryConn.GetNode(ctx, nodeQuery)
 						cobra.CheckErr(err)
 
 						output = append(output, []string{
@@ -252,7 +251,7 @@ var showCmd = &cobra.Command{
 				}
 				return
 			case selParameters:
-				showParameters(ctx, npa, height, consensusConn)
+				showParameters(ctx, npa, height, conn.Consensus())
 				return
 
 			default:
@@ -389,7 +388,7 @@ func showNativeToken(ctx context.Context, height int64, npa *common.NPASelection
 	}
 }
 
-func showParameters(ctx context.Context, npa *common.NPASelection, height int64, cons consensus.ClientBackend) {
+func showParameters(ctx context.Context, npa *common.NPASelection, height int64, cons consensus.Services) {
 	checkErr := func(what string, err error) {
 		if err != nil {
 			cobra.CheckErr(fmt.Errorf("%s: %w", what, err))
@@ -400,7 +399,7 @@ func showParameters(ctx context.Context, npa *common.NPASelection, height int64,
 	// not allowed on the public grpc node and the keymanager would require a
 	// ServicesBackend instead of the ClientBackend that the Oasis Client SDK
 	// provides.
-	genesisDoc, err := cons.GetGenesisDocument(ctx)
+	genesisDoc, err := cons.Core().GetGenesisDocument(ctx)
 	checkErr("GetGenesisDocument", err)
 	consensusParams := genesisDoc.Consensus
 	keymanagerParams := genesisDoc.KeyManager

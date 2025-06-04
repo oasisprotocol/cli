@@ -123,7 +123,9 @@ var statsCmd = &cobra.Command{
 		conn, err := connection.Connect(ctx, npa.Network)
 		cobra.CheckErr(err)
 
-		consensusConn := conn.Consensus()
+		consensusConn := conn.Consensus().Core()
+		registryConn := conn.Consensus().Registry()
+		roothashConn := conn.Consensus().RootHash()
 
 		// Fixup the start/end heights if they were not specified (or are 0)
 		if endHeight == 0 {
@@ -166,9 +168,6 @@ var statsCmd = &cobra.Command{
 		stats := &runtimeStats{
 			entities: make(map[signature.PublicKey]*entityStats),
 		}
-
-		roothashConn := consensusConn.RootHash()
-		registryConn := consensusConn.Registry()
 
 		nl, err := common.NewNodeLookup(ctx, consensusConn, registryConn, startHeight)
 		cobra.CheckErr(err)

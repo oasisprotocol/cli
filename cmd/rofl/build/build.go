@@ -312,7 +312,7 @@ func fetchTrustRoot(npa *common.NPASelection, cfg *buildRofl.TrustRootConfig) (s
 		switch cfg {
 		case nil:
 			// Use latest height.
-			height, err = common.GetActualHeight(ctx, conn.Consensus())
+			height, err = common.GetActualHeight(ctx, conn.Consensus().Core())
 			if err != nil {
 				return "", err
 			}
@@ -321,7 +321,7 @@ func fetchTrustRoot(npa *common.NPASelection, cfg *buildRofl.TrustRootConfig) (s
 			height = int64(cfg.Height) //nolint: gosec
 		}
 
-		blk, err := conn.Consensus().GetBlock(ctx, height)
+		blk, err := conn.Consensus().Core().GetBlock(ctx, height)
 		if err != nil {
 			return "", err
 		}

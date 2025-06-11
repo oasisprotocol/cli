@@ -27,6 +27,8 @@ var (
 	topUpTerm      string
 	topUpTermCount uint64
 
+	deploymentFlags *flag.FlagSet
+
 	showCmd = &cobra.Command{
 		Use:   "show [<machine-name>]",
 		Short: "Show information about a machine",

@@ -21,7 +21,7 @@ import (
 )
 
 // tdxBuildContainer builds a TDX-based container ROFL app.
-func tdxBuildContainer(
+func tdxBuildContainer( //nolint:gocyclo
 	buildEnv env.ExecEnv,
 	tmpDir string,
 	npa *common.NPASelection,
@@ -49,12 +49,12 @@ func tdxBuildContainer(
 	// Keep track of all images encountered, as we will need them in later steps.
 	images := []string{}
 
-	// Make sure that the image fields for all services contain a FQDN or it will cause
-	// Podman errors when trying to run it.
 	for serviceName, service := range proj.Services {
 		image := service.Image
 		images = append(images, image)
 
+		// Make sure that the image fields for all services contain a FQDN
+		// or it will cause Podman errors when trying to run it.
 		validationFailedErr := fmt.Errorf("compose file validation failed: image '%s' of service '%s' is not a fully-qualified domain name", image, serviceName)
 
 		if !strings.Contains(image, "/") {
@@ -73,6 +73,32 @@ func tdxBuildContainer(
 		_, err := idna.Lookup.ToASCII(domain)
 		if err != nil {
 			return validationFailedErr
+		}
+
+		// Also, if any volumes are set, make sure that the source of each volume
+		// is either /run/rofl-appd.sock or starts with /storage (unless defined in the
+		// top-level volumes config).
+		for _, vol := range service.Volumes {
+			if vol.Source == "/run/rofl-appd.sock" {
+				continue
+			}
+
+			if strings.HasPrefix(vol.Source, "/storage") {
+				continue
+			}
+
+			var ok bool
+			for _, v := range proj.Volumes {
+				if vol.Source == v.Name {
+					ok = true
+					break
+				}
+			}
+			if ok {
+				continue
+			}
+
+			return fmt.Errorf("compose file validation failed: volume '%s:%s' of service '%s' has an invalid source (should start with '/storage' or be equal to '/run/rofl-appd.sock')", vol.Source, vol.Target, serviceName)
 		}
 	}
 

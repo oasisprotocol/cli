@@ -2,6 +2,7 @@ package rofl
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -513,15 +514,18 @@ var (
 			manifest, err := buildRofl.LoadManifest()
 			cobra.CheckErr(err)
 
+			var changes bool
 			switch manifest.TEE {
 			case buildRofl.TEETypeTDX:
 				switch manifest.Kind {
 				case buildRofl.AppKindRaw:
 					artifacts := buildRofl.LatestBasicArtifacts // Copy.
-					manifest.Artifacts = &artifacts
+					changes, err = replaceArtifacts(manifest, &artifacts)
+					cobra.CheckErr(err)
 				case buildRofl.AppKindContainer:
 					artifacts := buildRofl.LatestContainerArtifacts // Copy.
-					manifest.Artifacts = &artifacts
+					changes, err = replaceArtifacts(manifest, &artifacts)
+					cobra.CheckErr(err)
 				default:
 				}
 			default:
@@ -530,6 +534,12 @@ var (
 			// Update manifest.
 			if err := manifest.Save(); err != nil {
 				cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
+			}
+
+			if changes {
+				fmt.Printf("Run `oasis rofl update` to update your ROFL app's on-chain configuration.\n")
+			} else {
+				fmt.Printf("Artifacts already up-to-date.\n")
 			}
 		},
 	}
@@ -682,6 +692,24 @@ var (
 		},
 	}
 )
+
+// replaceArtifacts replaces existing manifest artifacts with new ones and returns true, if there were changes.
+func replaceArtifacts(manifest *buildRofl.Manifest, newArtifacts *buildRofl.ArtifactsConfig) (bool, error) {
+	oldRaw, err := json.Marshal(manifest.Artifacts)
+	if err != nil {
+		return false, err
+	}
+
+	newRaw, err := json.Marshal(newArtifacts)
+	if err != nil {
+		return false, err
+	}
+
+	changes := !bytes.Equal(oldRaw, newRaw)
+	manifest.Artifacts = newArtifacts
+
+	return changes, nil
+}
 
 // detectAndCreateComposeFile detects the existing compose.yaml-like file and returns its filename. Otherwise, creates an empty default compose.yaml.
 func detectOrCreateComposeFile() string {

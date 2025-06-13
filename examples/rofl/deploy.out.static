@@ -1,0 +1,44 @@
+Using provider: oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz (oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz)
+Pushing ROFL app to OCI repository 'rofl.sh/2db0216a-17eb-46a4-8dcc-3115564ced5c:1748005573'...
+No pre-existing machine configured, creating a new one...
+Taking offer: playground_short [0000000000000001]
+Unlock your account.
+? Passphrase:
+You are about to sign the following transaction:
+Format: plain
+Method: roflmarket.InstanceCreate
+Body:
+  {
+    "provider": "oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz",
+    "offer": "0000000000000001",
+    "deployment": {
+      "app_id": "rofl1qrjtky678pd3uchsdlhqtjugnsvtck3wyg7w5324",
+      "manifest_hash": "5de346e10f8306ffcdbbe02a87c850b39727dd175b786f2d2daad03ba9a34013",
+      "metadata": {
+        "net.oasis.deployment.orc.ref": "rofl.sh/2db0216a-17eb-46a4-8dcc-3115564ced5c:1748005573@sha256:0c09081e9802de746e5a862b6ee77c8b6cd915928558cd0770a5f35957dd535d"
+      }
+    },
+    "term": 1,
+    "term_count": 1
+  }
+Authorized signer(s):
+  1. +xJDGEpqAtJIJP8suwwDtWKgqxAeWNAGY7tzocCpACM= (ed25519)
+     Nonce: 7
+Fee:
+  Amount: 0.0121918 TEST
+  Gas limit: 121918
+  (gas price: 0.0000001 TEST per gas unit)
+
+Network:  testnet
+ParaTime: sapphire
+Account:  ph_test
+? Sign this transaction? Yes
+(In case you are using a hardware-based signer you may need to confirm on device.)
+Broadcasting transaction...
+Transaction included in block successfully.
+Round:            12116208
+Transaction hash: cf0e4372ab407fa318bfe1b3db486a75883ff960e297ee36b33003b652e0460c
+Execution successful.
+Created machine: 00000000000000c2
+Deployment into machine scheduled.
+Use `oasis rofl machine show` to see status.

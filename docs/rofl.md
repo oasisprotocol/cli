@@ -83,7 +83,8 @@ Additionally, the following flags are available:
 
 - `--verify` also verifies the locally built enclave identity against the
   identity that is currently defined in the manifest and also against the
-  identity that is currently set in the on-chain policy.
+  identity that is currently set in the on-chain policy. It does not update the
+  manifest file with new entity id(s).
 
 - `--no-update-manifest` do not update the enclave identity stored in the app
   manifest.
@@ -99,31 +100,60 @@ chapter for details.
 [ROFL Prerequisites]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/prerequisites.md
 [npa]: ./account.md#npa
 
-## Update ROFL app config {#update}
+## Secrets management {#secret}
 
-Use `rofl update` command to update the ROFL app's configuration on chain:
+### Set secret {#secret-set}
+
+Run `rofl secret set <secret_name> <filename>|-` command to end-to-end encrypt a
+secret with a key derived from the selected deployment network and store it to
+the manifest file.
+
+If you have your secret in a file, run:
+
+![code shell](../examples/rofl/secret-set-file.in.static)
+
+You can also feed the secret from a standard input like this:
+
+![code shell](../examples/rofl/secret-set-stdin.in.static)
+
+Once the secret is encrypted and stored, **there is no way of obtaining the
+unencrypted value back again apart from within the TEE on the designated ROFL
+deployment**.
+
+:::danger Shells store history
+
+Passing secrets as a command line argument will store them in your shell history
+file as well! Use this approach only for testing. In production, always use
+file-based secrets.
+
+:::
+
+### Get secret info {#secret-get}
+
+Run `rofl secret get <secret-name>` to check whether the secret exists in your
+manifest file.
+
+![code shell](../examples/rofl/secret-get.in.static)
+
+![code](../examples/rofl/secret-get.out.static)
+
+### Remove secret {#secret-rm}
+
+Run `rofl secret rm <secret-name>` to remove the secret from your manifest file.
+
+![code shell](../examples/rofl/secret-rm.in.static)
+
+## Update ROFL app config on-chain {#update}
+
+Use `rofl update` command to push the ROFL app's configuration to the chain:
 
 ![code shell](../examples/rofl/update.in.static)
 
 ![code shell](../examples/rofl/update.out.static)
 
-## Remove ROFL app from the network {#remove}
-
-Run `rofl remove` to deregister your ROFL app:
-
-![code shell](../examples/rofl/remove.in.static)
-
-![code](../examples/rofl/remove.out.static)
-
-The deposit required to register the ROFL app will be returned to the current
-administrator account.
-
-:::danger Secrets will be permanently lost
-
-All secrets stored on-chain will be permanently lost when the ROFL app will be
-deregistered.
-
-:::
+The current on-chain policy, metadata and secrets will be replaced with the ones
+in the manifest file. Keep in mind that ROFL replicas need to be restarted in
+order for changes to take effect.
 
 ## Show ROFL information {#show}
 
@@ -136,9 +166,55 @@ account, staked amount, current ROFL policy and running instances:
 
 ## Deploy ROFL app {#deploy}
 
-Run `rofl deploy` to automatically deploy your app to the provider on-chain.
+Run `rofl deploy` to automatically deploy your app to a machine obtained from
+the [ROFL marketplace]. If a machine is already configured in your manifest file
+a new version of your ROFL app will be deployed there. If no machines are rented
+yet, you can use the following arguments to select a specific provider and
+offer:
+
+- `--provider <address>` specifies the provider to rent the machine from. On
+  Sapphire Testnet, the Oasis-managed provider will be selected by default.
+- `--offer <offer_name>` specifies the offer of the machine to rent. Run
+  `--show-offers` to list offers and specifications.
+
+![code shell](../examples/rofl/deploy.in.static)
+
+![code](../examples/rofl/deploy.out.static)
+
+[ROFL marketplace]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/features/marketplace.mdx
 
 ## Advanced
+
+### Upgrade ROFL app dependencies {#upgrade}
+
+Run `rofl upgrade` to bump ROFL bundle TDX artifacts in your manifest file to
+their latest versions. This includes:
+
+- the firmware
+- the kernel
+- stage two boot
+- ROFL containers middleware (for TDX containers kind only)
+
+![code shell](../examples/rofl/upgrade.in.static)
+
+### Remove ROFL app from the network {#remove}
+
+Run `rofl remove` to deregister your ROFL app:
+
+![code shell](../examples/rofl/remove.in.static)
+
+![code](../examples/rofl/remove.out.static)
+
+The deposit required to register the ROFL app will be returned to the current
+administrator account.
+
+:::danger Secrets will be permanently lost
+
+All secrets stored on-chain will be permanently lost when the ROFL app is
+deregistered! If you backed up your manifest file, those secrets will also be
+unretrievable since they were encrypted with a ROFL deployment-specific keypair.
+
+:::
 
 ### Show ROFL identity {#identity}
 

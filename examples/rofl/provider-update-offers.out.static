@@ -1,0 +1,51 @@
+$ oasis rofl provider update-offers 
+Unlock your account.
+? Passphrase: 
+Going to perform the following updates:
+Add offers:
+  - small
+Update offers:
+  <none>
+Remove offers:
+  <none>
+You are about to sign the following transaction:
+Format: plain
+Method: roflmarket.ProviderUpdateOffers
+Body:
+  {
+    "provider": "oasis1qrk58a6j2qn065m6p06jgjyt032f7qucy5wqeqpt",
+    "add": [
+      {
+        "id": "0000000000000000",
+        "resources": {
+          "tee": 2,
+          "memory": 4096,
+          "cpus": 2,
+          "storage": 20000
+        },
+        "payment": {
+          "native": {
+            "denomination": "",
+            "terms": {
+              "1": "10000000000000000000"
+            }
+          }
+        },
+        "capacity": 50,
+        "metadata": {
+          "net.oasis.scheduler.offer": "small"
+        }
+      }
+    ]
+  }
+Authorized signer(s):
+  1. AyZKkxNFeyqLI5HGTYqEmCcYxKGo/kueOzSHzdnrSePO (secp256k1eth)
+     Nonce: 860
+Fee:
+  Amount: 0.0133782 TEST
+  Gas limit: 133782
+  (gas price: 0.0000001 TEST per gas unit)
+
+Network:  testnet
+ParaTime: sapphire
+Account:  test:dave

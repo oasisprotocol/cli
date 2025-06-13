@@ -52,7 +52,7 @@ automatically updated with the newly assigned app identifier.
 In order to prevent spam attacks registering a ROFL app requires a
 certain amount to be deposited from your account until you decide to
 [remove it](#remove). The deposit remains locked for the lifetime of the app.
-Check out the [ROFL chapter][app] to view the current staking requirements.
+Check out the [Stake Requirements] chapter for more information.
 
 :::
 
@@ -66,7 +66,7 @@ derivation schemes:
 - `cri` uses the ROFL app creator address combined with the block round the
   transaction will be validated in and its position inside that block.
 
-[app]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/app.mdx
+[Stake Requirements]: https://github.com/oasisprotocol/docs/blob/main/docs/node/run-your-node/prerequisites/stake-requirements.md
 [smart contract address derivation]: https://ethereum.org/en/developers/docs/accounts/#contract-accounts
 
 ## Build ROFL {#build}
@@ -215,6 +215,106 @@ deregistered! If you backed up your manifest file, those secrets will also be
 unretrievable since they were encrypted with a ROFL deployment-specific keypair.
 
 :::
+
+### ROFL provider tooling {#provider}
+
+The `rofl provider` commands offers tools for managing your on-chain provider
+information and your offers.
+
+An example provider configuration file looks like this:
+
+```yaml title="rofl-provider.yaml"
+# Network name in your Oasis CLI
+network: testnet
+# ParaTime name in your Oasis CLI
+paratime: sapphire
+# Account name in your Oasis CLI
+provider: rofl_provider
+# List of Base64-encoded node IDs allowed to execute ROFL apps
+nodes:
+  -
+# Address of the scheduler app
+scheduler_app: rofl1qrqw99h0f7az3hwt2cl7yeew3wtz0fxunu7luyfg 
+# Account name or address of who receives ROFL machine rental payments
+payment_address: rofl_provider
+offers:
+  - id: small # Short human-readable name
+    resources:
+      tee: tdx # Possible values: sgx, tdx
+      memory: 4096 # In MiB
+      cpus: 2
+      storage: 20000 # In MiB
+    payment:
+      native: # Possible keys: native, evm
+        terms:
+          hourly: 10 # Possible keys: hourly, monthly, yearly
+    capacity: 50 # Max number of actively rented machines
+```
+
+#### Initialize a ROFL provider {#provider-init}
+
+The `rofl provider init` initializes a new provider configuration file.
+
+:::info
+
+[Network and ParaTime](./account.md#npa) selectors are available for the
+`rofl provider init` command.
+
+:::
+
+#### Create a ROFL provider on-chain {#provider-create}
+
+Run `rofl provider create` to register your account as a provider on the
+configured network and ParaTime.
+
+![code shell](../examples/rofl/provider-create.in.static)
+
+![code](../examples/rofl/provider-create.out.static)
+
+:::info
+
+In order to prevent spam attacks registering a ROFL provider requires a
+certain amount to be deposited from your account until you decide to
+[remove it](#provider-remove). The deposit remains locked for the lifetime of
+the provider entity. Check out the [Stake Requirements] chapter for more
+information.
+
+:::
+
+#### Update ROFL provider policies {#provider-update}
+
+Use `rofl provider update` to update the list of endorsed nodes, the scheduler
+app address, the payment recipient address and other provider settings.
+
+![code shell](../examples/rofl/provider-update.in.static)
+
+![code](../examples/rofl/provider-update.out.static)
+
+To update your offers, run
+[`rofl provider update-offers`](#provider-update-offers) instead.
+
+#### Update ROFL provider offers {#provider-update-offers}
+
+Use `rofl provider update-offers` to replace the on-chain offers with the ones
+in your provider manifest file.
+
+![code shell](../examples/rofl/provider-update-offers.in.static)
+
+![code](../examples/rofl/provider-update-offers.out.static)
+
+To update your provider policies, run [`rofl provider update`](#provider-update)
+instead.
+
+#### Remove ROFL provider from the network {#provider-remove}
+
+Run `rofl provider remove` to deregister your ROFL provider account:
+
+![code shell](../examples/rofl/provider-remove.in.static)
+
+![code](../examples/rofl/provider-remove.out.static)
+
+The deposit required to register the ROFL provider will be returned to its
+address.
 
 ### Show ROFL identity {#identity}
 

@@ -31,14 +31,4 @@ Fee:
 
 Network:  testnet
 ParaTime: sapphire
-Account:  ph_test
-? Sign this transaction? Yes
-(In case you are using a hardware-based signer you may need to confirm on device.)
-Broadcasting transaction...
-Transaction included in block successfully.
-Round:            12116208
-Transaction hash: cf0e4372ab407fa318bfe1b3db486a75883ff960e297ee36b33003b652e0460c
-Execution successful.
-Created machine: 00000000000000c2
-Deployment into machine scheduled.
-Use `oasis rofl machine show` to see status.
+Account:  test:dave

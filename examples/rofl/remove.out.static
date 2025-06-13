@@ -20,11 +20,4 @@ Fee:
 
 Network:  testnet
 ParaTime: sapphire (Sapphire Testnet)
-Account:  test:alice
-? Sign this transaction? Yes
-(In case you are using a hardware-based signer you may need to confirm on device.)
-Broadcasting transaction...
-Transaction included in block successfully.
-Round:            510
-Transaction hash: b3a6f36c7a846dcf3f28c2dd3d2383cc2c3f7c1e05cea4be92fff2338849d825
-Execution successful.
+Account:  test:dave

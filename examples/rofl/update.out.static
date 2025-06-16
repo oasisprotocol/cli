@@ -21,7 +21,7 @@ Body:
       "fees": 2,
       "max_expiration": 3
     },
-    "admin": "oasis1qpwaggvmhwq5uk40clase3knt655nn2tdy39nz2f"
+    "admin": "oasis1qrk58a6j2qn065m6p06jgjyt032f7qucy5wqeqpt"
   }
 Authorized signer(s):
   1. sk5kvBHaZ/si0xXRdjllIOxOgr7o2d1K+ckVaU3ndG4= (ed25519)
@@ -33,11 +33,4 @@ Fee:
 
 Network:  testnet
 ParaTime: sapphire (Sapphire Testnet)
-Account:  test:alice
-? Sign this transaction? Yes
-(In case you are using a hardware-based signer you may need to confirm on device.)
-Broadcasting transaction...
-Transaction included in block successfully.
-Round:            310
-Transaction hash: 2d8ef6e832256986a19d7b92dcf182976205c5247aff71487832877ff4d72edd
-Execution successful.
+Account:  test:dave

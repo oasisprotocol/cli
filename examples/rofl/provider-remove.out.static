@@ -1,0 +1,20 @@
+Unlock your account.
+? Passphrase: 
+You are about to sign the following transaction:
+Format: plain
+Method: roflmarket.ProviderRemove
+Body:
+  {
+    "provider": "oasis1qrk58a6j2qn065m6p06jgjyt032f7qucy5wqeqpt"
+  }
+Authorized signer(s):
+  1. AyZKkxNFeyqLI5HGTYqEmCcYxKGo/kueOzSHzdnrSePO (secp256k1eth)
+     Nonce: 859
+Fee:
+  Amount: 0.0121578 TEST
+  Gas limit: 121578
+  (gas price: 0.0000001 TEST per gas unit)
+
+Network:  testnet
+ParaTime: sapphire
+Account:  test:dave

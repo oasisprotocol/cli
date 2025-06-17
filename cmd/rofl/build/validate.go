@@ -59,14 +59,14 @@ func validateComposeFile(composeFile string, manifest *buildRofl.Manifest) error
 		}
 
 		// Also, if any volumes are set, make sure that the source of each volume
-		// is either /run/rofl-appd.sock or starts with /storage (unless defined in the
+		// is either /run/rofl-appd.sock or starts with /storage/ (unless defined in the
 		// top-level volumes config).
 		volumeSourceIsValid := func(src string) bool {
 			if src == "/run/rofl-appd.sock" {
 				return true
 			}
 
-			if strings.HasPrefix(src, "/storage") {
+			if strings.HasPrefix(src, "/storage/") {
 				return true
 			}
 

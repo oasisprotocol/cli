@@ -364,4 +364,5 @@ func init() {
 	_ = buildFlags.MarkDeprecated("update-manifest", "the app manifest is now updated by default. Pass --no-update-manifest to prevent updating it.")
 
 	Cmd.Flags().AddFlagSet(buildFlags)
+	Cmd.Flags().AddFlagSet(common.ForceFlag)
 }

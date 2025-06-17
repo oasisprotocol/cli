@@ -27,7 +27,7 @@ func tdxBuildContainer(
 	// Validate compose file.
 	fmt.Println("Validating compose file...")
 	if err := validateComposeFile(artifacts[artifactContainerCompose], manifest); err != nil {
-		return fmt.Errorf("compose file validation failed: %w", err)
+		common.CheckForceErr(fmt.Errorf("compose file validation failed: %w", err))
 	}
 
 	// Use the pre-built container runtime.

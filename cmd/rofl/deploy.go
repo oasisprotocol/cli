@@ -15,6 +15,7 @@ import (
 	flag "github.com/spf13/pflag"
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
+	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
@@ -122,27 +123,14 @@ var (
 				return
 			}
 
-			// Push ORC to OCI repository.
-			if deployment.OCIRepository == "" {
-				// Use default OCI repository with random name and timestamp tag.
-				deployment.OCIRepository = fmt.Sprintf(
-					"%s/%s:%d", buildRofl.DefaultOCIRegistry, uuid.New(), time.Now().Unix(),
-				)
-			}
-			fmt.Printf("Pushing ROFL app to OCI repository '%s'...\n", deployment.OCIRepository)
-
+			ociRepository := ociRepository(deployment)
 			orcFilename := roflCommon.GetOrcFilename(manifest, deploymentName)
-			ociDigest, manifestHash, err := buildRofl.PushBundleToOciRepository(orcFilename, deployment.OCIRepository)
-			switch {
-			case err == nil:
-				// Save the OCI repository field to the configuration file so we avoid multiple uploads.
-				if err := manifest.Save(); err != nil {
-					cobra.CheckErr(fmt.Sprintf("Failed to update manifest with OCI repository: %s", err))
-				}
-			case errors.Is(err, os.ErrNotExist):
-				cobra.CheckErr(fmt.Sprintf("ROFL app bundle '%s' not found. Run `oasis rofl build` first.", orcFilename))
-			default:
-				cobra.CheckErr(fmt.Sprintf("Failed to push ROFL app to OCI repository: %s", err))
+			fmt.Printf("Pushing ROFL app to OCI repository '%s'...\n", ociRepository)
+			ociDigest, manifestHash := pushBundleToOciRepository(orcFilename, ociRepository)
+			// Save the OCI repository field to the configuration file so we avoid multiple uploads.
+			deployment.OCIRepository = ociRepository
+			if err := manifest.Save(); err != nil {
+				cobra.CheckErr(fmt.Sprintf("Failed to update manifest with OCI repository: %s", err))
 			}
 
 			// Define the deployment.
@@ -262,6 +250,29 @@ var (
 		},
 	}
 )
+
+// ociRepository returns the OCI repository for the deployment (or a default one if not set).
+func ociRepository(deployment *buildRofl.Deployment) string {
+	if deployment.OCIRepository == "" {
+		return fmt.Sprintf(
+			"%s/%s:%d", buildRofl.DefaultOCIRegistry, uuid.New(), time.Now().Unix(),
+		)
+	}
+	return deployment.OCIRepository
+}
+
+func pushBundleToOciRepository(orcFilename string, ociRepository string) (string, hash.Hash) {
+	ociDigest, manifestHash, err := buildRofl.PushBundleToOciRepository(orcFilename, ociRepository)
+	switch {
+	case err == nil:
+	case errors.Is(err, os.ErrNotExist):
+		cobra.CheckErr(fmt.Sprintf("ROFL app bundle '%s' not found. Run `oasis rofl build` first.", orcFilename))
+	default:
+		cobra.CheckErr(fmt.Sprintf("Failed to push ROFL app to OCI repository: %s", err))
+	}
+
+	return ociDigest, manifestHash
+}
 
 // detectTerm returns the preferred (longest) period of the given offer.
 func detectTerm(offer *roflmarket.Offer) (term roflmarket.Term) {

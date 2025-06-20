@@ -1,34 +1,44 @@
-Using provider: oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz (oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz)
-Pushing ROFL app to OCI repository 'rofl.sh/2db0216a-17eb-46a4-8dcc-3115564ced5c:1748005573'...
+Using provider: oasis1qzc8pldvm8vm3duvdrj63wgvkw34y9ucfcxzetqr
+Pushing ROFL app to OCI repository 'rofl.sh/7aaddbd5-d782-430f-9362-f0107aa109d2:1750242297'...
 No pre-existing machine configured, creating a new one...
-Taking offer: playground_short [0000000000000001]
+Taking offer: small [0000000000000000]
 Unlock your account.
-? Passphrase:
+? Passphrase: 
 You are about to sign the following transaction:
 Format: plain
 Method: roflmarket.InstanceCreate
 Body:
   {
-    "provider": "oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz",
-    "offer": "0000000000000001",
+    "provider": "oasis1qzc8pldvm8vm3duvdrj63wgvkw34y9ucfcxzetqr",
+    "offer": "0000000000000000",
     "deployment": {
-      "app_id": "rofl1qrjtky678pd3uchsdlhqtjugnsvtck3wyg7w5324",
-      "manifest_hash": "5de346e10f8306ffcdbbe02a87c850b39727dd175b786f2d2daad03ba9a34013",
+      "app_id": "rofl1qpw7gxp7dqq72sdtpv4jrmdfys9nsp73wysglhue",
+      "manifest_hash": "c2bc74e68cbb5b9a70a2c7a378f79158e2c5975eca6bd4cbbeff602a1a12b311",
       "metadata": {
-        "net.oasis.deployment.orc.ref": "rofl.sh/2db0216a-17eb-46a4-8dcc-3115564ced5c:1748005573@sha256:0c09081e9802de746e5a862b6ee77c8b6cd915928558cd0770a5f35957dd535d"
+        "net.oasis.deployment.orc.ref": "rofl.sh/7aaddbd5-d782-430f-9362-f0107aa109d2:1750242297@sha256:ee206f123b395c630e6b52ff779c0cd63eb5ea99ba97275559558e340647ccb2"
       }
     },
     "term": 1,
-    "term_count": 1
+    "term_count": 24
   }
 Authorized signer(s):
-  1. +xJDGEpqAtJIJP8suwwDtWKgqxAeWNAGY7tzocCpACM= (ed25519)
-     Nonce: 7
+  1. Amc63/tU+uNrYi7OID2a5a/hHbsbGTtAolnlyA+MF5g5 (secp256k1eth)
+     Nonce: 6
 Fee:
-  Amount: 0.0121918 TEST
-  Gas limit: 121918
-  (gas price: 0.0000001 TEST per gas unit)
+  Amount: 0.0121926 ROSE
+  Gas limit: 121926
+  (gas price: 0.0000001 ROSE per gas unit)
 
-Network:  testnet
+Network:  mainnet
 ParaTime: sapphire
 Account:  test:dave
+? Sign this transaction? Yes
+(In case you are using a hardware-based signer you may need to confirm on device.)
+Broadcasting transaction...
+Transaction included in block successfully.
+Round:            9356523
+Transaction hash: bce96976f38485546b5950f8b2a7f9b7c43b9656935cc472a90680187469f4dd
+Execution successful.
+Created machine: 0000000000000000
+Deployment into machine scheduled.
+Use `oasis rofl machine show` to see status.

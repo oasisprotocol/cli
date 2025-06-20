@@ -174,8 +174,12 @@ offer:
 
 - `--provider <address>` specifies the provider to rent the machine from. On
   Sapphire Testnet, the Oasis-managed provider will be selected by default.
-- `--offer <offer_name>` specifies the offer of the machine to rent. Run
-  `--show-offers` to list offers and specifications.
+- `--offer <offer_name>` specifies the offer of the machine to rent. By default
+  it takes the most recent offer. Run `--show-offers` to list offers and
+  specifications.
+- `--term <hour|month|year>` specifies the base rent period. It takes the first
+  available provider term by default.
+- `--term-count <number>` specifies the multiplier. Default is `1`.
 
 ![code shell](../examples/rofl/deploy.in.static)
 

@@ -17,8 +17,10 @@ import (
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
+	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/roflmarket"
@@ -68,6 +70,11 @@ var (
 			ctx := context.Background()
 			conn, err := connection.Connect(ctx, npa.Network)
 			cobra.CheckErr(err)
+
+			// This is required for the pretty printer to work...
+			if npa.ParaTime != nil {
+				ctx = context.WithValue(ctx, config.ContextKeyParaTimeCfg, npa.ParaTime)
+			}
 
 			manifestEnclaves := make(map[sgx.EnclaveIdentity]struct{})
 			for _, eid := range deployment.Policy.Enclaves {
@@ -164,12 +171,25 @@ var (
 					return nil, fmt.Errorf("offer '%s' not found for provider '%s'", machine.Offer, providerAddr)
 				}
 
-				fmt.Printf("Taking offer: %s [%s]\n", machine.Offer, offer.ID)
+				fmt.Printf("Taking offer:\n")
+				showProviderOffer(ctx, offer)
 
 				term := detectTerm(offer)
 				if deployTermCount < 1 {
 					return nil, fmt.Errorf("number of terms must be at least 1")
 				}
+
+				// Calculate total price.
+				qTermCount := quantity.NewFromUint64(deployTermCount)
+				totalPrice, ok := offer.Payment.Native.Terms[term]
+				if !ok {
+					cobra.CheckErr("internal error: previously selected term not found in offer terms")
+				}
+				cobra.CheckErr(totalPrice.Mul(qTermCount))
+				tp := types.NewBaseUnits(totalPrice, offer.Payment.Native.Denomination)
+				fmt.Printf("Selected per-%s pricing term, total price is ", term2str(term))
+				tp.PrettyPrint(ctx, "", os.Stdout)
+				fmt.Println(".")
 
 				// Prepare transaction.
 				tx := roflmarket.NewInstanceCreateTx(nil, &roflmarket.InstanceCreate{
@@ -348,7 +368,7 @@ func showProviderOffers(ctx context.Context, npa *common.NPASelection, conn conn
 	fmt.Println()
 	fmt.Printf("Offers available from the selected provider:\n")
 	for idx, offer := range offers {
-		showProviderOffer(offer)
+		showProviderOffer(ctx, offer)
 		if idx != len(offers)-1 {
 			fmt.Println()
 		}
@@ -356,7 +376,7 @@ func showProviderOffers(ctx context.Context, npa *common.NPASelection, conn conn
 	fmt.Println()
 }
 
-func showProviderOffer(offer *roflmarket.Offer) {
+func showProviderOffer(ctx context.Context, offer *roflmarket.Offer) {
 	name, ok := offer.Metadata[provider.SchedulerMetadataOfferKey]
 	if !ok {
 		name = "<unnamed>"
@@ -379,8 +399,48 @@ func showProviderOffer(offer *roflmarket.Offer) {
 		offer.Resources.CPUCount,
 		float64(offer.Resources.Storage)/1024.,
 	)
+	if offer.Payment.Native != nil {
+		if len(offer.Payment.Native.Terms) == 0 {
+			return
+		}
 
-	// TODO: Show pricing.
+		// Specify sorting order for terms.
+		terms := []roflmarket.Term{roflmarket.TermHour, roflmarket.TermMonth, roflmarket.TermYear}
+
+		// Go through provided payment terms and print price.
+		fmt.Printf("  Price: ")
+		var gotPrev bool
+		for _, term := range terms {
+			price, exists := offer.Payment.Native.Terms[term]
+			if !exists {
+				continue
+			}
+
+			if gotPrev {
+				fmt.Printf(" | ")
+			}
+
+			bu := types.NewBaseUnits(price, offer.Payment.Native.Denomination)
+			bu.PrettyPrint(ctx, "", os.Stdout)
+			fmt.Printf("/%s", term2str(term))
+			gotPrev = true
+		}
+		fmt.Println()
+	}
+}
+
+// Helper to convert roflmarket term into string.
+func term2str(term roflmarket.Term) string {
+	switch term {
+	case roflmarket.TermHour:
+		return "hour"
+	case roflmarket.TermMonth:
+		return "month"
+	case roflmarket.TermYear:
+		return "year"
+	default:
+		return "<unknown>"
+	}
 }
 
 func init() {

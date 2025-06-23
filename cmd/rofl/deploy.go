@@ -18,7 +18,6 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/roflmarket"
@@ -94,8 +93,8 @@ var (
 			case "":
 				// Not yet set, obtain a new machine from the provider.
 				if deployProvider == "" {
-					if npa.ParaTime.ID == config.DefaultNetworks.All["testnet"].ParaTimes.All["sapphire"].ID {
-						deployProvider = provider.DefaultRoflServices[npa.ParaTime.ID].Provider
+					if roflServices, ok := provider.DefaultRoflServices[npa.ParaTime.ID]; ok {
+						deployProvider = roflServices.Provider
 					} else {
 						cobra.CheckErr(fmt.Sprintf("Provider not configured for deployment '%s' machine '%s'. Please specify --provider.", deploymentName, deployMachine))
 					}

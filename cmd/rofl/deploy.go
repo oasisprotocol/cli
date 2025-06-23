@@ -8,6 +8,7 @@ import (
 	"maps"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -32,13 +33,14 @@ import (
 )
 
 var (
-	deployProvider   string
-	deployOffer      string
-	deployMachine    string
-	deployTerm       string
-	deployTermCount  uint64
-	deployForce      bool
-	deployShowOffers bool
+	deployProvider       string
+	deployOffer          string
+	deployMachine        string
+	deployTerm           string
+	deployTermCount      uint64
+	deployForce          bool
+	deployShowOffers     bool
+	deployReplaceMachine bool
 
 	deployCmd = &cobra.Command{
 		Use:   "deploy",
@@ -141,11 +143,7 @@ var (
 				},
 			}
 
-			switch machine.ID {
-			case "":
-				// When machine is not set, we need to obtain one.
-				fmt.Printf("No pre-existing machine configured, creating a new one...\n")
-
+			obtainMachine := func() (*buildRofl.Machine, error) {
 				if deployOffer != "" {
 					machine.Offer = deployOffer
 				}
@@ -163,15 +161,14 @@ var (
 				}
 				if offer == nil {
 					showProviderOffers(ctx, npa, conn, *providerAddr)
-					cobra.CheckErr(fmt.Sprintf("Offer '%s' not found for provider '%s'.\n", machine.Offer, providerAddr))
-					return
+					return nil, fmt.Errorf("offer '%s' not found for provider '%s'", machine.Offer, providerAddr)
 				}
 
 				fmt.Printf("Taking offer: %s [%s]\n", machine.Offer, offer.ID)
 
 				term := detectTerm(offer)
 				if deployTermCount < 1 {
-					cobra.CheckErr("Number of terms must be at least 1.")
+					return nil, fmt.Errorf("number of terms must be at least 1")
 				}
 
 				// Prepare transaction.
@@ -190,19 +187,23 @@ var (
 
 				var machineID roflmarket.InstanceID
 				if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, &machineID) {
-					return
+					return nil, fmt.Errorf("broadcast transaction failed")
 				}
 
 				rawMachineID, _ := machineID.MarshalText()
 				cobra.CheckErr(err)
 				machine.ID = string(rawMachineID)
+				deployment.Machines[deployMachine] = machine
 
 				fmt.Printf("Created machine: %s\n", machine.ID)
-			default:
+				return machine, nil
+			}
+
+			doDeployMachine := func(machine *buildRofl.Machine) error {
 				// Deploy into existing machine.
 				var machineID roflmarket.InstanceID
 				if err = machineID.UnmarshalText([]byte(machine.ID)); err != nil {
-					cobra.CheckErr(fmt.Errorf("malformed machine ID: %w", err))
+					return fmt.Errorf("malformed machine ID: %w", err)
 				}
 
 				fmt.Printf("Deploying into existing machine: %s\n", machine.ID)
@@ -210,11 +211,25 @@ var (
 				// Sanity check the deployment.
 				var insDsc *roflmarket.Instance
 				insDsc, err = conn.Runtime(npa.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *providerAddr, machineID)
+
+				// The "instance not found" error originates from Rust code,
+				// so we can't compare it nicely here.
+				if err != nil && strings.Contains(err.Error(), "instance not found") {
+					if deployReplaceMachine {
+						fmt.Printf("Machine instance not found. Obtaining new one...")
+						machine.ID = ""
+						_, err = obtainMachine()
+						return err
+					}
+
+					cobra.CheckErr("Machine instance not found.\nTip: If your instance expired, run this command with --replace-machine flag to replace it with a new machine.")
+				}
 				cobra.CheckErr(err)
+
 				if insDsc.Deployment != nil && insDsc.Deployment.AppID != machineDeployment.AppID && !deployForce {
 					fmt.Printf("Machine already contains a deployment of ROFL app '%s'.\n", insDsc.Deployment.AppID)
 					fmt.Printf("You are trying to replace it with ROFL app '%s'.\n", machineDeployment.AppID)
-					cobra.CheckErr("Refusing to change existing ROFL app. Use --force to override.")
+					return fmt.Errorf("refusing to change existing ROFL app, use --force to override")
 				}
 
 				// Prepare transaction.
@@ -236,8 +251,19 @@ var (
 				cobra.CheckErr(err)
 
 				if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil) {
-					return
+					return fmt.Errorf("broadcast transaction failed")
 				}
+
+				return nil
+			}
+
+			if machine.ID == "" {
+				// When machine is not set, we need to obtain one.
+				fmt.Printf("No pre-existing machine configured, creating a new one...\n")
+				machine, err = obtainMachine()
+				cobra.CheckErr(err)
+			} else {
+				cobra.CheckErr(doDeployMachine(machine))
 			}
 
 			fmt.Printf("Deployment into machine scheduled.\n")
@@ -367,6 +393,7 @@ func init() {
 	providerFlags.Uint64Var(&deployTermCount, "term-count", 1, "number of terms to pay for in advance")
 	providerFlags.BoolVar(&deployForce, "force", false, "force deployment")
 	providerFlags.BoolVar(&deployShowOffers, "show-offers", false, "show all provider offers and quit")
+	providerFlags.BoolVar(&deployReplaceMachine, "replace-machine", false, "rent a new machine if the provided one expired")
 
 	deployCmd.Flags().AddFlagSet(common.SelectorFlags)
 	deployCmd.Flags().AddFlagSet(common.RuntimeTxFlags)

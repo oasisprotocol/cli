@@ -17,4 +17,8 @@ var DefaultRoflServices = map[string]RoflServices{
 		Scheduler: "rofl1qrqw99h0f7az3hwt2cl7yeew3wtz0fxunu7luyfg",
 		Provider:  "oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz",
 	},
+	config.DefaultNetworks.All["mainnet"].ParaTimes.All["sapphire"].ID: {
+		Scheduler: "rofl1qr95suussttd2g9ehu3zcpgx8ewtwgayyuzsl0x2",
+		Provider:  "oasis1qzc8pldvm8vm3duvdrj63wgvkw34y9ucfcxzetqr",
+	},
 }

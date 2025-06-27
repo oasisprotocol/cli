@@ -537,7 +537,7 @@ var (
 			}
 
 			if changes {
-				fmt.Printf("Run `oasis rofl update` to update your ROFL app's on-chain configuration.\n")
+				fmt.Printf("Run `oasis rofl build` to build your ROFL app.\n")
 			} else {
 				fmt.Printf("Artifacts already up-to-date.\n")
 			}

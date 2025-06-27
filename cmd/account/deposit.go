@@ -63,6 +63,11 @@ var depositCmd = &cobra.Command{
 		amountBaseUnits, err := helpers.ParseParaTimeDenomination(npa.ParaTime, amount, npa.ConsensusDenomination())
 		cobra.CheckErr(err)
 
+		// ParaTime deposit tx doesn't need gas. Don't detect the gas price, but set it to 0, if none provided.
+		if common.TxGasPrice == "" {
+			common.TxGasPrice = "0"
+		}
+
 		// Prepare transaction.
 		tx := consensusaccounts.NewDepositTx(nil, &consensusaccounts.Deposit{
 			To:     toAddr,

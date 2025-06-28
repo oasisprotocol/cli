@@ -96,4 +96,5 @@ func init() {
 	deploymentFlags.StringVar(&deploymentName, "deployment", buildRofl.DefaultDeploymentName, "deployment name")
 
 	logsCmd.Flags().AddFlagSet(deploymentFlags)
+	logsCmd.Flags().AddFlagSet(common.AnswerYesFlag)
 }

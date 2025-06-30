@@ -453,7 +453,6 @@ func init() {
 	providerFlags.BoolVar(&deployShowOffers, "show-offers", false, "show all provider offers and quit")
 	providerFlags.BoolVar(&deployReplaceMachine, "replace-machine", false, "rent a new machine if the provided one expired")
 
-	deployCmd.Flags().AddFlagSet(common.SelectorFlags)
 	deployCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	deployCmd.Flags().AddFlagSet(providerFlags)
 	deployCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)

@@ -8,6 +8,7 @@ import (
 	"maps"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -16,8 +17,10 @@ import (
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
+	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/roflmarket"
@@ -32,13 +35,14 @@ import (
 )
 
 var (
-	deployProvider   string
-	deployOffer      string
-	deployMachine    string
-	deployTerm       string
-	deployTermCount  uint64
-	deployForce      bool
-	deployShowOffers bool
+	deployProvider       string
+	deployOffer          string
+	deployMachine        string
+	deployTerm           string
+	deployTermCount      uint64
+	deployForce          bool
+	deployShowOffers     bool
+	deployReplaceMachine bool
 
 	deployCmd = &cobra.Command{
 		Use:   "deploy",
@@ -66,6 +70,11 @@ var (
 			ctx := context.Background()
 			conn, err := connection.Connect(ctx, npa.Network)
 			cobra.CheckErr(err)
+
+			// This is required for the pretty printer to work...
+			if npa.ParaTime != nil {
+				ctx = context.WithValue(ctx, config.ContextKeyParaTimeCfg, npa.ParaTime)
+			}
 
 			manifestEnclaves := make(map[sgx.EnclaveIdentity]struct{})
 			for _, eid := range deployment.Policy.Enclaves {
@@ -141,11 +150,7 @@ var (
 				},
 			}
 
-			switch machine.ID {
-			case "":
-				// When machine is not set, we need to obtain one.
-				fmt.Printf("No pre-existing machine configured, creating a new one...\n")
-
+			obtainMachine := func() (*buildRofl.Machine, error) {
 				if deployOffer != "" {
 					machine.Offer = deployOffer
 				}
@@ -163,16 +168,28 @@ var (
 				}
 				if offer == nil {
 					showProviderOffers(ctx, npa, conn, *providerAddr)
-					cobra.CheckErr(fmt.Sprintf("Offer '%s' not found for provider '%s'.\n", machine.Offer, providerAddr))
-					return
+					return nil, fmt.Errorf("offer '%s' not found for provider '%s'", machine.Offer, providerAddr)
 				}
 
-				fmt.Printf("Taking offer: %s [%s]\n", machine.Offer, offer.ID)
+				fmt.Printf("Taking offer:\n")
+				showProviderOffer(ctx, offer)
 
 				term := detectTerm(offer)
 				if deployTermCount < 1 {
-					cobra.CheckErr("Number of terms must be at least 1.")
+					return nil, fmt.Errorf("number of terms must be at least 1")
 				}
+
+				// Calculate total price.
+				qTermCount := quantity.NewFromUint64(deployTermCount)
+				totalPrice, ok := offer.Payment.Native.Terms[term]
+				if !ok {
+					cobra.CheckErr("internal error: previously selected term not found in offer terms")
+				}
+				cobra.CheckErr(totalPrice.Mul(qTermCount))
+				tp := types.NewBaseUnits(totalPrice, offer.Payment.Native.Denomination)
+				fmt.Printf("Selected per-%s pricing term, total price is ", term2str(term))
+				tp.PrettyPrint(ctx, "", os.Stdout)
+				fmt.Println(".")
 
 				// Prepare transaction.
 				tx := roflmarket.NewInstanceCreateTx(nil, &roflmarket.InstanceCreate{
@@ -190,19 +207,23 @@ var (
 
 				var machineID roflmarket.InstanceID
 				if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, &machineID) {
-					return
+					return nil, fmt.Errorf("broadcast transaction failed")
 				}
 
 				rawMachineID, _ := machineID.MarshalText()
 				cobra.CheckErr(err)
 				machine.ID = string(rawMachineID)
+				deployment.Machines[deployMachine] = machine
 
 				fmt.Printf("Created machine: %s\n", machine.ID)
-			default:
+				return machine, nil
+			}
+
+			doDeployMachine := func(machine *buildRofl.Machine) error {
 				// Deploy into existing machine.
 				var machineID roflmarket.InstanceID
 				if err = machineID.UnmarshalText([]byte(machine.ID)); err != nil {
-					cobra.CheckErr(fmt.Errorf("malformed machine ID: %w", err))
+					return fmt.Errorf("malformed machine ID: %w", err)
 				}
 
 				fmt.Printf("Deploying into existing machine: %s\n", machine.ID)
@@ -210,11 +231,25 @@ var (
 				// Sanity check the deployment.
 				var insDsc *roflmarket.Instance
 				insDsc, err = conn.Runtime(npa.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *providerAddr, machineID)
+
+				// The "instance not found" error originates from Rust code,
+				// so we can't compare it nicely here.
+				if err != nil && strings.Contains(err.Error(), "instance not found") {
+					if deployReplaceMachine {
+						fmt.Printf("Machine instance not found. Obtaining new one...")
+						machine.ID = ""
+						_, err = obtainMachine()
+						return err
+					}
+
+					cobra.CheckErr("Machine instance not found.\nTip: If your instance expired, run this command with --replace-machine flag to replace it with a new machine.")
+				}
 				cobra.CheckErr(err)
+
 				if insDsc.Deployment != nil && insDsc.Deployment.AppID != machineDeployment.AppID && !deployForce {
 					fmt.Printf("Machine already contains a deployment of ROFL app '%s'.\n", insDsc.Deployment.AppID)
 					fmt.Printf("You are trying to replace it with ROFL app '%s'.\n", machineDeployment.AppID)
-					cobra.CheckErr("Refusing to change existing ROFL app. Use --force to override.")
+					return fmt.Errorf("refusing to change existing ROFL app, use --force to override")
 				}
 
 				// Prepare transaction.
@@ -236,8 +271,19 @@ var (
 				cobra.CheckErr(err)
 
 				if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil) {
-					return
+					return fmt.Errorf("broadcast transaction failed")
 				}
+
+				return nil
+			}
+
+			if machine.ID == "" {
+				// When machine is not set, we need to obtain one.
+				fmt.Printf("No pre-existing machine configured, creating a new one...\n")
+				machine, err = obtainMachine()
+				cobra.CheckErr(err)
+			} else {
+				cobra.CheckErr(doDeployMachine(machine))
 			}
 
 			fmt.Printf("Deployment into machine scheduled.\n")
@@ -322,7 +368,7 @@ func showProviderOffers(ctx context.Context, npa *common.NPASelection, conn conn
 	fmt.Println()
 	fmt.Printf("Offers available from the selected provider:\n")
 	for idx, offer := range offers {
-		showProviderOffer(offer)
+		showProviderOffer(ctx, offer)
 		if idx != len(offers)-1 {
 			fmt.Println()
 		}
@@ -330,7 +376,7 @@ func showProviderOffers(ctx context.Context, npa *common.NPASelection, conn conn
 	fmt.Println()
 }
 
-func showProviderOffer(offer *roflmarket.Offer) {
+func showProviderOffer(ctx context.Context, offer *roflmarket.Offer) {
 	name, ok := offer.Metadata[provider.SchedulerMetadataOfferKey]
 	if !ok {
 		name = "<unnamed>"
@@ -353,8 +399,48 @@ func showProviderOffer(offer *roflmarket.Offer) {
 		offer.Resources.CPUCount,
 		float64(offer.Resources.Storage)/1024.,
 	)
+	if offer.Payment.Native != nil {
+		if len(offer.Payment.Native.Terms) == 0 {
+			return
+		}
 
-	// TODO: Show pricing.
+		// Specify sorting order for terms.
+		terms := []roflmarket.Term{roflmarket.TermHour, roflmarket.TermMonth, roflmarket.TermYear}
+
+		// Go through provided payment terms and print price.
+		fmt.Printf("  Price: ")
+		var gotPrev bool
+		for _, term := range terms {
+			price, exists := offer.Payment.Native.Terms[term]
+			if !exists {
+				continue
+			}
+
+			if gotPrev {
+				fmt.Printf(" | ")
+			}
+
+			bu := types.NewBaseUnits(price, offer.Payment.Native.Denomination)
+			bu.PrettyPrint(ctx, "", os.Stdout)
+			fmt.Printf("/%s", term2str(term))
+			gotPrev = true
+		}
+		fmt.Println()
+	}
+}
+
+// Helper to convert roflmarket term into string.
+func term2str(term roflmarket.Term) string {
+	switch term {
+	case roflmarket.TermHour:
+		return "hour"
+	case roflmarket.TermMonth:
+		return "month"
+	case roflmarket.TermYear:
+		return "year"
+	default:
+		return "<unknown>"
+	}
 }
 
 func init() {
@@ -367,6 +453,7 @@ func init() {
 	providerFlags.Uint64Var(&deployTermCount, "term-count", 1, "number of terms to pay for in advance")
 	providerFlags.BoolVar(&deployForce, "force", false, "force deployment")
 	providerFlags.BoolVar(&deployShowOffers, "show-offers", false, "show all provider offers and quit")
+	providerFlags.BoolVar(&deployReplaceMachine, "replace-machine", false, "rent a new machine if the provided one expired")
 
 	deployCmd.Flags().AddFlagSet(common.SelectorFlags)
 	deployCmd.Flags().AddFlagSet(common.RuntimeTxFlags)

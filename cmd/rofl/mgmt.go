@@ -736,10 +736,6 @@ func init() {
 	updateCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	updateCmd.Flags().AddFlagSet(updateFlags)
 
-	deployCmd.Flags().AddFlagSet(common.SelectorFlags)
-	deployCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
-	deployCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
-
 	removeCmd.Flags().AddFlagSet(common.SelectorFlags)
 	removeCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	removeCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)

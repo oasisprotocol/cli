@@ -7,7 +7,6 @@ import (
 
 	"github.com/oasisprotocol/cli/cmd/common"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
-	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
 var pushCmd = &cobra.Command{
@@ -15,14 +14,11 @@ var pushCmd = &cobra.Command{
 	Short: "Push ROFL app to OCI repository",
 	Args:  cobra.NoArgs,
 	Run: func(_ *cobra.Command, _ []string) {
-		cfg := cliConfig.Global()
-		npa := common.GetNPASelection(cfg)
-
-		manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+		manifest, deployment, _ := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
 			NeedAppID: true,
 		})
 
-		orcFilename := roflCommon.GetOrcFilename(manifest, deploymentName)
+		orcFilename := roflCommon.GetOrcFilename(manifest, roflCommon.DeploymentName)
 		ociRepository := ociRepository(deployment)
 
 		if common.OutputFormat() == common.FormatText {

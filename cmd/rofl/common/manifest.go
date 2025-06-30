@@ -7,7 +7,7 @@ import (
 
 	"github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/cmd/common"
-	"github.com/oasisprotocol/cli/config"
+	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
 // ManifestOptions configures the manifest options.
@@ -23,20 +23,23 @@ type ManifestOptions struct {
 // selection.
 //
 // In case there is an error in loading the manifest, it aborts the application.
-func LoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection, deployment string, opts *ManifestOptions) (*rofl.Manifest, *rofl.Deployment) {
-	manifest, d, err := MaybeLoadManifestAndSetNPA(cfg, npa, deployment, opts)
+func LoadManifestAndSetNPA(opts *ManifestOptions) (*rofl.Manifest, *rofl.Deployment, *common.NPASelection) {
+	cfg := cliConfig.Global()
+	npa := common.GetNPASelection(cfg)
+
+	manifest, d, err := MaybeLoadManifestAndSetNPA(cfg, npa, DeploymentName, opts)
 	cobra.CheckErr(err)
 	if opts != nil && opts.NeedAppID && !d.HasAppID() {
-		cobra.CheckErr(fmt.Errorf("deployment '%s' does not have an app ID set, maybe you need to run `oasis rofl create`", deployment))
+		cobra.CheckErr(fmt.Errorf("deployment '%s' does not have an app ID set, maybe you need to run `oasis rofl create`", DeploymentName))
 	}
-	return manifest, d
+	return manifest, d, npa
 }
 
 // MaybeLoadManifestAndSetNPA loads the ROFL app manifest and reconfigures the
 // network/paratime/account selection.
 //
 // In case there is an error in loading the manifest, it is returned.
-func MaybeLoadManifestAndSetNPA(cfg *config.Config, npa *common.NPASelection, deployment string, opts *ManifestOptions) (*rofl.Manifest, *rofl.Deployment, error) {
+func MaybeLoadManifestAndSetNPA(cfg *cliConfig.Config, npa *common.NPASelection, deployment string, opts *ManifestOptions) (*rofl.Manifest, *rofl.Deployment, error) {
 	manifest, err := rofl.LoadManifest()
 	if err != nil {
 		return nil, nil, err

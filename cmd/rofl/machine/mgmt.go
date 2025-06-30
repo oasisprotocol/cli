@@ -22,8 +22,6 @@ import (
 )
 
 var (
-	deploymentName string
-	wipeStorage    bool
 	topUpTerm      string
 	topUpTermCount uint64
 
@@ -32,10 +30,7 @@ var (
 		Short: "Show information about a machine",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
-			cfg := cliConfig.Global()
-			npa := common.GetNPASelection(cfg)
-
-			_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+			_, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
 				NeedAppID: true,
 				NeedAdmin: false,
 			})
@@ -168,7 +163,7 @@ var (
 				args,
 				scheduler.MethodRestart,
 				scheduler.RestartRequest{
-					WipeStorage: wipeStorage,
+					WipeStorage: roflCommon.WipeStorage,
 				},
 				"Machine restart scheduled.",
 			)
@@ -185,7 +180,7 @@ var (
 				args,
 				scheduler.MethodTerminate,
 				scheduler.TerminateRequest{
-					WipeStorage: wipeStorage,
+					WipeStorage: roflCommon.WipeStorage,
 				},
 				"Machine termination scheduled.",
 			)
@@ -198,11 +193,9 @@ var (
 		Aliases: []string{"cancel", "rm"},
 		Args:    cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
-			cfg := cliConfig.Global()
-			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
 
-			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+			manifest, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
 				NeedAppID: true,
 				NeedAdmin: false,
 			})
@@ -233,7 +226,7 @@ var (
 				ID:       machineID,
 			})
 
-			acc := common.LoadAccount(cfg, npa.AccountName)
+			acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
 			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
@@ -257,11 +250,9 @@ var (
 		Short: "Top-up payment for a machine",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
-			cfg := cliConfig.Global()
-			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
 
-			_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+			_, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
 				NeedAppID: true,
 				NeedAdmin: false,
 			})
@@ -300,7 +291,7 @@ var (
 				TermCount: topUpTermCount,
 			})
 
-			acc := common.LoadAccount(cfg, npa.AccountName)
+			acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
 			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
@@ -351,11 +342,9 @@ func resolveMachine(args []string, deployment *buildRofl.Deployment) (*buildRofl
 }
 
 func queueCommand(cliArgs []string, method string, args any, msgAfter string) {
-	cfg := cliConfig.Global()
-	npa := common.GetNPASelection(cfg)
 	txCfg := common.GetTransactionConfig()
 
-	_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+	_, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
 		NeedAppID: true,
 		NeedAdmin: false,
 	})
@@ -392,7 +381,7 @@ func queueCommand(cliArgs []string, method string, args any, msgAfter string) {
 		})},
 	})
 
-	acc := common.LoadAccount(cfg, npa.AccountName)
+	acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
 	sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 	cobra.CheckErr(err)
 
@@ -413,35 +402,29 @@ func showCommandArgs[V any](npa *common.NPASelection, raw []byte, args V) {
 }
 
 func init() {
-	deploymentFlags := flag.NewFlagSet("", flag.ContinueOnError)
-	deploymentFlags.StringVar(&deploymentName, "deployment", buildRofl.DefaultDeploymentName, "deployment name")
-
-	wipeFlags := flag.NewFlagSet("", flag.ContinueOnError)
-	wipeFlags.BoolVar(&wipeStorage, "wipe-storage", false, "whether to wipe machine storage")
-
 	topUpFlags := flag.NewFlagSet("", flag.ContinueOnError)
 	topUpFlags.StringVar(&topUpTerm, "term", roflCommon.TermMonth, "term to pay for in advance")
 	topUpFlags.Uint64Var(&topUpTermCount, "term-count", 1, "number of terms to pay for in advance")
 
 	showCmd.Flags().AddFlagSet(common.SelectorFlags)
-	showCmd.Flags().AddFlagSet(deploymentFlags)
+	showCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 
 	restartCmd.Flags().AddFlagSet(common.SelectorFlags)
 	restartCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
-	restartCmd.Flags().AddFlagSet(deploymentFlags)
-	restartCmd.Flags().AddFlagSet(wipeFlags)
+	restartCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
+	restartCmd.Flags().AddFlagSet(roflCommon.WipeFlags)
 
 	stopCmd.Flags().AddFlagSet(common.SelectorFlags)
 	stopCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
-	stopCmd.Flags().AddFlagSet(deploymentFlags)
-	stopCmd.Flags().AddFlagSet(wipeFlags)
+	stopCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
+	stopCmd.Flags().AddFlagSet(roflCommon.WipeFlags)
 
 	removeCmd.Flags().AddFlagSet(common.SelectorFlags)
 	removeCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
-	removeCmd.Flags().AddFlagSet(deploymentFlags)
+	removeCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 
 	topUpCmd.Flags().AddFlagSet(common.SelectorFlags)
 	topUpCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
-	topUpCmd.Flags().AddFlagSet(deploymentFlags)
+	topUpCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	topUpCmd.Flags().AddFlagSet(topUpFlags)
 }

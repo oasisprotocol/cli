@@ -16,6 +16,48 @@ import (
 	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 )
 
+// validateApp validates the ROFL app manifest.
+func validateApp(manifest *buildRofl.Manifest) error {
+	switch manifest.TEE {
+	case buildRofl.TEETypeSGX:
+		if manifest.Kind != buildRofl.AppKindRaw {
+			return fmt.Errorf("unsupported app kind for SGX TEE: %s", manifest.Kind)
+		}
+	case buildRofl.TEETypeTDX:
+		switch manifest.Kind {
+		case buildRofl.AppKindRaw:
+		case buildRofl.AppKindContainer:
+			wantedArtifacts := tdxWantedArtifacts(manifest, buildRofl.LatestContainerArtifacts)
+
+			var composeAf *artifact
+			for _, a := range wantedArtifacts {
+				if a.kind == artifactContainerCompose {
+					composeAf = a
+					break
+				}
+			}
+			if composeAf == nil {
+				return fmt.Errorf("missing compose.yaml artifact")
+			}
+
+			// Only fetch the compose.yaml artifact.
+			artifacts := tdxFetchArtifacts([]*artifact{composeAf})
+
+			// Validate compose.yaml.
+			err := validateComposeFile(artifacts[artifactContainerCompose], manifest)
+			if err != nil {
+				return fmt.Errorf("compose file validation failed: %w", err)
+			}
+		default:
+			return fmt.Errorf("unsupported app kind for TDX TEE: %s", manifest.Kind)
+		}
+	default:
+		return fmt.Errorf("unsupported TEE kind: %s", manifest.TEE)
+	}
+
+	return nil
+}
+
 // validateComposeFile validates the Docker compose file.
 func validateComposeFile(composeFile string, manifest *buildRofl.Manifest) error {
 	// Parse the compose file.

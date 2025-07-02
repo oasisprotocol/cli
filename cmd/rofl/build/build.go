@@ -38,6 +38,7 @@ var (
 	doVerify       bool
 	deploymentName string
 	noDocker       bool
+	onlyValidate   bool
 
 	Cmd = &cobra.Command{
 		Use:   "build",
@@ -51,6 +52,16 @@ var (
 				NeedAppID: true,
 				NeedAdmin: false,
 			})
+
+			if onlyValidate {
+				fmt.Println("Validating app...")
+				err := validateApp(manifest)
+				if err == nil {
+					fmt.Println("App validation passed.")
+					return nil
+				}
+				return err
+			}
 
 			fmt.Println("Building a ROFL application...")
 			fmt.Printf("Deployment: %s\n", deploymentName)
@@ -357,6 +368,7 @@ func init() {
 	buildFlags.BoolVar(&doVerify, "verify", false, "verify build against manifest and on-chain state")
 	buildFlags.StringVar(&deploymentName, "deployment", buildRofl.DefaultDeploymentName, "deployment name")
 	buildFlags.BoolVar(&noDocker, "no-docker", false, "do not use the Dockerized builder")
+	buildFlags.BoolVar(&onlyValidate, "only-validate", false, "validate without building")
 
 	// TODO: Remove when all the examples, demos and docs are updated.
 	var dummy bool

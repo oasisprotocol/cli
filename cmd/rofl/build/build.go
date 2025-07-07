@@ -21,7 +21,6 @@ import (
 	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/cmd/common"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
-	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
 // Build modes.
@@ -31,14 +30,13 @@ const (
 )
 
 var (
-	outputFn       string
-	buildMode      string
-	offline        bool
-	noUpdate       bool
-	doVerify       bool
-	deploymentName string
-	noDocker       bool
-	onlyValidate   bool
+	outputFn     string
+	buildMode    string
+	offline      bool
+	noUpdate     bool
+	doVerify     bool
+	noDocker     bool
+	onlyValidate bool
 
 	Cmd = &cobra.Command{
 		Use:   "build",
@@ -46,9 +44,7 @@ var (
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			cmd.SilenceUsage = true
-			cfg := cliConfig.Global()
-			npa := common.GetNPASelection(cfg)
-			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+			manifest, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
 				NeedAppID: true,
 				NeedAdmin: false,
 			})
@@ -64,7 +60,7 @@ var (
 			}
 
 			fmt.Println("Building a ROFL application...")
-			fmt.Printf("Deployment: %s\n", deploymentName)
+			fmt.Printf("Deployment: %s\n", roflCommon.DeploymentName)
 			fmt.Printf("Network:    %s\n", deployment.Network)
 			fmt.Printf("ParaTime:   %s\n", deployment.ParaTime)
 			fmt.Printf("Debug:      %v\n", deployment.Debug)
@@ -124,7 +120,7 @@ var (
 
 			// Setup some build environment variables.
 			os.Setenv("ROFL_MANIFEST", manifest.SourceFileName())
-			os.Setenv("ROFL_DEPLOYMENT_NAME", deploymentName)
+			os.Setenv("ROFL_DEPLOYMENT_NAME", roflCommon.DeploymentName)
 			os.Setenv("ROFL_DEPLOYMENT_NETWORK", deployment.Network)
 			os.Setenv("ROFL_DEPLOYMENT_PARATIME", deployment.ParaTime)
 			os.Setenv("ROFL_TMPDIR", tmpDir)
@@ -157,7 +153,7 @@ var (
 			runScript(manifest, buildRofl.ScriptBuildPost)
 
 			// Write the bundle out.
-			outFn := roflCommon.GetOrcFilename(manifest, deploymentName)
+			outFn := roflCommon.GetOrcFilename(manifest, roflCommon.DeploymentName)
 			if outputFn != "" {
 				outFn = outputFn
 			}
@@ -260,7 +256,7 @@ var (
 				fmt.Println("Update the manifest with the following identities to use the new app:")
 				fmt.Println()
 				fmt.Printf("deployments:\n")
-				fmt.Printf("  %s:\n", deploymentName)
+				fmt.Printf("  %s:\n", roflCommon.DeploymentName)
 				fmt.Printf("    policy:\n")
 				fmt.Printf("      enclaves:\n")
 				for _, id := range ids {
@@ -366,9 +362,10 @@ func init() {
 	buildFlags.StringVar(&outputFn, "output", "", "output bundle filename")
 	buildFlags.BoolVar(&noUpdate, "no-update-manifest", false, "do not update the manifest")
 	buildFlags.BoolVar(&doVerify, "verify", false, "verify build against manifest and on-chain state")
-	buildFlags.StringVar(&deploymentName, "deployment", buildRofl.DefaultDeploymentName, "deployment name")
 	buildFlags.BoolVar(&noDocker, "no-docker", false, "do not use the Dockerized builder")
 	buildFlags.BoolVar(&onlyValidate, "only-validate", false, "validate without building")
+
+	buildFlags.AddFlagSet(roflCommon.DeploymentFlags)
 
 	// TODO: Remove when all the examples, demos and docs are updated.
 	var dummy bool

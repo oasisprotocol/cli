@@ -40,11 +40,8 @@ var (
 	adminAddress string
 	pubName      string
 
-	appTEE         string
-	appKind        string
-	deploymentName string
-
-	deploymentFlags *flag.FlagSet
+	appTEE  string
+	appKind string
 
 	initCmd = &cobra.Command{
 		Use:   "init [<name>] [--tee TEE] [--kind KIND]",
@@ -177,16 +174,16 @@ var (
 			cobra.CheckErr(err)
 
 			// Load or create a deployment.
-			deployment, ok := manifest.Deployments[deploymentName]
+			deployment, ok := manifest.Deployments[roflCommon.DeploymentName]
 			switch ok {
 			case true:
 				if deployment.AppID != "" {
-					cobra.CheckErr(fmt.Errorf("ROFL app identifier already defined (%s) for deployment '%s', refusing to overwrite", deployment.AppID, deploymentName))
+					cobra.CheckErr(fmt.Errorf("ROFL app identifier already defined (%s) for deployment '%s', refusing to overwrite", deployment.AppID, roflCommon.DeploymentName))
 				}
 
 				// An existing deployment is defined, but without an AppID. Load everything else for
 				// the deployment and proceed with creating a new app.
-				manifest, deployment = roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+				manifest, deployment, npa = roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
 					NeedAppID: false,
 					NeedAdmin: true,
 				})
@@ -245,7 +242,7 @@ var (
 				if manifest.Deployments == nil {
 					manifest.Deployments = make(map[string]*buildRofl.Deployment)
 				}
-				manifest.Deployments[deploymentName] = deployment
+				manifest.Deployments[roflCommon.DeploymentName] = deployment
 			}
 
 			idScheme, ok := identifierSchemes[scheme]
@@ -257,7 +254,7 @@ var (
 			tx := rofl.NewCreateTx(nil, &rofl.Create{
 				Policy:   *deployment.Policy.AsDescriptor(),
 				Scheme:   idScheme,
-				Metadata: manifest.GetMetadata(deploymentName),
+				Metadata: manifest.GetMetadata(roflCommon.DeploymentName),
 			})
 
 			acc := common.LoadAccount(cfg, npa.AccountName)
@@ -287,11 +284,9 @@ var (
 		Short: "Update an existing ROFL application",
 		Args:  cobra.NoArgs,
 		Run: func(_ *cobra.Command, _ []string) {
-			cfg := cliConfig.Global()
-			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
 
-			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+			manifest, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
 				NeedAppID: true,
 				NeedAdmin: true,
 			})
@@ -330,7 +325,7 @@ var (
 			updateBody := rofl.Update{
 				ID:       appID,
 				Policy:   *deployment.Policy.AsDescriptor(),
-				Metadata: manifest.GetMetadata(deploymentName),
+				Metadata: manifest.GetMetadata(roflCommon.DeploymentName),
 				Secrets:  secrets,
 			}
 
@@ -347,7 +342,7 @@ var (
 			// Prepare transaction.
 			tx := rofl.NewUpdateTx(nil, &updateBody)
 
-			acc := common.LoadAccount(cfg, npa.AccountName)
+			acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
 			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
@@ -372,7 +367,7 @@ var (
 			if len(args) > 0 {
 				rawAppID = args[0]
 			} else {
-				manifest, deployment = roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+				manifest, deployment, npa = roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
 					NeedAppID: true,
 					NeedAdmin: true,
 				})
@@ -414,7 +409,7 @@ var (
 
 			// Update manifest to clear the corresponding deployment section.
 			if manifest != nil {
-				delete(manifest.Deployments, deploymentName)
+				delete(manifest.Deployments, roflCommon.DeploymentName)
 				if err = manifest.Save(); err != nil {
 					cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
 				}
@@ -427,14 +422,14 @@ var (
 		Short: "Show information about a ROFL application",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
+			var rawAppID string
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
-
-			var rawAppID string
 			if len(args) > 0 {
 				rawAppID = args[0]
 			} else {
-				_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+				var deployment *buildRofl.Deployment
+				_, deployment, npa = roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
 					NeedAppID: true,
 					NeedAdmin: false,
 				})
@@ -554,12 +549,10 @@ var (
 		Short: "Encrypt the given secret into the manifest, reading the value from file or stdin",
 		Args:  cobra.ExactArgs(2),
 		Run: func(_ *cobra.Command, args []string) {
-			cfg := cliConfig.Global()
-			npa := common.GetNPASelection(cfg)
 			secretName := args[0]
 			secretFn := args[1]
 
-			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+			manifest, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
 				NeedAppID: true,
 				NeedAdmin: false,
 			})
@@ -605,7 +598,7 @@ var (
 			}
 			for _, sc := range deployment.Secrets {
 				if sc.Name == secretName {
-					cobra.CheckErr(fmt.Errorf("secret named '%s' already exists for deployment '%s'", secretName, deploymentName))
+					cobra.CheckErr(fmt.Errorf("secret named '%s' already exists for deployment '%s'", secretName, roflCommon.DeploymentName))
 				}
 			}
 			deployment.Secrets = append(deployment.Secrets, &secretCfg)
@@ -624,11 +617,9 @@ var (
 		Short: "Show metadata about the given secret",
 		Args:  cobra.ExactArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
-			cfg := cliConfig.Global()
-			npa := common.GetNPASelection(cfg)
 			secretName := args[0]
 
-			_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+			_, deployment, _ := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
 				NeedAppID: false,
 				NeedAdmin: false,
 			})
@@ -641,7 +632,7 @@ var (
 				break
 			}
 			if secret == nil {
-				cobra.CheckErr(fmt.Errorf("secret named '%s' does not exist for deployment '%s'", secretName, deploymentName))
+				cobra.CheckErr(fmt.Errorf("secret named '%s' does not exist for deployment '%s'", secretName, roflCommon.DeploymentName))
 				return // Lint doesn't know that cobra.CheckErr never returns.
 			}
 
@@ -658,11 +649,9 @@ var (
 		Short: "Remove the given secret from the manifest",
 		Args:  cobra.ExactArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
-			cfg := cliConfig.Global()
-			npa := common.GetNPASelection(cfg)
 			secretName := args[0]
 
-			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+			manifest, deployment, _ := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
 				NeedAppID: false,
 				NeedAdmin: false,
 			})
@@ -679,7 +668,7 @@ var (
 				newSecrets = append(newSecrets, sc)
 			}
 			if !found {
-				cobra.CheckErr(fmt.Errorf("secret named '%s' does not exist for deployment '%s'", secretName, deploymentName))
+				cobra.CheckErr(fmt.Errorf("secret named '%s' does not exist for deployment '%s'", secretName, roflCommon.DeploymentName))
 			}
 			deployment.Secrets = newSecrets
 
@@ -730,44 +719,37 @@ func detectOrCreateComposeFile() string {
 }
 
 func init() {
-	deploymentFlags = flag.NewFlagSet("", flag.ContinueOnError)
-	deploymentFlags.StringVar(&deploymentName, "deployment", buildRofl.DefaultDeploymentName, "deployment name")
-
 	updateFlags := flag.NewFlagSet("", flag.ContinueOnError)
 	updateFlags.StringVar(&adminAddress, "admin", "", "set the administrator address")
-	updateCmd.Flags().AddFlagSet(deploymentFlags)
+	updateCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 
 	initCmd.Flags().StringVar(&appTEE, "tee", "tdx", "TEE kind [tdx, sgx]")
 	initCmd.Flags().StringVar(&appKind, "kind", "container", "ROFL app kind [container, raw]")
 
 	createCmd.Flags().AddFlagSet(common.SelectorFlags)
 	createCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
-	createCmd.Flags().AddFlagSet(deploymentFlags)
+	createCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	createCmd.Flags().StringVar(&scheme, "scheme", "cn", "app ID generation scheme: creator+round+index [cri] or creator+nonce [cn]")
 
 	updateCmd.Flags().AddFlagSet(common.SelectorFlags)
 	updateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
-	updateCmd.Flags().AddFlagSet(deploymentFlags)
+	updateCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	updateCmd.Flags().AddFlagSet(updateFlags)
-
-	deployCmd.Flags().AddFlagSet(common.SelectorFlags)
-	deployCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
-	deployCmd.Flags().AddFlagSet(deploymentFlags)
 
 	removeCmd.Flags().AddFlagSet(common.SelectorFlags)
 	removeCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
-	removeCmd.Flags().AddFlagSet(deploymentFlags)
+	removeCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 
 	showCmd.Flags().AddFlagSet(common.SelectorFlags)
-	showCmd.Flags().AddFlagSet(deploymentFlags)
+	showCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 
-	secretSetCmd.Flags().AddFlagSet(deploymentFlags)
+	secretSetCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	secretSetCmd.Flags().StringVar(&pubName, "public-name", "", "public secret name")
 	secretCmd.AddCommand(secretSetCmd)
 
-	secretGetCmd.Flags().AddFlagSet(deploymentFlags)
+	secretGetCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	secretCmd.AddCommand(secretGetCmd)
 
-	secretRmCmd.Flags().AddFlagSet(deploymentFlags)
+	secretRmCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	secretCmd.AddCommand(secretRmCmd)
 }

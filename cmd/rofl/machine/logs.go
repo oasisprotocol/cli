@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
@@ -14,7 +13,6 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/ed25519"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
-	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/build/rofl/scheduler"
 	"github.com/oasisprotocol/cli/cmd/common"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
@@ -26,10 +24,7 @@ var logsCmd = &cobra.Command{
 	Short: "Show logs from the given machine",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		cfg := cliConfig.Global()
-		npa := common.GetNPASelection(cfg)
-
-		_, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+		_, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
 			NeedAppID: true,
 			NeedAdmin: false,
 		})
@@ -70,7 +65,7 @@ var logsCmd = &cobra.Command{
 		cobra.CheckErr(err)
 
 		// TODO: Cache authentication token so we don't need to re-authenticate.
-		acc := common.LoadAccount(cfg, npa.AccountName)
+		acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
 
 		sigCtx := &signature.RichContext{
 			RuntimeID:    npa.ParaTime.Namespace(),
@@ -92,9 +87,6 @@ var logsCmd = &cobra.Command{
 }
 
 func init() {
-	deploymentFlags := flag.NewFlagSet("", flag.ContinueOnError)
-	deploymentFlags.StringVar(&deploymentName, "deployment", buildRofl.DefaultDeploymentName, "deployment name")
-
-	logsCmd.Flags().AddFlagSet(deploymentFlags)
+	logsCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	logsCmd.Flags().AddFlagSet(common.AnswerYesFlag)
 }

@@ -49,15 +49,13 @@ var (
 		Short: "Deploy ROFL to a specified machine",
 		Args:  cobra.NoArgs,
 		Run: func(_ *cobra.Command, _ []string) {
-			cfg := cliConfig.Global()
-			npa := common.GetNPASelection(cfg)
 			txCfg := common.GetTransactionConfig()
 
 			if txCfg.Offline {
 				cobra.CheckErr("offline mode currently not supported")
 			}
 
-			manifest, deployment := roflCommon.LoadManifestAndSetNPA(cfg, npa, deploymentName, &roflCommon.ManifestOptions{
+			manifest, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
 				NeedAppID: true,
 				NeedAdmin: true,
 			})
@@ -105,7 +103,7 @@ var (
 					if roflServices, ok := provider.DefaultRoflServices[npa.ParaTime.ID]; ok {
 						deployProvider = roflServices.Provider
 					} else {
-						cobra.CheckErr(fmt.Sprintf("Provider not configured for deployment '%s' machine '%s'. Please specify --provider.", deploymentName, deployMachine))
+						cobra.CheckErr(fmt.Sprintf("Provider not configured for deployment '%s' machine '%s'. Please specify --provider.", roflCommon.DeploymentName, deployMachine))
 					}
 				}
 
@@ -113,7 +111,7 @@ var (
 			default:
 				// Already set, require the provider to be omitted or equal.
 				if deployProvider != "" && deployProvider != machine.Provider {
-					cobra.CheckErr(fmt.Sprintf("Provider '%s' conflicts with existing provider '%s' for deployment '%s' machine '%s'. Omit --provider.", deployProvider, machine.Provider, deploymentName, deployMachine))
+					cobra.CheckErr(fmt.Sprintf("Provider '%s' conflicts with existing provider '%s' for deployment '%s' machine '%s'. Omit --provider.", deployProvider, machine.Provider, roflCommon.DeploymentName, deployMachine))
 				}
 			}
 
@@ -132,7 +130,7 @@ var (
 			}
 
 			ociRepository := ociRepository(deployment)
-			orcFilename := roflCommon.GetOrcFilename(manifest, deploymentName)
+			orcFilename := roflCommon.GetOrcFilename(manifest, roflCommon.DeploymentName)
 			fmt.Printf("Pushing ROFL app to OCI repository '%s'...\n", ociRepository)
 			ociDigest, manifestHash := pushBundleToOciRepository(orcFilename, ociRepository)
 			// Save the OCI repository field to the configuration file so we avoid multiple uploads.
@@ -200,7 +198,7 @@ var (
 					TermCount:  deployTermCount,
 				})
 
-				acc := common.LoadAccount(cfg, npa.AccountName)
+				acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
 				var sigTx, meta any
 				sigTx, meta, err = common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 				cobra.CheckErr(err)
@@ -260,12 +258,12 @@ var (
 						Method: scheduler.MethodDeploy,
 						Args: cbor.Marshal(scheduler.DeployRequest{
 							Deployment:  machineDeployment,
-							WipeStorage: false,
+							WipeStorage: roflCommon.WipeStorage,
 						}),
 					})},
 				})
 
-				acc := common.LoadAccount(cfg, npa.AccountName)
+				acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
 				var sigTx, meta any
 				sigTx, meta, err = common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 				cobra.CheckErr(err)
@@ -455,8 +453,8 @@ func init() {
 	providerFlags.BoolVar(&deployShowOffers, "show-offers", false, "show all provider offers and quit")
 	providerFlags.BoolVar(&deployReplaceMachine, "replace-machine", false, "rent a new machine if the provided one expired")
 
-	deployCmd.Flags().AddFlagSet(common.SelectorFlags)
 	deployCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
-	deployCmd.Flags().AddFlagSet(deploymentFlags)
 	deployCmd.Flags().AddFlagSet(providerFlags)
+	deployCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
+	deployCmd.Flags().AddFlagSet(roflCommon.WipeFlags)
 }

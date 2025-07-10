@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -42,6 +43,9 @@ var (
 
 	appTEE  string
 	appKind string
+
+	//go:embed init_artifacts/compose.yaml
+	initArtifactCompose []byte
 
 	initCmd = &cobra.Command{
 		Use:   "init [<name>] [--tee TEE] [--kind KIND]",
@@ -709,12 +713,10 @@ func detectOrCreateComposeFile() string {
 	}
 
 	filename := "compose.yaml"
-	f, err := os.OpenFile(filename, os.O_RDONLY|os.O_CREATE, 0o644)
-	if err != nil {
+	if err := os.WriteFile(filename, initArtifactCompose, 0o644); err != nil { //nolint: gosec
 		return ""
 	}
 
-	f.Close()
 	return filename
 }
 

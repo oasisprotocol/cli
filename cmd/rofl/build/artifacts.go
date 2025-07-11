@@ -184,7 +184,12 @@ FILES:
 			}
 		case tar.TypeSymlink:
 			// Symbolic link.
-			if err = os.Symlink(header.Linkname, path); err != nil {
+			var linkPath string
+			linkPath, err = cleanupPath(header.Linkname)
+			if err != nil {
+				return err
+			}
+			if err = os.Symlink(linkPath, path); err != nil {
 				return fmt.Errorf("failed to create soft link: %w", err)
 			}
 		case tar.TypeChar, tar.TypeBlock, tar.TypeFifo:

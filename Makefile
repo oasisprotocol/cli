@@ -16,7 +16,7 @@ build: oasis
 
 build-windows: oasis.exe
 
-oasis: $(shell find . -name "*.go" -type f) go.sum go.mod
+oasis: $(shell find . -name "*.go" -type f) $(shell find cmd/rofl/init_artifacts) go.sum go.mod
 	@$(PRINT) "$(MAGENTA)*** Building Go code...$(OFF)\n"
 	@$(GO) build -v -o oasis $(GOFLAGS) $(GO_EXTRA_FLAGS)
 

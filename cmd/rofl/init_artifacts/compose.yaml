@@ -1,0 +1,14 @@
+services:
+  mycontainer:
+    build: .
+    image: "docker.io/org_name/image_name"      # Always provide FQDN image names!
+    platform: linux/amd64
+    volumes:
+      - my-volume:/root/.my-volume              # Persistent per-machine storage.
+      - /run/rofl-appd.sock:/run/rofl-appd.sock # appd REST API.
+    environment:
+      - MY_SECRET_1=${MY_SECRET_1}              # See `oasis rofl secret` command.
+      - MY_SECRET_2=${MY_SECRET_2}
+
+volumes:
+  my-volume:

@@ -129,6 +129,8 @@ var (
 				return
 			}
 
+			acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
+
 			ociRepository := ociRepository(deployment)
 			orcFilename := roflCommon.GetOrcFilename(manifest, roflCommon.DeploymentName)
 			fmt.Printf("Pushing ROFL app to OCI repository '%s'...\n", ociRepository)
@@ -198,7 +200,6 @@ var (
 					TermCount:  deployTermCount,
 				})
 
-				acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
 				var sigTx, meta any
 				sigTx, meta, err = common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 				cobra.CheckErr(err)
@@ -263,7 +264,6 @@ var (
 					})},
 				})
 
-				acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
 				var sigTx, meta any
 				sigTx, meta, err = common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
 				cobra.CheckErr(err)

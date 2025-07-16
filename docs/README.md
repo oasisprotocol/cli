@@ -7,8 +7,8 @@ description: Powerful CLI for managing Oasis networks, nodes, tokens and dApps
 
 Oasis command-line interface (CLI) is a powerful all-in-one tool for
 interacting with the Oasis Network. You can download the latest release
-binaries from the [GitHub repository] (see the “Installing or Updating Oasis
-CLI on macOS” section below for macOS-specific instructions).
+binaries from the [GitHub repository] (see the "Installing or Updating Oasis
+CLI on macOS" section below for macOS-specific instructions).
 
 It boasts a number of handy features:
 
@@ -31,7 +31,7 @@ It boasts a number of handy features:
   - transaction encryption with X25519-Deoxys-II envelope
   - support for Ed25519, Ethereum-compatible Secp256k1 and Sr25519 signature
     schemes
-  - raw, BIP-44, ADR-8 and Ledger’s legacy derivation paths
+  - raw, BIP-44, ADR-8 and Ledger's legacy derivation paths
 - Node operator features:
   - Oasis node inspection and health-checks
   - network governance transactions
@@ -61,14 +61,14 @@ Terminal access and basic command-line knowledge.
   If not, add it by editing your shell configuration file (e.g., `~/.zshrc`
   for zsh):
 
-  ```bash
+  ```shell
   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
   source ~/.zshrc
   ```
 
   Create the directory if it doesn't exist:
 
-  ```bash
+  ```shell
   mkdir -p ~/.local/bin
   ```
 
@@ -83,38 +83,36 @@ Terminal access and basic command-line knowledge.
 
 2. **Extract the Archive**
 
-   ```bash
+   ```shell
    cd ~/Downloads
-   tar -xzf oasis_cli_0.14.1_darwin_all.tar.gz   # replace with your version
+   tar -xzf oasis_cli_X.Y.Z_darwin_all.tar.gz   # replace with your version
    ```
 
-   This creates a directory such as `oasis_cli_0.14.1_darwin_all`.
+   This creates a directory such as `oasis_cli_X.Y.Z_darwin_all`.
 
 3. **Navigate to the Extracted Directory**
 
-   ```bash
-   cd oasis_cli_0.14.1_darwin_all
+   ```shell
+   cd oasis_cli_X.Y.Z_darwin_all
    ```
 
 4. **Move the Binary to the User Path**
 
-   ```bash
+   ```shell
    mv oasis ~/.local/bin/
    ```
 
 5. **Bypass macOS Gatekeeper** (if you encounter a security warning)
 
-   ```bash
+   ```shell
    xattr -d com.apple.quarantine ~/.local/bin/oasis
    ```
 
    If a dialog appears, go to **System Settings → Privacy & Security →
-   Security**  
-   and click **“Open Anyway.”**
-
+   Security** and click **Open Anyway.**
 6. **Verify Installation**
 
-   ```bash
+   ```shell
    oasis --version
    ```
 
@@ -128,7 +126,7 @@ the latest version. Your configurations (wallets, settings) are preserved.
 
 1. **Check Current Version**
 
-   ```bash
+   ```shell
    oasis --version
    ```
 

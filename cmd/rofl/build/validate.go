@@ -116,22 +116,20 @@ func validateComposeFile(composeFile string, manifest *buildRofl.Manifest) error
 		}
 
 		for _, vol := range service.Volumes {
+			// Short compose syntax for volumes.
 			if volumeSourceIsValid(vol.Source) {
 				continue
 			}
 
-			var ok bool
-			for _, v := range proj.Volumes {
-				if vol.Source == v.Name {
-					ok = true
-					break
+			// Implicit declaration of volumes.
+			if v, ok := proj.Volumes[vol.Source]; ok {
+				// If the volume is external, it should be one of the valid locations.
+				if bool(!v.External) || volumeSourceIsValid(v.Name) {
+					continue
 				}
 			}
-			if ok {
-				continue
-			}
 
-			return fmt.Errorf("volume '%s:%s' of service '%s' has an invalid source (should start with '/storage' or be equal to '/run/rofl-appd.sock')", vol.Source, vol.Target, serviceName)
+			return fmt.Errorf("volume '%s:%s' of service '%s' has an invalid external source (should be '/run/rofl-appd.sock' or reside inside '/storage/')", vol.Source, vol.Target, serviceName)
 		}
 	}
 

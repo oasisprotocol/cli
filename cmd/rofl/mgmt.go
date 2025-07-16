@@ -6,7 +6,6 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -117,10 +116,15 @@ var (
 				cobra.CheckErr(fmt.Errorf("failed to write manifest: %w", err))
 			}
 
-			// Initialize git repository if not already present.
-			_, err = os.Stat(".git")
-			if err != nil && errors.Is(err, os.ErrNotExist) {
-				// Git directory doesn't exist, try to initialize.
+			// Check if we're inside an existing git repository.
+			var gitRepoExists bool
+			gitRevParseCmd := exec.Command("git", "rev-parse")
+			if err = gitRevParseCmd.Run(); err == nil {
+				gitRepoExists = true
+			}
+
+			if !gitRepoExists {
+				// Initialize a new git repository in the app directory.
 				gitInitCmd := exec.Command("git", "init")
 				if err = gitInitCmd.Run(); err != nil {
 					fmt.Printf("Git repository not initialized: %s.\n", err)
@@ -129,7 +133,7 @@ var (
 				}
 			}
 
-			// Initialize .gitignore.
+			// Initialize .gitignore in the app directory.
 			needToAddOrcIgnore := true
 			gitignore, err := os.Open(".gitignore")
 			if err == nil {

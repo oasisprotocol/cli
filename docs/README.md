@@ -6,8 +6,10 @@ description: Powerful CLI for managing Oasis networks, nodes, tokens and dApps
 # Oasis Command Line Interface
 
 Oasis command-line interface (CLI) is a powerful all-in-one tool for
-interacting with the Oasis Network. You can download the latest release
-binaries from the [GitHub repository].
+interacting with the Oasis Network.
+Head to the **[installation instructions]** to download and install it!
+
+[installation instructions]: setup.mdx
 
 It boasts a number of handy features:
 
@@ -19,8 +21,8 @@ It boasts a number of handy features:
   - connecting to remote (via TCP/IP) or local (Unix socket) Oasis node
     instance
 - Powerful wallet features:
-  - standard token operations (transfers, allowances, deposits, withdrawals and
-    balance queries)
+  - standard token operations (transfers, allowances, deposits, withdrawals
+    and balance queries)
   - file-based wallet with password protection
   - full Ledger hardware wallet support
   - address book
@@ -32,7 +34,7 @@ It boasts a number of handy features:
     schemes
   - raw, BIP-44, ADR-8 and Ledger's legacy derivation paths
 - Node operator features:
-  - Oasis node inspection and healthchecks
+  - Oasis node inspection and health-checks
   - network governance transactions
   - staking reward schedule transactions
 - Developer features:
@@ -43,5 +45,4 @@ It boasts a number of handy features:
     calls
   - debugging tools for deployed Wasm contracts
   - inspection of blocks, transactions, results and events
-
-[GitHub repository]: https://github.com/oasisprotocol/cli/releases
+  

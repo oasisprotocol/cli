@@ -15,7 +15,7 @@ require (
 	github.com/adrg/xdg v0.5.3
 	github.com/btcsuite/btcd/btcec/v2 v2.3.4
 	github.com/compose-spec/compose-go/v2 v2.7.1
-	github.com/ethereum/go-ethereum v1.15.11
+	github.com/ethereum/go-ethereum v1.16.1
 	github.com/foxboron/go-uefi v0.0.0-20241017190036-fab4fdf2f2f3
 	github.com/github/go-spdx/v2 v2.3.3
 	github.com/google/uuid v1.6.0
@@ -58,8 +58,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/cometbft/cometbft v0.37.15 // indirect
-	github.com/consensys/bavard v0.1.27 // indirect
-	github.com/consensys/gnark-crypto v0.16.0 // indirect
+	github.com/consensys/gnark-crypto v0.18.0 // indirect
 	github.com/crate-crypto/go-eth-kzg v1.3.0 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20240724233137-53bbb0ceb27a // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
@@ -110,7 +109,6 @@ require (
 	github.com/mgutz/ansi v0.0.0-20170206155736-9520e82c474b // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
-	github.com/mmcloughlin/addchain v0.4.0 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
 	github.com/multiformats/go-base36 v0.2.0 // indirect
@@ -165,5 +163,4 @@ require (
 	google.golang.org/protobuf v1.36.4 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	lukechampine.com/blake3 v1.3.0 // indirect
-	rsc.io/tmplfunc v0.0.3 // indirect
 )

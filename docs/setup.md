@@ -1,78 +1,151 @@
-# Setup
+---
+title: Oasis CLI
+description: Powerful CLI for managing Oasis networks, nodes, tokens and dApps
+---
 
-## Download and Run
+# Oasis Command Line Interface
 
-Download the latest release from our [GitHub repository][cli-releases] and
-extract it to your favorite application folder.
+The Oasis Command Line Interface (CLI) is a powerful, all-in-one tool for
+interacting with the Oasis Network. [5] You can download the latest release
+binaries from the [GitHub repository].
 
-:::info
+It boasts a number of handy features:
 
-Oasis is currently providing official amd64 for Linux and ARM builds for MacOS.
-If you want to run it on another platform, you will have to
-[build it from source][cli-source].
+- **Flexible setup**:
+  - Supports Mainnet, Testnet, Localnet, or any other deployment of the Oasis
+    network. [5]
+  - Consensus layer configuration with an arbitrary token. [5]
+  - Configuration of custom ParaTimes with an arbitrary token. [5]
+  - Connecting to a remote (via TCP/IP) or local (Unix socket) Oasis node
+    instance. [5]
+- **Powerful wallet features**:
+  - Standard token operations (transfers, allowances, deposits, withdrawals,
+    and balance queries). [5]
+  - File-based wallet with password protection. [5]
+  - Full Ledger hardware wallet support. [5]
+  - Address book. [5]
+  - Generation, signing, and submitting transactions in non-interactive
+    (headless) mode. [5]
+  - Offline transaction generation for air-gapped machines. [5]
+  - Transaction encryption with X25519-Deoxys-II envelope. [5]
+  - Support for Ed25519, Ethereum-compatible Secp256k1, and Sr25519 signature
+    schemes. [5]
+  - Raw, BIP-44, ADR-8, and Ledger's legacy derivation paths. [5]
+- **Node operator features**:
+  - Oasis node inspection and health checks. [5]
+  - Network governance transactions. [5]
+  - Staking reward schedule transactions. [5]
+- **Developer features**:
+  - Built-in testing accounts compatible with the Oasis test runner, the Oasis
+    CI, and the official Sapphire and Emerald Localnet Docker images. [5]
+  - Oasis ROFL app compilation, deployment, and management. [5]
+  - Oasis Wasm smart contract code deployment, instantiation, management, and
+    calls. [5]
+  - Debugging tools for deployed Wasm contracts. [5]
+  - Inspection of blocks, transactions, results, and events. [5]
 
-:::
+## Installation
 
-:::info
+### macOS
 
-We suggest that you update your system path to include a directory containing
-the `oasis` binary or create a symbolic link to `oasis` in your
-system path, so you can access it globally.
+This guide covers the installation or update process for the Oasis CLI on macOS
+(compatible with Apple Silicon like M1/M2/M3). It assumes you have Terminal
+access and basic command-line knowledge.
 
-:::
+#### Prerequisites
 
-Run the Oasis CLI by typing `oasis`.
+- macOS (tested on Apple Silicon).
+- To avoid modifying system directories, we'll install the binary in a
+  user-specific path (`~/.local/bin`). Ensure `~/.local/bin` is in your
+  `PATH`. If not, add it by editing your shell configuration file (e.g.,
+  `~/.zshrc` for zsh):
 
-![code](../examples/setup/first-run.out)
+    ```
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+    source ~/.zshrc
+    ```
 
-When running the Oasis CLI for the first time, it will generate a configuration
-file and populate it with the current Mainnet and Testnet networks. It will also
-configure all [ParaTimes supported by the Oasis Foundation][paratimes].
+- Create the directory if it doesn't exist: `mkdir -p ~/.local/bin`.
 
-## Configuration
+#### Installation Steps
 
-The configuration folder of Oasis CLI is located:
+1. **Download the Binary**:
+   - Visit the Oasis CLI GitHub releases page:
+     <https://github.com/oasisprotocol/cli/releases>.
+   - Download the latest macOS archive, e.g.,
+     `oasis_cli_X.Y.Z_darwin_all.tar.gz` (replace X.Y.Z with the version,
+     like 0.14.1).
 
-- on Windows:
-  - `%USERPROFILE%\AppData\Local\oasis\`
-- on macOS:
-  - `/Users/$USER/Library/Application Support/oasis/`
-- on Linux:
-  - `$HOME/.config/oasis/`
+2. **Extract the Archive**:
+   - Open Terminal and navigate to your Downloads folder:
 
-There, you will find `cli.toml` which contains the configuration of the
-networks, ParaTimes and your wallet. Additionally, each file-based account in
-your wallet will have a separate, password-encrypted JSON file in the same
-folder named after the name of the account with the `.wallet` extension.
+        ```
+        cd ~/Downloads
+        ```
 
-## Multiple Profiles
+   - Extract the file (replace with your version):
 
-You can utilize multiple profiles of your Oasis CLI. To create a new profile,
-move your existing configuration folder to another place, for example:
+        ```
+        tar -xzf oasis_cli_0.14.1_darwin_all.tar.gz
+        ```
 
-```shell
-mv $HOME/.config/oasis $HOME/.config/oasis_dev
-```
+   - This creates a directory like `oasis_cli_0.14.1_darwin_all`.
 
-Then, invoke `oasis` with arbitrary command to set up a fresh configuration
-folder under `~/.config/oasis`. For example:
+3. **Navigate to the Extracted Directory**:
 
-![code shell](../examples/setup/wallet-list.in)
+    ```
+    cd oasis_cli_0.14.1_darwin_all
+    ```
 
-![code](../examples/setup/wallet-list.out)
+4. **Move the Binary to User Path**:
 
-Now you can switch between the `oasis_dev` and the new profile by passing
-`--config` parameter pointing to `cli.toml` in the desired configuration folder.
+    ```
+    mv oasis ~/.local/bin/
+    ```
 
-![code shell](../examples/setup/wallet-list-config.in.static)
+5. **Bypass macOS Gatekeeper (if prompted with a security warning)**:
 
-![code](../examples/setup/wallet-list-config.out.static)
+    ```
+    xattr -d com.apple.quarantine ~/.local/bin/oasis
+    ```
 
-## Back Up Your Wallet
+   - If a dialog appears, go to System Settings > Privacy & Security >
+     Security, and click "Open Anyway".
 
-To back up your complete Oasis CLI configuration including your wallet, archive
-the configuration folder containing `cli.toml` and `.wallet` files.
+6. **Verify Installation**:
 
-[cli-releases]: https://github.com/oasisprotocol/cli/releases
-[cli-source]: https://github.com/oasisprotocol/cli
-[paratimes]: https://github.com/oasisprotocol/docs/blob/main/docs/build/tools/other-paratimes/README.mdx
+    ```
+    oasis --version
+    ```
+
+   - This should display the CLI version. If successful, the Oasis CLI is
+     installed and ready to use.
+
+## Updating the Oasis CLI
+
+To update the Oasis CLI to a newer version, simply overwrite the binary with
+the latest version. This preserves your configurations (e.g., wallets and
+settings).
+
+1. **Check Current Version**:
+
+    ```
+    oasis --version
+    ```
+
+    Compare with the latest on <https://github.com/oasisprotocol/cli/releases>
+    to see if an update is available.
+
+2. **Update Process**:
+   Follow the same installation steps above with the new version. The key
+   difference is that you're overwriting the existing binary rather than
+   installing it fresh. Your configurations will be preserved.
+
+## Notes
+
+- Clean up: Optionally delete the downloaded .tar.gz and extracted directory
+  after installation/update.
+- For major version updates, review the release notes on GitHub for any
+  breaking changes or additional steps.
+
+[GitHub repository]: https://github.com/oasisprotocol/cli/release

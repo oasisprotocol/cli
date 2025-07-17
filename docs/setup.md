@@ -1,24 +1,110 @@
 # Setup
+<!-- markdownlint-disable MD013 MD033 MD046 -->
 
 ## Download and Run
 
 Download the latest release from our [GitHub repository][cli-releases] and
-extract it to your favorite application folder.
+follow the instructions for **your platform** below:
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+<Tabs>
+  <TabItem value="MacOS" label="macOS">
+    ### Prerequisites
+
+    * macOS (Apple Silicon & Intel).
+    * Ensure `~/.local/bin` is on your `PATH` (add it in `~/.zshrc` or `~/.bashrc`):
+      ```shell
+      echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+      source ~/.zshrc
+      mkdir -p ~/.local/bin
+      ```
+
+    ### Installation
+
+    1. Download the latest **macOS** archive (e.g. `oasis_cli_X.Y.Z_darwin_all.tar.gz`) from the releases page.
+    2. Extract it:
+       ```shell
+       cd ~/Downloads
+       tar -xzf oasis_cli_X.Y.Z_darwin_all.tar.gz   # adjust version
+       ```
+    3. Move the binary to your path:
+       ```shell
+       mv oasis ~/.local/bin/
+       ```
+    4. Bypass Gatekeeper (first run only):
+       ```shell
+       xattr -d com.apple.quarantine ~/.local/bin/oasis
+       ```
+       If a dialog appears, open **System Settings → Privacy & Security** and click **Open Anyway**.
+    5. Verify:
+       ```shell
+       oasis --version
+       ```
+  </TabItem>
+
+  <TabItem value="Linux" label="Linux">
+    ### Prerequisites
+
+    * x86-64 Linux.
+    * Ensure `~/.local/bin` is on your `PATH`:
+      ```shell
+      echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+      source ~/.bashrc
+      mkdir -p ~/.local/bin
+      ```
+
+    ### Installation
+
+    1. Download the latest **Linux** archive (e.g. `oasis_cli_X.Y.Z_linux_amd64.tar.gz`).
+    2. Extract it:
+       ```shell
+       cd ~/Downloads
+       tar -xzf oasis_cli_X.Y.Z_linux_amd64.tar.gz   # adjust version
+       ```
+    3. Move the binary to your path:
+       ```shell
+       mv oasis ~/.local/bin/
+       ```
+    4. Verify:
+       ```shell
+       oasis --version
+       ```
+  </TabItem>
+
+  <TabItem value="Windows" label="Windows">
+    ### Prerequisites
+
+    * Windows 10/11 (x86-64).
+    * Decide on a folder already in your `PATH` (e.g. `%USERPROFILE%\bin`) or add one.
+
+    ### Installation
+
+    1. Download the latest **Windows** ZIP file (e.g. `oasis_cli_X.Y.Z_windows_amd64.zip`).
+    2. Extract it (double-click or `tar -xf` in PowerShell).
+    3. Copy `oasis.exe` to a directory on your `PATH`, for example:
+       ```powershell
+       New-Item -ItemType Directory -Force "$env:USERPROFILE\bin"
+       Copy-Item .\oasis.exe "$env:USERPROFILE\bin\"
+       ```
+       If that folder isn’t on the `PATH`, add it via **System Properties → Environment Variables**.
+    4. Verify:
+       ```powershell
+       oasis --version
+       ```
+  </TabItem>
+</Tabs>
 
 :::info
-
-Oasis is currently providing official amd64 for Linux and ARM builds for MacOS.
-If you want to run it on another platform, you will have to
-[build it from source][cli-source].
-
+Oasis currently provides official `amd64` builds for Linux and ARM builds
+for macOS. If you need another platform, you can still
+[build the CLI from source][cli-source].
 :::
 
 :::info
-
-We suggest that you update your system path to include a directory containing
-the `oasis` binary or create a symbolic link to `oasis` in your
-system path, so you can access it globally.
-
+For convenience, add the folder containing `oasis`/`oasis.exe` to your
+system `PATH` or create a symlink, so you can invoke the CLI globally.
 :::
 
 Run the Oasis CLI by typing `oasis`.
@@ -28,106 +114,6 @@ Run the Oasis CLI by typing `oasis`.
 When running the Oasis CLI for the first time, it will generate a configuration
 file and populate it with the current Mainnet and Testnet networks. It will also
 configure all [ParaTimes supported by the Oasis Foundation][paratimes].
-
-## Installing or Updating Oasis CLI on macOS
-
-This guide covers the installation or update process for the Oasis CLI on
-macOS (compatible with Apple Silicon M1/M2/M3). It assumes you have Terminal
-access and basic command-line knowledge.
-
-### Prerequisites
-
-- macOS (tested on Apple Silicon).
-- To avoid modifying system directories, we’ll install the binary in a
-  user-specific path (`~/.local/bin`). Ensure `~/.local/bin` is in your `PATH`.
-  If not, add it by editing your shell configuration file (e.g., `~/.zshrc`
-  for zsh):
-
-  ```shell
-  echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
-  source ~/.zshrc
-  ```
-
-  Create the directory if it doesn’t exist:
-
-  ```shell
-  mkdir -p ~/.local/bin
-  ```
-
-### Installation Steps
-
-1. **Download the Binary**
-
-   - Visit the Oasis CLI [cli-releases] page.
-   - Download the latest macOS archive, e.g.,
-     `oasis_cli_X.Y.Z_darwin_all.tar.gz` (replace `X.Y.Z` with the version,
-     like `0.14.1`).
-
-2. **Extract the Archive**
-
-   ```shell
-   cd ~/Downloads
-   tar -xzf oasis_cli_X.Y.Z_darwin_all.tar.gz   # replace with your version
-   ```
-
-   This creates a directory such as `oasis_cli_X.Y.Z_darwin_all`.
-
-3. **Navigate to the Extracted Directory**
-
-   ```shell
-   cd oasis_cli_X.Y.Z_darwin_all
-   ```
-
-4. **Move the Binary to the User Path**
-
-   ```shell
-   mv oasis ~/.local/bin/
-   ```
-
-5. **Bypass macOS Gatekeeper** (if you encounter a security warning)
-
-   ```shell
-   xattr -d com.apple.quarantine ~/.local/bin/oasis
-   ```
-
-   If a dialog appears, go to **System Settings → Privacy & Security →
-   Security** and click **Open Anyway**.
-
-6. **Verify Installation**
-
-   ```shell
-   oasis --version
-   ```
-
-   The CLI version should be displayed. If so, the Oasis CLI is installed and
-   ready to use.
-
-### Updating the Oasis CLI
-
-To update the Oasis CLI to a newer version, simply overwrite the binary with
-the latest version. Your configurations (wallets, settings) are preserved.
-
-1. **Check Current Version**
-
-   ```shell
-   oasis --version
-   ```
-
-   Compare the output with the latest version on the [cli-releases] page to
-   see if an update is available.
-
-2. **Update Process**
-
-   Follow the same installation steps above using the new version archive.
-   Because you are overwriting the existing binary, no additional cleanup is
-   required.
-
-### Notes
-
-- Clean-up: You can delete the downloaded `.tar.gz` file and extracted
-  directory after installation or update.
-- For major version updates, review the release notes on GitHub for any
-  breaking changes or additional steps.
 
 ## Configuration
 

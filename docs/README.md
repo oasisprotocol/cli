@@ -6,7 +6,10 @@ description: Powerful CLI for managing Oasis networks, nodes, tokens and dApps
 # Oasis Command Line Interface
 
 Oasis command-line interface (CLI) is a powerful all-in-one tool for
-interacting with the Oasis Network. You can download the latest release
+interacting with the Oasis Network.
+Head to the **[installation instructions]** to download and install it!
+
+[installation instructions]: setup.md
 binaries from the [GitHub repository] (see the [Installing or Updating Oasis
 CLI on macOS](setup.md#installing-or-updating-oasis-cli-on-macos) for macOS.
 

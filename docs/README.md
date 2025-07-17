@@ -10,8 +10,7 @@ interacting with the Oasis Network.
 Head to the **[installation instructions]** to download and install it!
 
 [installation instructions]: setup.md
-binaries from the [GitHub repository] (see the [Installing or Updating Oasis
-CLI on macOS](setup.md#installing-or-updating-oasis-cli-on-macos) for macOS.
+binaries from the [GitHub repository].
 
 It boasts a number of handy features:
 

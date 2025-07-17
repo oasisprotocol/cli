@@ -1,16 +1,18 @@
-# Setup
-<!-- markdownlint-disable MD013 MD033 MD046 -->
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
+# Setup
+<!-- markdownlint-disable MD013 MD033 MD046 -->
 
 ## Download and Run
 
 Download the latest release from our [GitHub repository][cli-releases] and
 follow the instructions for **your platform** below:
 
+The Oasis team provides CLI binaries for Linux, macOS and Windows operating systems. If you want to run it on another platform, you can [build the CLI from source][cli-source].
+
 <Tabs>
   <TabItem value="Linux" label="Linux">
-    ### Prerequisites
+    #### Prerequisites
 
     - amd64 or arm64 Linux.
     - Ensure `~/.local/bin` is on your `PATH`:
@@ -38,8 +40,8 @@ follow the instructions for **your platform** below:
        ```
   </TabItem>
 
-  <TabItem value="MacOS" label="macOS">
-    ### Prerequisites
+  <TabItem value="macOS" label="macOS">
+    #### Prerequisites
 
     - macOS (Apple Silicon & Intel).
     - Ensure `~/.local/bin` is on your `PATH` (add it in `~/.zshrc` or `~/.bashrc`):
@@ -73,7 +75,7 @@ follow the instructions for **your platform** below:
   </TabItem>
 
   <TabItem value="Windows" label="Windows">
-    ### Prerequisites
+    #### Prerequisites
 
     - Windows 10/11 (x86-64).
     - Decide on a folder already in your `PATH` (e.g. `%USERPROFILE%\bin`) or add one.
@@ -94,17 +96,6 @@ follow the instructions for **your platform** below:
        ```
   </TabItem>
 </Tabs>
-
-:::info
-Oasis currently provides official `amd64` and `arm64` builds for Linux and ARM builds
-for macOS. If you need another platform, you can still
-[build the CLI from source][cli-source].
-:::
-
-:::info
-For convenience, add the folder containing `oasis` (`oasis.exe` on Windows) to your
-system `PATH` or create a symlink, so you can invoke the CLI globally.
-:::
 
 Run the Oasis CLI by typing `oasis`.
 

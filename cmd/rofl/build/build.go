@@ -89,7 +89,7 @@ var (
 
 			var buildEnv env.ExecEnv
 			switch {
-			case manifest.Artifacts.Builder == "" || noDocker:
+			case manifest.Artifacts == nil || manifest.Artifacts.Builder == "" || noDocker:
 				buildEnv = env.NewNativeEnv()
 			default:
 				var baseDir string

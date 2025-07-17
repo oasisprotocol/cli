@@ -1,20 +1,48 @@
 # Setup
 <!-- markdownlint-disable MD013 MD033 MD046 -->
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 ## Download and Run
 
 Download the latest release from our [GitHub repository][cli-releases] and
 follow the instructions for **your platform** below:
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 <Tabs>
+  <TabItem value="Linux" label="Linux">
+    ### Prerequisites
+
+    - amd64 or arm64 Linux.
+    - Ensure `~/.local/bin` is on your `PATH`:
+      ```shell
+      echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+      source ~/.bashrc
+      mkdir -p ~/.local/bin
+      ```
+
+    ### Installation
+
+    1. Download the latest **Linux** archive (e.g. `oasis_cli_X.Y.Z_linux_amd64.tar.gz`).
+    2. Extract it:
+       ```shell
+       cd ~/Downloads
+       tar -xzf oasis_cli_X.Y.Z_linux_amd64.tar.gz   # adjust version and architecture
+       ```
+    3. Move the binary to your path:
+       ```shell
+       mv oasis ~/.local/bin/
+       ```
+    4. Verify:
+       ```shell
+       oasis --version
+       ```
+  </TabItem>
+
   <TabItem value="MacOS" label="macOS">
     ### Prerequisites
 
-    * macOS (Apple Silicon & Intel).
-    * Ensure `~/.local/bin` is on your `PATH` (add it in `~/.zshrc` or `~/.bashrc`):
+    - macOS (Apple Silicon & Intel).
+    - Ensure `~/.local/bin` is on your `PATH` (add it in `~/.zshrc` or `~/.bashrc`):
       ```shell
       echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
       source ~/.zshrc
@@ -44,40 +72,11 @@ import TabItem from '@theme/TabItem';
        ```
   </TabItem>
 
-  <TabItem value="Linux" label="Linux">
-    ### Prerequisites
-
-    * x86-64 Linux.
-    * Ensure `~/.local/bin` is on your `PATH`:
-      ```shell
-      echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-      source ~/.bashrc
-      mkdir -p ~/.local/bin
-      ```
-
-    ### Installation
-
-    1. Download the latest **Linux** archive (e.g. `oasis_cli_X.Y.Z_linux_amd64.tar.gz`).
-    2. Extract it:
-       ```shell
-       cd ~/Downloads
-       tar -xzf oasis_cli_X.Y.Z_linux_amd64.tar.gz   # adjust version
-       ```
-    3. Move the binary to your path:
-       ```shell
-       mv oasis ~/.local/bin/
-       ```
-    4. Verify:
-       ```shell
-       oasis --version
-       ```
-  </TabItem>
-
   <TabItem value="Windows" label="Windows">
     ### Prerequisites
 
-    * Windows 10/11 (x86-64).
-    * Decide on a folder already in your `PATH` (e.g. `%USERPROFILE%\bin`) or add one.
+    - Windows 10/11 (x86-64).
+    - Decide on a folder already in your `PATH` (e.g. `%USERPROFILE%\bin`) or add one.
 
     ### Installation
 
@@ -97,13 +96,13 @@ import TabItem from '@theme/TabItem';
 </Tabs>
 
 :::info
-Oasis currently provides official `amd64` builds for Linux and ARM builds
+Oasis currently provides official `amd64` and `arm64` builds for Linux and ARM builds
 for macOS. If you need another platform, you can still
 [build the CLI from source][cli-source].
 :::
 
 :::info
-For convenience, add the folder containing `oasis`/`oasis.exe` to your
+For convenience, add the folder containing `oasis` (`oasis.exe` on Windows) to your
 system `PATH` or create a symlink, so you can invoke the CLI globally.
 :::
 

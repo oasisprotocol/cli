@@ -9,7 +9,7 @@ Oasis command-line interface (CLI) is a powerful all-in-one tool for
 interacting with the Oasis Network.
 Head to the **[installation instructions]** to download and install it!
 
-[installation instructions]: setup.md
+[installation instructions]: setup.mdx
 binaries from the [GitHub repository].
 
 It boasts a number of handy features:

@@ -1,3 +1,4 @@
+version: 2
 project_name: Oasis CLI
 
 before:
@@ -14,6 +15,7 @@ universal_binaries:
 
 env:
   - CGO_ENABLED=1
+  - GOLDFLAGS_VERSION=-X github.com/oasisprotocol/cli/version.Software={{ .Version }}
 
 builds:
   - &build-common
@@ -70,32 +72,33 @@ builds:
       - amd64
 
 archives:
-  - name_template: "{{replace .ProjectName \" \" \"_\" | tolower}}_{{.Version}}_{{.Os}}_{{.Arch}}"
+  - name_template: '{{replace .ProjectName " " "_" | tolower}}_{{.Version}}_{{.Os}}_{{.Arch}}'
     wrap_in_directory: true
-    builds:
+    ids:
       - oasis-linux-amd64
       - oasis-linux-arm64
       - oasis-darwin-universal
       - oasis-windows-amd64
     format_overrides:
       - goos: windows
-        format: zip
+        formats:
+          - zip
 
 checksum:
   name_template: SHA256SUMS-{{.Version}}.txt
   algorithm: sha256
 
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 
 changelog:
   sort: asc
   use: github
   filters:
     exclude:
-    - Merge pull request
-    - Merge remote-tracking branch
-    - Merge branch
+      - Merge pull request
+      - Merge remote-tracking branch
+      - Merge branch
   groups:
     - title: Breaking changes
       regexp: "^.*breaks[(\\w)]*:+.*$"
@@ -121,3 +124,21 @@ release:
 
   footer: |
     **Full Changelog**: https://github.com/oasisprotocol/cli/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+homebrew_casks:
+  - name: oasis-cli
+    binary: oasis
+    directory: Casks
+    homepage: "https://github.com/oasisprotocol/cli"
+    description: "Command‑line interface for the Oasis Network"
+    commit_author:
+      name: github-actions[bot]
+      email: github-actions[bot]@users.noreply.github.com
+    commit_msg_template: "chore(brew): update {{ .ProjectName }} to {{ .Tag }}"
+    repository:
+      owner: oasisprotocol
+      name: cli
+      branch: brew-oasis-{{ .Tag }}
+      pull_request:
+        enabled: true
+        draft: false

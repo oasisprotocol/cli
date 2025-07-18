@@ -12,7 +12,7 @@ jobs:
   goreleaser:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/goreleaser/goreleaser-cross:v1.22.3
+      image: ghcr.io/goreleaser/goreleaser-cross:v1.24.5
       options: --user 1001
     steps:
       - name: Checkout
@@ -28,7 +28,7 @@ jobs:
         with:
           install-only: true
           distribution: goreleaser
-          version: 1.16.1
+          version: 2.11.0
       - name: Build and publish the next release
         run: |
           make release-build

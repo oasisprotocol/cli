@@ -34,3 +34,22 @@ jobs:
           make release-build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Bump Homebrew formula
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          TAG: ${{ github.ref_name }}   # e.g. v0.4.5
+        run: |
+          FORMULA=Formula/oasis.rb
+          URL="https://github.com/oasisprotocol/cli/archive/refs/tags/${TAG}.tar.gz"
+          SHA256=$(curl -Ls $URL | shasum -a 256 | cut -d" " -f1)
+
+          sed -i.bak -E "s/^  version \".*\"/  version \"${TAG#v}\"/"  $FORMULA
+          sed -i.bak -E "s|^  url \".*\"|  url \"${URL}\"|"            $FORMULA
+          sed -i.bak -E "s/^  sha256 \".*\"/  sha256 \"${SHA256}\"/"  $FORMULA
+          rm $FORMULA.bak
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add $FORMULA
+          git commit -m "brew(oasis): bump to ${TAG}"
+          git push

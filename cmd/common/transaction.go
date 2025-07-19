@@ -35,7 +35,7 @@ var (
 	txOffline    bool
 	txNonce      uint64
 	txGasLimit   uint64
-	txGasPrice   string
+	TxGasPrice   string
 	txFeeDenom   string
 	txEncrypted  bool
 	txUnsigned   bool
@@ -109,8 +109,8 @@ func PrepareConsensusTransaction(ctx context.Context, npa *NPASelection, signer 
 	// Gas price estimation if not specified.
 	gasPrice := quantity.NewQuantity()
 	var err error
-	if txGasPrice != "" {
-		gasPrice, err = helpers.ParseConsensusDenomination(npa.Network, txGasPrice)
+	if TxGasPrice != "" {
+		gasPrice, err = helpers.ParseConsensusDenomination(npa.Network, TxGasPrice)
 		if err != nil {
 			return 0, nil, fmt.Errorf("bad gas price: %w", err)
 		}
@@ -242,8 +242,8 @@ func PrepareParatimeTransaction(ctx context.Context, npa *NPASelection, account 
 	// Gas price estimation if not specified.
 	gasPrice := &types.BaseUnits{}
 	feeDenom := types.Denomination(txFeeDenom)
-	if txGasPrice != "" {
-		gasPrice, err = helpers.ParseParaTimeDenomination(npa.ParaTime, txGasPrice, feeDenom)
+	if TxGasPrice != "" {
+		gasPrice, err = helpers.ParseParaTimeDenomination(npa.ParaTime, TxGasPrice, feeDenom)
 		if err != nil {
 			return 0, nil, "", fmt.Errorf("bad gas price: %w", err)
 		}
@@ -601,7 +601,7 @@ func init() {
 	RuntimeTxFlags.BoolVar(&txOffline, "offline", false, "do not perform any operations requiring network access")
 	RuntimeTxFlags.Uint64Var(&txNonce, "nonce", invalidNonce, "override nonce to use")
 	RuntimeTxFlags.Uint64Var(&txGasLimit, "gas-limit", invalidGasLimit, "override gas limit to use (disable estimation)")
-	RuntimeTxFlags.StringVar(&txGasPrice, "gas-price", "", "override gas price to use")
+	RuntimeTxFlags.StringVar(&TxGasPrice, "gas-price", "", "override gas price to use")
 	RuntimeTxFlags.StringVar(&txFeeDenom, "fee-denom", "", "override fee denomination (defaults to native)")
 	RuntimeTxFlags.BoolVar(&txEncrypted, "encrypted", false, "encrypt transaction call data (requires online mode)")
 	RuntimeTxFlags.AddFlagSet(AnswerYesFlag)
@@ -613,7 +613,7 @@ func init() {
 	TxFlags.BoolVar(&txOffline, "offline", false, "do not perform any operations requiring network access")
 	TxFlags.Uint64Var(&txNonce, "nonce", invalidNonce, "override nonce to use")
 	TxFlags.Uint64Var(&txGasLimit, "gas-limit", invalidGasLimit, "override gas limit to use (disable estimation)")
-	TxFlags.StringVar(&txGasPrice, "gas-price", "", "override gas price to use")
+	TxFlags.StringVar(&TxGasPrice, "gas-price", "", "override gas price to use")
 	TxFlags.AddFlagSet(AnswerYesFlag)
 	TxFlags.BoolVar(&txUnsigned, "unsigned", false, "do not sign transaction")
 	TxFlags.StringVar(&txFormat, "format", "json", "transaction output format (for offline/unsigned modes) [json, cbor]")

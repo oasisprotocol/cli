@@ -54,8 +54,12 @@ var (
 			c, err := connection.Connect(ctx, npa.Network)
 			cobra.CheckErr(err)
 
-			addr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, targetAddress)
+			nativeAddr, ethAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, targetAddress)
 			cobra.CheckErr(err)
+
+			if name := common.FindAccountName(nativeAddr.String()); name != "" {
+				fmt.Printf("Name:             %s\n", name)
+			}
 
 			height, err := common.GetActualHeight(
 				ctx,
@@ -64,7 +68,7 @@ var (
 			cobra.CheckErr(err)
 
 			ownerQuery := &staking.OwnerQuery{
-				Owner:  addr.ConsensusAddress(),
+				Owner:  nativeAddr.ConsensusAddress(),
 				Height: height,
 			}
 
@@ -73,8 +77,10 @@ var (
 
 			consensusAccount, err := c.Consensus().Staking().Account(ctx, ownerQuery)
 			cobra.CheckErr(err)
-
-			fmt.Printf("Address: %s\n", addr)
+			if ethAddr != nil {
+				fmt.Printf("Ethereum address: %s\n", ethAddr)
+			}
+			fmt.Printf("Native address:   %s\n", nativeAddr)
 			fmt.Println()
 			fmt.Printf("=== CONSENSUS LAYER (%s) ===\n", npa.NetworkName)
 			fmt.Printf("  Nonce: %d\n", consensusAccount.General.Nonce)
@@ -93,7 +99,7 @@ var (
 
 			prettyPrintAccountBalanceAndDelegationsFrom(
 				npa.Network,
-				addr,
+				nativeAddr,
 				consensusAccount.General,
 				outgoingDelegations,
 				outgoingDebondingDelegations,
@@ -105,7 +111,7 @@ var (
 				fmt.Println("  Allowances for this Account:")
 				prettyPrintAllowances(
 					npa.Network,
-					addr,
+					nativeAddr,
 					consensusAccount.General.Allowances,
 					"    ",
 					os.Stdout,
@@ -123,7 +129,7 @@ var (
 					fmt.Println("  Active Delegations to this Account:")
 					prettyPrintDelegationsTo(
 						npa.Network,
-						addr,
+						nativeAddr,
 						consensusAccount.Escrow.Active,
 						incomingDelegations,
 						"    ",
@@ -135,7 +141,7 @@ var (
 					fmt.Println("  Debonding Delegations to this Account:")
 					prettyPrintDelegationsTo(
 						npa.Network,
-						addr,
+						nativeAddr,
 						consensusAccount.Escrow.Debonding,
 						incomingDebondingDelegations,
 						"    ",
@@ -177,7 +183,7 @@ var (
 				}
 
 				// Query runtime account when a ParaTime has been configured.
-				rtBalances, err := c.Runtime(npa.ParaTime).Accounts.Balances(ctx, round, *addr)
+				rtBalances, err := c.Runtime(npa.ParaTime).Accounts.Balances(ctx, round, *nativeAddr)
 				cobra.CheckErr(err)
 
 				var hasNonZeroBalance bool
@@ -187,7 +193,7 @@ var (
 					}
 				}
 
-				nonce, err := c.Runtime(npa.ParaTime).Accounts.Nonce(ctx, round, *addr)
+				nonce, err := c.Runtime(npa.ParaTime).Accounts.Nonce(ctx, round, *nativeAddr)
 				cobra.CheckErr(err)
 				hasNonZeroNonce := nonce > 0
 
@@ -214,17 +220,17 @@ var (
 							ctx,
 							round,
 							&consensusaccounts.DelegationsQuery{
-								From: *addr,
+								From: *nativeAddr,
 							},
 						)
 						rtUndelegations, _ := c.Runtime(npa.ParaTime).ConsensusAccounts.Undelegations(
 							ctx,
 							round,
 							&consensusaccounts.UndelegationsQuery{
-								To: *addr,
+								To: *nativeAddr,
 							},
 						)
-						prettyPrintParaTimeDelegations(ctx, c, height, npa, addr, rtDelegations, rtUndelegations, "  ", os.Stdout)
+						prettyPrintParaTimeDelegations(ctx, c, height, npa, nativeAddr, rtDelegations, rtUndelegations, "  ", os.Stdout)
 					}
 				}
 			}

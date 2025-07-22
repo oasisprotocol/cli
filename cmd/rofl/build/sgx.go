@@ -32,6 +32,7 @@ func sgxBuild(
 	manifest *buildRofl.Manifest,
 	deployment *buildRofl.Deployment,
 	bnd *bundle.Bundle,
+	locked bool,
 ) {
 	fmt.Println("Building an SGX-based Rust ROFL application...")
 
@@ -39,14 +40,14 @@ func sgxBuild(
 
 	// First build for the default target.
 	fmt.Println("Building ELF binary...")
-	elfPath, err := cargo.Build(buildEnv, true, "x86_64-unknown-linux-gnu", features)
+	elfPath, err := cargo.Build(buildEnv, true, locked, "x86_64-unknown-linux-gnu", features)
 	if err != nil {
 		cobra.CheckErr(fmt.Errorf("failed to build ELF binary: %w", err))
 	}
 
 	// Then build for the SGX target.
 	fmt.Println("Building SGXS binary...")
-	elfSgxPath, err := cargo.Build(buildEnv, true, "x86_64-fortanix-unknown-sgx", nil)
+	elfSgxPath, err := cargo.Build(buildEnv, true, locked, "x86_64-fortanix-unknown-sgx", nil)
 	if err != nil {
 		cobra.CheckErr(fmt.Errorf("failed to build SGXS binary: %w", err))
 	}

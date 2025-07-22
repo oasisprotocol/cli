@@ -134,12 +134,12 @@ var (
 					return fmt.Errorf("unsupported app kind for SGX TEE: %s", manifest.Kind)
 				}
 
-				sgxBuild(buildEnv, npa, manifest, deployment, bnd)
+				sgxBuild(buildEnv, npa, manifest, deployment, bnd, doVerify)
 			case buildRofl.TEETypeTDX:
 				// TDX.
 				switch manifest.Kind {
 				case buildRofl.AppKindRaw:
-					err = tdxBuildRaw(buildEnv, tmpDir, npa, manifest, deployment, bnd)
+					err = tdxBuildRaw(buildEnv, tmpDir, npa, manifest, deployment, bnd, doVerify)
 				case buildRofl.AppKindContainer:
 					err = tdxBuildContainer(buildEnv, tmpDir, npa, manifest, deployment, bnd)
 				}

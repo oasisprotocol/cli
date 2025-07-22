@@ -114,10 +114,13 @@ func GetMetadata(env env.ExecEnv) (*Metadata, error) {
 }
 
 // Build builds a Rust program using `cargo` in the current working directory.
-func Build(env env.ExecEnv, release bool, target string, features []string) (string, error) {
-	args := []string{"build", "--locked"}
+func Build(env env.ExecEnv, release, locked bool, target string, features []string) (string, error) {
+	args := []string{"build"}
 	if release {
 		args = append(args, "--release")
+	}
+	if locked {
+		args = append(args, "--locked")
 	}
 	if target != "" {
 		args = append(args, "--target", target)

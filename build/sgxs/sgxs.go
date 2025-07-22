@@ -2,10 +2,12 @@
 package sgxs
 
 import (
+	"fmt"
 	"os/exec"
 	"strconv"
 
 	"github.com/oasisprotocol/cli/build/env"
+	"github.com/oasisprotocol/cli/cmd/common"
 )
 
 // Elf2Sgxs converts an ELF binary built for the SGX ABI into an SGXS binary.
@@ -23,6 +25,9 @@ func Elf2Sgxs(buildEnv env.ExecEnv, elfSgxPath, sgxsPath string, heapSize, stack
 	cmd := exec.Command("ftxsgx-elf2sgxs", args...)
 	if err := buildEnv.WrapCommand(cmd); err != nil {
 		return err
+	}
+	if common.IsVerbose() {
+		fmt.Println(cmd)
 	}
 	return cmd.Run()
 }

@@ -366,6 +366,8 @@ func init() {
 	buildFlags.BoolVar(&onlyValidate, "only-validate", false, "validate without building")
 
 	buildFlags.AddFlagSet(roflCommon.DeploymentFlags)
+	buildFlags.AddFlagSet(common.VerboseFlag)
+	buildFlags.AddFlagSet(common.ForceFlag)
 
 	// TODO: Remove when all the examples, demos and docs are updated.
 	var dummy bool
@@ -373,5 +375,4 @@ func init() {
 	_ = buildFlags.MarkDeprecated("update-manifest", "the app manifest is now updated by default. Pass --no-update-manifest to prevent updating it.")
 
 	Cmd.Flags().AddFlagSet(buildFlags)
-	Cmd.Flags().AddFlagSet(common.ForceFlag)
 }

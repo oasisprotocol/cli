@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/oasisprotocol/cli/cmd/common"
 )
 
 // ExecEnv is an execution environment.
@@ -191,6 +193,9 @@ func (de *DockerEnv) FixPermissions(path string) error {
 	cmd := exec.Command("chown", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()), path) //nolint: gosec
 	if err = de.WrapCommand(cmd); err != nil {
 		return err
+	}
+	if common.IsVerbose() {
+		fmt.Println(cmd)
 	}
 	return cmd.Run()
 }

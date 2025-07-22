@@ -22,6 +22,9 @@ var (
 
 	// FormatFlag specifies the command's output format (text/json).
 	FormatFlag *flag.FlagSet
+
+	// VerboseFlag specifies the command's verbosity.
+	VerboseFlag *flag.FlagSet
 )
 
 // FormatType specifies the type of format for output of commands.
@@ -61,6 +64,7 @@ var (
 	force          bool
 	answerYes      bool
 	outputFormat   = FormatText
+	verbose        bool
 )
 
 // GetHeight returns the user-selected block height.
@@ -82,6 +86,11 @@ func GetAnswerYes() bool {
 // OutputFormat returns the format of the command's output.
 func OutputFormat() FormatType {
 	return outputFormat
+}
+
+// IsVerbose returns verbose mode.
+func IsVerbose() bool {
+	return verbose
 }
 
 // GetActualHeight returns the user-selected block height if explicitly
@@ -113,4 +122,7 @@ func init() {
 
 	FormatFlag = flag.NewFlagSet("", flag.ContinueOnError)
 	FormatFlag.Var(&outputFormat, "format", "output format ["+strings.Join([]string{string(FormatText), string(FormatJSON)}, ",")+"]")
+
+	VerboseFlag = flag.NewFlagSet("", flag.ContinueOnError)
+	VerboseFlag.BoolVarP(&verbose, "verbose", "v", false, "verbose")
 }

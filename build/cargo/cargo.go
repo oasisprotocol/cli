@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/oasisprotocol/cli/build/env"
+	"github.com/oasisprotocol/cli/cmd/common"
 )
 
 // Metadata is the cargo package metadata.
@@ -52,6 +53,9 @@ func GetMetadata(env env.ExecEnv) (*Metadata, error) {
 	}
 	if err = env.WrapCommand(cmd); err != nil {
 		return nil, err
+	}
+	if common.IsVerbose() {
+		fmt.Println(cmd)
 	}
 	if err = cmd.Start(); err != nil {
 		return nil, fmt.Errorf("failed to start metadata process: %w", err)
@@ -135,6 +139,9 @@ func Build(env env.ExecEnv, release bool, target string, features []string) (str
 
 	if err = env.WrapCommand(cmd); err != nil {
 		return "", err
+	}
+	if common.IsVerbose() {
+		fmt.Println(cmd)
 	}
 	if err = cmd.Start(); err != nil {
 		return "", fmt.Errorf("failed to start build process: %w", err)

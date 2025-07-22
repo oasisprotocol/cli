@@ -1,0 +1,15 @@
+=== ENTITY ===
+Entity Address: oasis1qzp84num6xgspdst65yv7yqegln6ndcxmuuq8s9w
+Entity ID:      xQN6ffLSdc51EfEQ2BzltK1iWYAw6Y1CkBAbFzlhhEQ=
+Stake:          11504987.432765658 ROSE
+Commission:     20.0%
+
+=== NODES ===
+Node Address: oasis1qqzjrsadvr2q5qq5ev6xyspjses8cjxxdcrth0g7
+Node ID:      Kb6opWKGbJHL0LK2Lto+m5ROIAXLhIr1lxQz0/kAOUM=
+  Node Roles:       validator
+  Software Version: 24.1
+  Node Status:
+    Expiration Processed:    false
+    Freeze End Time:         0
+    Election Eligible After: 38659

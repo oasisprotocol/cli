@@ -27,3 +27,12 @@ link-fragments: false
 # Do not always require language specifiers with fenced code blocks since they
 # are not part of the Markdown spec.
 fenced-code-language: false
+
+# Allow inline HTML for MDX tab components.
+no-inline-html:
+  allowed_elements:
+    - Tabs
+    - TabItem
+
+# MDX files often start with imports, so disable first-line heading rule.
+first-line-heading: false

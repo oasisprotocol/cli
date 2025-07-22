@@ -52,7 +52,7 @@ lint-git:
 
 lint-docs:
 	@$(PRINT) "$(CYAN)*** Running markdownlint-cli...$(OFF)\n"
-	@npx --yes markdownlint-cli '**/*.md'
+	@npx --yes markdownlint-cli '**/*.md?(x)'
 
 lint-go-mod-tidy:
 	@$(PRINT) "$(CYAN)*** Checking go mod tidy...$(OFF)\n"

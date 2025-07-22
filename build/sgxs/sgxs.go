@@ -13,7 +13,14 @@ import (
 // Elf2Sgxs converts an ELF binary built for the SGX ABI into an SGXS binary.
 //
 // It requires the `ftxsgx-elf2sgxs` utility to be installed.
-func Elf2Sgxs(buildEnv env.ExecEnv, elfSgxPath, sgxsPath string, heapSize, stackSize, threads uint64) error {
+func Elf2Sgxs(buildEnv env.ExecEnv, elfSgxPath, sgxsPath string, heapSize, stackSize, threads uint64) (err error) {
+	if elfSgxPath, err = buildEnv.PathToEnv(elfSgxPath); err != nil {
+		return
+	}
+	if sgxsPath, err = buildEnv.PathToEnv(sgxsPath); err != nil {
+		return
+	}
+
 	args := []string{
 		elfSgxPath,
 		"--heap-size", strconv.FormatUint(heapSize, 10),
@@ -23,8 +30,8 @@ func Elf2Sgxs(buildEnv env.ExecEnv, elfSgxPath, sgxsPath string, heapSize, stack
 	}
 
 	cmd := exec.Command("ftxsgx-elf2sgxs", args...)
-	if err := buildEnv.WrapCommand(cmd); err != nil {
-		return err
+	if err = buildEnv.WrapCommand(cmd); err != nil {
+		return
 	}
 	if common.IsVerbose() {
 		fmt.Println(cmd)

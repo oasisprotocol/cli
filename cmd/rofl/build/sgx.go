@@ -109,9 +109,11 @@ func sgxBuild(
 	sigName := "app.sig"
 
 	comp := bundle.Component{
-		Kind:       component.ROFL,
-		Name:       bnd.Manifest.Name,
-		Executable: execName,
+		Kind: component.ROFL,
+		Name: bnd.Manifest.Name,
+		ELF: &bundle.ELFMetadata{
+			Executable: execName,
+		},
 		SGX: &bundle.SGXMetadata{
 			Executable: sgxsName,
 			Signature:  sigName,

@@ -47,3 +47,9 @@ func GenAccountNames() types.AccountNames {
 
 	return an
 }
+
+// FindAccountName finds account's name (if exists).
+func FindAccountName(address string) string {
+	an := GenAccountNames()
+	return an[address]
+}

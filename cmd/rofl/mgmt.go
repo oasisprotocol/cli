@@ -279,8 +279,10 @@ var (
 			// Update the manifest with the given enclave identities, overwriting existing ones.
 			deployment.AppID = appID.String()
 
-			if err = manifest.Save(); err != nil {
-				cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
+			if !roflCommon.NoUpdate {
+				if err = manifest.Save(); err != nil {
+					cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
+				}
 			}
 
 			fmt.Printf("Run `oasis rofl build` to build your ROFL app.\n")
@@ -735,6 +737,7 @@ func init() {
 	createCmd.Flags().AddFlagSet(common.SelectorFlags)
 	createCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	createCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
+	createCmd.Flags().AddFlagSet(roflCommon.NoUpdateFlag)
 	createCmd.Flags().StringVar(&scheme, "scheme", "cn", "app ID generation scheme: creator+round+index [cri] or creator+nonce [cn]")
 
 	updateCmd.Flags().AddFlagSet(common.SelectorFlags)

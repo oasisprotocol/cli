@@ -33,7 +33,6 @@ var (
 	outputFn     string
 	buildMode    string
 	offline      bool
-	noUpdate     bool
 	doVerify     bool
 	noDocker     bool
 	onlyValidate bool
@@ -242,10 +241,10 @@ var (
 
 			// Override the update manifest flag in case the policy does not exist.
 			if deployment.Policy == nil {
-				noUpdate = true
+				roflCommon.NoUpdate = true
 			}
 
-			switch noUpdate {
+			switch roflCommon.NoUpdate {
 			case true:
 				// Ask the user to update the manifest manually (if the manifest has changed).
 				if maps.Equal(buildEnclaves, latestManifestEnclaves) {
@@ -360,19 +359,14 @@ func init() {
 	buildFlags := flag.NewFlagSet("", flag.ContinueOnError)
 	buildFlags.BoolVar(&offline, "offline", false, "do not perform any operations requiring network access")
 	buildFlags.StringVar(&outputFn, "output", "", "output bundle filename")
-	buildFlags.BoolVar(&noUpdate, "no-update-manifest", false, "do not update the manifest")
 	buildFlags.BoolVar(&doVerify, "verify", false, "verify build against manifest and on-chain state")
 	buildFlags.BoolVar(&noDocker, "no-docker", false, "do not use the Dockerized builder")
 	buildFlags.BoolVar(&onlyValidate, "only-validate", false, "validate without building")
 
 	buildFlags.AddFlagSet(roflCommon.DeploymentFlags)
+	buildFlags.AddFlagSet(roflCommon.NoUpdateFlag)
 	buildFlags.AddFlagSet(common.VerboseFlag)
 	buildFlags.AddFlagSet(common.ForceFlag)
-
-	// TODO: Remove when all the examples, demos and docs are updated.
-	var dummy bool
-	buildFlags.BoolVar(&dummy, "update-manifest", true, "not update the manifest")
-	_ = buildFlags.MarkDeprecated("update-manifest", "the app manifest is now updated by default. Pass --no-update-manifest to prevent updating it.")
 
 	Cmd.Flags().AddFlagSet(buildFlags)
 }

@@ -13,11 +13,17 @@ var (
 	// DeploymentFlags provide the deployment name.
 	DeploymentFlags *flag.FlagSet
 
+	// NoUpdateFlag is the flag for disabling the rofl.yaml manifest file update.
+	NoUpdateFlag *flag.FlagSet
+
 	// DeploymentName is the name of the ROFL app deployment.
 	DeploymentName string
 
 	// WipeStorage enables wiping the machine storage on deployment/restart.
 	WipeStorage bool
+
+	// NoUpdate disables updating the rofl.yaml manifest file.
+	NoUpdate bool
 )
 
 func init() {
@@ -26,4 +32,7 @@ func init() {
 
 	DeploymentFlags = flag.NewFlagSet("", flag.ContinueOnError)
 	DeploymentFlags.StringVar(&DeploymentName, "deployment", buildRofl.DefaultDeploymentName, "deployment name")
+
+	NoUpdateFlag = flag.NewFlagSet("", flag.ContinueOnError)
+	NoUpdateFlag.BoolVar(&NoUpdate, "no-update-manifest", false, "do not update the manifest")
 }

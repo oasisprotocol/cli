@@ -33,7 +33,6 @@ var (
 	outputFn     string
 	buildMode    string
 	offline      bool
-	noUpdate     bool
 	doVerify     bool
 	noDocker     bool
 	onlyValidate bool
@@ -134,12 +133,12 @@ var (
 					return fmt.Errorf("unsupported app kind for SGX TEE: %s", manifest.Kind)
 				}
 
-				sgxBuild(buildEnv, npa, manifest, deployment, bnd)
+				sgxBuild(buildEnv, npa, manifest, deployment, bnd, doVerify)
 			case buildRofl.TEETypeTDX:
 				// TDX.
 				switch manifest.Kind {
 				case buildRofl.AppKindRaw:
-					err = tdxBuildRaw(buildEnv, tmpDir, npa, manifest, deployment, bnd)
+					err = tdxBuildRaw(buildEnv, tmpDir, npa, manifest, deployment, bnd, doVerify)
 				case buildRofl.AppKindContainer:
 					err = tdxBuildContainer(buildEnv, tmpDir, npa, manifest, deployment, bnd)
 				}
@@ -242,10 +241,10 @@ var (
 
 			// Override the update manifest flag in case the policy does not exist.
 			if deployment.Policy == nil {
-				noUpdate = true
+				roflCommon.NoUpdate = true
 			}
 
-			switch noUpdate {
+			switch roflCommon.NoUpdate {
 			case true:
 				// Ask the user to update the manifest manually (if the manifest has changed).
 				if maps.Equal(buildEnclaves, latestManifestEnclaves) {
@@ -291,6 +290,11 @@ func setupBuildEnv(deployment *buildRofl.Deployment, npa *common.NPASelection) {
 
 	// Obtain and configure trust root.
 	trustRoot, err := fetchTrustRoot(npa, deployment.TrustRoot)
+	if deployment.Debug && err != nil {
+		// Trust root is not mandatory for debug builds.
+		fmt.Printf("WARNING: no trust root will be provided during compilation: %v\n", err)
+		return
+	}
 	cobra.CheckErr(err)
 	os.Setenv("ROFL_CONSENSUS_TRUST_ROOT", trustRoot)
 }
@@ -360,18 +364,14 @@ func init() {
 	buildFlags := flag.NewFlagSet("", flag.ContinueOnError)
 	buildFlags.BoolVar(&offline, "offline", false, "do not perform any operations requiring network access")
 	buildFlags.StringVar(&outputFn, "output", "", "output bundle filename")
-	buildFlags.BoolVar(&noUpdate, "no-update-manifest", false, "do not update the manifest")
 	buildFlags.BoolVar(&doVerify, "verify", false, "verify build against manifest and on-chain state")
 	buildFlags.BoolVar(&noDocker, "no-docker", false, "do not use the Dockerized builder")
 	buildFlags.BoolVar(&onlyValidate, "only-validate", false, "validate without building")
 
 	buildFlags.AddFlagSet(roflCommon.DeploymentFlags)
-
-	// TODO: Remove when all the examples, demos and docs are updated.
-	var dummy bool
-	buildFlags.BoolVar(&dummy, "update-manifest", true, "not update the manifest")
-	_ = buildFlags.MarkDeprecated("update-manifest", "the app manifest is now updated by default. Pass --no-update-manifest to prevent updating it.")
+	buildFlags.AddFlagSet(roflCommon.NoUpdateFlag)
+	buildFlags.AddFlagSet(common.VerboseFlag)
+	buildFlags.AddFlagSet(common.ForceFlag)
 
 	Cmd.Flags().AddFlagSet(buildFlags)
-	Cmd.Flags().AddFlagSet(common.ForceFlag)
 }

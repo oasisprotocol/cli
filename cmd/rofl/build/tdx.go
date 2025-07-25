@@ -36,6 +36,7 @@ func tdxBuildRaw(
 	manifest *buildRofl.Manifest,
 	deployment *buildRofl.Deployment,
 	bnd *bundle.Bundle,
+	locked bool,
 ) error {
 	wantedArtifacts := tdxWantedArtifacts(manifest, buildRofl.LatestBasicArtifacts)
 	artifacts := tdxFetchArtifacts(wantedArtifacts)
@@ -62,7 +63,7 @@ func tdxBuildRaw(
 	}
 
 	fmt.Println("Building runtime binary...")
-	initPath, err := cargo.Build(buildEnv, true, "", nil)
+	initPath, err := cargo.Build(buildEnv, true, locked, "", nil)
 	if err != nil {
 		return fmt.Errorf("failed to build runtime binary: %w", err)
 	}

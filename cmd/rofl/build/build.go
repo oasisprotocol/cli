@@ -290,6 +290,11 @@ func setupBuildEnv(deployment *buildRofl.Deployment, npa *common.NPASelection) {
 
 	// Obtain and configure trust root.
 	trustRoot, err := fetchTrustRoot(npa, deployment.TrustRoot)
+	if deployment.Debug && err != nil {
+		// Trust root is not mandatory for debug builds.
+		fmt.Printf("WARNING: no trust root will be provided during compilation: %v\n", err)
+		return
+	}
 	cobra.CheckErr(err)
 	os.Setenv("ROFL_CONSENSUS_TRUST_ROOT", trustRoot)
 }

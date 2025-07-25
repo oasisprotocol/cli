@@ -13,6 +13,7 @@ Available Commands:
   paratime    ParaTime layer operations
   rofl        ROFL app management
   transaction Raw transaction operations
+  update      Download and install the newest Oasis CLI release
   wallet      Manage accounts in the local wallet
 
 Flags:

@@ -710,9 +710,9 @@ func replaceArtifacts(manifest *buildRofl.Manifest, newArtifacts *buildRofl.Arti
 	return changes, nil
 }
 
-// detectAndCreateComposeFile detects the existing compose.yaml-like file and returns its filename. Otherwise, creates an empty default compose.yaml.
+// detectOrCreateComposeFile detects the existing compose.yaml-like file and returns its filename. If it doesn't exist, it creates compose.yaml and populates it.
 func detectOrCreateComposeFile() string {
-	for _, filename := range []string{"rofl-compose.yaml", "rofl-compose.yml", "docker-compose.yaml", "docker-compose.yml", "compose.yml"} {
+	for _, filename := range []string{"rofl-compose.yaml", "rofl-compose.yml", "docker-compose.yaml", "docker-compose.yml", "compose.yml", "compose.yaml"} {
 		if _, err := os.Stat(filename); err == nil {
 			return filename
 		}

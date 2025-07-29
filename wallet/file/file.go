@@ -214,6 +214,18 @@ func (af *fileAccountFactory) GetConfigFromSurvey(kind *wallet.ImportKind) (map[
 			Prompt: &survey.Select{
 				Message: "Algorithm:",
 				Options: SupportedAlgorithmsForImport(kind),
+				Description: func(value string, _ int) string {
+					switch value {
+					case wallet.AlgorithmEd25519Raw, wallet.AlgorithmEd25519Adr8:
+						return "Oasis consensus accounts and node operators"
+					case wallet.AlgorithmSecp256k1Raw, wallet.AlgorithmSecp256k1Bip44:
+						return "Oasis Sapphire and Ethereum-compatible keypair"
+					case wallet.AlgorithmSr25519Raw, wallet.AlgorithmSr25519Adr8:
+						return "Schnorrkel/Ristretto x25519"
+					default:
+						return ""
+					}
+				},
 			},
 		},
 	}

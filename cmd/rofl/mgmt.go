@@ -606,12 +606,19 @@ var (
 			if pubName != "" {
 				secretCfg.PublicName = pubName
 			}
-			for _, sc := range deployment.Secrets {
+
+			var replaced bool
+			for i, sc := range deployment.Secrets {
 				if sc.Name == secretName {
-					cobra.CheckErr(fmt.Errorf("secret named '%s' already exists for deployment '%s'", secretName, roflCommon.DeploymentName))
+					common.CheckForceErr(fmt.Errorf("the secret named '%s' for deployment '%s' already exists", secretName, roflCommon.DeploymentName))
+					deployment.Secrets[i] = &secretCfg
+					replaced = true
+					break
 				}
 			}
-			deployment.Secrets = append(deployment.Secrets, &secretCfg)
+			if !replaced {
+				deployment.Secrets = append(deployment.Secrets, &secretCfg)
+			}
 
 			// Update manifest.
 			if err = manifest.Save(); err != nil {
@@ -633,6 +640,7 @@ var (
 				NeedAppID: false,
 				NeedAdmin: false,
 			})
+
 			var secret *buildRofl.SecretConfig
 			for _, sc := range deployment.Secrets {
 				if sc.Name != secretName {
@@ -754,6 +762,7 @@ func init() {
 
 	secretSetCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	secretSetCmd.Flags().StringVar(&pubName, "public-name", "", "public secret name")
+	secretSetCmd.Flags().AddFlagSet(common.ForceFlag)
 	secretCmd.AddCommand(secretSetCmd)
 
 	secretGetCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)

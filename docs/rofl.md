@@ -120,6 +120,13 @@ Once the secret is encrypted and stored, **there is no way of obtaining the
 unencrypted value back again apart from within the TEE on the designated ROFL
 deployment**.
 
+Additionally, the following flags are available:
+
+- `--force` replaces an existing secret.
+- `--public-name <public-name>` defines the name of the secret that will be
+  publicly exposed e.g. in the Oasis Explorer. By default, the public name is
+  the same as the name of the secret.
+
 :::danger Shells store history
 
 Passing secrets as a command line argument will store them in your shell history

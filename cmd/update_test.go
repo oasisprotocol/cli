@@ -95,10 +95,10 @@ func TestUpdate_PositiveFlow(t *testing.T) {
 	defer ts.Close()
 
 	oldAPI := githubAPIBase
-	oldDL := downloadFunc
+	oldDL := download
 	githubAPIBase = ts.URL
 	// Custom downloader that works over plain HTTP for the test server.
-	downloadFunc = func(ctx context.Context, url string) (string, error) {
+	download = func(ctx context.Context, url string) (string, error) {
 		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 		res, err := http.DefaultClient.Do(req)
 		if err != nil {
@@ -123,10 +123,10 @@ func TestUpdate_PositiveFlow(t *testing.T) {
 	}
 	defer func() {
 		githubAPIBase = oldAPI
-		downloadFunc = oldDL
+		download = oldDL
 	}()
 
-	exit := runUpdateForTest(binPath)
+	exit := runTestUpdate(binPath)
 	if exit != 0 {
 		t.Fatalf("unexpected exit code %d", exit)
 	}
@@ -161,16 +161,16 @@ func TestUpdate_AlreadyUpToDate(t *testing.T) {
 	cliVersion.Software = "0.0.0"
 	defer func() { cliVersion.Software = oldVer }()
 
-	if code := runUpdateForTest(exe); code != 0 {
+	if code := runTestUpdate(exe); code != 0 {
 		t.Fatalf("expected 0 exit, got %d", code)
 	}
 }
 
 // runUpdateForTest is a local runner that avoids cobra / os.Exit in tests.
-func runUpdateForTest(fakeExePath string) int {
+func runTestUpdate(oasisBinaryPath string) int {
 	// monkey patch os.Executable
 	oldFn := osExecutable
-	osExecutable = func() (string, error) { return fakeExePath, nil }
+	osExecutable = func() (string, error) { return oasisBinaryPath, nil }
 	defer func() { osExecutable = oldFn }()
 
 	// Ensure a clean slate for cobra flags between tests.

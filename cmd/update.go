@@ -31,9 +31,10 @@ import (
 )
 
 const (
-	apiTimeout      = 15 * time.Second
-	downloadTimeout = 5 * time.Minute
-	maxChecksumSize = 1024 // bytes
+	apiTimeout           = 15 * time.Second
+	downloadTimeout      = 5 * time.Minute
+	maxChecksumSize      = 1024 // bytes
+	retryAfterMaxSeconds = 60   // upper bound for GitHub's Retry-After header
 )
 
 const (
@@ -56,17 +57,15 @@ var httpClient = &http.Client{
 
 var (
 	githubAPIBase = "https://api.github.com"
-
-	downloadFunc = doDownload
-
-	osExecutable = os.Executable
+	download      = doDownload
+	osExecutable  = os.Executable
 )
 
 // semverDiffers reports whether versions a and b differ (ignoring leading 'v').
 func semverDiffers(a, b string) (bool, error) {
 	normalize := func(s string) string {
 		s = strings.TrimPrefix(s, "v")
-		// Strip pre-release (-…) and build metadata (+…)
+		// Strip pre-release (-) and build metadata (+)
 		if idx := strings.IndexAny(s, "+-"); idx != -1 {
 			s = s[:idx]
 		}
@@ -82,6 +81,9 @@ func semverDiffers(a, b string) (bool, error) {
 	return aNorm != bNorm, nil
 }
 
+// ghRelease mirrors the subset of fields returned by GitHub’s
+// “Get the latest release” endpoint.
+// https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release
 type ghRelease struct {
 	TagName string `json:"tag_name"`
 	Body    string `json:"body"`
@@ -109,7 +111,7 @@ func fetchLatest(ctx context.Context) (*ghRelease, error) {
 		}
 
 		if res.StatusCode == http.StatusForbidden {
-			if sec, _ := strconv.Atoi(res.Header.Get("Retry-After")); sec > 0 && sec < 60 {
+			if sec, _ := strconv.Atoi(res.Header.Get("Retry-After")); sec > 0 && sec < retryAfterMaxSeconds {
 				res.Body.Close()
 				time.Sleep(time.Duration(sec) * time.Second)
 				continue
@@ -430,7 +432,7 @@ then downloads and replaces the current binary.`,
 		apiCtx, cancel := context.WithTimeout(context.Background(), apiTimeout)
 		defer cancel()
 
-		fmt.Println("Checking for updates…")
+		fmt.Println("Checking for updates...")
 		rel, err := fetchLatest(apiCtx)
 		cobra.CheckErr(err)
 
@@ -457,19 +459,24 @@ then downloads and replaces the current binary.`,
 		dlCtx, cancelDL := context.WithTimeout(context.Background(), downloadTimeout)
 		defer cancelDL()
 
-		assetPath, err := downloadFunc(dlCtx, assetURL)
+		assetPath, err := download(dlCtx, assetURL)
 		cobra.CheckErr(err)
 		defer func() { _ = os.Remove(assetPath) }()
 
-		if shaURL, ok := findSha256For(rel, assetName); ok {
-			shaPath, err2 := downloadFunc(dlCtx, shaURL)
-			cobra.CheckErr(err2)
-			defer func() { _ = os.Remove(shaPath) }()
-			cobra.CheckErr(verifySHA256(assetPath, shaPath))
-			fmt.Println("Checksum verified OK")
+		// The release is invalid without a SHA256 checksum; abort early if not present.
+		shaURL, ok := findSha256For(rel, assetName)
+		if !ok {
+			cobra.CheckErr(fmt.Errorf("sha256 checksum not found for asset %q", assetName))
 		}
 
-		fmt.Println("Installing…")
+		fmt.Println("Verifying integrity...")
+		shaPath, err2 := download(dlCtx, shaURL)
+		cobra.CheckErr(err2)
+		defer func() { _ = os.Remove(shaPath) }()
+		cobra.CheckErr(verifySHA256(assetPath, shaPath))
+		fmt.Println("Checksum verified OK")
+
+		fmt.Println("Installing...")
 		cobra.CheckErr(extractBinary(exePath, assetPath, assetName))
 
 		fmt.Printf("Updated to %s\n", latest)

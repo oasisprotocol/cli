@@ -132,12 +132,20 @@ func TestUpdate_PositiveFlow(t *testing.T) {
 	}
 
 	got, _ := os.ReadFile(binPath)
-	if string(got) != "new" && runtime.GOOS != osWindows {
-		t.Fatalf("binary not replaced, got %q", got)
-	}
 	if runtime.GOOS == osWindows {
+		// On Windows the updater stages the new binary *only* when an in-place
+		// rename fails (e.g. when the executable is locked). In this test run
+		// the file isn’t locked, so the rename may succeed and no ".new" file
+		// will be left behind. Accept either outcome.
 		if _, err := os.Stat(binPath + ".new"); err != nil {
-			t.Fatalf(".new staging not present on windows: %v", err)
+			// No staged file; ensure the binary was replaced in place.
+			if string(got) != "new" {
+				t.Fatalf("binary not replaced or staged on windows; got %q", got)
+			}
+		}
+	} else {
+		if string(got) != "new" {
+			t.Fatalf("binary not replaced, got %q", got)
 		}
 	}
 }

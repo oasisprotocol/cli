@@ -34,7 +34,7 @@ var (
 	buildMode    string
 	offline      bool
 	doVerify     bool
-	noDocker     bool
+	noContainer  bool
 	onlyValidate bool
 
 	Cmd = &cobra.Command{
@@ -88,7 +88,7 @@ var (
 
 			var buildEnv env.ExecEnv
 			switch {
-			case manifest.Artifacts == nil || manifest.Artifacts.Builder == "" || noDocker:
+			case manifest.Artifacts == nil || manifest.Artifacts.Builder == "" || noContainer:
 				buildEnv = env.NewNativeEnv()
 			default:
 				var baseDir string
@@ -97,13 +97,13 @@ var (
 					return fmt.Errorf("failed to determine base directory: %w", err)
 				}
 
-				dockerEnv := env.NewDockerEnv(
+				containerEnv := env.NewContainerEnv(
 					manifest.Artifacts.Builder,
 					baseDir,
 					"/src",
 				)
-				dockerEnv.AddDirectory(tmpDir)
-				buildEnv = dockerEnv
+				containerEnv.AddDirectory(tmpDir)
+				buildEnv = containerEnv
 			}
 
 			if !buildEnv.IsAvailable() {
@@ -365,7 +365,7 @@ func init() {
 	buildFlags.BoolVar(&offline, "offline", false, "do not perform any operations requiring network access")
 	buildFlags.StringVar(&outputFn, "output", "", "output bundle filename")
 	buildFlags.BoolVar(&doVerify, "verify", false, "verify build against manifest and on-chain state")
-	buildFlags.BoolVar(&noDocker, "no-docker", false, "do not use the Dockerized builder")
+	buildFlags.BoolVar(&noContainer, "no-container", false, "do not use the containerized builder")
 	buildFlags.BoolVar(&onlyValidate, "only-validate", false, "validate without building")
 
 	buildFlags.AddFlagSet(roflCommon.DeploymentFlags)

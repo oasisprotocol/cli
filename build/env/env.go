@@ -78,16 +78,18 @@ func (ne *NativeEnv) String() string {
 	return "native environment"
 }
 
-// DockerEnv is a Docker-based execution environment that executes all commands inside a Docker
+// ContainerEnv is a Docker or Podman-based execution environment that executes all commands inside a
 // container using the configured image.
-type DockerEnv struct {
+type ContainerEnv struct {
 	image   string
 	volumes map[string]string
 }
 
-// NewDockerEnv creates a new Docker-based execution environment.
-func NewDockerEnv(image, baseDir, dirMount string) *DockerEnv {
-	return &DockerEnv{
+var containerCmds = []string{"docker", "podman"}
+
+// NewContainerEnv creates a new Docker or Podman-based execution environment.
+func NewContainerEnv(image, baseDir, dirMount string) *ContainerEnv {
+	return &ContainerEnv{
 		image: image,
 		volumes: map[string]string{
 			baseDir: dirMount,
@@ -96,12 +98,12 @@ func NewDockerEnv(image, baseDir, dirMount string) *DockerEnv {
 }
 
 // AddDirectory exposes a host directory to the container under the same path.
-func (de *DockerEnv) AddDirectory(path string) {
+func (de *ContainerEnv) AddDirectory(path string) {
 	de.volumes[path] = path
 }
 
 // WrapCommand implements ExecEnv.
-func (de *DockerEnv) WrapCommand(cmd *exec.Cmd) error {
+func (de *ContainerEnv) WrapCommand(cmd *exec.Cmd) error {
 	cmd.Err = nil // May be set by a previous exec.Command invocation.
 	origArgs := cmd.Args
 
@@ -132,13 +134,13 @@ func (de *DockerEnv) WrapCommand(cmd *exec.Cmd) error {
 		}
 	}
 
-	cmd.Path, err = exec.LookPath("docker")
-	if err != nil {
-		return fmt.Errorf("failed to find 'docker': %w", err)
+	cmd.Path = getContainerCmd()
+	if cmd.Path == "" {
+		return fmt.Errorf("failed to find any of the containerization commands: %s", strings.Join(containerCmds, ", "))
 	}
 
 	cmd.Args = []string{
-		"docker", "run",
+		cmd.Path, "run",
 		"--rm",
 		"--platform", "linux/amd64",
 		"--workdir", workDir,
@@ -154,7 +156,7 @@ func (de *DockerEnv) WrapCommand(cmd *exec.Cmd) error {
 }
 
 // PathFromEnv implements ExecEnv.
-func (de *DockerEnv) PathFromEnv(path string) (string, error) {
+func (de *ContainerEnv) PathFromEnv(path string) (string, error) {
 	for hostDir, bindDir := range de.volumes {
 		if !strings.HasPrefix(path, bindDir) {
 			continue
@@ -169,7 +171,7 @@ func (de *DockerEnv) PathFromEnv(path string) (string, error) {
 }
 
 // PathToEnv implements ExecEnv.
-func (de *DockerEnv) PathToEnv(path string) (string, error) {
+func (de *ContainerEnv) PathToEnv(path string) (string, error) {
 	for hostDir, bindDir := range de.volumes {
 		if !strings.HasPrefix(path, hostDir) {
 			continue
@@ -184,7 +186,7 @@ func (de *DockerEnv) PathToEnv(path string) (string, error) {
 }
 
 // FixPermissions implements ExecEnv.
-func (de *DockerEnv) FixPermissions(path string) error {
+func (de *ContainerEnv) FixPermissions(path string) error {
 	path, err := de.PathToEnv(path)
 	if err != nil {
 		return err
@@ -201,17 +203,26 @@ func (de *DockerEnv) FixPermissions(path string) error {
 }
 
 // HasBinary implements ExecEnv.
-func (de *DockerEnv) HasBinary(string) bool {
+func (de *ContainerEnv) HasBinary(string) bool {
 	return true
 }
 
+// getContainerCmd finds a working docker or podman command and returns its path.
+func getContainerCmd() string {
+	for _, cmd := range containerCmds {
+		if path, err := exec.LookPath(cmd); err == nil && path != "" {
+			return path
+		}
+	}
+	return ""
+}
+
 // IsAvailable implements ExecEnv.
-func (de *DockerEnv) IsAvailable() bool {
-	path, err := exec.LookPath("docker")
-	return err == nil && path != ""
+func (de *ContainerEnv) IsAvailable() bool {
+	return getContainerCmd() != ""
 }
 
 // String returns a string representation of the execution environment.
-func (de *DockerEnv) String() string {
-	return "Docker"
+func (de *ContainerEnv) String() string {
+	return "Container"
 }

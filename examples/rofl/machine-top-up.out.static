@@ -1,0 +1,34 @@
+Using provider:     oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz (oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz)
+Top-up machine:     default [000000000000022a]
+Top-up term:        12 x hour
+Unlock your account.
+? Passphrase: 
+You are about to sign the following transaction:
+Format: plain
+Method: roflmarket.InstanceTopUp
+Body:
+  {
+    "provider": "oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz",
+    "id": "000000000000022a",
+    "term": 1,
+    "term_count": 12
+  }
+Authorized signer(s):
+  1. AyZKkxNFeyqLI5HGTYqEmCcYxKGo/kueOzSHzdnrSePO (secp256k1eth)
+     Nonce: 996
+Fee:
+  Amount: 0.0013614 TEST
+  Gas limit: 13614
+  (gas price: 0.0000001 TEST per gas unit)
+
+Network:  testnet
+ParaTime: sapphire
+Account:  dave
+? Sign this transaction? Yes
+(In case you are using a hardware-based signer you may need to confirm on device.)
+Broadcasting transaction...
+Transaction included in block successfully.
+Round:            12917124
+Transaction hash: 094ddc21c39acd96789153003016bda5d2a0077e7be11635bb755b6c49c287ac
+Execution successful.
+Machine topped up.

@@ -194,6 +194,19 @@ offer:
 
 [ROFL marketplace]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/features/marketplace.mdx
 
+## Top-up payment for the machine {#top-up}
+
+Run `rofl machine top-up` to extend the rental of the machine obtained from
+the [ROFL marketplace]. The rental is extended under the terms of the original
+offer. Specify the extension period with [`--term`][term-flags] and
+[`--term-count`][term-flags] parameters.
+
+![code shell](../examples/rofl/machine-top-up.in.static)
+
+![code](../examples/rofl/machine-top-up.out.static)
+
+[term-flags]: #deploy
+
 ## Advanced
 
 ### Upgrade ROFL app dependencies {#upgrade}

@@ -38,8 +38,6 @@ var (
 	deployProvider       string
 	deployOffer          string
 	deployMachine        string
-	deployTerm           string
-	deployTermCount      uint64
 	deployForce          bool
 	deployShowOffers     bool
 	deployReplaceMachine bool
@@ -175,12 +173,12 @@ var (
 				showProviderOffer(ctx, offer)
 
 				term := detectTerm(offer)
-				if deployTermCount < 1 {
+				if roflCommon.TermCount < 1 {
 					return nil, nil, fmt.Errorf("number of terms must be at least 1")
 				}
 
 				// Calculate total price.
-				qTermCount := quantity.NewFromUint64(deployTermCount)
+				qTermCount := quantity.NewFromUint64(roflCommon.TermCount)
 				totalPrice, ok := offer.Payment.Native.Terms[term]
 				if !ok {
 					cobra.CheckErr("internal error: previously selected term not found in offer terms")
@@ -197,7 +195,7 @@ var (
 					Offer:      offer.ID,
 					Deployment: &machineDeployment,
 					Term:       term,
-					TermCount:  deployTermCount,
+					TermCount:  roflCommon.TermCount,
 				})
 
 				var sigTx, meta any
@@ -334,11 +332,11 @@ func detectTerm(offer *roflmarket.Offer) (term roflmarket.Term) {
 		cobra.CheckErr(fmt.Errorf("no payment terms available for offer '%s'", offer.ID))
 	}
 
-	if deployTerm != "" {
+	if roflCommon.Term != "" {
 		// Custom deploy term.
-		term = roflCommon.ParseMachineTerm(deployTerm)
+		term = roflCommon.ParseMachineTerm(roflCommon.Term)
 		if _, ok := offer.Payment.Native.Terms[term]; !ok {
-			cobra.CheckErr(fmt.Errorf("term '%s' is not available for offer '%s'", deployTerm, offer.ID))
+			cobra.CheckErr(fmt.Errorf("term '%s' is not available for offer '%s'", roflCommon.Term, offer.ID))
 		}
 		return
 	}
@@ -454,8 +452,6 @@ func init() {
 	providerFlags.StringVar(&deployProvider, "provider", "", "set the provider address")
 	providerFlags.StringVar(&deployOffer, "offer", "", "set the provider's offer identifier")
 	providerFlags.StringVar(&deployMachine, "machine", buildRofl.DefaultMachineName, "machine to deploy into")
-	providerFlags.StringVar(&deployTerm, "term", "", "term to pay for in advance")
-	providerFlags.Uint64Var(&deployTermCount, "term-count", 1, "number of terms to pay for in advance")
 	providerFlags.BoolVar(&deployForce, "force", false, "force deployment")
 	providerFlags.BoolVar(&deployShowOffers, "show-offers", false, "show all provider offers and quit")
 	providerFlags.BoolVar(&deployReplaceMachine, "replace-machine", false, "rent a new machine if the provided one expired")
@@ -464,4 +460,5 @@ func init() {
 	deployCmd.Flags().AddFlagSet(providerFlags)
 	deployCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	deployCmd.Flags().AddFlagSet(roflCommon.WipeFlags)
+	deployCmd.Flags().AddFlagSet(roflCommon.TermFlags)
 }

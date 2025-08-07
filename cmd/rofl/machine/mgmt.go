@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
@@ -22,9 +21,6 @@ import (
 )
 
 var (
-	topUpTerm      string
-	topUpTermCount uint64
-
 	showCmd = &cobra.Command{
 		Use:   "show [<machine-name>]",
 		Short: "Show information about a machine",
@@ -262,13 +258,16 @@ var (
 			// Resolve provider address.
 			providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
 			if err != nil {
-				cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
+				cobra.CheckErr(fmt.Sprintf("invalid provider address: %s", err))
 			}
 
 			// Parse machine payment term.
-			term := roflCommon.ParseMachineTerm(topUpTerm)
-			if topUpTermCount < 1 {
-				cobra.CheckErr("Number of terms must be at least 1.")
+			if roflCommon.Term == "" {
+				cobra.CheckErr("no term period specified. Use --term to specify it")
+			}
+			term := roflCommon.ParseMachineTerm(roflCommon.Term)
+			if roflCommon.TermCount < 1 {
+				cobra.CheckErr("number of terms must be at least 1.")
 			}
 
 			// When not in offline mode, connect to the given network endpoint.
@@ -281,14 +280,14 @@ var (
 
 			fmt.Printf("Using provider:     %s (%s)\n", machine.Provider, providerAddr)
 			fmt.Printf("Top-up machine:     %s [%s]\n", machineName, machine.ID)
-			fmt.Printf("Top-up term:        %d x %s\n", topUpTermCount, topUpTerm)
+			fmt.Printf("Top-up term:        %d x %s\n", roflCommon.TermCount, roflCommon.Term)
 
 			// Prepare transaction.
 			tx := roflmarket.NewInstanceTopUpTx(nil, &roflmarket.InstanceTopUp{
 				Provider:  *providerAddr,
 				ID:        machineID,
 				Term:      term,
-				TermCount: topUpTermCount,
+				TermCount: roflCommon.TermCount,
 			})
 
 			acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
@@ -402,10 +401,6 @@ func showCommandArgs[V any](npa *common.NPASelection, raw []byte, args V) {
 }
 
 func init() {
-	topUpFlags := flag.NewFlagSet("", flag.ContinueOnError)
-	topUpFlags.StringVar(&topUpTerm, "term", roflCommon.TermMonth, "term to pay for in advance")
-	topUpFlags.Uint64Var(&topUpTermCount, "term-count", 1, "number of terms to pay for in advance")
-
 	showCmd.Flags().AddFlagSet(common.SelectorFlags)
 	showCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 
@@ -426,5 +421,5 @@ func init() {
 	topUpCmd.Flags().AddFlagSet(common.SelectorFlags)
 	topUpCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	topUpCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
-	topUpCmd.Flags().AddFlagSet(topUpFlags)
+	topUpCmd.Flags().AddFlagSet(roflCommon.TermFlags)
 }

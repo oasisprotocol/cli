@@ -150,7 +150,7 @@ var (
 				},
 			}
 
-			obtainMachine := func() (*buildRofl.Machine, error) {
+			obtainMachine := func() (*buildRofl.Machine, *roflmarket.Instance, error) {
 				if deployOffer != "" {
 					machine.Offer = deployOffer
 				}
@@ -168,7 +168,7 @@ var (
 				}
 				if offer == nil {
 					showProviderOffers(ctx, npa, conn, *providerAddr)
-					return nil, fmt.Errorf("offer '%s' not found for provider '%s'", machine.Offer, providerAddr)
+					return nil, nil, fmt.Errorf("offer '%s' not found for provider '%s'", machine.Offer, providerAddr)
 				}
 
 				fmt.Printf("Taking offer:\n")
@@ -176,7 +176,7 @@ var (
 
 				term := detectTerm(offer)
 				if deployTermCount < 1 {
-					return nil, fmt.Errorf("number of terms must be at least 1")
+					return nil, nil, fmt.Errorf("number of terms must be at least 1")
 				}
 
 				// Calculate total price.
@@ -206,23 +206,27 @@ var (
 
 				var machineID roflmarket.InstanceID
 				if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, &machineID) {
-					return nil, fmt.Errorf("broadcast transaction failed")
+					return nil, nil, fmt.Errorf("broadcast transaction failed")
 				}
 
 				rawMachineID, _ := machineID.MarshalText()
-				cobra.CheckErr(err)
 				machine.ID = string(rawMachineID)
 				deployment.Machines[deployMachine] = machine
 
 				fmt.Printf("Created machine: %s\n", machine.ID)
-				return machine, nil
+
+				var insDsc *roflmarket.Instance
+				insDsc, err = conn.Runtime(npa.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *providerAddr, machineID)
+				cobra.CheckErr(err)
+
+				return machine, insDsc, nil
 			}
 
-			doDeployMachine := func(machine *buildRofl.Machine) error {
+			doDeployMachine := func(machine *buildRofl.Machine) (*roflmarket.Instance, error) {
 				// Deploy into existing machine.
 				var machineID roflmarket.InstanceID
 				if err = machineID.UnmarshalText([]byte(machine.ID)); err != nil {
-					return fmt.Errorf("malformed machine ID: %w", err)
+					return nil, fmt.Errorf("malformed machine ID: %w", err)
 				}
 
 				fmt.Printf("Deploying into existing machine: %s\n", machine.ID)
@@ -237,8 +241,8 @@ var (
 					if deployReplaceMachine {
 						fmt.Printf("Machine instance not found. Obtaining new one...")
 						machine.ID = ""
-						_, err = obtainMachine()
-						return err
+						_, _, err = obtainMachine()
+						return nil, err
 					}
 
 					cobra.CheckErr("Machine instance not found.\nTip: If your instance expired, run this command with --replace-machine flag to replace it with a new machine.")
@@ -248,7 +252,7 @@ var (
 				if insDsc.Deployment != nil && insDsc.Deployment.AppID != machineDeployment.AppID && !deployForce {
 					fmt.Printf("Machine already contains a deployment of ROFL app '%s'.\n", insDsc.Deployment.AppID)
 					fmt.Printf("You are trying to replace it with ROFL app '%s'.\n", machineDeployment.AppID)
-					return fmt.Errorf("refusing to change existing ROFL app, use --force to override")
+					return nil, fmt.Errorf("refusing to change existing ROFL app, use --force to override")
 				}
 
 				// Prepare transaction.
@@ -269,23 +273,26 @@ var (
 				cobra.CheckErr(err)
 
 				if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil) {
-					return fmt.Errorf("broadcast transaction failed")
+					return nil, fmt.Errorf("broadcast transaction failed")
 				}
 
-				return nil
+				return insDsc, nil
 			}
 
+			var insDsc *roflmarket.Instance
 			if machine.ID == "" {
 				// When machine is not set, we need to obtain one.
 				fmt.Printf("No pre-existing machine configured, creating a new one...\n")
-				machine, err = obtainMachine()
+				machine, insDsc, err = obtainMachine()
 				cobra.CheckErr(err)
 			} else {
-				cobra.CheckErr(doDeployMachine(machine))
+				insDsc, err = doDeployMachine(machine)
+				cobra.CheckErr(err)
 			}
 
 			fmt.Printf("Deployment into machine scheduled.\n")
-			fmt.Printf("Use `oasis rofl machine show` to see status.\n")
+			fmt.Printf("This machine expires on %s. Use `oasis rofl machine top-up` to extend it.\n", time.Unix(int64(insDsc.PaidUntil), 0))
+			fmt.Printf("Use `oasis rofl machine show` to check status.\n")
 
 			if err = manifest.Save(); err != nil {
 				cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))

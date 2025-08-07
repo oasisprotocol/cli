@@ -37,7 +37,7 @@ require (
 	github.com/zondax/ledger-go v1.0.0
 	golang.org/x/crypto v0.40.0
 	golang.org/x/net v0.42.0
-	golang.org/x/sys v0.34.0
+	golang.org/x/sys v0.35.0
 	golang.org/x/text v0.27.0
 	gopkg.in/yaml.v3 v3.0.1
 	oras.land/oras-go/v2 v2.6.0

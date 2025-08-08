@@ -59,6 +59,7 @@ var (
 	githubAPIBase = "https://api.github.com"
 	download      = doDownload
 	osExecutable  = os.Executable
+	disableUpdateSubcommand = false
 )
 
 // semverDiffers reports whether versions a and b differ (ignoring leading 'v').
@@ -505,6 +506,9 @@ then downloads and replaces the current binary.`,
 }
 
 func init() {
+	if disableUpdateSubcommand {
+		return
+	}
 	updateCmd.Flags().AddFlagSet(progress.AnswerYesFlag)
 	rootCmd.AddCommand(updateCmd)
 }

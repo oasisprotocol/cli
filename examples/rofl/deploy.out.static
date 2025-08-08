@@ -41,4 +41,5 @@ Transaction hash: bce96976f38485546b5950f8b2a7f9b7c43b9656935cc472a90680187469f4
 Execution successful.
 Created machine: 0000000000000000
 Deployment into machine scheduled.
-Use `oasis rofl machine show` to see status.
+This machine expires on 2025-08-07 12:35:47 +0200 CEST. Use `oasis rofl machine top-up` to extend it.
+Use `oasis rofl machine show` to check status.

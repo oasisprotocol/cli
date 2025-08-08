@@ -16,6 +16,9 @@ var (
 	// NoUpdateFlag is the flag for disabling the rofl.yaml manifest file update.
 	NoUpdateFlag *flag.FlagSet
 
+	// TermFlags provide the term and count setting.
+	TermFlags *flag.FlagSet
+
 	// DeploymentName is the name of the ROFL app deployment.
 	DeploymentName string
 
@@ -24,6 +27,12 @@ var (
 
 	// NoUpdate disables updating the rofl.yaml manifest file.
 	NoUpdate bool
+
+	// Term specifies the rental base unit.
+	Term string
+
+	// TermCount specific the rental base unit multiplier.
+	TermCount uint64
 )
 
 func init() {
@@ -35,4 +44,8 @@ func init() {
 
 	NoUpdateFlag = flag.NewFlagSet("", flag.ContinueOnError)
 	NoUpdateFlag.BoolVar(&NoUpdate, "no-update-manifest", false, "do not update the manifest")
+
+	TermFlags = flag.NewFlagSet("", flag.ContinueOnError)
+	TermFlags.StringVar(&Term, "term", "", "term to pay for in advance [hour, month, year]")
+	TermFlags.Uint64Var(&TermCount, "term-count", 1, "number of terms to pay for in advance")
 }

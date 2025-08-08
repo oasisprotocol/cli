@@ -59,7 +59,7 @@ var (
 	githubAPIBase = "https://api.github.com"
 	download      = doDownload
 	osExecutable  = os.Executable
-	// I have to use a string for DisableUpdateCmd because of the limitations of the -X flag in Go build.
+	// DisableUpdateCmd removes the `oasis update` command. This is suitable for environments where the package manager handles updates.
 	DisableUpdateCmd = "false"
 )
 

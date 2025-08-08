@@ -59,7 +59,8 @@ var (
 	githubAPIBase = "https://api.github.com"
 	download      = doDownload
 	osExecutable  = os.Executable
-	disableUpdateSubcommand = "false"
+	// I have to use a string for DisableUpdateCmd because of the limitations of the -X flag in Go build.
+	DisableUpdateCmd = "false"
 )
 
 // semverDiffers reports whether versions a and b differ (ignoring leading 'v').
@@ -506,8 +507,7 @@ then downloads and replaces the current binary.`,
 }
 
 func init() {
-	// I have to use a string here because of the limitations of the -X flag in Go build.
-	if disableUpdateSubcommand == "true" {
+	if DisableUpdateCmd == "true" {
 		return
 	}
 	updateCmd.Flags().AddFlagSet(progress.AnswerYesFlag)

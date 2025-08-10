@@ -59,6 +59,8 @@ var (
 	githubAPIBase = "https://api.github.com"
 	download      = doDownload
 	osExecutable  = os.Executable
+	// DisableUpdateCmd removes the `oasis update` command. This is suitable for environments where the package manager handles updates.
+	DisableUpdateCmd = "false"
 )
 
 // semverDiffers reports whether versions a and b differ (ignoring leading 'v').
@@ -505,6 +507,9 @@ then downloads and replaces the current binary.`,
 }
 
 func init() {
+	if DisableUpdateCmd == "true" {
+		return
+	}
 	updateCmd.Flags().AddFlagSet(progress.AnswerYesFlag)
 	rootCmd.AddCommand(updateCmd)
 }

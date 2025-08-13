@@ -24,10 +24,10 @@ import (
 	"strings"
 	"time"
 
-	progress "github.com/oasisprotocol/cli/cmd/common"
-
-	cliVersion "github.com/oasisprotocol/cli/version"
 	"github.com/spf13/cobra"
+
+	progress "github.com/oasisprotocol/cli/cmd/common"
+	cliVersion "github.com/oasisprotocol/cli/version"
 )
 
 const (

@@ -9,4 +9,6 @@ const (
 	MetadataKeyTLSPk = "net.oasis.tls.pk"
 	// MetadataKeySchedulerAPI is the name of the metadata key that stores the API endpoint address.
 	MetadataKeySchedulerAPI = "net.oasis.scheduler.api"
+	// MetadataKeyProxyDomain is the name of the metadata key that stores the proxy domain.
+	MetadataKeyProxyDomain = "net.oasis.proxy.domain"
 )

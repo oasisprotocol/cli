@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"golang.org/x/net/idna"
@@ -59,9 +60,9 @@ func validateApp(manifest *buildRofl.Manifest) error {
 }
 
 // validateComposeFile validates the Docker compose file.
-func validateComposeFile(composeFile string, manifest *buildRofl.Manifest) error {
+func validateComposeFile(composeFile string, manifest *buildRofl.Manifest) error { //nolint: gocyclo
 	// Parse the compose file.
-	options, err := compose.NewProjectOptions([]string{composeFile})
+	options, err := compose.NewProjectOptions([]string{composeFile}, compose.WithInterpolation(false))
 	if err != nil {
 		return fmt.Errorf("failed to set-up compose options: %w", err)
 	}
@@ -107,6 +108,9 @@ func validateComposeFile(composeFile string, manifest *buildRofl.Manifest) error
 			if src == "/run/rofl-appd.sock" {
 				return true
 			}
+			if src == "/run/podman.sock" {
+				return true
+			}
 
 			if strings.HasPrefix(src, "/storage/") {
 				return true
@@ -129,7 +133,53 @@ func validateComposeFile(composeFile string, manifest *buildRofl.Manifest) error
 				}
 			}
 
-			return fmt.Errorf("volume '%s:%s' of service '%s' has an invalid external source (should be '/run/rofl-appd.sock' or reside inside '/storage/')", vol.Source, vol.Target, serviceName)
+			return fmt.Errorf("volume '%s:%s' of service '%s' has an invalid external source (should be '/run/rofl-appd.sock', '/run/podman.sock' or reside inside '/storage/')", vol.Source, vol.Target, serviceName)
+		}
+
+		// Validate ports.
+		publishedPorts := make(map[uint64]struct{})
+		for _, port := range service.Ports {
+			if port.Target == 0 {
+				return fmt.Errorf("service '%s' has an invalid zero port defined", serviceName)
+			}
+			if port.Published == "" || port.Published == "0" {
+				return fmt.Errorf("port '%d' of service '%s' does not have an explicit published port defined", port.Target, serviceName)
+			}
+			publishedPort, err := strconv.ParseUint(port.Published, 10, 16)
+			if err != nil {
+				return fmt.Errorf("published port '%s' of service '%s' is invalid: %w", port.Published, serviceName, err)
+			}
+			publishedPorts[publishedPort] = struct{}{}
+		}
+
+		// Validate annotations.
+		for key, value := range service.Annotations {
+			keyAtoms := strings.Split(key, ".")
+			switch {
+			case strings.HasPrefix(key, "net.oasis.proxy.ports"):
+				port, err := strconv.ParseUint(keyAtoms[4], 10, 16)
+				if err != nil {
+					return fmt.Errorf("proxy port annotation of service '%s' has an invalid port: %s", serviceName, keyAtoms[4])
+				}
+				if _, ok := publishedPorts[port]; !ok {
+					return fmt.Errorf("proxy port annotation of service '%s' references an unpublished port '%d'", serviceName, port)
+				}
+
+				// Validate supported annotations.
+				switch keyAtoms[5] {
+				case "mode":
+					// Validate supported modes.
+					switch value {
+					case "ignore":
+					case "passthrough":
+					case "terminate-tls":
+					default:
+						return fmt.Errorf("proxy port annotation of service '%s', port '%d' has an invalid mode: %s", serviceName, port, value)
+					}
+				default:
+				}
+			default:
+			}
 		}
 	}
 

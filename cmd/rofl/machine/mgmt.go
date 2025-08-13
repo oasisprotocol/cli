@@ -3,12 +3,10 @@ package machine
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/roflmarket"
@@ -21,135 +19,6 @@ import (
 )
 
 var (
-	showCmd = &cobra.Command{
-		Use:   "show [<machine-name>]",
-		Short: "Show information about a machine",
-		Args:  cobra.MaximumNArgs(1),
-		Run: func(_ *cobra.Command, args []string) {
-			_, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
-				NeedAppID: true,
-				NeedAdmin: false,
-			})
-
-			machine, machineName, machineID := resolveMachine(args, deployment)
-
-			// Establish connection with the target network.
-			ctx := context.Background()
-			conn, err := connection.Connect(ctx, npa.Network)
-			cobra.CheckErr(err)
-
-			// Resolve provider address.
-			providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
-			if err != nil {
-				cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
-			}
-
-			insDsc, err := conn.Runtime(npa.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *providerAddr, machineID)
-			cobra.CheckErr(err)
-
-			insCmds, err := conn.Runtime(npa.ParaTime).ROFLMarket.InstanceCommands(ctx, client.RoundLatest, *providerAddr, machineID)
-			cobra.CheckErr(err)
-
-			fmt.Printf("Name:       %s\n", machineName)
-			fmt.Printf("Provider:   %s\n", insDsc.Provider)
-			fmt.Printf("ID:         %s\n", insDsc.ID)
-			fmt.Printf("Offer:      %s\n", insDsc.Offer)
-			fmt.Printf("Status:     %s\n", insDsc.Status)
-			fmt.Printf("Creator:    %s\n", insDsc.Creator)
-			fmt.Printf("Admin:      %s\n", insDsc.Admin)
-			switch insDsc.NodeID {
-			case nil:
-				fmt.Printf("Node ID:    <none>\n")
-			default:
-				fmt.Printf("Node ID:    %s\n", insDsc.NodeID)
-			}
-
-			fmt.Printf("Created at: %s\n", time.Unix(int64(insDsc.CreatedAt), 0))
-			fmt.Printf("Updated at: %s\n", time.Unix(int64(insDsc.UpdatedAt), 0))
-			fmt.Printf("Paid until: %s\n", time.Unix(int64(insDsc.PaidUntil), 0))
-
-			if len(insDsc.Metadata) > 0 {
-				fmt.Printf("Metadata:\n")
-				for key, value := range insDsc.Metadata {
-					fmt.Printf("  %s: %s\n", key, value)
-				}
-			}
-
-			fmt.Printf("Resources:\n")
-
-			fmt.Printf("  TEE:     ")
-			switch insDsc.Resources.TEE {
-			case roflmarket.TeeTypeSGX:
-				fmt.Printf("Intel SGX\n")
-			case roflmarket.TeeTypeTDX:
-				fmt.Printf("Intel TDX\n")
-			default:
-				fmt.Printf("[unknown: %d]\n", insDsc.Resources.TEE)
-			}
-
-			fmt.Printf("  Memory:  %d MiB\n", insDsc.Resources.Memory)
-			fmt.Printf("  vCPUs:   %d\n", insDsc.Resources.CPUCount)
-			fmt.Printf("  Storage: %d MiB\n", insDsc.Resources.Storage)
-			if insDsc.Resources.GPU != nil {
-				fmt.Printf("  GPU:\n")
-				if insDsc.Resources.GPU.Model != "" {
-					fmt.Printf("    Model: %s\n", insDsc.Resources.GPU.Model)
-				} else {
-					fmt.Printf("    Model: <any>\n")
-				}
-				fmt.Printf("    Count: %d\n", insDsc.Resources.GPU.Count)
-			}
-
-			switch insDsc.Deployment {
-			default:
-				fmt.Printf("Deployment:\n")
-				fmt.Printf("  App ID: %s\n", insDsc.Deployment.AppID)
-
-				if len(insDsc.Deployment.Metadata) > 0 {
-					fmt.Printf("  Metadata:\n")
-					for key, value := range insDsc.Deployment.Metadata {
-						fmt.Printf("    %s: %s\n", key, value)
-					}
-				}
-			case nil:
-				fmt.Printf("Deployment: <no current deployment>\n")
-			}
-
-			// Show commands.
-			fmt.Printf("Commands:\n")
-			if len(insCmds) > 0 {
-				for _, qc := range insCmds {
-					fmt.Printf("  - ID: %s\n", qc.ID)
-
-					var cmd scheduler.Command
-					err := cbor.Unmarshal(qc.Cmd, &cmd)
-					switch err {
-					case nil:
-						// Decodable scheduler command.
-						fmt.Printf("    Method: %s\n", cmd.Method)
-						fmt.Printf("    Args:\n")
-
-						switch cmd.Method {
-						case scheduler.MethodDeploy:
-							showCommandArgs(npa, cmd.Args, scheduler.DeployRequest{})
-						case scheduler.MethodRestart:
-							showCommandArgs(npa, cmd.Args, scheduler.RestartRequest{})
-						case scheduler.MethodTerminate:
-							showCommandArgs(npa, cmd.Args, scheduler.TerminateRequest{})
-						default:
-							showCommandArgs(npa, cmd.Args, make(map[string]interface{}))
-						}
-					default:
-						// Unknown command format.
-						fmt.Printf("    <unknown format: %X>\n", qc.Cmd)
-					}
-				}
-			} else {
-				fmt.Printf("  <no queued commands>\n")
-			}
-		},
-	}
-
 	restartCmd = &cobra.Command{
 		Use:   "restart [<machine-name>]",
 		Short: "Restart a running machine or start a stopped one",
@@ -401,9 +270,6 @@ func showCommandArgs[V any](npa *common.NPASelection, raw []byte, args V) {
 }
 
 func init() {
-	showCmd.Flags().AddFlagSet(common.SelectorFlags)
-	showCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
-
 	restartCmd.Flags().AddFlagSet(common.SelectorFlags)
 	restartCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	restartCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)

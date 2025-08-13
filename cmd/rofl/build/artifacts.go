@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"net/url"
 	"os"
@@ -130,6 +131,22 @@ func extractArchive(fn, outputDir string) error {
 	cleanupPath := func(path string) (string, error) {
 		// Sanitize path to ensure it doesn't escape to any parent directories.
 		path = filepath.Clean(filepath.Join(outputDir, path))
+
+		var pathErr *fs.PathError
+		resolvedPath, err := filepath.EvalSymlinks(path)
+		switch {
+		case err == nil:
+			// Path resolved successfully, use it.
+			path = resolvedPath
+		case errors.As(err, &pathErr) && errors.Is(pathErr.Err, fs.ErrNotExist):
+			// There was an error while resolving the path. This is fine as the destination path will
+			// usually not exist. Check that the non-existent path doesn't escape.
+			if !strings.HasPrefix(pathErr.Path, outputDir) {
+				return "", fmt.Errorf("malformed path in archive")
+			}
+		default:
+			return "", fmt.Errorf("unable to sanitize path: %w", err)
+		}
 		if !strings.HasPrefix(path, outputDir) {
 			return "", fmt.Errorf("malformed path in archive")
 		}

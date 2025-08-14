@@ -44,4 +44,5 @@ var pushCmd = &cobra.Command{
 
 func init() {
 	pushCmd.Flags().AddFlagSet(common.FormatFlag)
+	pushCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 }

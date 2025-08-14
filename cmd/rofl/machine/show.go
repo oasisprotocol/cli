@@ -86,14 +86,16 @@ var showCmd = &cobra.Command{
 		fmt.Printf("Updated at: %s\n", time.Unix(int64(insDsc.UpdatedAt), 0))
 		fmt.Printf("Paid until: %s\n", time.Unix(int64(insDsc.PaidUntil), 0))
 
-		if proxyDomain, ok := schedulerDsc.Metadata[scheduler.MetadataKeyProxyDomain]; ok {
-			numericMachineID := binary.BigEndian.Uint64(machineID[:])
-			proxyDomain = fmt.Sprintf("m%d.%s", numericMachineID, proxyDomain)
+		if schedulerDsc != nil {
+			if proxyDomain, ok := schedulerDsc.Metadata[scheduler.MetadataKeyProxyDomain]; ok {
+				numericMachineID := binary.BigEndian.Uint64(machineID[:])
+				proxyDomain = fmt.Sprintf("m%d.%s", numericMachineID, proxyDomain)
 
-			fmt.Printf("Proxy:\n")
-			fmt.Printf("  Domain: %s\n", proxyDomain)
+				fmt.Printf("Proxy:\n")
+				fmt.Printf("  Domain: %s\n", proxyDomain)
 
-			showMachinePorts(manifest, proxyDomain)
+				showMachinePorts(manifest, proxyDomain)
+			}
 		}
 
 		if len(insDsc.Metadata) > 0 {

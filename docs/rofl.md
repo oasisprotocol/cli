@@ -135,6 +135,39 @@ file-based secrets.
 
 :::
 
+### Import secrets from `.env` files {#secret-import}
+
+Run `rofl secret import <dot-env-file>|-` to bulk-import secrets from a
+[dotenv](https://github.com/motdotla/dotenv) compatible file (key=value with
+`#` comments). This is handy for files like `.env`, `.env.production`,
+`.env.testnet`, or symlinks such as `.env → .env.production`. You can also
+pass `-` to read from standard input.
+
+Each `KEY=VALUE` pair becomes a separate secret entry in your manifest.
+Quoted values may span multiple physical lines;
+newline characters are preserved.
+Double-quoted values also support common escapes (`\n`, `\r`, `\t`, `\"`, `\\`).
+Lines starting with `#` are ignored. Unquoted values stop at an unquoted `#`
+comment.
+
+![code shell](../examples/rofl/secret-import.in.static)
+
+```bash
+oasis rofl secret import .env
+```
+
+By default, if a secret with the same name already exists,
+the command will
+fail. Use `--force` to replace existing secrets.
+
+After importing, **run**:
+
+```bash
+oasis rofl update
+```
+
+to push the updated secrets on-chain.
+
 ### Get secret info {#secret-get}
 
 Run `rofl secret get <secret-name>` to check whether the secret exists in your

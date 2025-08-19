@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -24,6 +25,7 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 
+	buildDotenv "github.com/oasisprotocol/cli/build/dotenv"
 	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/cmd/common"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
@@ -629,6 +631,110 @@ var (
 		},
 	}
 
+	// secretImportCmd bulk-imports secrets from a .env file (key=value with # comments).
+	// Supports '-' to read from stdin. Existing secrets are replaced only with --force.
+	secretImportCmd = &cobra.Command{
+		Use:   "import <dot-env-file>|-",
+		Short: "Import multiple secrets from a .env file",
+		Args:  cobra.ExactArgs(1),
+		Run: func(_ *cobra.Command, args []string) {
+			envFn := args[0]
+
+			manifest, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
+				NeedAppID: true,
+				NeedAdmin: false,
+			})
+			var appID rofl.AppID
+			if err := appID.UnmarshalText([]byte(deployment.AppID)); err != nil {
+				cobra.CheckErr(fmt.Errorf("malformed ROFL app ID: %w", err))
+			}
+
+			// Establish connection with the target network to obtain SEK.
+			ctx := context.Background()
+			conn, err := connection.Connect(ctx, npa.Network)
+			cobra.CheckErr(err)
+
+			appCfg, err := conn.Runtime(npa.ParaTime).ROFL.App(ctx, client.RoundLatest, appID)
+			cobra.CheckErr(err)
+
+			// Read .env data (supports stdin via "-").
+			var raw []byte
+			if envFn == "-" {
+				raw, err = io.ReadAll(os.Stdin)
+				if err != nil {
+					cobra.CheckErr(fmt.Errorf("failed to read .env from standard input: %w", err))
+				}
+			} else {
+				raw, err = os.ReadFile(envFn)
+				if err != nil {
+					cobra.CheckErr(fmt.Errorf("failed to read .env file: %w", err))
+				}
+			}
+
+			entries, err := buildDotenv.Parse(string(raw))
+			if err != nil {
+				cobra.CheckErr(fmt.Errorf("failed to parse .env: %w", err))
+			}
+			if len(entries) == 0 {
+				fmt.Println("No key=value pairs found in the provided .env input.")
+				return
+			}
+
+			// Deterministic iteration for stable updates.
+			names := make([]string, 0, len(entries))
+			for k := range entries {
+				names = append(names, k)
+			}
+			sort.Strings(names)
+
+			var imported, updated int
+			for _, name := range names {
+				value := []byte(entries[name])
+
+				encValue, err := buildRofl.EncryptSecret(name, value, appCfg.SEK)
+				if err != nil {
+					cobra.CheckErr(fmt.Errorf("failed to encrypt secret %s: %w", name, err))
+				}
+
+				secretCfg := buildRofl.SecretConfig{
+					Name:  name,
+					Value: encValue,
+				}
+
+				var replaced bool
+				for i, sc := range deployment.Secrets {
+					if sc.Name == name {
+						common.CheckForceErr(fmt.Errorf("the secret named '%s' for deployment '%s' already exists", name, roflCommon.DeploymentName))
+						// Preserve any existing public name unless we add a way to override it via import flags.
+						if sc.PublicName != "" && secretCfg.PublicName == "" {
+							secretCfg.PublicName = sc.PublicName
+						}
+						deployment.Secrets[i] = &secretCfg
+						replaced = true
+						updated++
+						break
+					}
+				}
+				if !replaced {
+					deployment.Secrets = append(deployment.Secrets, &secretCfg)
+					imported++
+				}
+			}
+
+			// Update manifest.
+			if err = manifest.Save(); err != nil {
+				cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
+			}
+
+			src := envFn
+			if envFn == "-" {
+				src = "stdin"
+			}
+			fmt.Printf("Imported %d secrets, updated %d existing from '%s'.\n", imported, updated, src)
+			fmt.Printf("Run `oasis rofl update` to update your ROFL app's on-chain configuration.\n")
+		},
+	}
+
 	secretGetCmd = &cobra.Command{
 		Use:   "get <name>",
 		Short: "Show metadata about the given secret",
@@ -764,6 +870,11 @@ func init() {
 	secretSetCmd.Flags().StringVar(&pubName, "public-name", "", "public secret name")
 	secretSetCmd.Flags().AddFlagSet(common.ForceFlag)
 	secretCmd.AddCommand(secretSetCmd)
+
+	// secret import flags and registration.
+	secretImportCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
+	secretImportCmd.Flags().AddFlagSet(common.ForceFlag)
+	secretCmd.AddCommand(secretImportCmd)
 
 	secretGetCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	secretCmd.AddCommand(secretGetCmd)

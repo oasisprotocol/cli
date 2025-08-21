@@ -500,10 +500,55 @@ type ArtifactsConfig struct {
 	Container ContainerArtifactsConfig `yaml:"container,omitempty" json:"container,omitempty"`
 }
 
+type artifactUpgrade struct {
+	existing *string
+	new      string
+}
+
+func upgradeArtifacts(upgrade []artifactUpgrade) bool {
+	var changed bool
+	for _, artifact := range upgrade {
+		if artifact.new == "" {
+			continue
+		}
+		if *artifact.existing == artifact.new {
+			continue
+		}
+		*artifact.existing = artifact.new
+		changed = true
+	}
+	return changed
+}
+
+// UpgradeTo upgrades the artifacts to the latest version by updating any relevant fields.
+//
+// Returns true iff any artifacts have been updated.
+func (ac *ArtifactsConfig) UpgradeTo(latest *ArtifactsConfig) bool {
+	var changed bool
+	changed = upgradeArtifacts([]artifactUpgrade{
+		{&ac.Builder, latest.Builder},
+		{&ac.Firmware, latest.Firmware},
+		{&ac.Kernel, latest.Kernel},
+		{&ac.Stage2, latest.Stage2},
+	})
+	changed = ac.Container.UpgradeTo(&latest.Container) || changed
+	return changed
+}
+
 // ContainerArtifactsConfig is the container artifacts configuration.
 type ContainerArtifactsConfig struct {
 	// Runtime is the URI/path to the container runtime artifact (empty to use default).
 	Runtime string `yaml:"runtime,omitempty" json:"runtime,omitempty"`
 	// Compose is the URI/path to the docker-compose.yaml artifact (empty to use default).
 	Compose string `yaml:"compose,omitempty" json:"compose,omitempty"`
+}
+
+// UpgradeTo upgrades the artifacts to the latest version by updating any relevant fields.
+//
+// Returns true iff any artifacts have been updated.
+func (cc *ContainerArtifactsConfig) UpgradeTo(latest *ContainerArtifactsConfig) bool {
+	return upgradeArtifacts([]artifactUpgrade{
+		{&cc.Compose, latest.Compose},
+		{&cc.Runtime, latest.Runtime},
+	})
 }

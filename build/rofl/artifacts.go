@@ -14,6 +14,5 @@ var LatestContainerArtifacts = ArtifactsConfig{
 	Stage2:   "https://github.com/oasisprotocol/oasis-boot/releases/download/v0.6.2/stage2-podman.tar.bz2#b2ea2a0ca769b6b2d64e3f0c577ee9c08f0bb81a6e33ed5b15b2a7e50ef9a09f",
 	Container: ContainerArtifactsConfig{
 		Runtime: "https://github.com/oasisprotocol/oasis-sdk/releases/download/rofl-containers%2Fv0.7.1/rofl-containers#0a7f821f36793b9409c623d795ea0edd996ac5cd96f05f3e8a81da409deb1880",
-		Compose: "compose.yaml",
 	},
 }

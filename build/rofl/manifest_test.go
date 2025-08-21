@@ -211,3 +211,37 @@ func TestLoadManifest(t *testing.T) {
 	require.Contains(m.Deployments, "default")
 	require.Equal("rofl1qpa9ydy3qmka3yrqzx0pxuvyfexf9mlh75hker5j", m.Deployments["default"].AppID)
 }
+
+func TestUpgradeArtifacts(t *testing.T) {
+	require := require.New(t)
+
+	existing := ArtifactsConfig{
+		Builder:  "a",
+		Firmware: "b",
+		Kernel:   "c",
+		Stage2:   "d",
+		Container: ContainerArtifactsConfig{
+			Runtime: "e",
+			Compose: "f",
+		},
+	}
+	latest := ArtifactsConfig{
+		Firmware: "b2",
+		Kernel:   "c2",
+		Stage2:   "d2",
+		Container: ContainerArtifactsConfig{
+			Runtime: "e2",
+		},
+	}
+	changed := existing.UpgradeTo(&latest)
+	require.True(changed)
+	require.Equal("a", existing.Builder)
+	require.Equal("b2", existing.Firmware)
+	require.Equal("c2", existing.Kernel)
+	require.Equal("d2", existing.Stage2)
+	require.Equal("e2", existing.Container.Runtime)
+	require.Equal("f", existing.Container.Compose)
+
+	changed = existing.UpgradeTo(&latest)
+	require.False(changed)
+}

@@ -241,8 +241,8 @@ and any proxy URLs, run `oasis rofl machine show`:
 oasis rofl machine show
 ```
 
-The output will include a `Proxy` section if you have published any ports
-in your `compose.yaml`, providing you with a public URL to access your service:
+If you have published ports in your `compose.yaml`, the output will include
+a `Proxy` section with public URLs to access your services:
 
 ```
 Name:       default
@@ -256,18 +256,16 @@ Proxy:
 ...
 ```
 
-:::info Proxy prerequisites
-To see proxy URLs:
+:::tip No proxy URLs shown?
+If proxy URLs are not displayed:
 
-- Use Oasis CLI v0.15.0 or newer.
-- Upgrade your ROFL artifacts and redeploy:
+1. Ensure you're using Oasis CLI v0.15.0+ (`oasis --version`)
+2. Update your ROFL artifacts: `oasis rofl upgrade`
+3. Rebuild and redeploy:
 
-```shell
-oasis rofl upgrade
-oasis rofl build
-oasis rofl update
-oasis rofl deploy
-```
+  ```shell
+    oasis rofl build && oasis rofl update && oasis rofl deploy
+  ```
 
 :::
 

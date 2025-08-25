@@ -251,8 +251,9 @@ feature page.
 ### Top-up payment for the machine {#machine-top-up}
 
 Run `rofl machine top-up` to extend the rental of the machine obtained from
-the [ROFL marketplace]. You can check the current expiration date of your machine
-in the `Paid until` field from the [`oasis rofl machine show` output](#machine-show).
+the [ROFL marketplace]. You can check the current expiration date of your
+machine in the `Paid until` field from
+the [`oasis rofl machine show` output](#machine-show).
 The rental is extended under the terms of the original
 offer. Specify the extension period with [`--term`][term-flags] and
 [`--term-count`][term-flags] parameters.

@@ -237,42 +237,23 @@ the `oasis rofl machine` subcommands.
 To view details about a deployed machine, including its status, expiration,
 and any proxy URLs, run `oasis rofl machine show`:
 
-```shell
-oasis rofl machine show
-```
+![code shell](../examples/rofl/machine-show.in.static)
+
+![code](../examples/rofl/machine-show.out.static)
 
 If you have published ports in your `compose.yaml`, the output will include
-a `Proxy` section with public URLs to access your services:
+a `Proxy` section with public URLs to access your services. For more details on
+how to configure the proxy and for troubleshooting, see the [ROFL Proxy]
+feature page.
 
-```
-Name:       default
-Provider:   oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz
-ID:         000000000000025a
-...
-Proxy:
-  Domain: m602.test-proxy-b.rofl.app
-  Ports from compose file:
-    8080 (http-echo): https://p8080.m602.test-proxy-b.rofl.app
-...
-```
-
-:::tip No proxy URLs shown?
-If proxy URLs are not displayed:
-
-1. Ensure you're using Oasis CLI v0.15.0+ (`oasis --version`)
-2. Update your ROFL artifacts: `oasis rofl upgrade`
-3. Rebuild and redeploy:
-
-  ```shell
-    oasis rofl build && oasis rofl update && oasis rofl deploy
-  ```
-
-:::
+[ROFL Proxy]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/features/proxy.mdx
 
 ### Top-up payment for the machine {#machine-top-up}
 
 Run `rofl machine top-up` to extend the rental of the machine obtained from
-the [ROFL marketplace]. The rental is extended under the terms of the original
+the [ROFL marketplace]. You can check the current expiration date of your machine
+in the `Paid until` field from the [`oasis rofl machine show` output](#machine-show).
+The rental is extended under the terms of the original
 offer. Specify the extension period with [`--term`][term-flags] and
 [`--term-count`][term-flags] parameters.
 

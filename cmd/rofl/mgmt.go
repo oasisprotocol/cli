@@ -2,7 +2,6 @@ package rofl
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	_ "embed"
 	"encoding/json"
@@ -521,21 +520,22 @@ var (
 			manifest, err := buildRofl.LoadManifest()
 			cobra.CheckErr(err)
 
-			var changes bool
+			var latestArtifacts buildRofl.ArtifactsConfig
 			switch manifest.TEE {
 			case buildRofl.TEETypeTDX:
 				switch manifest.Kind {
 				case buildRofl.AppKindRaw:
-					artifacts := buildRofl.LatestBasicArtifacts // Copy.
-					changes, err = replaceArtifacts(manifest, &artifacts)
-					cobra.CheckErr(err)
+					latestArtifacts = buildRofl.LatestBasicArtifacts // Copy.
 				case buildRofl.AppKindContainer:
-					artifacts := buildRofl.LatestContainerArtifacts // Copy.
-					changes, err = replaceArtifacts(manifest, &artifacts)
-					cobra.CheckErr(err)
+					latestArtifacts = buildRofl.LatestContainerArtifacts // Copy.
 				default:
 				}
 			default:
+			}
+
+			if !manifest.Artifacts.UpgradeTo(&latestArtifacts) {
+				fmt.Printf("Artifacts already up-to-date.\n")
+				return
 			}
 
 			// Update manifest.
@@ -543,11 +543,7 @@ var (
 				cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
 			}
 
-			if changes {
-				fmt.Printf("Run `oasis rofl build` to build your ROFL app.\n")
-			} else {
-				fmt.Printf("Artifacts already up-to-date.\n")
-			}
+			fmt.Printf("Run `oasis rofl build` to build your ROFL app.\n")
 		},
 	}
 
@@ -805,24 +801,6 @@ var (
 		},
 	}
 )
-
-// replaceArtifacts replaces existing manifest artifacts with new ones and returns true, if there were changes.
-func replaceArtifacts(manifest *buildRofl.Manifest, newArtifacts *buildRofl.ArtifactsConfig) (bool, error) {
-	oldRaw, err := json.Marshal(manifest.Artifacts)
-	if err != nil {
-		return false, err
-	}
-
-	newRaw, err := json.Marshal(newArtifacts)
-	if err != nil {
-		return false, err
-	}
-
-	changes := !bytes.Equal(oldRaw, newRaw)
-	manifest.Artifacts = newArtifacts
-
-	return changes, nil
-}
 
 // detectOrCreateComposeFile detects the existing compose.yaml-like file and returns its filename. If it doesn't exist, it creates compose.yaml and populates it.
 func detectOrCreateComposeFile() string {

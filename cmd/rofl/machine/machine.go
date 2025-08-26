@@ -15,6 +15,7 @@ func init() {
 	Cmd.AddCommand(restartCmd)
 	Cmd.AddCommand(stopCmd)
 	Cmd.AddCommand(removeCmd)
+	Cmd.AddCommand(changeAdminCmd)
 	Cmd.AddCommand(topUpCmd)
 	Cmd.AddCommand(logsCmd)
 }

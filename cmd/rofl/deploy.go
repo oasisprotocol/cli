@@ -239,8 +239,8 @@ var (
 					if deployReplaceMachine {
 						fmt.Printf("Machine instance not found. Obtaining new one...")
 						machine.ID = ""
-						_, _, err = obtainMachine()
-						return nil, err
+						_, insDsc, err = obtainMachine()
+						return insDsc, err
 					}
 
 					cobra.CheckErr("Machine instance not found.\nTip: If your instance expired, run this command with --replace-machine flag to replace it with a new machine.")

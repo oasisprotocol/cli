@@ -2,12 +2,22 @@ package common
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/cmd/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
+)
+
+var (
+	// orcFilenameDisallowedChars is a regexp matching characters that are not allowed in filenames.
+	orcFilenameDisallowedChars = regexp.MustCompile("[^a-zA-Z0-9-]")
+
+	// orcFilenameRepeatedChars is a regexp matching repeats of dash characters in filenames.
+	orcFilenameRepeatedChars = regexp.MustCompile("(-){2,}")
 )
 
 // ManifestOptions configures the manifest options.
@@ -76,8 +86,11 @@ func MaybeLoadManifestAndSetNPA(cfg *cliConfig.Config, npa *common.NPASelection,
 		}
 		npa.ParaTimeName = d.ParaTime
 	}
-	switch d.Admin {
-	case "":
+	switch {
+	case d.Admin == "":
+		// No admin in manifest, leave unchanged.
+	case npa.AccountSetExplicitly:
+		// Account explicitly overridden on the command line, leave unchanged.
 	default:
 		accCfg, err := common.LoadAccountConfig(cfg, d.Admin)
 		switch {
@@ -95,5 +108,9 @@ func MaybeLoadManifestAndSetNPA(cfg *cliConfig.Config, npa *common.NPASelection,
 
 // GetOrcFilename generates a filename based on the project name and deployment.
 func GetOrcFilename(manifest *rofl.Manifest, deploymentName string) string {
-	return fmt.Sprintf("%s.%s.orc", manifest.Name, deploymentName)
+	normalizedName := strings.ToLower(manifest.Name)
+	normalizedName = strings.TrimSpace(normalizedName)
+	normalizedName = orcFilenameDisallowedChars.ReplaceAllString(normalizedName, "-")
+	normalizedName = orcFilenameRepeatedChars.ReplaceAllString(normalizedName, "$1")
+	return fmt.Sprintf("%s.%s.orc", normalizedName, deploymentName)
 }

@@ -13,7 +13,6 @@ import (
 	"sort"
 
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 
 	"github.com/oasisprotocol/oasis-core/go/common/sgx/pcs"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx/quote"
@@ -37,9 +36,8 @@ var (
 		"cn":  rofl.CreatorNonce,
 	}
 
-	scheme       string
-	adminAddress string
-	pubName      string
+	scheme  string
+	pubName string
 
 	appTEE  string
 	appKind string
@@ -302,9 +300,6 @@ var (
 				NeedAdmin: true,
 			})
 
-			if adminAddress == "" && deployment.Admin != "" {
-				adminAddress = "self"
-			}
 			secrets := buildRofl.PrepareSecrets(deployment.Secrets)
 
 			var appID rofl.AppID
@@ -315,10 +310,6 @@ var (
 			npa.MustHaveAccount()
 			npa.MustHaveParaTime()
 
-			if adminAddress == "" {
-				fmt.Println("You must specify --admin or configure an admin in the manifest.")
-				return
-			}
 			if deployment.Policy == nil {
 				fmt.Println("You must configure policy in the manifest.")
 				return
@@ -341,11 +332,8 @@ var (
 			}
 
 			// Update administrator address.
-			if adminAddress == "self" {
-				adminAddress = npa.AccountName
-			}
 			var err error
-			updateBody.Admin, _, err = common.ResolveLocalAccountOrAddress(npa.Network, adminAddress)
+			updateBody.Admin, _, err = common.ResolveLocalAccountOrAddress(npa.Network, deployment.Admin)
 			if err != nil {
 				cobra.CheckErr(fmt.Errorf("bad administrator address: %w", err))
 			}
@@ -819,10 +807,6 @@ func detectOrCreateComposeFile() string {
 }
 
 func init() {
-	updateFlags := flag.NewFlagSet("", flag.ContinueOnError)
-	updateFlags.StringVar(&adminAddress, "admin", "", "set the administrator address")
-	updateCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
-
 	initCmd.Flags().StringVar(&appTEE, "tee", "tdx", "TEE kind [tdx, sgx]")
 	initCmd.Flags().StringVar(&appKind, "kind", "container", "ROFL app kind [container, raw]")
 
@@ -832,10 +816,9 @@ func init() {
 	createCmd.Flags().AddFlagSet(roflCommon.NoUpdateFlag)
 	createCmd.Flags().StringVar(&scheme, "scheme", "cn", "app ID generation scheme: creator+round+index [cri] or creator+nonce [cn]")
 
-	updateCmd.Flags().AddFlagSet(common.SelectorFlags)
+	updateCmd.Flags().AddFlagSet(common.AccountFlag)
 	updateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	updateCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
-	updateCmd.Flags().AddFlagSet(updateFlags)
 
 	removeCmd.Flags().AddFlagSet(common.SelectorFlags)
 	removeCmd.Flags().AddFlagSet(common.RuntimeTxFlags)

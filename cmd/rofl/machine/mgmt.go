@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/roflmarket"
@@ -107,6 +108,84 @@ var (
 			if err = manifest.Save(); err != nil {
 				cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
 			}
+		},
+	}
+
+	changeAdminCmd = &cobra.Command{
+		Use:   "change-admin [<machine-name>] <new-admin>",
+		Short: "Change the machine administrator",
+		Args:  cobra.RangeArgs(1, 2),
+		Run: func(_ *cobra.Command, args []string) {
+			txCfg := common.GetTransactionConfig()
+
+			_, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
+				NeedAppID: true,
+				NeedAdmin: false,
+			})
+
+			var newAdminAddress string
+			switch len(args) {
+			case 1:
+				// Just admin address.
+				newAdminAddress = args[0]
+				args = nil
+			case 2:
+				// Machine and admin address.
+				newAdminAddress = args[1]
+				args = args[:1]
+			}
+
+			machine, machineName, machineID := resolveMachine(args, deployment)
+
+			// Resolve provider address.
+			providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
+			if err != nil {
+				cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
+			}
+
+			// Resolve new admin address.
+			newAdminAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, newAdminAddress)
+			if err != nil {
+				cobra.CheckErr(fmt.Sprintf("Invalid admin address: %s", err))
+			}
+
+			// When not in offline mode, connect to the given network endpoint.
+			ctx := context.Background()
+			var conn connection.Connection
+			if !txCfg.Offline {
+				conn, err = connection.Connect(ctx, npa.Network)
+				cobra.CheckErr(err)
+			}
+
+			fmt.Printf("Provider:  %s (%s)\n", machine.Provider, providerAddr)
+			fmt.Printf("Machine:   %s [%s]\n", machineName, machine.ID)
+
+			// Resolve old admin in online mode.
+			if !txCfg.Offline {
+				insDsc, err := conn.Runtime(npa.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *providerAddr, machineID)
+				cobra.CheckErr(err)
+
+				fmt.Printf("Old admin: %s\n", insDsc.Admin)
+			}
+
+			fmt.Printf("New admin: %s\n", newAdminAddr)
+
+			// Prepare transaction.
+			tx := roflmarket.NewInstanceChangeAdmin(nil, &roflmarket.InstanceChangeAdmin{
+				Provider: *providerAddr,
+				ID:       machineID,
+				Admin:    *newAdminAddr,
+			})
+
+			acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
+			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
+			cobra.CheckErr(err)
+
+			if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil) {
+				return
+			}
+
+			fmt.Printf("Machine admin address changed.\n")
 		},
 	}
 
@@ -283,6 +362,10 @@ func init() {
 	removeCmd.Flags().AddFlagSet(common.SelectorFlags)
 	removeCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	removeCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
+
+	changeAdminCmd.Flags().AddFlagSet(common.AccountFlag)
+	changeAdminCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
+	changeAdminCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 
 	topUpCmd.Flags().AddFlagSet(common.SelectorFlags)
 	topUpCmd.Flags().AddFlagSet(common.RuntimeTxFlags)

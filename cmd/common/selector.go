@@ -43,8 +43,9 @@ type NPASelection struct {
 	ParaTimeName string
 	ParaTime     *config.ParaTime
 
-	AccountName string
-	Account     *cliConfig.Account
+	AccountName          string
+	Account              *cliConfig.Account
+	AccountSetExplicitly bool
 }
 
 // GetNPASelection returns the user-selected network/ParaTime/account combination.
@@ -78,6 +79,7 @@ func GetNPASelection(cfg *cliConfig.Config) *NPASelection {
 	s.AccountName = cfg.Wallet.Default
 	if selectedAccount != "" {
 		s.AccountName = selectedAccount
+		s.AccountSetExplicitly = true
 	}
 	if s.AccountName != "" {
 		accCfg, err := LoadAccountConfig(cfg, s.AccountName)

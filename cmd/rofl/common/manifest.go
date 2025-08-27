@@ -76,8 +76,11 @@ func MaybeLoadManifestAndSetNPA(cfg *cliConfig.Config, npa *common.NPASelection,
 		}
 		npa.ParaTimeName = d.ParaTime
 	}
-	switch d.Admin {
-	case "":
+	switch {
+	case d.Admin == "":
+		// No admin in manifest, leave unchanged.
+	case npa.AccountSetExplicitly:
+		// Account explicitly overridden on the command line, leave unchanged.
 	default:
 		accCfg, err := common.LoadAccountConfig(cfg, d.Admin)
 		switch {

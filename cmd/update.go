@@ -26,7 +26,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	progress "github.com/oasisprotocol/cli/cmd/common"
+	"github.com/oasisprotocol/cli/cmd/common"
+	"github.com/oasisprotocol/cli/cmd/common/progress"
 	cliVersion "github.com/oasisprotocol/cli/version"
 )
 
@@ -478,7 +479,7 @@ then downloads and replaces the current binary.`,
 		fmt.Printf("\n─ Changelog for %s ─\n%s\n", latest, rel.Body)
 
 		// Ask for confirmation unless -y/--yes used.
-		progress.Confirm("Upgrade now?", "upgrade cancelled")
+		common.Confirm("Upgrade now?", "upgrade cancelled")
 
 		dlCtx, cancelDL := context.WithTimeout(context.Background(), downloadTimeout)
 		defer cancelDL()
@@ -510,6 +511,6 @@ func init() {
 	if DisableUpdateCmd == "true" {
 		return
 	}
-	updateCmd.Flags().AddFlagSet(progress.AnswerYesFlag)
+	updateCmd.Flags().AddFlagSet(common.AnswerYesFlag)
 	rootCmd.AddCommand(updateCmd)
 }

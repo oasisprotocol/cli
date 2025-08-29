@@ -227,10 +227,34 @@ offer:
 
 [ROFL marketplace]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/features/marketplace.mdx
 
-## Top-up payment for the machine {#top-up}
+## Manage a deployed ROFL machine {#machine}
+
+Once a ROFL app is deployed, you can manage the machine it's running on using
+the `oasis rofl machine` subcommands.
+
+### Show machine information {#machine-show}
+
+To view details about a deployed machine, including its status, expiration,
+and any proxy URLs, run `oasis rofl machine show`:
+
+![code shell](../examples/rofl/machine-show.in.static)
+
+![code](../examples/rofl/machine-show.out.static)
+
+If you have published ports in your `compose.yaml`, the output will include
+a `Proxy` section with public URLs to access your services. For more details on
+how to configure the proxy and for troubleshooting, see the [ROFL Proxy]
+feature page.
+
+[ROFL Proxy]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/features/proxy.mdx
+
+### Top-up payment for the machine {#machine-top-up}
 
 Run `rofl machine top-up` to extend the rental of the machine obtained from
-the [ROFL marketplace]. The rental is extended under the terms of the original
+the [ROFL marketplace]. You can check the current expiration date of your
+machine in the `Paid until` field from
+the [`oasis rofl machine show` output](#machine-show).
+The rental is extended under the terms of the original
 offer. Specify the extension period with [`--term`][term-flags] and
 [`--term-count`][term-flags] parameters.
 
@@ -239,6 +263,41 @@ offer. Specify the extension period with [`--term`][term-flags] and
 ![code](../examples/rofl/machine-top-up.out.static)
 
 [term-flags]: #deploy
+
+### Show machine logs {#machine-logs}
+
+You can fetch logs from your running ROFL app using `oasis rofl machine logs`.
+
+![code shell](../examples/rofl/machine-logs.in.static)
+
+:::danger Logs are not encrypted!
+
+While only the app admin can access the logs, they are stored
+**unencrypted on the ROFL node**. In production, make sure
+you never print any confidential data to the standard or error outputs!
+
+:::
+
+### Restart a machine {#machine-restart}
+
+To restart a running machine, use `oasis rofl machine restart`.
+
+If you wish to clear the machine's persistent storage,
+pass the [`--wipe-storage`] flag.
+
+[`--wipe-storage`]: #machine-deploy
+
+### Stop a machine {#machine-stop}
+
+To stop a machine, use `oasis rofl machine stop`.
+To start it back again, use [`oasis rofl machine restart`].
+
+[`oasis rofl machine restart`]: #machine-restart
+
+### Remove a machine {#machine-remove}
+
+To cancel the rental and permanently remove a machine,
+including its persistent storage, use `oasis rofl machine remove`.
 
 ## Advanced
 

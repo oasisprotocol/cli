@@ -1,0 +1,26 @@
+Name:       default
+Provider:   oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz
+ID:         000000000000025a
+Offer:      0000000000000001
+Status:     accepted
+Creator:    oasis1qzvxd8vjgp2y0tjx229420tva822mdk2wxpx0vws
+Admin:      oasis1qzvxd8vjgp2y0tjx229420tva822mdk2wxpx0vws
+Node ID:    DbeoxcRwDO4Wh8bwq5rAR7wzhiB+LeYn+y7lFSGAZ7I=
+Created at: 2025-08-25 10:00:00 +0000 UTC
+Updated at: 2025-08-25 10:00:10 +0000 UTC
+Paid until: 2025-08-26 10:00:00 +0000 UTC
+Proxy:
+  Domain: m602.test-proxy-b.rofl.app
+  Ports from compose file:
+    8080 (http-echo): https://p8080.m602.test-proxy-b.rofl.app
+Resources:
+  TEE:     Intel TDX
+  Memory:  4096 MiB
+  vCPUs:   2
+  Storage: 20000 MiB
+Deployment:
+  App ID: rofl1qrqw99h0f7az3hwt2cl7yeew3wtz0fxunu7luyfg
+  Metadata:
+    net.oasis.deployment.orc.ref: rofl.sh/0ba0712d-114c-4e39-ac8e-b28edffcada8:1747909776@sha256:77ff0dc76adf957a4a089cf7cb584aa7788fef027c7180ceb73a662ede87a217
+Commands:
+  <no queued commands>

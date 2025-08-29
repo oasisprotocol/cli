@@ -119,6 +119,12 @@ func maybeDownloadArtifact(kind, uri string) string {
 
 // extractArchive extracts the given tar.bz2 archive into the target output directory.
 func extractArchive(fn, outputDir string) error {
+	resolvedOutputDir, err := filepath.EvalSymlinks(outputDir)
+	if err != nil {
+		return fmt.Errorf("unable to resolve output path: %w", err)
+	}
+	outputDir = resolvedOutputDir
+
 	f, err := os.Open(fn)
 	if err != nil {
 		return fmt.Errorf("failed to open archive: %w", err)

@@ -1,3 +1,7 @@
+---
+toc_max_heading_level: 2
+---
+
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
@@ -15,6 +19,25 @@ follow the instructions for **your platform** below:
 
 <Tabs>
   <TabItem value="Linux" label="Linux">
+    ### Homebrew
+
+    If you use [Homebrew on Linux](https://docs.brew.sh/Homebrew-on-Linux),
+    you can install the Oasis CLI with:
+
+    #### Installation
+
+    ```shell
+    brew install oasis
+    ```
+
+    #### Verify
+
+    ```shell
+    oasis --version
+    ```
+
+    ### Manual
+
     #### Prerequisites
 
     - amd64 or arm64 Linux.
@@ -44,6 +67,25 @@ follow the instructions for **your platform** below:
   </TabItem>
 
   <TabItem value="macOS" label="macOS">
+    ### Homebrew (Recommended)
+
+    The recommended way to install the Oasis CLI on macOS is via
+    [Homebrew](https://brew.sh/).
+
+    #### Installation
+
+    ```shell
+    brew install oasis
+    ```
+    
+    #### Verify
+    
+    ```shell
+    oasis --version
+    ```
+
+    ### Manual
+
     #### Prerequisites
 
     - macOS (Apple Silicon & Intel).
@@ -102,11 +144,12 @@ follow the instructions for **your platform** below:
 
 ## Update
 
-The Oasis CLI includes a built-in command to upgrade to the latest version.
-To update, run `oasis update`.
+If you installed Oasis CLI manually, the application includes a built-in
+`oasis update` command which upgrades software to the latest version.
 
-This will check for a newer version on GitHub, show you the release notes,
-and ask for confirmation before downloading and replacing the current binary.
+This command will check for a newer version on GitHub, show you the
+release notes, and ask for confirmation before downloading and replacing
+the current binary.
 
 ## Configuration
 

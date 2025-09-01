@@ -82,6 +82,7 @@ linters-settings:
           - github.com/wI2L/jsondiff
           - github.com/google/uuid
           - golang.org/x/net/idna
+          - golang.org/x/term
   exhaustive:
     # Switch statements are to be considered exhaustive if a 'default' case is
     # present, even if all enum members aren't listed in the switch.

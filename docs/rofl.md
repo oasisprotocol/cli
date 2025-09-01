@@ -285,7 +285,7 @@ To restart a running machine, use `oasis rofl machine restart`.
 If you wish to clear the machine's persistent storage,
 pass the [`--wipe-storage`] flag.
 
-[`--wipe-storage`]: #machine-deploy
+[`--wipe-storage`]: #deploy
 
 ### Stop a machine {#machine-stop}
 

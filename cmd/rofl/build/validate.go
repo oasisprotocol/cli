@@ -68,8 +68,7 @@ func validateComposeFile(composeFile string, manifest *buildRofl.Manifest) error
 	}
 	proj, err := options.LoadProject(context.Background())
 	if err != nil {
-		fmt.Println(err)
-		return fmt.Errorf("parsing failed")
+		return fmt.Errorf("parsing: %w", err)
 	}
 
 	// Keep track of all images encountered, as we will need them in later steps.

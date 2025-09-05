@@ -96,16 +96,19 @@ func prettyPrintDelegationDescriptions(
 	// NOTE: We assume the delegation descriptions are either all for
 	// (active) delegations or all for debonding delegations.
 	lenLongest := 0
-	if delDescriptions[0].endTime == beacon.EpochInvalid {
-		// Active delegations.
-		lenLongest = lenLongestString(addressFieldName, amountFieldName)
-	} else {
-		// Debonding delegations.
-		lenLongest = lenLongestString(addressFieldName, amountFieldName, endTimeFieldName)
+	if len(delDescriptions) > 0 { // Check if slice is not empty before accessing
+		if delDescriptions[0].endTime == beacon.EpochInvalid {
+			// Active delegations.
+			lenLongest = lenLongestString(addressFieldName, amountFieldName)
+		} else {
+			// Debonding delegations.
+			lenLongest = lenLongestString(addressFieldName, amountFieldName, endTimeFieldName)
+		}
 	}
 
+
 	for _, desc := range delDescriptions {
-		fmt.Fprintf(w, "%s  - %-*s %s", prefix, lenLongest, addressFieldName, desc.address)
+		fmt.Fprintf(w, "%s  - %-*s %s", prefix, lenLongest, addressFieldName, common.PrettyAddressBothFromConsensus(network, desc.address))
 		if desc.self {
 			fmt.Fprintf(w, " (self)")
 		}

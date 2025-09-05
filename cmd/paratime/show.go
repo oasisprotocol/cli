@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -218,7 +219,9 @@ var (
 						// Regular SDK transaction.
 						fmt.Printf("Kind: oasis\n")
 
-						common.PrintTransactionRaw(npa, &tx.Tx)
+						// Pretty-print with full context so names, ETH map and denominations are available.
+						ppCtx := common.PrettyPrintContext(npa)
+						tx.Tx.PrettyPrint(ppCtx, "", os.Stdout)
 					}
 					fmt.Println()
 

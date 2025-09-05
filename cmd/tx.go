@@ -130,7 +130,20 @@ var (
 			tx, err := tryDecodeTx(rawTx)
 			cobra.CheckErr(err)
 
-			common.PrintTransaction(npa, tx)
+			// Build full pretty-print context (ParaTime cfg + names + ETH map).
+			ppCtx := common.PrettyPrintContext(npa)
+
+			switch dtx := tx.(type) {
+			case *types.UnverifiedTransaction:
+				// Runtime signed tx: pretty-print with context.
+				dtx.PrettyPrint(ppCtx, "", os.Stdout)
+			case *types.Transaction:
+				// Runtime unsigned tx: pretty-print with context.
+				dtx.PrettyPrint(ppCtx, "", os.Stdout)
+			default:
+				// Fallback for consensus-layer or any other types.
+				common.PrintTransaction(npa, tx)
+			}
 		},
 	}
 )

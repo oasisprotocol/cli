@@ -47,10 +47,13 @@ func getSerializedBip44Path(path []uint32) ([]byte, error) {
 		return nil, fmt.Errorf("path should contain 5 elements")
 	}
 
-	// First three elements are hardened
-	for index, element := range path[:3] {
+	for index, element := range path {
 		pos := index * 4
-		value := element | 0x80000000 // Harden all components.
+		value := element
+		// First three elements are hardened
+		if index < 3 {
+			value |= 0x80000000
+		}
 		binary.LittleEndian.PutUint32(message[pos:], value)
 	}
 	return message, nil

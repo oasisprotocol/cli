@@ -144,8 +144,15 @@ var (
 				AppID:        appID,
 				ManifestHash: manifestHash,
 				Metadata: map[string]string{
-					"net.oasis.deployment.orc.ref": fmt.Sprintf("%s@%s", deployment.OCIRepository, ociDigest),
+					scheduler.MetadataKeyORCReference: fmt.Sprintf("%s@%s", deployment.OCIRepository, ociDigest),
 				},
+			}
+			if len(machine.Permissions) > 0 {
+				perms, err := resolveAndMarshalPermissions(npa, machine.Permissions)
+				if err != nil {
+					cobra.CheckErr(fmt.Sprintf("Failed to marshal permissions: %s", err))
+				}
+				machineDeployment.Metadata[scheduler.MetadataKeyPermissions] = perms
 			}
 
 			obtainMachine := func() (*buildRofl.Machine, *roflmarket.Instance, error) {
@@ -444,6 +451,22 @@ func term2str(term roflmarket.Term) string {
 	default:
 		return "<unknown>"
 	}
+}
+
+func resolveAndMarshalPermissions(npa *common.NPASelection, permissions map[string][]string) (string, error) {
+	perms := make(scheduler.Permissions)
+	for action, addresses := range permissions {
+		perms[action] = make([]types.Address, len(addresses))
+		for i, rawAddr := range addresses {
+			addr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, rawAddr)
+			if err != nil {
+				return "", err
+			}
+
+			perms[action][i] = *addr
+		}
+	}
+	return scheduler.MarshalPermissions(perms), nil
 }
 
 func init() {

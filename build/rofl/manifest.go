@@ -408,6 +408,9 @@ type Machine struct {
 	Offer string `yaml:"offer,omitempty" json:"offer,omitempty"`
 	// ID is the identifier of the machine to deploy into.
 	ID string `yaml:"id,omitempty" json:"id,omitempty"`
+
+	// Permissions is a map of permissions for the machine.
+	Permissions map[string][]string `yaml:"permissions,omitempty" json:"permissions,omitempty"`
 }
 
 // Validate validates the machine for correctness.

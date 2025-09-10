@@ -60,4 +60,5 @@ func init() {
 	Cmd.AddCommand(setRPCCmd)
 	Cmd.AddCommand(showCmd)
 	Cmd.AddCommand(statusCmd)
+	Cmd.AddCommand(trustCmd)
 }

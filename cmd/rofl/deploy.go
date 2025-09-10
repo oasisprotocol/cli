@@ -211,7 +211,7 @@ var (
 
 				var machineID roflmarket.InstanceID
 				if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, &machineID) {
-					return nil, nil, fmt.Errorf("broadcast transaction failed")
+					return nil, nil, nil
 				}
 
 				rawMachineID, _ := machineID.MarshalText()
@@ -278,7 +278,7 @@ var (
 				cobra.CheckErr(err)
 
 				if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil) {
-					return nil, fmt.Errorf("broadcast transaction failed")
+					return nil, nil
 				}
 
 				return insDsc, nil
@@ -293,6 +293,10 @@ var (
 			} else {
 				insDsc, err = doDeployMachine(machine)
 				cobra.CheckErr(err)
+			}
+
+			if txCfg.Export {
+				return
 			}
 
 			fmt.Printf("Deployment into machine scheduled.\n")
@@ -479,6 +483,7 @@ func init() {
 	providerFlags.BoolVar(&deployShowOffers, "show-offers", false, "show all provider offers and quit")
 	providerFlags.BoolVar(&deployReplaceMachine, "replace-machine", false, "rent a new machine if the provided one expired")
 
+	deployCmd.Flags().AddFlagSet(common.AccountFlag)
 	deployCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	deployCmd.Flags().AddFlagSet(providerFlags)
 	deployCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)

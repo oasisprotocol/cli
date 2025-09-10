@@ -11,4 +11,10 @@ const (
 	MetadataKeySchedulerAPI = "net.oasis.scheduler.api"
 	// MetadataKeyProxyDomain is the name of the metadata key that stores the proxy domain.
 	MetadataKeyProxyDomain = "net.oasis.proxy.domain"
+	// MetadataKeyPermissions is the name of the deployment metadata key that stores the machine
+	// permissions.
+	MetadataKeyPermissions = "net.oasis.scheduler.permissions"
+	// MetadataKeyORCReference is the name of the deployment metadata key that stores the ORC
+	// reference.
+	MetadataKeyORCReference = "net.oasis.deployment.orc.ref"
 )

@@ -89,4 +89,5 @@ var logsCmd = &cobra.Command{
 func init() {
 	logsCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	logsCmd.Flags().AddFlagSet(common.AnswerYesFlag)
+	logsCmd.Flags().AddFlagSet(common.AccountFlag)
 }

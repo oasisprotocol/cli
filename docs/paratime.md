@@ -70,8 +70,8 @@ CLI config automatically.
 [network]: ./network.md
 [`network add-local`]: ./network.md#add-local
 [ParaTime ID]: https://github.com/oasisprotocol/oasis-core/blob/master/docs/runtime/identifiers.md
-[Mainnet]: https://github.com/oasisprotocol/docs/blob/main/docs/node/mainnet/README.md
-[Testnet]: https://github.com/oasisprotocol/docs/blob/main/docs/node/testnet/README.md
+[Mainnet]: https://github.com/oasisprotocol/docs/blob/main/docs/node/network/mainnet
+[Testnet]: https://github.com/oasisprotocol/docs/blob/main/docs/node/network/testnet
 
 ## List ParaTimes {#list}
 

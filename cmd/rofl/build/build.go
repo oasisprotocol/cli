@@ -50,7 +50,7 @@ var (
 
 			if onlyValidate {
 				fmt.Println("Validating app...")
-				err := validateApp(manifest)
+				_, err := ValidateApp(manifest, ValidationOpts{})
 				if err == nil {
 					fmt.Println("App validation passed.")
 					return nil

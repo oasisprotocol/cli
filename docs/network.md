@@ -129,8 +129,8 @@ changes each time you restart the `oasis-net-runner`:
 
 ![code shell](../examples/network/set-chain-context.in.static)
 
-[Mainnet]: https://github.com/oasisprotocol/docs/blob/main/docs/node/mainnet/README.md
-[Testnet]: https://github.com/oasisprotocol/docs/blob/main/docs/node/testnet/README.md
+[Mainnet]: https://github.com/oasisprotocol/docs/blob/main/docs/node/network/mainnet
+[Testnet]: https://github.com/oasisprotocol/docs/blob/main/docs/node/network/testnet
 
 ## Set Default Network {#set-default}
 

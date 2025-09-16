@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"net"
 	"time"
 
-	compose "github.com/compose-spec/compose-go/v2/cli"
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
@@ -17,9 +17,9 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/roflmarket"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
-	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/build/rofl/scheduler"
 	"github.com/oasisprotocol/cli/cmd/common"
+	roflCmdBuild "github.com/oasisprotocol/cli/cmd/rofl/build"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
 )
 
@@ -34,6 +34,18 @@ var showCmd = &cobra.Command{
 		})
 
 		machine, machineName, machineID := resolveMachine(args, deployment)
+
+		var appID rofl.AppID
+		if err := appID.UnmarshalText([]byte(deployment.AppID)); err != nil {
+			cobra.CheckErr(fmt.Sprintf("malformed app id: %s", err))
+		}
+
+		extraCfg, err := roflCmdBuild.ValidateApp(manifest, roflCmdBuild.ValidationOpts{
+			Offline: true,
+		})
+		if err != nil {
+			cobra.CheckErr(fmt.Sprintf("failed to validate app: %s", err))
+		}
 
 		// Establish connection with the target network.
 		ctx := context.Background()
@@ -94,7 +106,7 @@ var showCmd = &cobra.Command{
 				fmt.Printf("Proxy:\n")
 				fmt.Printf("  Domain: %s\n", proxyDomain)
 
-				showMachinePorts(manifest, proxyDomain)
+				showMachinePorts(extraCfg, appID, insDsc, proxyDomain)
 			}
 		}
 
@@ -167,7 +179,7 @@ var showCmd = &cobra.Command{
 					case scheduler.MethodTerminate:
 						showCommandArgs(npa, cmd.Args, scheduler.TerminateRequest{})
 					default:
-						showCommandArgs(npa, cmd.Args, make(map[string]interface{}))
+						showCommandArgs(npa, cmd.Args, make(map[string]any))
 					}
 				default:
 					// Unknown command format.
@@ -180,52 +192,31 @@ var showCmd = &cobra.Command{
 	},
 }
 
-func showMachinePorts(manifest *buildRofl.Manifest, domain string) {
-	if manifest.TEE != buildRofl.TEETypeTDX || manifest.Kind != buildRofl.AppKindContainer {
-		return
-	}
-	if manifest.Artifacts == nil {
-		return
-	}
-	composeFile := manifest.Artifacts.Container.Compose
-	if composeFile == "" {
-		return
-	}
-
-	// Parse the compose file.
-	options, err := compose.NewProjectOptions([]string{composeFile}, compose.WithInterpolation(false))
-	if err != nil {
-		return
-	}
-	proj, err := options.LoadProject(context.Background())
-	if err != nil {
-		return
-	}
-
-	type portDsc struct {
-		serviceName string
-		port        string
-	}
-	var ports []portDsc
-	for serviceName, service := range proj.Services {
-		for _, port := range service.Ports {
-			if port.Protocol != "tcp" {
-				continue
-			}
-			mode := service.Annotations[fmt.Sprintf("net.oasis.proxy.ports.%s.mode", port.Published)]
-			if mode == "ignore" {
-				continue
-			}
-			ports = append(ports, portDsc{serviceName, port.Published})
-		}
-	}
-	if len(ports) == 0 {
+func showMachinePorts(extraCfg *roflCmdBuild.AppExtraConfig, appID rofl.AppID, insDsc *roflmarket.Instance, domain string) {
+	if extraCfg == nil || len(extraCfg.Ports) == 0 {
 		return
 	}
 
 	fmt.Printf("  Ports from compose file:\n")
-	for _, p := range ports {
-		fmt.Printf("    %s (%s): https://p%s.%s\n", p.port, p.serviceName, p.port, domain)
+	for i, p := range extraCfg.Ports {
+		genericDomain := fmt.Sprintf("%s.%s", p.GenericDomain, domain)
+		switch p.CustomDomain {
+		case "":
+			fmt.Printf("    %s (%s): https://%s\n", p.Port, p.ServiceName, genericDomain)
+		default:
+			fmt.Printf("    %s (%s): https://%s\n", p.Port, p.ServiceName, p.CustomDomain)
+
+			domainToken := scheduler.DomainVerificationToken(insDsc, appID, p.CustomDomain)
+			addrs, err := net.LookupHost(genericDomain)
+			if err == nil {
+				fmt.Printf("      * Point A record of your domain to: %s\n", addrs[0])
+			}
+			fmt.Printf("      * Add TXT record to your domain: oasis-rofl-verification=%s\n", domainToken)
+		}
+
+		if i < len(extraCfg.Ports)-1 {
+			fmt.Println()
+		}
 	}
 }
 

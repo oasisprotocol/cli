@@ -26,7 +26,7 @@ func tdxBuildContainer(
 
 	// Validate compose file.
 	fmt.Println("Validating compose file...")
-	if err := validateComposeFile(artifacts[artifactContainerCompose], manifest); err != nil {
+	if _, err := validateComposeFile(artifacts[artifactContainerCompose], manifest, ValidationOpts{}); err != nil {
 		common.CheckForceErr(fmt.Errorf("compose file validation failed: %w", err))
 	}
 

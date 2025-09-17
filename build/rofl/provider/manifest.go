@@ -173,6 +173,10 @@ func (m *Manifest) Save() error {
 type Offer struct {
 	// ID is the unique offer identifier used by the scheduler.
 	ID string `yaml:"id" json:"id"`
+	// Note contains one-line notification such as a discount or a warning.
+	Note string `yaml:"note" json:"note"`
+	// Description contains longer offer-specific description such as intended applications.
+	Description string `yaml:"description" json:"description"`
 	// Resources are the offered resources.
 	Resources Resources `yaml:"resources" json:"resources"`
 	// Payment is the payment for this offer.
@@ -205,6 +209,12 @@ const schedulerMetadataPrefix = "net.oasis.scheduler."
 // SchedulerMetadataOfferKey is the metadata key used for the offer name.
 const SchedulerMetadataOfferKey = schedulerMetadataPrefix + "offer"
 
+// NoteMetadataKey is the metadata key for offer-specific one-line notification such as a discount or a warning.
+const NoteMetadataKey = "net.oasis.note"
+
+// DescriptionMetadataKey is the metadata key for longer offer-specific description such as intended applications.
+const DescriptionMetadataKey = "net.oasis.description"
+
 // GetMetadata derives metadata from the attributes defined in the offer and combines it with the
 // specified metadata.
 func (o *Offer) GetMetadata() map[string]string {
@@ -219,6 +229,13 @@ func (o *Offer) GetMetadata() map[string]string {
 			continue
 		}
 		meta[schedulerMetadataPrefix+md.name] = md.value
+	}
+
+	if o.Description != "" {
+		meta[DescriptionMetadataKey] = o.Description
+	}
+	if o.Note != "" {
+		meta[NoteMetadataKey] = o.Note
 	}
 
 	maps.Copy(meta, o.Metadata)

@@ -195,6 +195,8 @@ var (
 				fmt.Printf("Selected per-%s pricing term, total price is ", term2str(term))
 				tp.PrettyPrint(ctx, "", os.Stdout)
 				fmt.Println(".")
+				// Warn the user about the non-refundable rental policy before first renting.
+				roflCommon.PrintRentRefundWarning()
 
 				// Prepare transaction.
 				tx := roflmarket.NewInstanceCreateTx(nil, &roflmarket.InstanceCreate{

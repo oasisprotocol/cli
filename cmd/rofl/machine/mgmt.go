@@ -85,6 +85,7 @@ var (
 			fmt.Printf("Using provider:     %s (%s)\n", machine.Provider, providerAddr)
 			fmt.Printf("Canceling machine:  %s [%s]\n", machineName, machine.ID)
 			fmt.Printf("WARNING: Canceling a machine will permanently destroy it including any persistent storage!\n")
+			roflCommon.PrintRentRefundWarning()
 
 			// Prepare transaction.
 			tx := roflmarket.NewInstanceCancelTx(nil, &roflmarket.InstanceCancel{
@@ -229,6 +230,7 @@ var (
 			fmt.Printf("Using provider:     %s (%s)\n", machine.Provider, providerAddr)
 			fmt.Printf("Top-up machine:     %s [%s]\n", machineName, machine.ID)
 			fmt.Printf("Top-up term:        %d x %s\n", roflCommon.TermCount, roflCommon.Term)
+			roflCommon.PrintRentRefundWarning()
 
 			// Prepare transaction.
 			tx := roflmarket.NewInstanceTopUpTx(nil, &roflmarket.InstanceTopUp{

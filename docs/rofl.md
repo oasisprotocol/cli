@@ -299,6 +299,13 @@ To start it back again, use [`oasis rofl machine restart`].
 To cancel the rental and permanently remove a machine,
 including its persistent storage, use `oasis rofl machine remove`.
 
+:::info
+
+Canceling a machine rental will not refund any payment for the already paid
+term.
+
+:::
+
 ## Advanced
 
 ### Upgrade ROFL app dependencies {#upgrade}

@@ -1,0 +1,33 @@
+Using provider:     oasis1qzc8pldvm8vm3duvdrj63wgvkw34y9ucfcxzetqr (oasis1qzc8pldvm8vm3duvdrj63wgvkw34y9ucfcxzetqr)
+Canceling machine:  default [0000000000000000]
+WARNING: Canceling a machine will permanently destroy it including any persistent storage!
+WARNING: Machine rental is non-refundable. You will not get a refund for the already paid term if you cancel.
+Unlock your account.
+? Passphrase:
+You are about to sign the following transaction:
+Format: plain
+Method: roflmarket.InstanceCancel
+Body:
+  {
+    "provider": "oasis1qzc8pldvm8vm3duvdrj63wgvkw34y9ucfcxzetqr",
+    "id": "0000000000000000"
+  }
+Authorized signer(s):
+  1. Amc63/tU+uNrYi7OID2a5a/hHbsbGTtAolnlyA+MF5g5 (secp256k1eth)
+     Nonce: 7
+Fee:
+  Amount: 0.0009876 ROSE
+  Gas limit: 9876
+  (gas price: 0.0000001 ROSE per gas unit)
+
+Network:  mainnet
+ParaTime: sapphire
+Account:  test:dave
+? Sign this transaction? Yes
+(In case you are using a hardware-based signer you may need to confirm on device.)
+Broadcasting transaction...
+Transaction included in block successfully.
+Round:            9356524
+Transaction hash: 4c619736c5678486950f5b5950a7f9b7c43b9656935cc472a90680187469f4dd
+Execution successful.
+Machine removed.

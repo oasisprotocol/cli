@@ -2,6 +2,7 @@ Using provider: oasis1qzc8pldvm8vm3duvdrj63wgvkw34y9ucfcxzetqr
 Pushing ROFL app to OCI repository 'rofl.sh/7aaddbd5-d782-430f-9362-f0107aa109d2:1750242297'...
 No pre-existing machine configured, creating a new one...
 Taking offer: small [0000000000000000]
+WARNING: Machine rental is non-refundable. You will not get a refund for the already paid term if you cancel.
 Unlock your account.
 ? Passphrase: 
 You are about to sign the following transaction:

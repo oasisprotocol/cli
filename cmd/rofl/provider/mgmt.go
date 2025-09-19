@@ -43,14 +43,31 @@ var (
 			}
 
 			fmt.Printf("Scheduler app: %s\n", schedulerApp)
-
-			// Create a default manifest.
 			manifest := provider.Manifest{
 				Network:        npa.NetworkName,
 				ParaTime:       npa.ParaTimeName,
 				Provider:       npa.AccountName,
 				SchedulerApp:   schedulerApp,
 				PaymentAddress: npa.AccountName,
+				Offers: []*provider.Offer{{
+					ID:          "example_offer",
+					Note:        "One-liner note for special discounts or warnings (optional)",
+					Description: "This is an example offer.\nFill in your description here.",
+					Resources: provider.Resources{
+						TEE:      "tdx",
+						Memory:   1024,
+						CPUCount: 1,
+						Storage:  3000,
+					},
+					Payment: provider.Payment{
+						Native: &provider.NativePayment{
+							Terms: map[string]string{
+								provider.TermKeyMonth: "100",
+							},
+						},
+					},
+					Capacity: 10,
+				}},
 			}
 			err := manifest.Validate()
 			cobra.CheckErr(err)

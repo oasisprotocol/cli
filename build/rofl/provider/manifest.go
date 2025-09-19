@@ -267,15 +267,11 @@ const (
 
 // Payment is payment configuration for an offer.
 type Payment struct {
-	Native *struct {
-		Denomination string            `yaml:"denomination" json:"denomination"`
-		Terms        map[string]string `yaml:"terms" json:"terms"`
-	} `yaml:"native,omitempty" json:"native,omitempty"`
+	// Native contains native payment terms.
+	Native *NativePayment `yaml:"native,omitempty" json:"native,omitempty"`
 
-	EvmContract *struct {
-		Address string `json:"address"`
-		Data    string `json:"data"`
-	} `yaml:"evm,omitempty" json:"evm,omitempty"`
+	// EvmContract contains payment terms defined in a smart contract.
+	EvmContract *EVMContractPayment `yaml:"evm,omitempty" json:"evm,omitempty"`
 }
 
 // Validate validates the payment configuration.
@@ -351,6 +347,24 @@ func (p *Payment) AsDescriptor(pt *config.ParaTime) (*roflmarket.Payment, error)
 		}
 	}
 	return &dsc, nil
+}
+
+// NativePayment is payment configuration for native tokens.
+type NativePayment struct {
+	// Denomination is the native token denomination.
+	Denomination string `yaml:"denomination,omitempty" json:"denomination,omitempty"`
+
+	// Terms are payment terms in form of Term => amount in decimal.
+	Terms map[string]string `yaml:"terms" json:"terms"`
+}
+
+// EVMContractPayment is payment configuration for EVM contract-based payments.
+type EVMContractPayment struct {
+	// Address is hex-encoded address without leading 0x.
+	Address string `json:"address"`
+
+	// Data is arbitrary Base-64 encoded payment information.
+	Data string `json:"data"`
 }
 
 // Resources are describe the offered resources.

@@ -82,7 +82,7 @@ var (
 				cobra.CheckErr(err)
 			}
 
-			fmt.Printf("Using provider:     %s (%s)\n", machine.Provider, providerAddr)
+			fmt.Printf("Using provider:     %s\n", common.PrettyAddress(npa.Network, *providerAddr))
 			fmt.Printf("Canceling machine:  %s [%s]\n", machineName, machine.ID)
 			fmt.Printf("WARNING: Canceling a machine will permanently destroy it including any persistent storage!\n")
 			roflCommon.PrintRentRefundWarning()
@@ -158,7 +158,7 @@ var (
 				cobra.CheckErr(err)
 			}
 
-			fmt.Printf("Provider:  %s (%s)\n", machine.Provider, providerAddr)
+			fmt.Printf("Provider:  %s\n", common.PrettyAddress(npa.Network, *providerAddr))
 			fmt.Printf("Machine:   %s [%s]\n", machineName, machine.ID)
 
 			// Resolve old admin in online mode.
@@ -166,10 +166,10 @@ var (
 				insDsc, err := conn.Runtime(npa.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *providerAddr, machineID)
 				cobra.CheckErr(err)
 
-				fmt.Printf("Old admin: %s\n", insDsc.Admin)
+				fmt.Printf("Old admin: %s\n", common.PrettyAddress(npa.Network, insDsc.Admin))
 			}
 
-			fmt.Printf("New admin: %s\n", newAdminAddr)
+			fmt.Printf("New admin: %s\n", common.PrettyAddress(npa.Network, *newAdminAddr))
 
 			// Prepare transaction.
 			tx := roflmarket.NewInstanceChangeAdmin(nil, &roflmarket.InstanceChangeAdmin{
@@ -227,7 +227,7 @@ var (
 				cobra.CheckErr(err)
 			}
 
-			fmt.Printf("Using provider:     %s (%s)\n", machine.Provider, providerAddr)
+			fmt.Printf("Using provider:     %s\n", common.PrettyAddress(npa.Network, *providerAddr))
 			fmt.Printf("Top-up machine:     %s [%s]\n", machineName, machine.ID)
 			fmt.Printf("Top-up term:        %d x %s\n", roflCommon.TermCount, roflCommon.Term)
 			roflCommon.PrintRentRefundWarning()
@@ -314,7 +314,7 @@ func queueCommand(cliArgs []string, method string, args any, msgAfter string) {
 		cobra.CheckErr(err)
 	}
 
-	fmt.Printf("Using provider: %s (%s)\n", machine.Provider, providerAddr)
+	fmt.Printf("Using provider: %s\n", common.PrettyAddress(npa.Network, *providerAddr))
 	fmt.Printf("Machine:        %s [%s]\n", machineName, machine.ID)
 	fmt.Printf("Command:        %s\n", method)
 	fmt.Printf("Args:\n")

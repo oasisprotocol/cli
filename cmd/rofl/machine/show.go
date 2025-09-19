@@ -69,12 +69,12 @@ var showCmd = &cobra.Command{
 		}
 
 		fmt.Printf("Name:       %s\n", machineName)
-		fmt.Printf("Provider:   %s\n", insDsc.Provider)
+		fmt.Printf("Provider:   %s\n", common.PrettyAddress(npa.Network, insDsc.Provider))
 		fmt.Printf("ID:         %s\n", insDsc.ID)
 		fmt.Printf("Offer:      %s\n", insDsc.Offer)
 		fmt.Printf("Status:     %s\n", insDsc.Status)
-		fmt.Printf("Creator:    %s\n", insDsc.Creator)
-		fmt.Printf("Admin:      %s\n", insDsc.Admin)
+		fmt.Printf("Creator:    %s\n", common.PrettyAddress(npa.Network, insDsc.Creator))
+		fmt.Printf("Admin:      %s\n", common.PrettyAddress(npa.Network, insDsc.Admin))
 		switch insDsc.NodeID {
 		case nil:
 			fmt.Printf("Node ID:    <none>\n")

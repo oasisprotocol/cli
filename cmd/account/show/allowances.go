@@ -10,6 +10,8 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
+
+	"github.com/oasisprotocol/cli/cmd/common"
 )
 
 // allowanceDescription is a description of an allowance.
@@ -61,7 +63,8 @@ func prettyPrintAllowanceDescriptions(
 	lenLongest := lenLongestString(beneficiaryFieldName, amountFieldName)
 
 	for _, desc := range allowDescriptions {
-		fmt.Fprintf(w, "%s  - %-*s %s", prefix, lenLongest, beneficiaryFieldName, desc.beneficiary)
+		ppAddr := common.PrettyAddress(network, types.NewAddressFromConsensus(desc.beneficiary))
+		fmt.Fprintf(w, "%s  - %-*s %s", prefix, lenLongest, beneficiaryFieldName, ppAddr)
 		if desc.self {
 			fmt.Fprintf(w, " (self)")
 		}

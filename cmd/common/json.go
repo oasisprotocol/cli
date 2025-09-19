@@ -135,7 +135,10 @@ func PrettyPrint(npa *NPASelection, prefix string, blob interface{}) string {
 			ctx = context.WithValue(ctx, config.ContextKeyParaTimeCfg, npa.ParaTime)
 		}
 		ctx = context.WithValue(ctx, signature.ContextKeySigContext, &sigCtx)
-		ctx = context.WithValue(ctx, types.ContextKeyAccountNames, GenAccountNames())
+
+		// Provide names (network-aware) and native->ETH mapping for Ethereum-preferred parentheses.
+		ctx = context.WithValue(ctx, types.ContextKeyAccountNames, GenAccountNamesForNetwork(npa.Network))
+		ctx = context.WithValue(ctx, types.ContextKeyAccountEthMap, GenAccountEthMap(npa.Network))
 
 		// Set up chain context for signature verification during pretty-printing.
 		coreSignature.UnsafeResetChainContext()

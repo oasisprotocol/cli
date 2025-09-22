@@ -173,6 +173,10 @@ func (m *Manifest) Save() error {
 type Offer struct {
 	// ID is the unique offer identifier used by the scheduler.
 	ID string `yaml:"id" json:"id"`
+	// Note contains one-line notification such as a discount or a warning.
+	Note string `yaml:"note" json:"note"`
+	// Description contains longer offer-specific description such as intended applications.
+	Description string `yaml:"description" json:"description"`
 	// Resources are the offered resources.
 	Resources Resources `yaml:"resources" json:"resources"`
 	// Payment is the payment for this offer.
@@ -205,6 +209,12 @@ const schedulerMetadataPrefix = "net.oasis.scheduler."
 // SchedulerMetadataOfferKey is the metadata key used for the offer name.
 const SchedulerMetadataOfferKey = schedulerMetadataPrefix + "offer"
 
+// NoteMetadataKey is the metadata key for offer-specific one-line notification such as a discount or a warning.
+const NoteMetadataKey = "net.oasis.note"
+
+// DescriptionMetadataKey is the metadata key for longer offer-specific description such as intended applications.
+const DescriptionMetadataKey = "net.oasis.description"
+
 // GetMetadata derives metadata from the attributes defined in the offer and combines it with the
 // specified metadata.
 func (o *Offer) GetMetadata() map[string]string {
@@ -219,6 +229,13 @@ func (o *Offer) GetMetadata() map[string]string {
 			continue
 		}
 		meta[schedulerMetadataPrefix+md.name] = md.value
+	}
+
+	if o.Description != "" {
+		meta[DescriptionMetadataKey] = o.Description
+	}
+	if o.Note != "" {
+		meta[NoteMetadataKey] = o.Note
 	}
 
 	maps.Copy(meta, o.Metadata)
@@ -250,15 +267,11 @@ const (
 
 // Payment is payment configuration for an offer.
 type Payment struct {
-	Native *struct {
-		Denomination string            `yaml:"denomination" json:"denomination"`
-		Terms        map[string]string `yaml:"terms" json:"terms"`
-	} `yaml:"native,omitempty" json:"native,omitempty"`
+	// Native contains native payment terms.
+	Native *NativePayment `yaml:"native,omitempty" json:"native,omitempty"`
 
-	EvmContract *struct {
-		Address string `json:"address"`
-		Data    string `json:"data"`
-	} `yaml:"evm,omitempty" json:"evm,omitempty"`
+	// EvmContract contains payment terms defined in a smart contract.
+	EvmContract *EVMContractPayment `yaml:"evm,omitempty" json:"evm,omitempty"`
 }
 
 // Validate validates the payment configuration.
@@ -334,6 +347,24 @@ func (p *Payment) AsDescriptor(pt *config.ParaTime) (*roflmarket.Payment, error)
 		}
 	}
 	return &dsc, nil
+}
+
+// NativePayment is payment configuration for native tokens.
+type NativePayment struct {
+	// Denomination is the native token denomination.
+	Denomination string `yaml:"denomination,omitempty" json:"denomination,omitempty"`
+
+	// Terms are payment terms in form of Term => amount in decimal.
+	Terms map[string]string `yaml:"terms" json:"terms"`
+}
+
+// EVMContractPayment is payment configuration for EVM contract-based payments.
+type EVMContractPayment struct {
+	// Address is hex-encoded address without leading 0x.
+	Address string `json:"address"`
+
+	// Data is arbitrary Base-64 encoded payment information.
+	Data string `json:"data"`
 }
 
 // Resources are describe the offered resources.

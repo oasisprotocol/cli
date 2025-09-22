@@ -415,6 +415,12 @@ func showProviderOffer(ctx context.Context, offer *roflmarket.Offer) {
 		offer.Resources.CPUCount,
 		float64(offer.Resources.Storage)/1024.,
 	)
+	if _, ok := offer.Metadata[provider.NoteMetadataKey]; ok {
+		fmt.Printf("  Note: %s\n", offer.Metadata[provider.NoteMetadataKey])
+	}
+	if _, ok := offer.Metadata[provider.DescriptionMetadataKey]; ok {
+		fmt.Printf("  Description:\n    %s\n", strings.ReplaceAll(offer.Metadata[provider.DescriptionMetadataKey], "\n", "\n    "))
+	}
 	if offer.Payment.Native != nil {
 		if len(offer.Payment.Native.Terms) == 0 {
 			return

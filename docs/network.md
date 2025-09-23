@@ -414,6 +414,8 @@ The provided ID can be one of the following:
 
   ![code json](../examples/network-show/id-entity.out.static)
 
+  By passing `--format json`, the output is formatted as JSON.
+
 - If the node ID is provided, Oasis CLI shows detailed information of the node
   such as the Oasis Core software version, the node's role, supported
   ParaTimes, trusted execution environment support and more. For example:

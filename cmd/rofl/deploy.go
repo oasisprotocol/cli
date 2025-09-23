@@ -30,6 +30,7 @@ import (
 	"github.com/oasisprotocol/cli/build/rofl/provider"
 	"github.com/oasisprotocol/cli/build/rofl/scheduler"
 	"github.com/oasisprotocol/cli/cmd/common"
+	roflCmdBuild "github.com/oasisprotocol/cli/cmd/rofl/build"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
@@ -61,6 +62,13 @@ var (
 			var appID rofl.AppID
 			if err := appID.UnmarshalText([]byte(deployment.AppID)); err != nil {
 				cobra.CheckErr(fmt.Sprintf("malformed app id: %s", err))
+			}
+
+			extraCfg, err := roflCmdBuild.ValidateApp(manifest, roflCmdBuild.ValidationOpts{
+				Offline: true,
+			})
+			if err != nil {
+				cobra.CheckErr(fmt.Sprintf("failed to validate app: %s", err))
 			}
 
 			ctx := context.Background()
@@ -153,6 +161,9 @@ var (
 					cobra.CheckErr(fmt.Sprintf("Failed to marshal permissions: %s", err))
 				}
 				machineDeployment.Metadata[scheduler.MetadataKeyPermissions] = perms
+			}
+			if customDomains := extractCustomDomains(extraCfg); customDomains != "" {
+				machineDeployment.Metadata[scheduler.MetadataKeyProxyCustomDomains] = customDomains
 			}
 
 			obtainMachine := func() (*buildRofl.Machine, *roflmarket.Instance, error) {
@@ -479,6 +490,21 @@ func resolveAndMarshalPermissions(npa *common.NPASelection, permissions map[stri
 		}
 	}
 	return scheduler.MarshalPermissions(perms), nil
+}
+
+func extractCustomDomains(extraCfg *roflCmdBuild.AppExtraConfig) string {
+	if extraCfg == nil || len(extraCfg.Ports) == 0 {
+		return ""
+	}
+
+	customDomains := make([]string, 0, len(extraCfg.Ports))
+	for _, p := range extraCfg.Ports {
+		if p.CustomDomain == "" {
+			continue
+		}
+		customDomains = append(customDomains, p.CustomDomain)
+	}
+	return strings.Join(customDomains, " ")
 }
 
 func init() {

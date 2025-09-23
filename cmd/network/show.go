@@ -43,7 +43,7 @@ const (
 	selParameters
 )
 
-func printEntityNodes(ctx context.Context, npa *common.NPASelection, stakingConn staking.Backend, registryConn registry.Backend, beaconConn api.Backend, entity *entity.Entity, height int64) error {
+func prettyPrintEntityNodes(ctx context.Context, npa *common.NPASelection, stakingConn staking.Backend, registryConn registry.Backend, beaconConn api.Backend, entity *entity.Entity, height int64) error {
 	epoch, err := beaconConn.GetEpoch(ctx, height)
 	if err != nil {
 		return err
@@ -177,7 +177,14 @@ var showCmd = &cobra.Command{
 			}
 
 			if entity, err := registryConn.GetEntity(ctx, idQuery); err == nil {
-				err = printEntityNodes(ctx, npa, stakingConn, registryConn, beaconConn, entity, height)
+				switch common.OutputFormat() {
+				case common.FormatJSON:
+					var jsonBytes []byte
+					jsonBytes, err = json.MarshalIndent(&entity, "", "  ")
+					fmt.Println(string(jsonBytes))
+				default:
+					err = prettyPrintEntityNodes(ctx, npa, stakingConn, registryConn, beaconConn, entity, height)
+				}
 				cobra.CheckErr(err)
 				return
 			}
@@ -210,7 +217,14 @@ var showCmd = &cobra.Command{
 			cobra.CheckErr(err) // If this doesn't work the other large queries won't either.
 			for _, entity := range entities {
 				if staking.NewAddress(entity.ID).Equal(addr) {
-					err = printEntityNodes(ctx, npa, stakingConn, registryConn, beaconConn, entity, height)
+					switch common.OutputFormat() {
+					case common.FormatJSON:
+						var jsonBytes []byte
+						jsonBytes, err = json.MarshalIndent(&entity, "", "  ")
+						fmt.Println(string(jsonBytes))
+					default:
+						err = prettyPrintEntityNodes(ctx, npa, stakingConn, registryConn, beaconConn, entity, height)
+					}
 					cobra.CheckErr(err)
 					return
 				}

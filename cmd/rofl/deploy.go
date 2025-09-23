@@ -88,7 +88,7 @@ var (
 			cfgEnclaves, err := roflCommon.GetRegisteredEnclaves(ctx, deployment.AppID, npa)
 			cobra.CheckErr(err)
 
-			if !maps.Equal(manifestEnclaves, cfgEnclaves) && !deployForce {
+			if !maps.Equal(manifestEnclaves, cfgEnclaves) && !deployForce && !txCfg.Export {
 				// TODO: Generate and run Update TX automatically.
 				cobra.CheckErr("Local enclave identities DIFFER from on-chain enclave identities! Run `oasis rofl update` first")
 			}

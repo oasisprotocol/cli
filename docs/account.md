@@ -455,9 +455,7 @@ assets may still be [slashed][slashing].
 ### Public Key to Address {#from-public-key}
 
 `account from-public-key <public_key>` converts the Base64-encoded public key
-to the [Oasis native address][address].
-
-[address]: https://github.com/oasisprotocol/docs/blob/main/docs/general/manage-tokens/terminology.md#address
+to the [Oasis native address].
 
 ![code shell](../examples/account/from-public-key.in)
 
@@ -474,6 +472,8 @@ Oasis consensus transactions hold the public key of the signer instead of their
 signer's staking address on the network.
 
 :::
+
+[Oasis native address]: https://github.com/oasisprotocol/docs/blob/main/docs/general/manage-tokens/terminology.md#address
 
 ### Non-Interactive Mode {#y}
 

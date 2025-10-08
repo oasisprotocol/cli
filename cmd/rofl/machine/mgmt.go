@@ -3,16 +3,21 @@ package machine
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
+	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/roflmarket"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
 	buildRofl "github.com/oasisprotocol/cli/build/rofl"
+	buildRoflProvider "github.com/oasisprotocol/cli/build/rofl/provider"
 	"github.com/oasisprotocol/cli/build/rofl/scheduler"
 	"github.com/oasisprotocol/cli/cmd/common"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
@@ -201,6 +206,12 @@ var (
 				NeedAppID: true,
 				NeedAdmin: false,
 			})
+			ctx := context.Background()
+
+			// This is required for the price pretty printer to work...
+			if npa.ParaTime != nil {
+				ctx = context.WithValue(ctx, config.ContextKeyParaTimeCfg, npa.ParaTime)
+			}
 
 			machine, machineName, machineID := resolveMachine(args, deployment)
 
@@ -220,16 +231,47 @@ var (
 			}
 
 			// When not in offline mode, connect to the given network endpoint.
-			ctx := context.Background()
 			var conn connection.Connection
+			var offer *roflmarket.Offer
 			if !txCfg.Offline {
 				conn, err = connection.Connect(ctx, npa.Network)
 				cobra.CheckErr(err)
+
+				// Fetch chosen offer, so we can calculate price.
+				offers, err := conn.Runtime(npa.ParaTime).ROFLMarket.Offers(ctx, client.RoundLatest, *providerAddr)
+				if err != nil {
+					cobra.CheckErr(fmt.Errorf("failed to query provider: %s", err))
+				}
+
+				for _, of := range offers {
+					if of.Metadata[buildRoflProvider.SchedulerMetadataOfferKey] == machine.Offer {
+						offer = of
+						break
+					}
+				}
+				if offer == nil {
+					cobra.CheckErr(fmt.Errorf("unable to find existing machine offer (%s) among market offers", machine.Offer))
+				}
 			}
 
 			fmt.Printf("Using provider:     %s (%s)\n", machine.Provider, providerAddr)
 			fmt.Printf("Top-up machine:     %s [%s]\n", machineName, machine.ID)
-			fmt.Printf("Top-up term:        %d x %s\n", roflCommon.TermCount, roflCommon.Term)
+			if txCfg.Offline {
+				fmt.Printf("Top-up term:        %d x %s\n", roflCommon.TermCount, roflCommon.Term)
+			} else {
+				// Calculate total price and print term info.
+				qTermCount := quantity.NewFromUint64(roflCommon.TermCount)
+				totalPrice, ok := offer.Payment.Native.Terms[term]
+				if !ok {
+					cobra.CheckErr("previously selected term not found in offer terms")
+				}
+				cobra.CheckErr(totalPrice.Mul(qTermCount))
+				tp := types.NewBaseUnits(totalPrice, offer.Payment.Native.Denomination)
+				fmt.Printf("Top-up term:        %d x %s (", roflCommon.TermCount, roflCommon.Term)
+				tp.PrettyPrint(ctx, "", os.Stdout)
+				fmt.Println(" total)")
+			}
+
 			roflCommon.PrintRentRefundWarning()
 
 			// Prepare transaction.

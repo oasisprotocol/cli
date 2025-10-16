@@ -20,7 +20,7 @@ var createCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := config.Global()
-		name := "test_wallet"
+		name := "default"
 		if len(args) > 0 {
 			name = args[0]
 		}

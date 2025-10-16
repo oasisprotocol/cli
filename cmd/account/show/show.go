@@ -28,7 +28,7 @@ var (
 	Cmd = &cobra.Command{
 		Use:     "show [address]",
 		Short:   "Show balance and other information",
-		Aliases: []string{"s"},
+		Aliases: []string{"s", "balance", "b"},
 		Args:    cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()

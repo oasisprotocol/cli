@@ -15,12 +15,15 @@ import (
 var accKind string
 
 var createCmd = &cobra.Command{
-	Use:   "create <name>",
+	Use:   "create [<name>]",
 	Short: "Create a new account",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := config.Global()
-		name := args[0]
+		name := "account-1"
+		if len(args) > 0 {
+			name = args[0]
+		}
 
 		checkAccountExists(cfg, name)
 

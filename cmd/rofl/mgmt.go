@@ -110,6 +110,14 @@ var (
 
 			switch manifest.TEE {
 			case buildRofl.TEETypeTDX:
+				// TDX requires storage settings.
+				if !reset {
+					manifest.Resources.Storage = &buildRofl.StorageConfig{
+						Kind: buildRofl.StorageKindDiskPersistent,
+						Size: 512,
+					}
+				}
+
 				switch appKind {
 				case buildRofl.AppKindRaw:
 					artifacts := buildRofl.LatestBasicArtifacts // Copy.
@@ -235,6 +243,12 @@ var (
 					debugMode = params.DebugAllowTestRuntimes
 				}
 
+				// For TDX assign empty quote policies by default.
+				var tdxQuotePolicy *pcs.TdxQuotePolicy
+				if manifest.TEE == buildRofl.TEETypeTDX {
+					tdxQuotePolicy = &pcs.TdxQuotePolicy{}
+				}
+
 				// Generate manifest and a default policy which does not accept any enclaves.
 				deployment = &buildRofl.Deployment{
 					Network:  npa.NetworkName,
@@ -246,7 +260,7 @@ var (
 							PCS: &pcs.QuotePolicy{
 								TCBValidityPeriod:          30,
 								MinTCBEvaluationDataNumber: 18,
-								TDX:                        &pcs.TdxQuotePolicy{},
+								TDX:                        tdxQuotePolicy,
 							},
 						},
 						Endorsements: []rofl.AllowedEndorsement{

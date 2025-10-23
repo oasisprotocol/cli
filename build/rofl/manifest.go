@@ -167,7 +167,7 @@ func (m *Manifest) Validate() error {
 		return fmt.Errorf("unsupported app kind: %s", m.Kind)
 	}
 
-	if err := m.Resources.Validate(); err != nil {
+	if err := m.Resources.Validate(m.TEE); err != nil {
 		return fmt.Errorf("bad resources config: %w", err)
 	}
 
@@ -443,13 +443,18 @@ type ResourcesConfig struct {
 }
 
 // Validate validates the resources configuration for correctness.
-func (r *ResourcesConfig) Validate() error {
+func (r *ResourcesConfig) Validate(tee string) error {
 	if r.Memory < 16 {
 		return fmt.Errorf("memory size must be at least 16M")
 	}
 	if r.CPUCount < 1 {
 		return fmt.Errorf("vCPU count must be at least 1")
 	}
+
+	if tee == TEETypeSGX && r.Storage != nil {
+		return fmt.Errorf("SGX apps do not support disk storage")
+	}
+
 	if r.Storage != nil {
 		err := r.Storage.Validate()
 		if err != nil {

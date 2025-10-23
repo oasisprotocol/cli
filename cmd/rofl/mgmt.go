@@ -41,6 +41,7 @@ var (
 
 	appTEE  string
 	appKind string
+	reset   bool
 
 	//go:embed init_artifacts/compose.yaml
 	initArtifactCompose []byte
@@ -64,31 +65,44 @@ var (
 			err = os.Chdir(appPath)
 			cobra.CheckErr(err)
 
-			// Fail in case there is an existing manifest.
-			if buildRofl.ManifestExists() {
-				cobra.CheckErr("refusing to overwrite existing manifest")
+			var manifest *buildRofl.Manifest
+			if !reset {
+				// Fail in case there is an existing manifest.
+				if buildRofl.ManifestExists() {
+					cobra.CheckErr("Refusing to overwrite existing manifest.\nHint: To reset existing ROFL manifest, pass --reset flag.")
+				}
+
+				fmt.Printf("Creating a new app with default policy...\n")
+
+				// Create a default manifest without any deployments.
+				manifest = &buildRofl.Manifest{
+					Name:    appName,
+					Version: "0.1.0",
+					TEE:     appTEE,
+					Kind:    appKind,
+					Resources: buildRofl.ResourcesConfig{
+						Memory:   512,
+						CPUCount: 1,
+					},
+				}
+			} else {
+				manifest, err = buildRofl.LoadManifest()
+				cobra.CheckErr(err)
+
+				fmt.Printf("\n")
+				if !common.GetAnswerYes() {
+					common.Confirm("Reset existing app manifest file by removing all configured ROFL deployments, secrets and policies", "not resetting")
+				}
+
+				manifest.Name = appName
+				manifest.Deployments = make(map[string]*buildRofl.Deployment)
 			}
 
-			// Create a default manifest without any deployments.
 			// TODO: Extract author and repository from Git configuration if available.
-			manifest := buildRofl.Manifest{
-				Name:    appName,
-				Version: "0.1.0",
-				TEE:     appTEE,
-				Kind:    appKind,
-				Resources: buildRofl.ResourcesConfig{
-					Memory:   512,
-					CPUCount: 1,
-					Storage: &buildRofl.StorageConfig{
-						Kind: buildRofl.StorageKindDiskPersistent,
-						Size: 512,
-					},
-				},
-			}
+
 			err = manifest.Validate()
 			cobra.CheckErr(err)
 
-			fmt.Printf("Creating a new ROFL app with default policy...\n")
 			fmt.Printf("Name:     %s\n", manifest.Name)
 			fmt.Printf("Version:  %s\n", manifest.Version)
 			fmt.Printf("TEE:      %s\n", manifest.TEE)
@@ -828,6 +842,8 @@ func detectOrCreateComposeFile() string {
 func init() {
 	initCmd.Flags().StringVar(&appTEE, "tee", "tdx", "TEE kind [tdx, sgx]")
 	initCmd.Flags().StringVar(&appKind, "kind", "container", "ROFL app kind [container, raw]")
+	initCmd.Flags().BoolVar(&reset, "reset", false, "reset the existing ROFL manifest")
+	initCmd.Flags().AddFlagSet(common.AnswerYesFlag)
 
 	createCmd.Flags().AddFlagSet(common.SelectorFlags)
 	createCmd.Flags().AddFlagSet(common.RuntimeTxFlags)

@@ -18,8 +18,8 @@ OFfchain Logic (ROFL)][rofl] apps:
 
 ## Initialize a new ROFL app manifest {#init}
 
-The `rofl init` command will prepare a new ROFL app manifest in the given
-directory (defaults to the current directory). The manifest is a YAML file named
+The `rofl init` command will prepare a new ROFL manifest in the given directory
+(defaults to the current directory). The manifest is a YAML file named
 `rofl.yaml` which defines the versions of all components, upgrade policies, etc.
 needed to manage, build and deploy the ROFL app.
 
@@ -27,8 +27,11 @@ needed to manage, build and deploy the ROFL app.
 
 ![code](../examples/rofl/init.out.static)
 
-Note that by default the manifest will not contain any deployments. In order to
-create deployments, use `rofl create`.
+You can create a new ROFL manifest file based on the existing one by passing
+`--reset` flag. This is useful if you want to make your own deployment of
+the existing ROFL project. It will remove information on previous user-specific
+deployments but keep information such as the minimum CPU, memory and storage
+requirements.
 
 ## Create a new ROFL app on the network {#create}
 

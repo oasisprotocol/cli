@@ -447,6 +447,23 @@ var (
 			appCfg, err := conn.Runtime(npa.ParaTime).ROFL.App(ctx, client.RoundLatest, appID)
 			cobra.CheckErr(err)
 
+			replicas, err := conn.Runtime(npa.ParaTime).ROFL.AppInstances(ctx, client.RoundLatest, appID)
+			cobra.CheckErr(err)
+
+			if common.OutputFormat() == common.FormatJSON {
+				output := struct {
+					App      *rofl.AppConfig      `json:"app"`
+					Replicas []*rofl.Registration `json:"replicas"`
+				}{
+					App:      appCfg,
+					Replicas: replicas,
+				}
+				jsonOutput, err := common.PrettyJSONMarshal(output)
+				cobra.CheckErr(err)
+				fmt.Println(string(jsonOutput))
+				return
+			}
+
 			fmt.Printf("App ID:        %s\n", appCfg.ID)
 			fmt.Printf("Admin:         ")
 			switch appCfg.Admin {
@@ -478,9 +495,6 @@ var (
 
 			fmt.Println()
 			fmt.Printf("=== Replicas ===\n")
-
-			replicas, err := conn.Runtime(npa.ParaTime).ROFL.AppInstances(ctx, client.RoundLatest, appID)
-			cobra.CheckErr(err)
 
 			if len(replicas) > 0 {
 				for _, ai := range replicas {
@@ -826,6 +840,7 @@ func init() {
 
 	showCmd.Flags().AddFlagSet(common.SelectorFlags)
 	showCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
+	showCmd.Flags().AddFlagSet(common.FormatFlag)
 
 	secretSetCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	secretSetCmd.Flags().StringVar(&pubName, "public-name", "", "public secret name")

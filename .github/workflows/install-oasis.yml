@@ -1,0 +1,39 @@
+name: install-oasis
+on:
+  workflow_call:
+    inputs:
+      release_tag:
+        required: false
+        type: string
+  # A push occurs to one of the matched branches.
+  push:
+    branches:
+      - master
+      - stable/*
+  # Or when a pull request event occurs for a pull request against one of the
+  # matched branches.
+  pull_request:
+    branches:
+      - master
+      - stable/*
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Oasis CLI (latest or pinned)
+        run: |
+          #TAG="${{ inputs.release_tag }}"
+          #echo "Input length: ${#TAG}"
+          API="https://github.com/oasisprotocol/cli/releases/download/v0.16.0/oasis_cli_0.16.0_linux_amd64.tar.gz"
+          echo "Fetching release from $API"
+          curl -L "$API" -o oasis-cli.tar.gz
+          ls
+          tar -xvzf oasis-cli.tar.gz
+          rm oasis-cli.tar.gz
+          cd oasis_cli_0.16.0_linux_amd64
+          # Make executable
+          chmod +x oasis
+          # Verify installation
+          ./oasis --version
+      - name: Expose PATH
+        run: echo "$PWD" >> "$GITHUB_PATH"

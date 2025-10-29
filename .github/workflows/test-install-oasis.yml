@@ -1,0 +1,5 @@
+jobs:
+  use-oasis-cli:
+    uses: your-org/ci/.github/workflows/install-oasis.yml@main
+    with:
+      release_tag: v0.16.0

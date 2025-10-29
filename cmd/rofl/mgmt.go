@@ -452,12 +452,17 @@ var (
 
 			if common.OutputFormat() == common.FormatJSON {
 				output := struct {
-					App      *rofl.AppConfig      `json:"app"`
-					Replicas []*rofl.Registration `json:"replicas"`
+					App      common.JSONPrettyPrintRoflAppConfig      `json:"app"`
+					Replicas []common.JSONPrettyPrintRoflRegistration `json:"replicas"`
 				}{
-					App:      appCfg,
-					Replicas: replicas,
+					App:      common.JSONPrettyPrintRoflAppConfig(*appCfg),
+					Replicas: make([]common.JSONPrettyPrintRoflRegistration, 0, len(replicas)),
 				}
+				// Convert replicas to pretty-printable format.
+				for _, ai := range replicas {
+					output.Replicas = append(output.Replicas, common.JSONPrettyPrintRoflRegistration(*ai))
+				}
+
 				jsonOutput, err := common.PrettyJSONMarshal(output)
 				cobra.CheckErr(err)
 				fmt.Println(string(jsonOutput))

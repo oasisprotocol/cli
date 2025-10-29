@@ -2,10 +2,13 @@ package common
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-core/go/common"
 	coreSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
@@ -13,10 +16,10 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
-	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/contracts"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 )
 
 // PrettyJSONMarshal returns pretty-printed JSON encoding of v.
@@ -44,6 +47,40 @@ func JSONMarshalKey(k interface{}) (keyJSON []byte, err error) {
 		keyJSON, err = json.Marshal(k)
 	}
 	return
+}
+
+// JSONPrettyPrintRoflAppConfig is a wrapper around rofl.AppConfig that implements custom JSON marshaling.
+type JSONPrettyPrintRoflAppConfig rofl.AppConfig
+
+// MarshalJSON implements custom JSON marshaling.
+func (a JSONPrettyPrintRoflAppConfig) MarshalJSON() ([]byte, error) {
+	type alias JSONPrettyPrintRoflAppConfig
+	out := struct {
+		alias
+		// Overrides alias field so JSON marshaler uses this base64 string.
+		SEK string `json:"sek"`
+	}{
+		alias: alias(a),
+		SEK:   base64.StdEncoding.EncodeToString(a.SEK[:]),
+	}
+	return json.Marshal(out)
+}
+
+// JSONPrettyPrintRoflRegistration is a wrapper around rofl.Registration that implements custom JSON marshaling.
+type JSONPrettyPrintRoflRegistration rofl.Registration
+
+// MarshalJSON implements custom JSON marshaling.
+func (r JSONPrettyPrintRoflRegistration) MarshalJSON() ([]byte, error) {
+	type alias JSONPrettyPrintRoflRegistration
+	out := struct {
+		alias
+		// Overrides alias field so JSON marshaler uses this base64 string.
+		REK string `json:"rek"`
+	}{
+		alias: alias(r),
+		REK:   base64.StdEncoding.EncodeToString(r.REK[:]),
+	}
+	return json.Marshal(out)
 }
 
 // JSONPrintKeyValueTuple traverses potentially large number of items and prints JSON representation

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"maps"
 	"os"
+	"os/exec"
 	"slices"
 
 	"github.com/spf13/cobra"
@@ -68,6 +69,7 @@ var (
 			fmt.Printf("Version:    %s\n", manifest.Version)
 			fmt.Printf("TEE:        %s\n", manifest.TEE)
 			fmt.Printf("Kind:       %s\n", manifest.Kind)
+			fmt.Println()
 
 			switch deployment.Debug {
 			case true:
@@ -104,6 +106,24 @@ var (
 				)
 				containerEnv.AddDirectory(tmpDir)
 				buildEnv = containerEnv
+
+				if buildEnv.IsAvailable() {
+					fmt.Printf("Initializing build environment...\n")
+					// Run a dummy command to make sure that all necessary Docker layers
+					// for the build environment are downloaded at the start instead of
+					// later in the build process.
+					// Also pipe all output from the process to stdout/stderr, so the user
+					// can follow the progress in real-time.
+					cmd := exec.Command("true")
+					cmd.Stdout = os.Stdout
+					cmd.Stderr = os.Stderr
+					if err = buildEnv.WrapCommand(cmd); err != nil {
+						return fmt.Errorf("unable to wrap command: %w", err)
+					}
+					if err = cmd.Run(); err != nil {
+						return fmt.Errorf("failed to initialize build environment: %w", err)
+					}
+				}
 			}
 
 			if !buildEnv.IsAvailable() {

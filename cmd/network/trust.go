@@ -20,6 +20,11 @@ const (
 	// be able to fetch and verify light headers and finally detect and penalize a possible
 	// byzantine behavior. This value intentionally overestimates the actual time required.
 	maxVerificationTime = 24 * time.Hour
+
+	// maxCpCreationTime defines the upper bound within which remote node should produce
+	// checkpoint. This value intentionally overestimates the actual time required,
+	// assuming nodes with very bulky NodeDB, where checkpoint creation is slow.
+	maxCpCreationTime = 36 * time.Hour
 )
 
 var trustCmd = &cobra.Command{
@@ -94,11 +99,12 @@ func calcTrust(ctx context.Context, conn connection.Connection) (config.TrustCon
 	}
 	trustPeriod := calcTrustPeriod(debondingPeriod)
 
-	// Going back the whole checkpoint interval guarantees there should be at least
-	// one target checkpoint height inside this interval.
-	candidate, err := conn.Consensus().Core().GetBlock(ctx, latest.Height-cpInterval)
+	// Going back the whole checkpoint interval plus max checkpoint creation time guarantees there wil be at least
+	// one target checkpoint height from the trust height onwards, for which remote nodes already created a checkpoint.
+	candidateHeight := latest.Height - cpInterval - int64(maxCpCreationTime/blkTime)
+	candidate, err := conn.Consensus().Core().GetBlock(ctx, candidateHeight)
 	if err != nil {
-		return config.TrustConfig{}, fmt.Errorf("failed to get candidate trust (height: %d): %w", candidate.Height, err)
+		return config.TrustConfig{}, fmt.Errorf("failed to get candidate trust (height: %d): %w", candidateHeight, err)
 	}
 
 	// Sanity check: the trusted root must not be older than the sum of the trust

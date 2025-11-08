@@ -7,6 +7,7 @@ import (
 	"maps"
 	"os"
 	"slices"
+	"strings"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -85,6 +86,19 @@ var (
 
 			// Ensure deterministic umask for builds.
 			setUmask(0o002)
+
+			// Set LC_ALL=C for the entire build process to ensure deterministic file ordering
+			// and consistent behavior across different locale environments.
+			os.Setenv("LC_ALL", "C")
+			os.Unsetenv("LANG")
+			for _, env := range os.Environ() {
+				if strings.HasPrefix(env, "LC_") && env != "LC_ALL=C" {
+					parts := strings.SplitN(env, "=", 2)
+					if len(parts) == 2 {
+						os.Unsetenv(parts[0])
+					}
+				}
+			}
 
 			var buildEnv env.ExecEnv
 			switch {

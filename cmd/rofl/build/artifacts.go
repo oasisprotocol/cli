@@ -292,24 +292,124 @@ func ensureBinaryExists(buildEnv env.ExecEnv, name, pkg string) error {
 //
 // Returns the size of the created filesystem image in bytes.
 func createSquashFs(buildEnv env.ExecEnv, fn, dir string) (int64, error) {
-	const mkSquashFsBin = "mksquashfs"
-	if err := ensureBinaryExists(buildEnv, mkSquashFsBin, "squashfs-tools"); err != nil {
+	const sqfstarBin = "sqfstar"
+	if err := ensureBinaryExists(buildEnv, sqfstarBin, "squashfs-tools"); err != nil {
+		return 0, err
+	}
+	if err := ensureBinaryExists(buildEnv, "fakeroot", "fakeroot"); err != nil {
 		return 0, err
 	}
 
-	// Execute mksquashfs.
-	cmd := exec.Command(
-		mkSquashFsBin,
-		dir,
-		fn,
-		"-comp", "gzip",
-		"-noappend",
-		"-mkfs-time", "1234",
-		"-all-time", "1234",
-		"-root-time", "1234",
-		"-all-root",
-		"-reproducible",
+	// Print sqfstar version for debugging
+	verCmd := exec.Command(sqfstarBin, "-version")
+	verOut, err := verCmd.CombinedOutput()
+	if err == nil {
+		fmt.Printf("sqfstar version: %s\n", string(verOut))
+	}
+
+	// Create reproducible tar archive.
+	// Set LC_ALL=C to ensure consistent collation/sorting across environments.
+	tarPath := fn + ".tar"
+	fmt.Printf("Creating tar archive: %s\n", tarPath)
+	tarCmd := exec.Command(
+		"tar",
+		"--create",
+		"--file="+tarPath,
+		"--format=pax",
+		"--sort=name",
+		"--mtime=@0",
+		"--owner=0",
+		"--group=0",
+		"--numeric-owner",
+		"--mode=go=rX,u+rw,a-s",
+		"--no-acls",
+		"--no-selinux",
+		"--no-xattrs",
+		"--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime,delete=mtime",
+		".",
 	)
+	tarCmd.Dir = dir
+	// Filter out any existing LC_* variables and set LC_ALL=C and SOURCE_DATE_EPOCH for consistent sorting.
+	tarEnv := []string{}
+	for _, e := range os.Environ() {
+		if !strings.HasPrefix(e, "LC_") && !strings.HasPrefix(e, "LANG=") && !strings.HasPrefix(e, "SOURCE_DATE_EPOCH=") {
+			tarEnv = append(tarEnv, e)
+		}
+	}
+	tarCmd.Env = append(tarEnv, "LC_ALL=C", "SOURCE_DATE_EPOCH=0", "TZ=UTC")
+	var tarOut strings.Builder
+	tarCmd.Stderr = &tarOut
+	tarCmd.Stdout = &tarOut
+	if err := buildEnv.WrapCommand(tarCmd); err != nil {
+		return 0, err
+	}
+	if err := tarCmd.Run(); err != nil {
+		return 0, fmt.Errorf("failed to create tar archive: %w\n%s", err, tarOut.String())
+	}
+
+	// Compute and print tar hash for reproducibility verification
+	tarHash, err := sha256File(tarPath)
+	if err != nil {
+		return 0, fmt.Errorf("failed to compute tar hash: %w", err)
+	}
+	fmt.Printf("Tar archive hash (SHA256): %s\n", tarHash)
+
+	// Debug: Check tar contents for root directory ownership
+	tarListCmd := exec.Command("sh", "-c", "tar -tvf "+tarPath+" | head -10")
+	tarListCmd.Env = append(tarEnv, "LC_ALL=C")
+	tarListOut, err := tarListCmd.CombinedOutput()
+	if err == nil {
+		fmt.Printf("Tar contents (first 10 entries):\n%s\n", string(tarListOut))
+	}
+
+	// Convert tar to squashfs using sqfstar under fakeroot.
+	// fakeroot ensures the root directory is created with UID/GID 0.
+	cmd := exec.Command(
+		"fakeroot",
+		"--",
+		sqfstarBin,
+		fn,
+		"-noI", // No inode compression
+		"-noD", // No data compression
+		"-noF", // No fragment compression
+		"-noX", // No xattr compression
+		"-b", "1M",
+		"-processors", "1",
+		"-noappend",
+		"-mkfs-time", "0",
+		"-all-time", "0",
+		"-root-mode", "0755",
+		"-all-root",
+		"-root-owned",
+		"-force-uid", "0",
+		"-force-gid", "0",
+		"-no-fragments",
+		"-no-xattrs",
+		"-no-tailends",
+		"-nopad",
+		"-no-exports",
+		"-no-sparse",
+		"-no-duplicates",
+	)
+	// Set LC_ALL=C to ensure consistent collation/sorting across environments.
+	// Filter out any existing LC_* variables and set LC_ALL=C.
+	env := []string{}
+	for _, e := range os.Environ() {
+		if !strings.HasPrefix(e, "LC_") && !strings.HasPrefix(e, "LANG=") && !strings.HasPrefix(e, "TZ=") && !strings.HasPrefix(e, "SOURCE_DATE_EPOCH=") {
+			env = append(env, e)
+		}
+	}
+	cmd.Env = append(env, "LC_ALL=C", "TZ=UTC", "SOURCE_DATE_EPOCH=0")
+
+	// Open tar file and pipe it to sqfstar's stdin
+	tarFile, err := os.Open(tarPath)
+	if err != nil {
+		return 0, fmt.Errorf("failed to open tar archive: %w", err)
+	}
+	defer tarFile.Close()
+	defer os.Remove(tarPath)
+
+	cmd.Stdin = tarFile
 	var out strings.Builder
 	cmd.Stderr = &out
 	cmd.Stdout = &out
@@ -325,6 +425,15 @@ func createSquashFs(buildEnv env.ExecEnv, fn, dir string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+
+	// Compute and print squashfs hash for reproducibility verification
+	sqfsHash, err := sha256File(fn)
+	if err != nil {
+		return 0, fmt.Errorf("failed to compute squashfs hash: %w", err)
+	}
+	fmt.Printf("SquashFS image path: %s\n", fn)
+	fmt.Printf("SquashFS image hash (SHA256): %s\n", sqfsHash)
+
 	return fi.Size(), nil
 }
 

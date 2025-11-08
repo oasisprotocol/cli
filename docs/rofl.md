@@ -100,7 +100,7 @@ chapter for details.
 
 :::
 
-[ROFL Prerequisites]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/prerequisites.md
+[ROFL Prerequisites]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/workflow/prerequisites.md
 [npa]: ./account.md#npa
 
 ## Secrets management {#secret}

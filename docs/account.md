@@ -455,7 +455,9 @@ assets may still be [slashed][slashing].
 ### Public Key to Address {#from-public-key}
 
 `account from-public-key <public_key>` converts the Base64-encoded public key
-to the [Oasis native address](../terminology.md#address).
+to the [Oasis native address][address].
+
+[address]: https://github.com/oasisprotocol/docs/blob/main/docs/general/manage-tokens/terminology.md#address
 
 ![code shell](../examples/account/from-public-key.in)
 

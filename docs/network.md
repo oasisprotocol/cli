@@ -397,7 +397,7 @@ The provided ID can be one of the following:
   ```shell
   oasis network show 000000000000000000000000000000000000000000000000f80306c9858e7279 | jq '.staking.thresholds."node-compute"'
   ```
-  
+
   ```
   "5000000000000000"
   ```
@@ -453,3 +453,15 @@ By passing `--format json`, the output is formatted as JSON.
 `network status` command.
 
 :::
+
+### State Sync Trust {#trust}
+
+`network trust` will show suggested trust for the consensus [state sync].
+
+For example:
+
+![code shell](../examples/network/trust.in.static)
+
+![code json](../examples/network/trust.out.static)
+
+[state sync]: https://github.com/oasisprotocol/docs/blob/main/docs/node/run-your-node/advanced/sync-node-using-state-sync.md#using-state-sync-for-quick-bootstrapping

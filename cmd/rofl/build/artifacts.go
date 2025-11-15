@@ -359,36 +359,39 @@ func createSquashFs(buildEnv env.ExecEnv, fn, dir string) (int64, error) {
 	tarHash := hex.EncodeToString(tarHasher.Sum(nil))
 	fmt.Printf("TAR archive SHA256: %s\n", tarHash)
 
+	// Convert paths for container environment if needed.
+	fnInEnv, err := buildEnv.PathToEnv(fn)
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert output path: %w", err)
+	}
+	tarPathInEnv, err := buildEnv.PathToEnv(tarPath)
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert tar path: %w", err)
+	}
+
 	// Convert tar to squashfs using sqfstar under fakeroot.
+	// We use shell redirection instead of cmd.Stdin because stdin doesn't get piped through
+	// Docker when running in a container environment.
 	cmd := exec.Command(
-		fakerootBin,
-		"--",
-		sqfstarBin,
-		fn,
-		"-reproducible",
-		"-comp", "gzip",
-		"-b", "1M",
-		"-processors", "1",
-		"-noappend",
-		"-mkfs-time", "0",
-		"-all-time", "0",
-		"-nopad",
-		"-all-root",
-		"-force-uid", "0",
-		"-force-gid", "0",
+		"sh", "-c",
+		fakerootBin+" -- "+sqfstarBin+" "+fnInEnv+
+			" -reproducible"+
+			" -comp gzip"+
+			" -b 1M"+
+			" -processors 1"+
+			" -noappend"+
+			" -mkfs-time 0"+
+			" -all-time 0"+
+			" -nopad"+
+			" -all-root"+
+			" -force-uid 0"+
+			" -force-gid 0"+
+			" < "+tarPathInEnv,
 	)
 
 	cmd.Env = cleanEnvForReproducibility()
 
-	// Open tar file and pipe it to sqfstar's stdin.
-	tarFile, err = os.Open(tarPath)
-	if err != nil {
-		return 0, fmt.Errorf("failed to open tar archive: %w", err)
-	}
-	defer tarFile.Close()
 	defer os.Remove(tarPath)
-
-	cmd.Stdin = tarFile
 	var out strings.Builder
 	cmd.Stderr = &out
 	cmd.Stdout = &out

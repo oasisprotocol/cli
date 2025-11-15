@@ -359,12 +359,18 @@ func createSquashFs(buildEnv env.ExecEnv, fn, dir string) (int64, error) {
 	tarHash := hex.EncodeToString(tarHasher.Sum(nil))
 	fmt.Printf("TAR archive SHA256: %s\n", tarHash)
 
+	// Convert paths for container environment if needed.
+	fnInEnv, err := buildEnv.PathToEnv(fn)
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert output path: %w", err)
+	}
+
 	// Convert tar to squashfs using sqfstar under fakeroot.
 	cmd := exec.Command(
 		fakerootBin,
 		"--",
 		sqfstarBin,
-		fn,
+		fnInEnv,
 		"-reproducible",
 		"-comp", "gzip",
 		"-b", "1M",

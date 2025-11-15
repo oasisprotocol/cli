@@ -145,6 +145,10 @@ func (de *ContainerEnv) WrapCommand(cmd *exec.Cmd) error {
 		"--platform", "linux/amd64",
 		"--workdir", workDir,
 	}
+	// Add interactive flag if stdin is set to allow piping data into the container.
+	if cmd.Stdin != nil {
+		cmd.Args = append(cmd.Args, "--interactive")
+	}
 	for hostDir, bindDir := range de.volumes {
 		cmd.Args = append(cmd.Args, "--volume", hostDir+":"+bindDir)
 	}

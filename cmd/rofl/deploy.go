@@ -127,7 +127,7 @@ var (
 				cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
 			}
 
-			fmt.Printf("Using provider: %s (%s)\n", machine.Provider, providerAddr)
+			fmt.Printf("Using provider: %s\n", common.PrettyAddress(npa.Network, *providerAddr))
 
 			if deployShowOffers {
 				// Display all offers supported by the provider.

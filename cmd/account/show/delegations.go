@@ -105,7 +105,8 @@ func prettyPrintDelegationDescriptions(
 	}
 
 	for _, desc := range delDescriptions {
-		fmt.Fprintf(w, "%s  - %-*s %s", prefix, lenLongest, addressFieldName, desc.address)
+		ppAddr := common.PrettyAddress(network, types.NewAddressFromConsensus(desc.address))
+		fmt.Fprintf(w, "%s  - %-*s %s", prefix, lenLongest, addressFieldName, ppAddr)
 		if desc.self {
 			fmt.Fprintf(w, " (self)")
 		}

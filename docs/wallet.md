@@ -59,7 +59,7 @@ mapping**.
 
 ## Create an Account {#create}
 
-The `wallet create <name>` command is used add a new account into your Oasis
+The `wallet create [<name>]` command is used add a new account into your Oasis
 CLI wallet by:
 
 - generating a new mnemonic and storing it into a file-based wallet, or

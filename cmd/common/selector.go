@@ -110,7 +110,7 @@ func (npa *NPASelection) PrettyPrintNetwork() (out string) {
 	if len(npa.Network.Description) > 0 {
 		out += fmt.Sprintf(" (%s)", npa.Network.Description)
 	}
-	return
+	return out
 }
 
 // ConsensusDenomination returns the denomination used to represent the consensus layer token.
@@ -125,7 +125,7 @@ func (npa *NPASelection) ConsensusDenomination() (denom types.Denomination) {
 	default:
 		denom = types.Denomination(cfgDenom)
 	}
-	return
+	return denom
 }
 
 func init() {

@@ -32,6 +32,7 @@ import (
 	"github.com/oasisprotocol/cli/cmd/common"
 	roflCmdBuild "github.com/oasisprotocol/cli/cmd/rofl/build"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
+	roflProvider "github.com/oasisprotocol/cli/cmd/rofl/provider"
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
@@ -40,7 +41,6 @@ var (
 	deployOffer          string
 	deployMachine        string
 	deployForce          bool
-	deployShowOffers     bool
 	deployReplaceMachine bool
 
 	deployCmd = &cobra.Command{
@@ -129,9 +129,17 @@ var (
 
 			fmt.Printf("Using provider: %s (%s)\n", machine.Provider, providerAddr)
 
-			if deployShowOffers {
+			if roflCommon.ShowOffers {
 				// Display all offers supported by the provider.
-				showProviderOffers(ctx, npa, conn, *providerAddr)
+				offers, err := fetchProviderOffers(ctx, npa, conn, *providerAddr)
+				cobra.CheckErr(err)
+
+				fmt.Println()
+				fmt.Printf("Offers available from the selected provider:\n")
+				for _, offer := range offers {
+					roflProvider.ShowOfferSummary(npa, offer)
+				}
+				fmt.Println()
 				return
 			}
 
@@ -183,12 +191,17 @@ var (
 					}
 				}
 				if offer == nil {
-					showProviderOffers(ctx, npa, conn, *providerAddr)
+					fmt.Println()
+					fmt.Printf("Offers available from the selected provider:\n")
+					for _, of := range offers {
+						roflProvider.ShowOfferSummary(npa, of)
+					}
+					fmt.Println()
 					return nil, nil, fmt.Errorf("offer '%s' not found for provider '%s'", machine.Offer, providerAddr)
 				}
 
 				fmt.Printf("Taking offer:\n")
-				showProviderOffer(ctx, offer)
+				roflProvider.ShowOfferSummary(npa, offer)
 
 				term := detectTerm(offer)
 				if roflCommon.TermCount < 1 {
@@ -203,7 +216,7 @@ var (
 				}
 				cobra.CheckErr(totalPrice.Mul(qTermCount))
 				tp := types.NewBaseUnits(totalPrice, offer.Payment.Native.Denomination)
-				fmt.Printf("Selected per-%s pricing term, total price is ", term2str(term))
+				fmt.Printf("Selected per-%s pricing term, total price is ", roflCommon.FormatTerm(term))
 				tp.PrettyPrint(ctx, "", os.Stdout)
 				fmt.Println(".")
 				// Warn the user about the non-refundable rental policy before first renting.
@@ -350,7 +363,7 @@ func pushBundleToOciRepository(orcFilename string, ociRepository string) (string
 func detectTerm(offer *roflmarket.Offer) (term roflmarket.Term) {
 	if offer == nil {
 		cobra.CheckErr(fmt.Errorf("no offers exist to determine payment term"))
-		return // Linter complains otherwise.
+		return term // Linter complains otherwise.
 	}
 	if offer.Payment.Native == nil {
 		cobra.CheckErr(fmt.Errorf("no payment terms available for offer '%s'", offer.ID))
@@ -362,7 +375,7 @@ func detectTerm(offer *roflmarket.Offer) (term roflmarket.Term) {
 		if _, ok := offer.Payment.Native.Terms[term]; !ok {
 			cobra.CheckErr(fmt.Errorf("term '%s' is not available for offer '%s'", roflCommon.Term, offer.ID))
 		}
-		return
+		return term
 	}
 
 	// Take the longest payment period.
@@ -372,108 +385,20 @@ func detectTerm(offer *roflmarket.Offer) (term roflmarket.Term) {
 			term = t
 		}
 	}
-	return
+	return term
 }
 
 func fetchProviderOffers(ctx context.Context, npa *common.NPASelection, conn connection.Connection, provider types.Address) (offers []*roflmarket.Offer, err error) {
 	offers, err = conn.Runtime(npa.ParaTime).ROFLMarket.Offers(ctx, client.RoundLatest, provider)
 	if err != nil {
 		err = fmt.Errorf("failed to query provider: %s", err)
-		return
+		return offers, err
 	}
 	// Order offers, newer first.
 	sort.Slice(offers, func(i, j int) bool {
 		return bytes.Compare(offers[i].ID[:], offers[j].ID[:]) > 0
 	})
-	return
-}
-
-func showProviderOffers(ctx context.Context, npa *common.NPASelection, conn connection.Connection, provider types.Address) {
-	offers, err := fetchProviderOffers(ctx, npa, conn, provider)
-	cobra.CheckErr(err)
-
-	fmt.Println()
-	fmt.Printf("Offers available from the selected provider:\n")
-	for idx, offer := range offers {
-		showProviderOffer(ctx, offer)
-		if idx != len(offers)-1 {
-			fmt.Println()
-		}
-	}
-	fmt.Println()
-}
-
-func showProviderOffer(ctx context.Context, offer *roflmarket.Offer) {
-	name, ok := offer.Metadata[provider.SchedulerMetadataOfferKey]
-	if !ok {
-		name = "<unnamed>"
-	}
-
-	var tee string
-	switch offer.Resources.TEE {
-	case roflmarket.TeeTypeSGX:
-		tee = "sgx"
-	case roflmarket.TeeTypeTDX:
-		tee = "tdx"
-	default:
-		tee = "<unknown>"
-	}
-
-	fmt.Printf("- %s [%s]\n", name, offer.ID)
-	fmt.Printf("  TEE: %s | Memory: %d MiB | vCPUs: %d | Storage: %.2f GiB\n",
-		tee,
-		offer.Resources.Memory,
-		offer.Resources.CPUCount,
-		float64(offer.Resources.Storage)/1024.,
-	)
-	if _, ok := offer.Metadata[provider.NoteMetadataKey]; ok {
-		fmt.Printf("  Note: %s\n", offer.Metadata[provider.NoteMetadataKey])
-	}
-	if _, ok := offer.Metadata[provider.DescriptionMetadataKey]; ok {
-		fmt.Printf("  Description:\n    %s\n", strings.ReplaceAll(offer.Metadata[provider.DescriptionMetadataKey], "\n", "\n    "))
-	}
-	if offer.Payment.Native != nil {
-		if len(offer.Payment.Native.Terms) == 0 {
-			return
-		}
-
-		// Specify sorting order for terms.
-		terms := []roflmarket.Term{roflmarket.TermHour, roflmarket.TermMonth, roflmarket.TermYear}
-
-		// Go through provided payment terms and print price.
-		fmt.Printf("  Price: ")
-		var gotPrev bool
-		for _, term := range terms {
-			price, exists := offer.Payment.Native.Terms[term]
-			if !exists {
-				continue
-			}
-
-			if gotPrev {
-				fmt.Printf(" | ")
-			}
-
-			bu := types.NewBaseUnits(price, offer.Payment.Native.Denomination)
-			bu.PrettyPrint(ctx, "", os.Stdout)
-			fmt.Printf("/%s", term2str(term))
-			gotPrev = true
-		}
-		fmt.Println()
-	}
-}
-
-// Helper to convert roflmarket term into string.
-func term2str(term roflmarket.Term) string {
-	switch term {
-	case roflmarket.TermHour:
-		return "hour"
-	case roflmarket.TermMonth:
-		return "month"
-	case roflmarket.TermYear:
-		return "year"
-	default:
-		return "<unknown>"
-	}
+	return offers, err
 }
 
 func resolveAndMarshalPermissions(npa *common.NPASelection, permissions map[string][]string) (string, error) {
@@ -514,12 +439,12 @@ func init() {
 	providerFlags.StringVar(&deployOffer, "offer", "", "set the provider's offer identifier")
 	providerFlags.StringVar(&deployMachine, "machine", buildRofl.DefaultMachineName, "machine to deploy into")
 	providerFlags.BoolVar(&deployForce, "force", false, "force deployment")
-	providerFlags.BoolVar(&deployShowOffers, "show-offers", false, "show all provider offers and quit")
 	providerFlags.BoolVar(&deployReplaceMachine, "replace-machine", false, "rent a new machine if the provided one expired")
 
 	deployCmd.Flags().AddFlagSet(common.AccountFlag)
 	deployCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	deployCmd.Flags().AddFlagSet(providerFlags)
+	deployCmd.Flags().AddFlagSet(roflCommon.ShowOffersFlag)
 	deployCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	deployCmd.Flags().AddFlagSet(roflCommon.WipeFlags)
 	deployCmd.Flags().AddFlagSet(roflCommon.TermFlags)

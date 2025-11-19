@@ -1,0 +1,149 @@
+[
+  {
+    "address": "oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz",
+    "nodes": [
+      "bOlqho9R3JHP64kJk+SfMxZt5fNkYWf6gdhErWlY60E=",
+      "1owPK3eT21k0ajRG7VfHRgp4JPXobCQtzuglz6ZSJis="
+    ],
+    "scheduler_app": "rofl1qrqw99h0f7az3hwt2cl7yeew3wtz0fxunu7luyfg",
+    "payment_address": {
+      "native": "oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz"
+    },
+    "metadata": {
+      "net.oasis.provider.homepage": "https://oasis.net",
+      "net.oasis.provider.name": "OPF Testnet"
+    },
+    "stake": {
+      "Amount": "100000000000000000000",
+      "Denomination": ""
+    },
+    "offers_next_id": "0000000000000004",
+    "offers_count": 1,
+    "instances_next_id": "0000000000000423",
+    "instances_count": 12,
+    "created_at": 1745405831,
+    "updated_at": 1763564052
+  },
+  {
+    "address": "oasis1qqw74ezqygseg32e7jq9tl637q7aa4h7qsssmwp3",
+    "nodes": [
+      "mXsy6XlJlEK5vJwEfyqRWZLVN5Ss4QpwI6h124IDjjw="
+    ],
+    "scheduler_app": "rofl1qrqw99h0f7az3hwt2cl7yeew3wtz0fxunu7luyfg",
+    "payment_address": {
+      "native": "oasis1qqw74ezqygseg32e7jq9tl637q7aa4h7qsssmwp3"
+    },
+    "metadata": {},
+    "stake": {
+      "Amount": "100000000000000000000",
+      "Denomination": ""
+    },
+    "offers_next_id": "0000000000000003",
+    "offers_count": 3,
+    "instances_next_id": "0000000000000000",
+    "instances_count": 0,
+    "created_at": 1763242822,
+    "updated_at": 1763242822
+  },
+  {
+    "address": "oasis1qrcxr6lh03xyazkg7ad7q2dqs94kj0arusmyzq8g",
+    "nodes": [],
+    "scheduler_app": "rofl1qrqw99h0f7az3hwt2cl7yeew3wtz0fxunu7luyfg",
+    "payment_address": {
+      "native": "oasis1qrcxr6lh03xyazkg7ad7q2dqs94kj0arusmyzq8g"
+    },
+    "metadata": {},
+    "stake": {
+      "Amount": "100000000000000000000",
+      "Denomination": ""
+    },
+    "offers_next_id": "0000000000000000",
+    "offers_count": 0,
+    "instances_next_id": "0000000000000000",
+    "instances_count": 0,
+    "created_at": 1748354255,
+    "updated_at": 1748354255
+  },
+  {
+    "address": "oasis1qrfeadn03ljm0kfx8wx0d5zf6kj79pxqvv0dukdm",
+    "nodes": [
+      "ULUybf1RbPkDWUT/m/qPKT+f6WOtnZyiugDM4R6Nfm8="
+    ],
+    "scheduler_app": "rofl1qrqw99h0f7az3hwt2cl7yeew3wtz0fxunu7luyfg",
+    "payment_address": {
+      "native": "oasis1qrfeadn03ljm0kfx8wx0d5zf6kj79pxqvv0dukdm"
+    },
+    "metadata": {
+      "net.oasis.provider.name": "OPF Testnet Provider A"
+    },
+    "stake": {
+      "Amount": "100000000000000000000",
+      "Denomination": ""
+    },
+    "offers_next_id": "0000000000000001",
+    "offers_count": 1,
+    "instances_next_id": "0000000000000009",
+    "instances_count": 2,
+    "created_at": 1743595118,
+    "updated_at": 1759299287
+  },
+  {
+    "address": "oasis1qrjprejadvxjwj3m3mj8xurt0mvafw4jhymmmtlj",
+    "nodes": [],
+    "scheduler_app": "rofl1qrqw99h0f7az3hwt2cl7yeew3wtz0fxunu7luyfg",
+    "payment_address": {
+      "native": "oasis1qrjprejadvxjwj3m3mj8xurt0mvafw4jhymmmtlj"
+    },
+    "metadata": {},
+    "stake": {
+      "Amount": "100000000000000000000",
+      "Denomination": ""
+    },
+    "offers_next_id": "0000000000000000",
+    "offers_count": 0,
+    "instances_next_id": "0000000000000000",
+    "instances_count": 0,
+    "created_at": 1746798928,
+    "updated_at": 1746798928
+  },
+  {
+    "address": "oasis1qrpptdcpsxvxn3re0cg3f6hfy0kyfujnz5ex7vgn",
+    "nodes": [],
+    "scheduler_app": "rofl1qr95suussttd2g9ehu3zcpgx8ewtwgayyuzsl0x2",
+    "payment_address": {
+      "native": "oasis1qrpptdcpsxvxn3re0cg3f6hfy0kyfujnz5ex7vgn"
+    },
+    "metadata": {},
+    "stake": {
+      "Amount": "100000000000000000000",
+      "Denomination": ""
+    },
+    "offers_next_id": "0000000000000002",
+    "offers_count": 2,
+    "instances_next_id": "0000000000000002",
+    "instances_count": 2,
+    "created_at": 1758443738,
+    "updated_at": 1758444736
+  },
+  {
+    "address": "oasis1qrxhk2aqwq7g5fq85a89yv2khdgn2wzccqhg2sal",
+    "nodes": [
+      "5MsgQwijUlpH9+0Hbyors5jwmx7tTmKMA4c9leV3prI="
+    ],
+    "scheduler_app": "rofl1qrqw99h0f7az3hwt2cl7yeew3wtz0fxunu7luyfg",
+    "payment_address": {
+      "native": "oasis1qrxhk2aqwq7g5fq85a89yv2khdgn2wzccqhg2sal"
+    },
+    "metadata": {},
+    "stake": {
+      "Amount": "100000000000000000000",
+      "Denomination": ""
+    },
+    "offers_next_id": "0000000000000005",
+    "offers_count": 4,
+    "instances_next_id": "000000000000001d",
+    "instances_count": 0,
+    "created_at": 1744628473,
+    "updated_at": 1761127084
+  }
+]

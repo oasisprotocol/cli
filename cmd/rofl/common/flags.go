@@ -19,6 +19,9 @@ var (
 	// TermFlags provide the term and count setting.
 	TermFlags *flag.FlagSet
 
+	// ShowOffersFlag is the flag for showing all provider offers.
+	ShowOffersFlag *flag.FlagSet
+
 	// DeploymentName is the name of the ROFL app deployment.
 	DeploymentName string
 
@@ -33,6 +36,9 @@ var (
 
 	// TermCount specific the rental base unit multiplier.
 	TermCount uint64
+
+	// ShowOffers controls whether to display all offers for each provider.
+	ShowOffers bool
 )
 
 func init() {
@@ -48,4 +54,7 @@ func init() {
 	TermFlags = flag.NewFlagSet("", flag.ContinueOnError)
 	TermFlags.StringVar(&Term, "term", "", "term to pay for in advance [hour, month, year]")
 	TermFlags.Uint64Var(&TermCount, "term-count", 1, "number of terms to pay for in advance")
+
+	ShowOffersFlag = flag.NewFlagSet("", flag.ContinueOnError)
+	ShowOffersFlag.BoolVar(&ShowOffers, "show-offers", false, "show all offers for each provider")
 }

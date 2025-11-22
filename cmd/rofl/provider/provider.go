@@ -16,4 +16,6 @@ func init() {
 	Cmd.AddCommand(updateCmd)
 	Cmd.AddCommand(updateOffersCmd)
 	Cmd.AddCommand(removeCmd)
+	Cmd.AddCommand(listCmd)
+	Cmd.AddCommand(showCmd)
 }

@@ -1,0 +1,92 @@
+{
+  "address": "oasis1qqw74ezqygseg32e7jq9tl637q7aa4h7qsssmwp3",
+  "nodes": [
+    "mXsy6XlJlEK5vJwEfyqRWZLVN5Ss4QpwI6h124IDjjw="
+  ],
+  "scheduler_app": "rofl1qrqw99h0f7az3hwt2cl7yeew3wtz0fxunu7luyfg",
+  "payment_address": {
+    "native": "oasis1qqw74ezqygseg32e7jq9tl637q7aa4h7qsssmwp3"
+  },
+  "metadata": {},
+  "stake": {
+    "Amount": "100000000000000000000",
+    "Denomination": ""
+  },
+  "offers_next_id": "0000000000000003",
+  "offers_count": 3,
+  "instances_next_id": "0000000000000000",
+  "instances_count": 0,
+  "created_at": 1763242822,
+  "updated_at": 1763242822,
+  "offers": [
+    {
+      "id": "0000000000000000",
+      "resources": {
+        "tee": 2,
+        "memory": 8192,
+        "cpus": 2,
+        "storage": 40000
+      },
+      "payment": {
+        "native": {
+          "denomination": "",
+          "terms": {
+            "2": "150000000000000000000"
+          }
+        }
+      },
+      "capacity": 10,
+      "metadata": {
+        "net.oasis.description": "Small compute instance with 2 vCPUs, 8GB RAM, and 40GB storage.\nPerfect for testing and lightweight ROFL applications.\nHosted on Akash decentralized cloud infrastructure.",
+        "net.oasis.note": "Small instance - ideal for lightweight ROFL applications",
+        "net.oasis.scheduler.offer": "small"
+      }
+    },
+    {
+      "id": "0000000000000001",
+      "resources": {
+        "tee": 2,
+        "memory": 16384,
+        "cpus": 4,
+        "storage": 80000
+      },
+      "payment": {
+        "native": {
+          "denomination": "",
+          "terms": {
+            "2": "300000000000000000000"
+          }
+        }
+      },
+      "capacity": 5,
+      "metadata": {
+        "net.oasis.description": "Medium compute instance with 4 vCPUs, 16GB RAM, and 80GB storage.\nGreat for standard ROFL applications with moderate resource needs.\nHosted on Akash decentralized cloud infrastructure.",
+        "net.oasis.note": "Medium instance - balanced compute and memory",
+        "net.oasis.scheduler.offer": "medium"
+      }
+    },
+    {
+      "id": "0000000000000002",
+      "resources": {
+        "tee": 2,
+        "memory": 28672,
+        "cpus": 8,
+        "storage": 180000
+      },
+      "payment": {
+        "native": {
+          "denomination": "",
+          "terms": {
+            "2": "600000000000000000000"
+          }
+        }
+      },
+      "capacity": 1,
+      "metadata": {
+        "net.oasis.description": "Large compute instance with 8 vCPUs, 28GB RAM, and 180GB storage.\nDesigned for resource-intensive ROFL applications.\nHosted on Akash decentralized cloud infrastructure.",
+        "net.oasis.note": "Large instance - high-performance computing",
+        "net.oasis.scheduler.offer": "large"
+      }
+    }
+  ]
+}

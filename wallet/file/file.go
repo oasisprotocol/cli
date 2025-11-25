@@ -202,7 +202,7 @@ func (af *fileAccountFactory) GetConfigFromFlags() (map[string]interface{}, erro
 	return cfg, nil
 }
 
-func (af *fileAccountFactory) GetConfigFromSurvey(kind *wallet.ImportKind) (map[string]interface{}, error) {
+func (af *fileAccountFactory) GetConfigFromSurvey(kind *wallet.ImportKind, opts ...survey.AskOpt) (map[string]interface{}, error) {
 	// Ask for import details.
 	var answers struct {
 		Algorithm string
@@ -238,7 +238,7 @@ func (af *fileAccountFactory) GetConfigFromSurvey(kind *wallet.ImportKind) (map[
 			},
 		})
 	}
-	err := survey.Ask(questions, &answers)
+	err := survey.Ask(questions, &answers, opts...)
 	if err != nil {
 		return nil, err
 	}

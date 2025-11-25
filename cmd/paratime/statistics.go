@@ -384,7 +384,7 @@ var statsCmd = &cobra.Command{
 		if err != nil {
 			// Non-fatal, this is informative and gathering stats is time
 			// consuming.
-			fmt.Printf("\nWarning: failed to query metadata registry: %v\n", err)
+			common.Warnf("\nWarning: failed to query metadata registry: %v", err)
 		}
 
 		stats.prepareEntitiesOutput(entityMetadataLookup)

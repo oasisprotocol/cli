@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -10,6 +11,16 @@ import (
 
 	"github.com/oasisprotocol/cli/config"
 )
+
+// Warnf prints a message to stderr with formatting.
+func Warnf(format string, args ...interface{}) {
+	fmt.Fprintf(os.Stderr, format+"\n", args...)
+}
+
+// Warn prints a message to stderr.
+func Warn(msg string) {
+	fmt.Fprintln(os.Stderr, msg)
+}
 
 // CheckForceErr treats error as warning, if --force is provided.
 func CheckForceErr(err interface{}) {
@@ -20,7 +31,7 @@ func CheckForceErr(err interface{}) {
 
 	// --force is provided.
 	if IsForce() {
-		fmt.Printf("Warning: %s\nProceeding by force as requested\n", err)
+		Warnf("Warning: %s\nProceeding by force as requested", err)
 		return
 	}
 

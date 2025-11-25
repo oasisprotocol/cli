@@ -233,7 +233,7 @@ var (
 			for _, offer := range existingOffers {
 				offerID, ok := offer.Metadata[provider.SchedulerMetadataOfferKey]
 				if !ok {
-					fmt.Printf("WARNING: On-chain offer '%s' is missing '%s' metadata, ignoring.\n", offer.ID, provider.SchedulerMetadataOfferKey)
+					common.Warnf("WARNING: On-chain offer '%s' is missing '%s' metadata, ignoring.", offer.ID, provider.SchedulerMetadataOfferKey)
 					continue
 				}
 

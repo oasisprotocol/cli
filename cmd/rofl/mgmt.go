@@ -417,8 +417,8 @@ var (
 				cobra.CheckErr(err)
 			}
 
-			fmt.Printf("WARNING: Removing this ROFL app will DEREGISTER it, ERASE any on-chain secrets and local configuration!\n")
-			fmt.Printf("WARNING: THIS ACTION IS IRREVERSIBLE!\n")
+			common.Warn("WARNING: Removing this ROFL app will DEREGISTER it, ERASE any on-chain secrets and local configuration!")
+			common.Warn("WARNING: THIS ACTION IS IRREVERSIBLE!")
 			if !common.GetAnswerYes() {
 				common.Confirm(fmt.Sprintf("Remove ROFL app '%s' deployed on network '%s'", appID, npa.NetworkName), "not removing")
 			}

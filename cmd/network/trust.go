@@ -66,7 +66,7 @@ WARNING:
 			fmt.Println("Trust height: ", trust.Height)
 			fmt.Println("Trust hash: ", trust.Hash)
 			fmt.Println()
-			fmt.Println("WARNING: Cannot be trusted unless the CLI is connected to the RPC endpoint you control.")
+			common.Warn("WARNING: Cannot be trusted unless the CLI is connected to the RPC endpoint you control.")
 		}
 
 		return nil

@@ -67,7 +67,7 @@ type Factory interface {
 	GetConfigFromFlags() (map[string]interface{}, error)
 
 	// GetConfigFromSurvey generates account configuration from survey answers.
-	GetConfigFromSurvey(kind *ImportKind) (map[string]interface{}, error)
+	GetConfigFromSurvey(kind *ImportKind, opts ...survey.AskOpt) (map[string]interface{}, error)
 
 	// DataPrompt returns a survey prompt for entering data when importing the account.
 	DataPrompt(kind ImportKind, cfg map[string]interface{}) survey.Prompt

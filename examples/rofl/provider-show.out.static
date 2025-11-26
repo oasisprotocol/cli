@@ -1,0 +1,41 @@
+Provider: oasis1qqw74ezqygseg32e7jq9tl637q7aa4h7qsssmwp3
+
+=== Basic Information ===
+Scheduler App:    rofl1qrqw99h0f7az3hwt2cl7yeew3wtz0fxunu7luyfg
+Payment Address:  oasis1qqw74ezqygseg32e7jq9tl637q7aa4h7qsssmwp3
+Nodes:            1
+  1. mXsy6XlJlEK5vJwEfyqRWZLVN5Ss4QpwI6h124IDjjw=
+Stake:            100.0 TEST
+Offers:           3
+Instances:        0
+Created At:       2025-11-15T21:40:22Z
+Updated At:       2025-11-15T21:40:22Z
+
+=== Offers ===
+  - small [0000000000000000]
+    TEE: tdx | Memory: 8192 MiB | vCPUs: 2 | Storage: 39.06 GiB
+    Capacity: 10
+    Note: Small instance - ideal for lightweight ROFL applications
+    Description:
+      Small compute instance with 2 vCPUs, 8GB RAM, and 40GB storage.
+      Perfect for testing and lightweight ROFL applications.
+      Hosted on Akash decentralized cloud infrastructure.
+    Payment: monthly: 150.0 TEST
+  - medium [0000000000000001]
+    TEE: tdx | Memory: 16384 MiB | vCPUs: 4 | Storage: 78.12 GiB
+    Capacity: 5
+    Note: Medium instance - balanced compute and memory
+    Description:
+      Medium compute instance with 4 vCPUs, 16GB RAM, and 80GB storage.
+      Great for standard ROFL applications with moderate resource needs.
+      Hosted on Akash decentralized cloud infrastructure.
+    Payment: monthly: 300.0 TEST
+  - large [0000000000000002]
+    TEE: tdx | Memory: 28672 MiB | vCPUs: 8 | Storage: 175.78 GiB
+    Capacity: 1
+    Note: Large instance - high-performance computing
+    Description:
+      Large compute instance with 8 vCPUs, 28GB RAM, and 180GB storage.
+      Designed for resource-intensive ROFL applications.
+      Hosted on Akash decentralized cloud infrastructure.
+    Payment: monthly: 600.0 TEST

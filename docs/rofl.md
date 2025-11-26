@@ -431,6 +431,42 @@ in your provider manifest file.
 To update your provider policies, run [`rofl provider update`](#provider-update)
 instead.
 
+#### List ROFL providers {#provider-list}
+
+Use `rofl provider list` to display all ROFL providers registered on the
+selected ParaTime:
+
+![code shell](../examples/rofl/provider-list.in.static)
+
+![code](../examples/rofl/provider-list.out.static)
+
+The command displays provider addresses, scheduler app IDs, node counts, and
+offer/instance counts for each provider.
+
+To see detailed information about all offers from each provider, use the
+`--show-offers` flag:
+
+![code shell](../examples/rofl/provider-list-show-offers.in.static)
+
+#### Show ROFL provider details {#provider-show}
+
+Use `rofl provider show <address>` to display detailed information about a
+specific ROFL provider, including all their offers:
+
+![code shell](../examples/rofl/provider-show.in.static)
+
+![code](../examples/rofl/provider-show.out.static)
+
+This command provides comprehensive information including:
+
+- Basic provider information (address, scheduler app, payment address)
+- List of endorsed nodes
+- Stake amount
+- Detailed information about all offers (resources, pricing terms, capacity)
+
+Use `--format json` to get the full provider metadata in machine-readable
+format.
+
 #### Remove ROFL provider from the network {#provider-remove}
 
 Run `rofl provider remove` to deregister your ROFL provider account:

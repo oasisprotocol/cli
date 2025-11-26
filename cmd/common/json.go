@@ -46,7 +46,7 @@ func JSONMarshalKey(k interface{}) (keyJSON []byte, err error) {
 		// Marshal string or Base64 otherwise.
 		keyJSON, err = json.Marshal(k)
 	}
-	return
+	return keyJSON, err
 }
 
 // JSONPrettyPrintRoflAppConfig is a wrapper around rofl.AppConfig that implements custom JSON marshaling.

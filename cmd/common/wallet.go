@@ -2,9 +2,9 @@ package common
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
-	"github.com/AlecAivazis/survey/v2"
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
 
@@ -61,9 +61,10 @@ func LoadAccount(cfg *config.Config, name string) wallet.Account {
 	var passphrase string
 	if af.RequiresPassphrase() && !answerYes {
 		// Ask for passphrase to decrypt the account.
-		fmt.Printf("Unlock your account.\n")
+		// Use stderr for prompts so they work when stdout is piped.
+		fmt.Fprintln(os.Stderr, "Unlock your account.")
 
-		err = survey.AskOne(PromptPassphrase, &passphrase)
+		err = Ask(PromptPassphrase, &passphrase)
 		cobra.CheckErr(err)
 	}
 

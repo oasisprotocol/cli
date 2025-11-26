@@ -47,7 +47,7 @@ var (
 				}
 
 				var kindRaw string
-				err = survey.AskOne(&survey.Select{
+				err = common.Ask(&survey.Select{
 					Message: "Kind:",
 					Options: supportedKinds,
 				}, &kindRaw)
@@ -57,7 +57,7 @@ var (
 				cobra.CheckErr(err)
 
 				// Ask for wallet configuration.
-				afCfg, err = af.GetConfigFromSurvey(&kind)
+				afCfg, err = af.GetConfigFromSurvey(&kind, common.SurveyStdio)
 				cobra.CheckErr(err)
 			} else {
 				afCfg["algorithm"] = algorithm
@@ -88,7 +88,7 @@ var (
 						Validate: af.DataValidator(kind, afCfg),
 					},
 				}
-				err = survey.Ask(questions, &answers)
+				err = common.AskMulti(questions, &answers)
 				cobra.CheckErr(err)
 				// Ask for passphrase.
 				passphrase = common.AskNewPassphrase()

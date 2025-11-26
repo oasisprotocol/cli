@@ -15,3 +15,4 @@ Fee:
 Network:  testnet
 ParaTime: sapphire
 Account:  eric
+(In case you are using a hardware-based signer you may need to confirm on device.)

@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -31,15 +32,15 @@ var rmCmd = &cobra.Command{
 		}
 
 		if !common.GetAnswerYes() {
-			fmt.Printf("WARNING: Removing the account will ERASE secret key material!\n")
-			fmt.Printf("WARNING: THIS ACTION IS IRREVERSIBLE!\n")
+			fmt.Fprintln(os.Stderr, "WARNING: Removing the account will ERASE secret key material!")
+			fmt.Fprintln(os.Stderr, "WARNING: THIS ACTION IS IRREVERSIBLE!")
 
 			var result string
 			confirmText := fmt.Sprintf("I really want to remove accounts: %s", strings.Join(uniqueArgs, ", "))
-			prompt := &survey.Input{
+			confirmPrompt := &survey.Input{
 				Message: fmt.Sprintf("Enter '%s' (without quotes) to confirm removal:", confirmText),
 			}
-			err := survey.AskOne(prompt, &result)
+			err := common.Ask(confirmPrompt, &result)
 			cobra.CheckErr(err)
 
 			if result != confirmText {

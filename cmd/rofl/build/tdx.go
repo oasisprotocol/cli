@@ -54,7 +54,7 @@ func tdxBuildRaw(
 	dep := pkgMeta.FindDependency("oasis-runtime-sdk")
 	switch dep {
 	case nil:
-		fmt.Println("WARNING: No oasis-runtime-sdk dependency found. Skipping validation of TDX binary.")
+		common.Warn("WARNING: No oasis-runtime-sdk dependency found. Skipping validation of TDX binary.")
 	default:
 		// Check for presence of TDX feature.
 		if !dep.HasFeature("tdx") {
@@ -336,8 +336,8 @@ func tdxSetupBuildEnv(deployment *buildRofl.Deployment, npa *common.NPASelection
 		}
 	case buildModeUnsafe:
 		// Unsafe debug builds.
-		fmt.Println("WARNING: Building in UNSAFE DEBUG mode with MOCK TDX.")
-		fmt.Println("WARNING: This build will NOT BE DEPLOYABLE outside local test environments.")
+		common.Warn("WARNING: Building in UNSAFE DEBUG mode with MOCK TDX.")
+		common.Warn("WARNING: This build will NOT BE DEPLOYABLE outside local test environments.")
 
 		os.Setenv("OASIS_UNSAFE_SKIP_AVR_VERIFY", "1")
 		os.Setenv("OASIS_UNSAFE_ALLOW_DEBUG_ENCLAVES", "1")

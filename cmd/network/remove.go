@@ -24,7 +24,7 @@ var rmCmd = &cobra.Command{
 		}
 
 		if !common.GetAnswerYes() && len(net.ParaTimes.All) > 0 {
-			fmt.Printf("WARNING: Network '%s' contains %d ParaTimes.\n", name, len(net.ParaTimes.All))
+			common.Warnf("WARNING: Network '%s' contains %d ParaTimes.", name, len(net.ParaTimes.All))
 			common.Confirm("Are you sure you want to remove the network?", "not removing network")
 		}
 

@@ -86,7 +86,7 @@ var (
 					},
 				}
 
-				err := survey.Ask(questions, &paratimeInfo)
+				err := common.AskMulti(questions, &paratimeInfo)
 				cobra.CheckErr(err)
 			}
 

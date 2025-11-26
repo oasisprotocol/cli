@@ -45,7 +45,7 @@ func (af *testAccountFactory) GetConfigFromFlags() (map[string]interface{}, erro
 	return nil, nil
 }
 
-func (af *testAccountFactory) GetConfigFromSurvey(_ *wallet.ImportKind) (map[string]interface{}, error) {
+func (af *testAccountFactory) GetConfigFromSurvey(_ *wallet.ImportKind, _ ...survey.AskOpt) (map[string]interface{}, error) {
 	return nil, fmt.Errorf("test: account is built-in")
 }
 

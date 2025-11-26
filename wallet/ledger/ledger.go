@@ -59,7 +59,7 @@ func (af *ledgerAccountFactory) GetConfigFromFlags() (map[string]interface{}, er
 	return cfg, nil
 }
 
-func (af *ledgerAccountFactory) GetConfigFromSurvey(_ *wallet.ImportKind) (map[string]interface{}, error) {
+func (af *ledgerAccountFactory) GetConfigFromSurvey(_ *wallet.ImportKind, _ ...survey.AskOpt) (map[string]interface{}, error) {
 	return nil, fmt.Errorf("ledger: import not supported")
 }
 

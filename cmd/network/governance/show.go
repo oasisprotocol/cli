@@ -362,15 +362,11 @@ var (
 				// Try to figure out the human readable names for all the entities.
 				fromRegistry, err := metadata.EntitiesFromRegistry(ctx)
 				if err != nil {
-					fmt.Println()
-					fmt.Printf("Warning: failed to query metadata registry: %v", err)
-					fmt.Println()
+					common.Warnf("\nWarning: failed to query metadata registry: %v\n", err)
 				}
 				fromOasisscan, err := metadata.EntitiesFromOasisscan(ctx)
 				if err != nil {
-					fmt.Println()
-					fmt.Printf("Warning: failed to query oasisscan: %v", err)
-					fmt.Println()
+					common.Warnf("\nWarning: failed to query oasisscan: %v\n", err)
 				}
 
 				getName := func(addr staking.Address) string {

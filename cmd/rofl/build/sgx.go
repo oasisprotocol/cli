@@ -244,8 +244,8 @@ func sgxSetupBuildEnv(deployment *buildRofl.Deployment, npa *common.NPASelection
 		return nil // No features.
 	case buildModeUnsafe:
 		// Unsafe debug builds.
-		fmt.Println("WARNING: Building in UNSAFE DEBUG mode with MOCK SGX.")
-		fmt.Println("WARNING: This build will NOT BE DEPLOYABLE outside local test environments.")
+		common.Warn("WARNING: Building in UNSAFE DEBUG mode with MOCK SGX.")
+		common.Warn("WARNING: This build will NOT BE DEPLOYABLE outside local test environments.")
 
 		os.Setenv("OASIS_UNSAFE_SKIP_AVR_VERIFY", "1")
 		os.Setenv("OASIS_UNSAFE_ALLOW_DEBUG_ENCLAVES", "1")

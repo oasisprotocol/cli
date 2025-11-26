@@ -16,7 +16,7 @@ var exportCmd = &cobra.Command{
 	Run: func(_ *cobra.Command, args []string) {
 		name := args[0]
 
-		fmt.Printf("WARNING: Exporting the account will expose secret key material!\n")
+		common.Warn("WARNING: Exporting the account will expose secret key material!")
 		acc := common.LoadAccount(config.Global(), name)
 		accCfg, _ := common.LoadAccountConfig(config.Global(), name)
 

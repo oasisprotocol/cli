@@ -6,6 +6,7 @@ import (
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 
+	"github.com/oasisprotocol/cli/cmd/common"
 	"github.com/oasisprotocol/cli/cmd/network/governance"
 )
 
@@ -41,7 +42,7 @@ func networkDetailsFromSurvey(net *config.Network) {
 		Symbol      string
 		Decimals    uint8
 	}{}
-	err := survey.Ask(questions, &answers)
+	err := common.AskMulti(questions, &answers)
 	cobra.CheckErr(err)
 
 	net.Description = answers.Description

@@ -2,10 +2,24 @@ package common
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 )
+
+// SurveyStdio is the standard survey option to direct prompts to stderr.
+var SurveyStdio = survey.WithStdio(os.Stdin, os.Stderr, os.Stderr)
+
+// Ask wraps survey.AskOne while forcing prompts to stderr.
+func Ask(p survey.Prompt, response interface{}, opts ...survey.AskOpt) error {
+	return survey.AskOne(p, response, append([]survey.AskOpt{SurveyStdio}, opts...)...)
+}
+
+// AskMulti wraps survey.Ask while forcing prompts to stderr.
+func AskMulti(qs []*survey.Question, response interface{}, opts ...survey.AskOpt) error {
+	return survey.Ask(qs, response, append([]survey.AskOpt{SurveyStdio}, opts...)...)
+}
 
 var (
 	// PromptPassphrase is the standard passphrase prompt.
@@ -27,12 +41,12 @@ var (
 // Confirm asks the user for confirmation and aborts when rejected.
 func Confirm(msg, abortMsg string) {
 	if answerYes {
-		fmt.Printf("? %s Yes\n", msg)
+		fmt.Fprintf(os.Stderr, "? %s Yes\n", msg)
 		return
 	}
 
 	var proceed bool
-	err := survey.AskOne(&survey.Confirm{Message: msg}, &proceed)
+	err := Ask(&survey.Confirm{Message: msg}, &proceed)
 	cobra.CheckErr(err)
 	if !proceed {
 		cobra.CheckErr(abortMsg)
@@ -61,7 +75,7 @@ func AskNewPassphrase() string {
 			},
 		},
 	}
-	err := survey.Ask(questions, &answers)
+	err := AskMulti(questions, &answers)
 	cobra.CheckErr(err)
 
 	return answers.Passphrase

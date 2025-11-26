@@ -12,3 +12,4 @@ Fee:
 Network:  testnet
 ParaTime: none (consensus layer)
 Account:  orlando
+(In case you are using a hardware-based signer you may need to confirm on device.)

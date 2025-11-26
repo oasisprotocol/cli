@@ -464,4 +464,4 @@ For example:
 
 ![code json](../examples/network/trust.out.static)
 
-[state sync]: https://github.com/oasisprotocol/docs/blob/main/docs/node/run-your-node/advanced/sync-node-using-state-sync.md#using-state-sync-for-quick-bootstrapping
+[state sync]: https://github.com/oasisprotocol/docs/blob/main/docs/node/run-your-node/advanced/sync-node-using-state-sync.md

@@ -14,6 +14,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -316,13 +317,23 @@ func createSquashFs(buildEnv env.ExecEnv, fn, dir string) (int64, error) {
 	}
 
 	// Create reproducible tar archive.
+	if os.Getenv("ROFL_DEBUG_ROOTFS_HASH") != "" {
+		if err := debugRootfsHashes(dir); err != nil {
+			return 0, fmt.Errorf("failed to compute rootfs debug hashes: %w", err)
+		}
+	}
+
 	tarPath := fn + ".tar"
+	tarPathEnv, err := buildEnv.PathToEnv(tarPath)
+	if err != nil {
+		return 0, fmt.Errorf("failed to translate tar path for container: %w", err)
+	}
 	fmt.Printf("Creating tar archive: %s\n", tarPath)
 	//nolint:gosec // tarPath is constructed internally, not from user input.
 	tarCmd := exec.Command(
 		"tar",
 		"--create",
-		"--file="+tarPath,
+		"--file="+tarPathEnv,
 		"--format=gnu",
 		"--sort=name",
 		"--mtime=@0",
@@ -413,6 +424,69 @@ func createSquashFs(buildEnv env.ExecEnv, fn, dir string) (int64, error) {
 	return fi.Size(), nil
 }
 
+// debugRootfsHashes prints deterministic SHA256 hashes for all files in dir to help diagnose
+// cross-host differences. Controlled via ROFL_DEBUG_ROOTFS_HASH env var.
+func debugRootfsHashes(dir string) error {
+	type entry struct {
+		path string
+		hash string
+	}
+	var entries []entry
+
+	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		rel, err := filepath.Rel(dir, path)
+		if err != nil {
+			return err
+		}
+
+		fi, err := os.Lstat(path)
+		if err != nil {
+			return err
+		}
+
+		switch {
+		case fi.Mode()&os.ModeSymlink != 0:
+			target, err := os.Readlink(path)
+			if err != nil {
+				return err
+			}
+			entries = append(entries, entry{path: rel, hash: "symlink->" + target})
+		default:
+			f, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			h := sha256.New()
+			if _, err = io.Copy(h, f); err != nil {
+				f.Close()
+				return err
+			}
+			f.Close()
+			entries = append(entries, entry{path: rel, hash: fmt.Sprintf("%x", h.Sum(nil))})
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].path < entries[j].path
+	})
+
+	fmt.Println("Rootfs file hashes (debug):")
+	for _, e := range entries {
+		fmt.Printf("  %s %s\n", e.hash, e.path)
+	}
+	return nil
+}
+
 // sha256File computes a SHA-256 digest of the file with the given filename and returns a
 // hex-encoded hash.
 func sha256File(fn string) (string, error) {
@@ -443,7 +517,22 @@ func createVerityHashTree(buildEnv env.ExecEnv, fsFn, hashFn string) (string, er
 		return "", err
 	}
 
+	// Translate paths for container environments.
+	fsFnEnv, err := buildEnv.PathToEnv(fsFn)
+	if err != nil {
+		return "", fmt.Errorf("failed to translate filesystem path for container: %w", err)
+	}
+
+	hashFnEnv, err := buildEnv.PathToEnv(hashFn)
+	if err != nil {
+		return "", fmt.Errorf("failed to translate hash path for container: %w", err)
+	}
+
 	rootHashFn := hashFn + ".roothash"
+	rootHashFnEnv, err := buildEnv.PathToEnv(rootHashFn)
+	if err != nil {
+		return "", fmt.Errorf("failed to translate roothash path for container: %w", err)
+	}
 
 	cmd := exec.Command( //nolint:gosec
 		veritysetupBin, "format",
@@ -451,9 +540,9 @@ func createVerityHashTree(buildEnv env.ExecEnv, fsFn, hashFn string) (string, er
 		"--hash-block-size=4096",
 		"--uuid=00000000-0000-0000-0000-000000000000",
 		"--salt="+salt,
-		"--root-hash-file="+rootHashFn,
-		fsFn,
-		hashFn,
+		"--root-hash-file="+rootHashFnEnv,
+		fsFnEnv,
+		hashFnEnv,
 	)
 	var out strings.Builder
 	cmd.Stderr = &out
@@ -556,14 +645,22 @@ func convertToQcow2(buildEnv env.ExecEnv, fn string) error {
 	}
 
 	tmpOutFn := fn + ".qcow2"
+	fnEnv, err := buildEnv.PathToEnv(fn)
+	if err != nil {
+		return fmt.Errorf("failed to translate qcow input path for container: %w", err)
+	}
+	tmpOutFnEnv, err := buildEnv.PathToEnv(tmpOutFn)
+	if err != nil {
+		return fmt.Errorf("failed to translate qcow output path for container: %w", err)
+	}
 
 	// Execute qemu-img.
 	cmd := exec.Command(
 		qemuImgBin,
 		"convert",
 		"-O", "qcow2",
-		fn,
-		tmpOutFn,
+		fnEnv,
+		tmpOutFnEnv,
 	)
 	var out strings.Builder
 	cmd.Stderr = &out

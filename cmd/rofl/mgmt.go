@@ -128,6 +128,9 @@ var (
 					manifest.Artifacts = &artifacts
 				default:
 				}
+				if manifest.Artifacts != nil {
+					manifest.Artifacts.Builder = buildRofl.LatestBuilderImage
+				}
 			default:
 			}
 
@@ -565,9 +568,13 @@ var (
 					latestArtifacts = buildRofl.LatestContainerArtifacts // Copy.
 				default:
 				}
+				latestArtifacts.Builder = buildRofl.LatestBuilderImage
 			default:
 			}
 
+			if manifest.Artifacts == nil {
+				manifest.Artifacts = &buildRofl.ArtifactsConfig{}
+			}
 			if !manifest.Artifacts.UpgradeTo(&latestArtifacts) {
 				fmt.Printf("Artifacts already up-to-date.\n")
 				return

@@ -1,14 +1,6 @@
-# golangci-lint configuration.
-
-# For more information, see:
-# https://golangci-lint.run/usage/configuration/.
-
-run:
-  timeout: 5m
-
+version: "2"
 linters:
-  # Disable all linters except the ones explicitly listed below.
-  disable-all: true
+  default: none
   enable:
     - asciicheck
     - bodyclose
@@ -16,74 +8,100 @@ linters:
     - dogsled
     - dupl
     - errcheck
-    - exhaustive
     - goconst
     - gocritic
     - gocyclo
     - godot
-    - gofumpt
     - goheader
-    - goimports
-    - revive
     - gomodguard
     - goprintffuncname
     - gosec
-    - gosimple
     - govet
     - ineffassign
     - misspell
     - nakedret
     - nestif
-    - noctx
     - nolintlint
     - prealloc
+    - revive
     - rowserrcheck
-    - staticcheck
-    - stylecheck
     - sqlclosecheck
-    - typecheck
+    - staticcheck
     - unconvert
     - unparam
     - unused
     - whitespace
-
-linters-settings:
-  depguard:
+  settings:
+    depguard:
+      rules:
+        main:
+          files:
+            - $all
+          allow:
+            - $gostd
+            - golang.org/x/sys/unix
+            - golang.org/x/crypto/sha3
+            - golang.org/x/crypto/argon2
+            - github.com/oasisprotocol
+            - github.com/btcsuite/btcd
+            - github.com/adrg/xdg
+            - github.com/AlecAivazis/survey/v2
+            - github.com/ethereum/go-ethereum
+            - github.com/miguelmota/go-ethereum-hdwallet
+            - github.com/mitchellh/mapstructure
+            - github.com/olekukonko/tablewriter
+            - github.com/spf13/cobra
+            - github.com/spf13/pflag
+            - github.com/spf13/viper
+            - github.com/stretchr/testify
+            - github.com/tyler-smith/go-bip39
+            - github.com/zondax/ledger-go
+            - github.com/foxboron/go-uefi/authenticode
+            - golang.org/x/text
+            - gopkg.in/yaml.v3
+            - github.com/compose-spec/compose-go/v2
+            - github.com/github/go-spdx/v2
+            - github.com/opencontainers/image-spec/specs-go/v1
+            - oras.land/oras-go/v2
+            - github.com/wI2L/jsondiff
+            - github.com/google/uuid
+            - golang.org/x/net/idna
+            - golang.org/x/term
+          deny:
+            - pkg: github.com/pkg/errors
+              desc: Should be replaced by standard lib errors package
+            - pkg: github.com/fxamacker/cbor/v2
+              desc: Use oasis-core/go/common/cbor instead
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
     rules:
-      main:
-        files:
-          - $all
-        allow:
-          - $gostd
-          - golang.org/x/sys/unix
-          - golang.org/x/crypto/sha3
-          - golang.org/x/crypto/argon2
-          - github.com/oasisprotocol
-          - github.com/btcsuite/btcd
-          - github.com/adrg/xdg
-          - github.com/AlecAivazis/survey/v2
-          - github.com/ethereum/go-ethereum
-          - github.com/miguelmota/go-ethereum-hdwallet
-          - github.com/mitchellh/mapstructure
-          - github.com/olekukonko/tablewriter
-          - github.com/spf13/cobra
-          - github.com/spf13/pflag
-          - github.com/spf13/viper
-          - github.com/stretchr/testify
-          - github.com/tyler-smith/go-bip39
-          - github.com/zondax/ledger-go
-          - github.com/foxboron/go-uefi/authenticode
-          - golang.org/x/text
-          - gopkg.in/yaml.v3
-          - github.com/compose-spec/compose-go/v2
-          - github.com/github/go-spdx/v2
-          - github.com/opencontainers/image-spec/specs-go/v1
-          - oras.land/oras-go/v2
-          - github.com/wI2L/jsondiff
-          - github.com/google/uuid
-          - golang.org/x/net/idna
-          - golang.org/x/term
-  exhaustive:
-    # Switch statements are to be considered exhaustive if a 'default' case is
-    # present, even if all enum members aren't listed in the switch.
-    default-signifies-exhaustive: true
+      - linters:
+          - revive
+        path: "/common/"
+        text: "var-naming: avoid meaningless package names"
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/oasisprotocol/cli
+
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

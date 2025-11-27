@@ -98,6 +98,16 @@ Building ROFL apps does not require a working TEE on your machine. However, you
 do need to install all corresponding tools. Check out the [ROFL Prerequisites]
 chapter for details.
 
+Platform/container selection rules:
+
+- On Linux/amd64, builds are native by default unless the manifest specifies a
+  `builder` image; you can force native builds with `--no-container` even if a
+  `builder` is set.
+- On macOS/Windows/other architectures, builds always use a containerized
+  builder; `--no-container` will fail on these platforms.
+- If a containerized build is selected (due to platform or manifest), Docker or
+  Podman must be available; otherwise the build fails.
+
 :::
 
 [ROFL Prerequisites]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/workflow/prerequisites.md

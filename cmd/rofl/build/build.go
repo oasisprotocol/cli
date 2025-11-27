@@ -7,7 +7,9 @@ import (
 	"maps"
 	"os"
 	"os/exec"
+	"runtime"
 	"slices"
+	"strings"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -88,41 +90,56 @@ var (
 			// Ensure deterministic umask for builds.
 			setUmask(0o002)
 
+			// Determine builder image to use.
+			builderImage := ""
+			if manifest.Artifacts != nil {
+				builderImage = strings.TrimSpace(manifest.Artifacts.Builder)
+				if manifest.Artifacts.Builder != "" && builderImage == "" {
+					return fmt.Errorf("builder image is empty after trimming whitespace")
+				}
+			}
+
+			// Determine if we need to use a container for building.
+			// Native builds are only supported on Linux. On other platforms, we require
+			// a container.
+			nativeBuildSupported := runtime.GOOS == "linux" && runtime.GOARCH == "amd64"
+			containerAvailable := env.IsContainerRuntimeAvailable()
+
 			var buildEnv env.ExecEnv
 			switch {
-			case manifest.Artifacts == nil || manifest.Artifacts.Builder == "" || noContainer:
+			case noContainer:
+				if !nativeBuildSupported {
+					return fmt.Errorf("native ROFL builds are only supported on linux/amd64; remove --no-container to use containerized builds on %s/%s", runtime.GOOS, runtime.GOARCH)
+				}
+				// Force native build regardless of manifest.
 				buildEnv = env.NewNativeEnv()
 			default:
-				var baseDir string
-				baseDir, err = env.GetBasedir()
-				if err != nil {
-					return fmt.Errorf("failed to determine base directory: %w", err)
+				useContainer := false
+				if !nativeBuildSupported {
+					useContainer = true
+				} else if builderImage != "" {
+					useContainer = true
 				}
 
-				containerEnv := env.NewContainerEnv(
-					manifest.Artifacts.Builder,
-					baseDir,
-					"/src",
-				)
-				containerEnv.AddDirectory(tmpDir)
-				buildEnv = containerEnv
+				if !useContainer {
+					buildEnv = env.NewNativeEnv()
+					break
+				}
 
-				if buildEnv.IsAvailable() {
-					fmt.Printf("Initializing build environment...\n")
-					// Run a dummy command to make sure that all necessary Docker layers
-					// for the build environment are downloaded at the start instead of
-					// later in the build process.
-					// Also pipe all output from the process to stdout/stderr, so the user
-					// can follow the progress in real-time.
-					cmd := exec.Command("true")
-					cmd.Stdout = os.Stdout
-					cmd.Stderr = os.Stderr
-					if err = buildEnv.WrapCommand(cmd); err != nil {
-						return fmt.Errorf("unable to wrap command: %w", err)
+				if !containerAvailable {
+					if builderImage != "" {
+						return fmt.Errorf("builder specified in manifest but no container runtime (docker or podman) is available")
 					}
-					if err = cmd.Run(); err != nil {
-						return fmt.Errorf("failed to initialize build environment: %w", err)
-					}
+					return fmt.Errorf("native ROFL builds are only supported on linux/amd64; on %s/%s you need docker or podman installed", runtime.GOOS, runtime.GOARCH)
+				}
+
+				if builderImage == "" {
+					builderImage = buildRofl.DefaultBuilderImage
+				}
+				fmt.Printf("Using container build environment (image: %s)\n", builderImage)
+				buildEnv, err = setupContainerEnv(builderImage, tmpDir)
+				if err != nil {
+					return err
 				}
 			}
 
@@ -303,6 +320,39 @@ var (
 		},
 	}
 )
+
+// setupContainerEnv creates and initializes a container build environment.
+func setupContainerEnv(builderImage, tmpDir string) (env.ExecEnv, error) {
+	baseDir, err := env.GetBasedir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to determine base directory: %w", err)
+	}
+
+	containerEnv := env.NewContainerEnv(
+		builderImage,
+		baseDir,
+		"/src",
+	)
+	containerEnv.AddDirectory(tmpDir)
+
+	fmt.Printf("Initializing build environment...\n")
+	// Run a dummy command to make sure that all necessary Docker layers
+	// for the build environment are downloaded at the start instead of
+	// later in the build process.
+	// Also pipe all output from the process to stdout/stderr, so the user
+	// can follow the progress in real-time.
+	cmd := exec.Command("true")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err = containerEnv.WrapCommand(cmd); err != nil {
+		return nil, fmt.Errorf("unable to wrap command: %w", err)
+	}
+	if err = cmd.Run(); err != nil {
+		return nil, fmt.Errorf("failed to initialize build environment with image %s (ensure the image is accessible and your container runtime can pull it): %w", builderImage, err)
+	}
+
+	return containerEnv, nil
+}
 
 func setupBuildEnv(deployment *buildRofl.Deployment, npa *common.NPASelection) {
 	// Configure app ID.

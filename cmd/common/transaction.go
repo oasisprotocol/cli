@@ -7,10 +7,11 @@ import (
 	"math"
 	"os"
 
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/accounts"
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/core"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/accounts"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/core"
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	coreSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
@@ -587,10 +588,12 @@ func PrettyErrorHints(
 		errMsg += "\nTip: You can get TEST tokens at https://faucet.testnet.oasis.io or #dev-central at https://oasis.io/discord."
 	}
 	if failedRes.Module == staking.ModuleName {
-		if failedRes.Code == 5 {
+		switch failedRes.Code {
+		case 5:
 			errMsg += "\nTip: Did you forget to run `oasis account allow`?"
-		} else if failedRes.Code == 9 {
+		case 9:
 			errMsg += "\nTip: You can see minimum staking transfer amount by running `oasis network show parameters`"
+		default:
 		}
 	}
 	return errMsg

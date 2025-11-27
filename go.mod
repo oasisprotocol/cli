@@ -1,8 +1,6 @@
 module github.com/oasisprotocol/cli
 
-go 1.24.0
-
-toolchain go1.24.2
+go 1.25.4
 
 // v1.5.0 has broken uint parsing, use a commit with the fix until the
 // the maintainers merge the PR: https://github.com/spf13/cast/pull/144

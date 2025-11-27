@@ -181,7 +181,8 @@ func ResolveAddress(net *configSdk.Network, address string) (*types.Address, *et
 		if len(subs) > 2 {
 			poolName = subs[2]
 		}
-		if poolKind == addressExplicitParaTime {
+		switch poolKind {
+		case addressExplicitParaTime:
 			switch poolName {
 			case poolCommon:
 				return &accounts.CommonPoolAddress, nil, nil
@@ -196,7 +197,7 @@ func ResolveAddress(net *configSdk.Network, address string) (*types.Address, *et
 			default:
 				return nil, nil, fmt.Errorf("unsupported ParaTime pool: %s", poolName)
 			}
-		} else if poolKind == addressExplicitConsensus {
+		case addressExplicitConsensus:
 			var addr types.Address
 			switch poolName {
 			case poolBurn:
@@ -211,8 +212,9 @@ func ResolveAddress(net *configSdk.Network, address string) (*types.Address, *et
 				return nil, nil, fmt.Errorf("unsupported consensus pool: %s", poolName)
 			}
 			return &addr, nil, nil
+		default:
+			return nil, nil, fmt.Errorf("unsupported pool kind: %s. Please use pool:<poolKind>:<poolName>, for example pool:paratime:pending-withdrawal", poolKind)
 		}
-		return nil, nil, fmt.Errorf("unsupported pool kind: %s. Please use pool:<poolKind>:<poolName>, for example pool:paratime:pending-withdrawal", poolKind)
 	case addressExplicitTest:
 		// test:alice, test:dave
 		if testKey, ok := testing.TestAccounts[data]; ok {

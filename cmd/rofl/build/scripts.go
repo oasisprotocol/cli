@@ -11,7 +11,7 @@ import (
 	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 )
 
-// runScripts executes the specified build script using the current build environment.
+// runScript executes the specified build script using the current build environment.
 func runScript(manifest *buildRofl.Manifest, name string, buildEnv env.ExecEnv, useContainer bool) {
 	script, ok := manifest.Scripts[name]
 	if !ok {
@@ -24,7 +24,7 @@ func runScript(manifest *buildRofl.Manifest, name string, buildEnv env.ExecEnv, 
 	if shell == "" {
 		shell = "/bin/sh"
 	}
-	cmd := exec.Command(shell, "-c", script) //nolint: gosec
+	cmd := exec.Command(shell, "-c", script)
 
 	if useContainer {
 		if err := buildEnv.WrapCommand(cmd); err != nil {

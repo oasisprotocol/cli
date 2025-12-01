@@ -8,13 +8,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
@@ -118,167 +116,6 @@ func maybeDownloadArtifact(kind, uri string) string {
 	return cacheFn
 }
 
-// extractArchive extracts the given tar.bz2 archive into the target output directory.
-func extractArchive(fn, outputDir string) error {
-	resolvedOutputDir, err := filepath.EvalSymlinks(outputDir)
-	if err != nil {
-		return fmt.Errorf("unable to resolve output path: %w", err)
-	}
-	outputDir = resolvedOutputDir
-
-	f, err := os.Open(fn)
-	if err != nil {
-		return fmt.Errorf("failed to open archive: %w", err)
-	}
-	defer f.Close()
-
-	rd := tar.NewReader(bzip2.NewReader(f))
-
-	existingPaths := make(map[string]struct{})
-	cleanupPath := func(path string) (string, error) {
-		// Sanitize path to ensure it doesn't escape to any parent directories.
-		path = filepath.Clean(filepath.Join(outputDir, path))
-
-		var pathErr *fs.PathError
-		resolvedPath, err := filepath.EvalSymlinks(path)
-		switch {
-		case err == nil:
-			// Path resolved successfully, use it.
-			path = resolvedPath
-		case errors.As(err, &pathErr) && errors.Is(pathErr.Err, fs.ErrNotExist):
-			// There was an error while resolving the path. This is fine as the destination path will
-			// usually not exist. Check that the non-existent path doesn't escape.
-			if !strings.HasPrefix(pathErr.Path, outputDir) {
-				return "", fmt.Errorf("malformed path in archive")
-			}
-		default:
-			return "", fmt.Errorf("unable to sanitize path: %w", err)
-		}
-		if !strings.HasPrefix(path, outputDir) {
-			return "", fmt.Errorf("malformed path in archive")
-		}
-		return path, nil
-	}
-
-	modTimes := make(map[string]time.Time)
-
-FILES:
-	for {
-		var header *tar.Header
-		header, err = rd.Next()
-		switch {
-		case errors.Is(err, io.EOF):
-			// We are done.
-			break FILES
-		case err != nil:
-			// Failed to read archive.
-			return fmt.Errorf("error reading archive: %w", err)
-		case header == nil:
-			// Bad archive.
-			return fmt.Errorf("malformed archive")
-		}
-
-		var path string
-		path, err = cleanupPath(header.Name)
-		if err != nil {
-			return err
-		}
-		if _, ok := existingPaths[path]; ok {
-			continue // Make sure we never handle a path twice.
-		}
-		existingPaths[path] = struct{}{}
-		modTimes[path] = header.ModTime
-
-		switch header.Typeflag {
-		case tar.TypeDir:
-			// Directory.
-			if err = os.MkdirAll(path, header.FileInfo().Mode()); err != nil {
-				return fmt.Errorf("failed to create directory: %w", err)
-			}
-		case tar.TypeLink:
-			// Hard link.
-			var linkPath string
-			linkPath, err = cleanupPath(header.Linkname)
-			if err != nil {
-				return err
-			}
-
-			if err = os.Link(linkPath, path); err != nil {
-				return fmt.Errorf("failed to create hard link: %w", err)
-			}
-		case tar.TypeSymlink:
-			// Symbolic link.
-			if err = os.Symlink(header.Linkname, path); err != nil {
-				return fmt.Errorf("failed to create soft link: %w", err)
-			}
-		case tar.TypeChar, tar.TypeBlock, tar.TypeFifo:
-			// Device or FIFO node.
-			if err = extractHandleSpecialNode(path, header); err != nil {
-				return err
-			}
-		case tar.TypeReg:
-			// Regular file.
-			if err = os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-				return fmt.Errorf("failed to create parent directory: %w", err)
-			}
-
-			var fh *os.File
-			fh, err = os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, header.FileInfo().Mode())
-			if err != nil {
-				return fmt.Errorf("failed to create file: %w", err)
-			}
-			if _, err = io.Copy(fh, rd); err != nil { //nolint:gosec
-				fh.Close()
-				return fmt.Errorf("failed to copy data: %w", err)
-			}
-			fh.Close()
-		default:
-			// Skip unsupported types.
-			continue
-		}
-	}
-
-	// Update all modification times at the end to ensure they are correct.
-	for path, mtime := range modTimes {
-		if err = extractChtimes(path, mtime, mtime); err != nil {
-			return fmt.Errorf("failed to change file '%s' timestamps: %w", path, err)
-		}
-	}
-
-	return nil
-}
-
-// copyFile copies the file at path src to a file at path dst using the given mode.
-func copyFile(src, dst string, mode os.FileMode) error {
-	err := os.MkdirAll(filepath.Dir(dst), 0o755)
-	if err != nil {
-		return fmt.Errorf("failed to create destination directory for '%s': %w", dst, err)
-	}
-
-	sf, err := os.Open(src)
-	if err != nil {
-		return fmt.Errorf("failed to open '%s': %w", src, err)
-	}
-	defer sf.Close()
-
-	df, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, mode)
-	if err != nil {
-		return fmt.Errorf("failed to create '%s': %w", dst, err)
-	}
-	defer df.Close()
-
-	if _, err = io.Copy(df, sf); err != nil {
-		return fmt.Errorf("failed to copy '%s': %w", src, err)
-	}
-
-	// Ensure times are constant for deterministic builds.
-	if err = extractChtimes(dst, time.Time{}, time.Time{}); err != nil {
-		return fmt.Errorf("failed to change atime/mtime for '%s': %w", dst, err)
-	}
-
-	return nil
-}
-
 // ensureBinaryExists checks whether the given binary name exists in path and returns a nice error
 // message suggesting to install a given package if it doesn't.
 func ensureBinaryExists(buildEnv env.ExecEnv, name, pkg string) error {
@@ -300,11 +137,33 @@ func cleanEnvForReproducibility() []string {
 	return append(env, "LC_ALL=C", "TZ=UTC", "SOURCE_DATE_EPOCH=0")
 }
 
-// createSquashFs creates a squashfs filesystem in the given file using directory dir to populate
-// it.
+// extraFile represents a file to be injected into the rootfs.
+type extraFile struct {
+	HostPath string
+	TarPath  string
+	Mode     os.FileMode
+}
+
+// normalizeHeader normalizes a tar header for reproducible builds.
+// Uses GNU format because sqfstar < 4.6 has a bug with PAX headers
+// that incorrectly strips pathname components in linkpath for symlinks.
+func normalizeHeader(header *tar.Header) {
+	header.Format = tar.FormatGNU
+	header.Uid = 0
+	header.Gid = 0
+	header.Uname = ""
+	header.Gname = ""
+	header.ModTime = time.Unix(0, 0)
+	header.AccessTime = time.Time{}
+	header.ChangeTime = time.Time{}
+	header.PAXRecords = nil
+}
+
+// createSquashFsFromTar creates a squashfs filesystem by streaming a tar.bz2 template
+// and injecting extra files, without extracting to disk.
 //
 // Returns the size of the created filesystem image in bytes.
-func createSquashFs(buildEnv env.ExecEnv, fn, dir string) (int64, error) {
+func createSquashFsFromTar(buildEnv env.ExecEnv, outputFn, templateFn string, extraFiles []extraFile) (int64, error) {
 	const (
 		sqfstarBin  = "sqfstar"
 		fakerootBin = "fakeroot"
@@ -316,72 +175,27 @@ func createSquashFs(buildEnv env.ExecEnv, fn, dir string) (int64, error) {
 		return 0, err
 	}
 
-	// Create reproducible tar archive.
-	if os.Getenv("ROFL_DEBUG_ROOTFS_HASH") != "" {
-		if err := debugRootfsHashes(dir); err != nil {
-			return 0, fmt.Errorf("failed to compute rootfs debug hashes: %w", err)
-		}
-	}
-
-	tarPath := fn + ".tar"
-	tarPathEnv, err := buildEnv.PathToEnv(tarPath)
+	// Open the template tar.bz2.
+	templateFile, err := os.Open(templateFn)
 	if err != nil {
-		return 0, fmt.Errorf("failed to translate tar path for container: %w", err)
+		return 0, fmt.Errorf("failed to open template archive: %w", err)
 	}
-	fmt.Printf("Creating tar archive: %s\n", tarPath)
-	//nolint:gosec // tarPath is constructed internally, not from user input.
-	tarCmd := exec.Command(
-		"tar",
-		"--create",
-		"--file="+tarPathEnv,
-		"--format=gnu",
-		"--sort=name",
-		"--mtime=@0",
-		"--owner=0",
-		"--group=0",
-		"--numeric-owner",
-		"--mode=a-s",
-		".",
-	)
-	tarCmd.Dir = dir
-	tarCmd.Env = cleanEnvForReproducibility()
+	defer templateFile.Close()
 
-	var tarOut strings.Builder
-	tarCmd.Stderr = &tarOut
-	tarCmd.Stdout = &tarOut
-	if err := buildEnv.WrapCommand(tarCmd); err != nil {
-		return 0, err
-	}
-	if err := tarCmd.Run(); err != nil {
-		return 0, fmt.Errorf("failed to create tar archive: %w\n%s", err, tarOut.String())
-	}
+	bzReader := bzip2.NewReader(templateFile)
+	tarReader := tar.NewReader(bzReader)
 
-	// Compute and print tar archive hash for verification.
-	tarFile, err := os.Open(tarPath)
-	if err != nil {
-		return 0, fmt.Errorf("failed to open tar archive for hashing: %w", err)
-	}
-	tarHasher := sha256.New()
-	if _, err := io.Copy(tarHasher, tarFile); err != nil {
-		tarFile.Close()
-		return 0, fmt.Errorf("failed to hash tar archive: %w", err)
-	}
-	tarFile.Close()
-	tarHash := hex.EncodeToString(tarHasher.Sum(nil))
-	fmt.Printf("TAR archive SHA256: %s\n", tarHash)
-
-	// Convert paths for container environment if needed.
-	fnInEnv, err := buildEnv.PathToEnv(fn)
+	// Convert output path for container environment if needed.
+	outputFnEnv, err := buildEnv.PathToEnv(outputFn)
 	if err != nil {
 		return 0, fmt.Errorf("failed to convert output path: %w", err)
 	}
 
-	// Convert tar to squashfs using sqfstar under fakeroot.
 	cmd := exec.Command(
 		fakerootBin,
 		"--",
 		sqfstarBin,
-		fnInEnv,
+		outputFnEnv,
 		"-reproducible",
 		"-comp", "gzip",
 		"-b", "1M",
@@ -394,96 +208,187 @@ func createSquashFs(buildEnv env.ExecEnv, fn, dir string) (int64, error) {
 		"-force-uid", "0",
 		"-force-gid", "0",
 	)
-
 	cmd.Env = cleanEnvForReproducibility()
 
-	// Open tar file and pipe it to sqfstar's stdin.
-	tarFile, err = os.Open(tarPath)
-	if err != nil {
-		return 0, fmt.Errorf("failed to open tar archive: %w", err)
-	}
-	defer tarFile.Close()
-	defer os.Remove(tarPath)
+	var cmdOut strings.Builder
+	cmd.Stderr = &cmdOut
+	cmd.Stdout = &cmdOut
 
-	cmd.Stdin = tarFile
-	var out strings.Builder
-	cmd.Stderr = &out
-	cmd.Stdout = &out
+	// Create pipe for stdin.
+	stdinPipe, err := cmd.StdinPipe()
+	if err != nil {
+		return 0, fmt.Errorf("failed to create stdin pipe: %w", err)
+	}
+
 	if err := buildEnv.WrapCommand(cmd); err != nil {
 		return 0, err
 	}
-	if err := cmd.Run(); err != nil {
-		return 0, fmt.Errorf("%w\n%s", err, out.String())
+	if err := cmd.Start(); err != nil {
+		return 0, fmt.Errorf("failed to start sqfstar: %w", err)
+	}
+
+	// Create tar writer that writes to both sqfstar's stdin and a hash for verification.
+	tarHasher := sha256.New()
+	tarWriter := tar.NewWriter(io.MultiWriter(stdinPipe, tarHasher))
+
+	// Ensure cleanup on error.
+	var cmdErr error
+	defer func() {
+		if cmdErr != nil {
+			tarWriter.Close()
+			stdinPipe.Close()
+			cmd.Wait() //nolint:errcheck
+		}
+	}()
+
+	// Build a map of extra files by their tar path for quick lookup.
+	extraFileMap := make(map[string]extraFile)
+	for _, ef := range extraFiles {
+		extraFileMap[ef.TarPath] = ef
+	}
+
+	// Track directories seen from the template to ensure parent dirs exist for extra files.
+	seenDirs := make(map[string]bool)
+
+	// Copy entries from template, skipping ones we'll replace.
+	for {
+		header, err := tarReader.Next()
+		if errors.Is(err, io.EOF) {
+			break
+		}
+		if err != nil {
+			cmdErr = fmt.Errorf("error reading template archive: %w", err)
+			return 0, cmdErr
+		}
+
+		// Normalize the path.
+		cleanPath := strings.TrimPrefix(header.Name, "./")
+
+		// Track directories from template.
+		if header.Typeflag == tar.TypeDir {
+			seenDirs[strings.TrimSuffix(cleanPath, "/")] = true
+		}
+
+		// Skip if this path will be replaced by an extra file.
+		if _, willReplace := extraFileMap[cleanPath]; willReplace {
+			// Drain the body if it's a regular file.
+			if header.Typeflag == tar.TypeReg && header.Size > 0 {
+				if _, err := io.Copy(io.Discard, io.LimitReader(tarReader, header.Size)); err != nil {
+					cmdErr = fmt.Errorf("failed to skip file content: %w", err)
+					return 0, cmdErr
+				}
+			}
+			continue
+		}
+
+		// Normalize header for reproducibility.
+		normalizeHeader(header)
+
+		if err := tarWriter.WriteHeader(header); err != nil {
+			cmdErr = fmt.Errorf("failed to write tar header: %w", err)
+			return 0, cmdErr
+		}
+
+		// Copy body for regular files.
+		if header.Typeflag == tar.TypeReg {
+			const maxFileSize = 500 * 1024 * 1024 // 500 MB sanity limit
+			if header.Size > maxFileSize {
+				cmdErr = fmt.Errorf("file too large: %s (%d bytes)", header.Name, header.Size)
+				return 0, cmdErr
+			}
+			if _, err := io.Copy(tarWriter, io.LimitReader(tarReader, header.Size)); err != nil {
+				cmdErr = fmt.Errorf("failed to copy file content: %w", err)
+				return 0, cmdErr
+			}
+		}
+	}
+
+	// Add extra files, creating parent directories as needed.
+	for _, ef := range extraFileMap {
+		if err := addFileToTar(tarWriter, ef.HostPath, ef.TarPath, ef.Mode, seenDirs); err != nil {
+			cmdErr = fmt.Errorf("failed to add extra file %s: %w", ef.TarPath, err)
+			return 0, cmdErr
+		}
+	}
+
+	// Close tar writer and stdin pipe.
+	if err := tarWriter.Close(); err != nil {
+		cmdErr = fmt.Errorf("failed to close tar writer: %w", err)
+		return 0, cmdErr
+	}
+
+	// Print tar hash for verification.
+	fmt.Printf("TAR archive SHA256: %s\n", hex.EncodeToString(tarHasher.Sum(nil)))
+
+	if err := stdinPipe.Close(); err != nil {
+		cmdErr = fmt.Errorf("failed to close stdin pipe: %w", err)
+		return 0, cmdErr
+	}
+
+	// Wait for sqfstar to finish.
+	if err := cmd.Wait(); err != nil {
+		return 0, fmt.Errorf("sqfstar failed: %w\nOutput: %s", err, cmdOut.String())
 	}
 
 	// Measure the size of the resulting image.
-	fi, err := os.Stat(fn)
+	fi, err := os.Stat(outputFn)
 	if err != nil {
 		return 0, err
 	}
 	return fi.Size(), nil
 }
 
-// debugRootfsHashes prints deterministic SHA256 hashes for all files in dir to help diagnose
-// cross-host differences. Controlled via ROFL_DEBUG_ROOTFS_HASH env var.
-func debugRootfsHashes(dir string) error {
-	type entry struct {
-		path string
-		hash string
+// addFileToTar adds a file from the host filesystem to a tar archive,
+// creating any missing parent directory entries first.
+func addFileToTar(tw *tar.Writer, hostPath, tarPath string, mode os.FileMode, seenDirs map[string]bool) error {
+	// Create missing parent directories.
+	var dirsToCreate []string
+	for dir := filepath.Dir(tarPath); dir != "." && dir != "/" && dir != ""; dir = filepath.Dir(dir) {
+		if !seenDirs[dir] {
+			dirsToCreate = append(dirsToCreate, dir)
+			seenDirs[dir] = true
+		}
 	}
-	var entries []entry
+	for i := len(dirsToCreate) - 1; i >= 0; i-- {
+		dirHeader := &tar.Header{
+			Name:     "./" + dirsToCreate[i] + "/",
+			Mode:     0o755,
+			Typeflag: tar.TypeDir,
+		}
+		normalizeHeader(dirHeader)
+		if err := tw.WriteHeader(dirHeader); err != nil {
+			return fmt.Errorf("failed to write directory header: %w", err)
+		}
+	}
 
-	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() {
-			return nil
-		}
-		rel, err := filepath.Rel(dir, path)
-		if err != nil {
-			return err
-		}
-
-		fi, err := os.Lstat(path)
-		if err != nil {
-			return err
-		}
-
-		switch {
-		case fi.Mode()&os.ModeSymlink != 0:
-			target, err := os.Readlink(path)
-			if err != nil {
-				return err
-			}
-			entries = append(entries, entry{path: rel, hash: "symlink->" + target})
-		default:
-			f, err := os.Open(path)
-			if err != nil {
-				return err
-			}
-			h := sha256.New()
-			if _, err = io.Copy(h, f); err != nil {
-				f.Close()
-				return err
-			}
-			f.Close()
-			entries = append(entries, entry{path: rel, hash: fmt.Sprintf("%x", h.Sum(nil))})
-		}
-		return nil
-	})
+	// Add the file.
+	f, err := os.Open(hostPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to open file: %w", err)
+	}
+	defer f.Close()
+
+	fi, err := f.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to stat file: %w", err)
 	}
 
-	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].path < entries[j].path
-	})
-
-	fmt.Println("Rootfs file hashes (debug):")
-	for _, e := range entries {
-		fmt.Printf("  %s %s\n", e.hash, e.path)
+	header := &tar.Header{
+		Name:     "./" + tarPath,
+		Mode:     int64(mode),
+		Size:     fi.Size(),
+		Typeflag: tar.TypeReg,
 	}
+	normalizeHeader(header)
+
+	if err := tw.WriteHeader(header); err != nil {
+		return fmt.Errorf("failed to write header: %w", err)
+	}
+
+	if _, err := io.Copy(tw, f); err != nil {
+		return fmt.Errorf("failed to write content: %w", err)
+	}
+
 	return nil
 }
 
@@ -591,7 +496,7 @@ func concatFiles(a, b string) error {
 
 // padWithEmptySpace pads the given file with empty space to make it the given size. See
 // `appendEmptySpace` for details.
-func padWithEmptySpace(fn string, size uint64) error {
+func padWithEmptySpace(buildEnv env.ExecEnv, fn string, size uint64) error {
 	fi, err := os.Stat(fn)
 	if err != nil {
 		return err
@@ -601,24 +506,24 @@ func padWithEmptySpace(fn string, size uint64) error {
 	if currentSize >= size {
 		return nil
 	}
-	_, err = appendEmptySpace(fn, size-currentSize, 1)
+	_, err = appendEmptySpace(buildEnv, fn, size-currentSize, 1)
 	return err
 }
 
 // appendEmptySpace appends empty space to the given file. If the filesystem supports sparse files,
-// this should not actually take any extra space.
+// this should not actually take any extra space. Padding is performed inside the build environment
+// (host or container) so size observations are consistent.
 //
 // The function ensures that the given space respects alignment by adding padding as needed.
 //
 // Returns the offset where the empty space starts.
-func appendEmptySpace(fn string, size uint64, align uint64) (uint64, error) {
-	f, err := os.OpenFile(fn, os.O_RDWR, 0o644)
+func appendEmptySpace(buildEnv env.ExecEnv, fn string, size uint64, align uint64) (uint64, error) {
+	fnEnv, err := buildEnv.PathToEnv(fn)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to translate path for padding: %w", err)
 	}
-	defer f.Close()
 
-	fi, err := f.Stat()
+	fi, err := os.Stat(fn)
 	if err != nil {
 		return 0, err
 	}
@@ -630,11 +535,48 @@ func appendEmptySpace(fn string, size uint64, align uint64) (uint64, error) {
 	}
 	offset += (align - (offset % align)) % align
 
-	if err = f.Truncate(int64(offset + size)); err != nil { //nolint: gosec
+	newSize := offset + size
+	cmd := exec.Command("truncate", "-s", fmt.Sprintf("%d", newSize), fnEnv) //nolint:gosec // fnEnv is derived from internal build state
+	if err := buildEnv.WrapCommand(cmd); err != nil {
 		return 0, err
+	}
+	if err := cmd.Run(); err != nil {
+		return 0, fmt.Errorf("failed to pad file: %w", err)
 	}
 
 	return offset, nil
+}
+
+// verifyRawImage verifies the raw stage2 image has valid dm-verity.
+// This verification step also ensures the file data is fully consistent before
+// qcow2 conversion, which is necessary for reliable image generation.
+func verifyRawImage(buildEnv env.ExecEnv, stage2 *tdxStage2) error {
+	const veritysetupBin = "veritysetup"
+	if err := ensureBinaryExists(buildEnv, veritysetupBin, "cryptsetup-bin"); err != nil {
+		return err
+	}
+
+	fnEnv, err := buildEnv.PathToEnv(stage2.fn)
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command( //nolint:gosec // Arguments are from internal build state.
+		veritysetupBin, "verify",
+		fmt.Sprintf("--hash-offset=%d", stage2.fsSize),
+		fnEnv, fnEnv, stage2.rootHash,
+	)
+	var out strings.Builder
+	cmd.Stdout = &out
+	cmd.Stderr = &out
+	if err := buildEnv.WrapCommand(cmd); err != nil {
+		return err
+	}
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("veritysetup verify failed: %w\n%s", err, out.String())
+	}
+
+	return nil
 }
 
 // convertToQcow2 converts a raw image to qcow2 format.
@@ -647,17 +589,18 @@ func convertToQcow2(buildEnv env.ExecEnv, fn string) error {
 	tmpOutFn := fn + ".qcow2"
 	fnEnv, err := buildEnv.PathToEnv(fn)
 	if err != nil {
-		return fmt.Errorf("failed to translate qcow input path for container: %w", err)
+		return fmt.Errorf("failed to translate input path: %w", err)
 	}
 	tmpOutFnEnv, err := buildEnv.PathToEnv(tmpOutFn)
 	if err != nil {
-		return fmt.Errorf("failed to translate qcow output path for container: %w", err)
+		return fmt.Errorf("failed to translate output path: %w", err)
 	}
 
-	// Execute qemu-img.
+	// Convert with explicit raw format to avoid misdetection.
 	cmd := exec.Command(
 		qemuImgBin,
 		"convert",
+		"-f", "raw",
 		"-O", "qcow2",
 		fnEnv,
 		tmpOutFnEnv,
@@ -676,5 +619,6 @@ func convertToQcow2(buildEnv env.ExecEnv, fn string) error {
 	if err := os.Rename(tmpOutFn, fn); err != nil {
 		return fmt.Errorf("failed to rename temporary file: %w", err)
 	}
+
 	return nil
 }

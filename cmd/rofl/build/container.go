@@ -33,8 +33,8 @@ func tdxBuildContainer(
 	// Use the pre-built container runtime.
 	initPath := artifacts[artifactContainerRuntime]
 
-	stage2, err := tdxPrepareStage2(buildEnv, tmpDir, artifacts, initPath, map[string]string{
-		artifacts[artifactContainerCompose]: "etc/oasis/containers/compose.yaml",
+	stage2, err := tdxPrepareStage2(buildEnv, tmpDir, artifacts, initPath, []extraFile{
+		{HostPath: artifacts[artifactContainerCompose], TarPath: "etc/oasis/containers/compose.yaml", Mode: 0o644},
 	})
 	if err != nil {
 		return err

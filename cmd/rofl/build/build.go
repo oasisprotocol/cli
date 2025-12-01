@@ -1,7 +1,6 @@
 package build
 
 import (
-	"bytes"
 	"context"
 	"encoding/base64"
 	"fmt"
@@ -131,31 +130,33 @@ var (
 			}
 
 			// Prepare temporary build directory.
+			// When using a container, place temp files inside the project directory
+			// (.oasis-tmp) which is already bind-mounted. This is needed because:
+			// - On macOS, the default temp (/var/folders/...) is not shared with Docker
+			// - Using /tmp is problematic due to symlinks (/tmp -> /private/tmp)
 			tmpBase := ""
-			var cleanupTmp func()
-			if usingContainer && runtime.GOOS == "darwin" {
-				tmpBase, cleanupTmp, err = makeCaseSensitiveTmp()
-				if err != nil {
-					return err
-				}
-			} else if usingContainer {
-				tmpBase, err = env.GetBasedir()
+			if usingContainer {
+				var baseDir string
+				baseDir, err = env.GetBasedir()
 				if err != nil {
 					return fmt.Errorf("failed to determine base directory: %w", err)
 				}
-				tmpBase = filepath.Join(tmpBase, ".oasis-tmp")
+				tmpBase = filepath.Join(baseDir, ".oasis-tmp")
+				// Clean up any leftover temp files from previous runs.
+				_ = os.RemoveAll(tmpBase)
 				if err = os.MkdirAll(tmpBase, 0o755); err != nil {
-					return fmt.Errorf("failed to create temporary build base directory: %w", err)
+					return fmt.Errorf("failed to create temporary build directory: %w", err)
 				}
 			}
-
 			tmpDir, err = os.MkdirTemp(tmpBase, "oasis-build")
 			if err != nil {
 				return fmt.Errorf("failed to create temporary build directory: %w", err)
 			}
-			defer os.RemoveAll(tmpDir)
-			if cleanupTmp != nil {
-				defer cleanupTmp()
+			if usingContainer {
+				// Clean up the .oasis-tmp base directory (which contains tmpDir).
+				defer os.RemoveAll(tmpBase)
+			} else {
+				defer os.RemoveAll(tmpDir)
 			}
 
 			if !buildEnv.IsAvailable() {
@@ -348,9 +349,6 @@ func setupContainerEnv(builderImage string) (env.ExecEnv, error) {
 		baseDir,
 		"/src",
 	)
-	// Mount /tmp for temporary build files. On macOS, the default temp directory
-	// (/var/folders/...) is not reliably shared with Docker Desktop containers.
-	containerEnv.AddDirectory("/tmp")
 
 	fmt.Printf("Initializing build environment...\n")
 	// Run a dummy command to make sure that all necessary Docker layers
@@ -445,83 +443,6 @@ func fetchTrustRoot(npa *common.NPASelection, cfg *buildRofl.TrustRootConfig) (s
 	}
 	encRoot := cbor.Marshal(root)
 	return base64.StdEncoding.EncodeToString(encRoot), nil
-}
-
-// makeCaseSensitiveTmp creates a case-sensitive temporary directory on macOS using a sparse image.
-// Falls back to an error if hdiutil is unavailable or the image cannot be mounted.
-func makeCaseSensitiveTmp() (string, func(), error) {
-	base := filepath.Join(os.TempDir(), "oasis-case-tmp")
-	image := base + ".sparseimage"
-	mountPoint := base + "-mnt"
-	size := os.Getenv("ROFL_CASE_TMP_SIZE")
-	if size == "" {
-		size = "10g"
-	}
-	// Best-effort cleanup from previous runs in case of crashes.
-	_ = exec.Command("hdiutil", "detach", "-force", mountPoint).Run() //nolint: errcheck,gosec
-	_ = os.Remove(image)
-	_ = os.RemoveAll(mountPoint)
-
-	if err := os.MkdirAll(filepath.Dir(image), 0o755); err != nil {
-		return "", nil, fmt.Errorf("failed to prepare case-sensitive tmp: %w", err)
-	}
-
-	create := exec.Command(
-		"hdiutil", "create",
-		"-size", size,
-		"-type", "SPARSE",
-		"-fs", "APFSX",
-		"-volname", "oasis-tmp",
-		"-quiet",
-		image,
-	)
-	if err := create.Run(); err != nil {
-		return "", nil, fmt.Errorf("failed to create case-sensitive sparse image: %w", err)
-	}
-
-	if err := os.MkdirAll(mountPoint, 0o755); err != nil {
-		os.Remove(image)
-		return "", nil, fmt.Errorf("failed to create mount point: %w", err)
-	}
-
-	attach := exec.Command(
-		"hdiutil", "attach",
-		"-nobrowse",
-		"-mountpoint", mountPoint,
-		image,
-	)
-	var out bytes.Buffer
-	attach.Stdout = &out
-	attach.Stderr = &out
-	if err := attach.Run(); err != nil {
-		os.Remove(image)
-		os.RemoveAll(mountPoint)
-		return "", nil, fmt.Errorf("failed to attach case-sensitive image: %w\n%s", err, out.String())
-	}
-
-	device := ""
-	for _, line := range strings.Split(out.String(), "\n") {
-		fields := strings.Fields(line)
-		if len(fields) >= 3 && strings.HasPrefix(fields[0], "/dev/disk") {
-			device = fields[0]
-			break
-		}
-	}
-	if device == "" {
-		// Best effort cleanup.
-		exec.Command("hdiutil", "detach", "-force", mountPoint).Run() //nolint: errcheck
-		os.Remove(image)
-		os.RemoveAll(mountPoint)
-		return "", nil, fmt.Errorf("failed to parse attached device from hdiutil output:\n%s", out.String())
-	}
-
-	cleanup := func() {
-		exec.Command("hdiutil", "detach", "-force", device).Run() //nolint: errcheck,gosec
-		os.Remove(image)
-		os.RemoveAll(mountPoint)
-	}
-
-	return mountPoint, cleanup, nil
 }
 
 func init() {

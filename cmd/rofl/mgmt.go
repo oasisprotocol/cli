@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -28,6 +29,7 @@ import (
 	"github.com/oasisprotocol/cli/cmd/common"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
+	"github.com/oasisprotocol/cli/version"
 )
 
 var (
@@ -121,17 +123,21 @@ var (
 				switch appKind {
 				case buildRofl.AppKindRaw:
 					artifacts := buildRofl.LatestBasicArtifacts // Copy.
+					artifacts.Builder = buildRofl.LatestBuilderImage
 					manifest.Artifacts = &artifacts
 				case buildRofl.AppKindContainer:
 					artifacts := buildRofl.LatestContainerArtifacts // Copy.
+					artifacts.Builder = buildRofl.LatestContainerBuilderImage
 					artifacts.Container.Compose = detectOrCreateComposeFile()
 					manifest.Artifacts = &artifacts
 				default:
 				}
-				if manifest.Artifacts != nil {
-					manifest.Artifacts.Builder = buildRofl.LatestBuilderImage
-				}
 			default:
+			}
+
+			// Set tooling version.
+			manifest.Tooling = &buildRofl.ToolingConfig{
+				Version: strings.TrimPrefix(version.Software, "v"),
 			}
 
 			// Serialize manifest and write it to file.
@@ -564,20 +570,23 @@ var (
 				switch manifest.Kind {
 				case buildRofl.AppKindRaw:
 					latestArtifacts = buildRofl.LatestBasicArtifacts // Copy.
+					latestArtifacts.Builder = buildRofl.LatestBuilderImage
 				case buildRofl.AppKindContainer:
 					latestArtifacts = buildRofl.LatestContainerArtifacts // Copy.
+					latestArtifacts.Builder = buildRofl.LatestContainerBuilderImage
 				default:
 				}
-				latestArtifacts.Builder = buildRofl.LatestBuilderImage
 			default:
 			}
 
 			if manifest.Artifacts == nil {
 				manifest.Artifacts = &buildRofl.ArtifactsConfig{}
 			}
-			if !manifest.Artifacts.UpgradeTo(&latestArtifacts) {
-				fmt.Printf("Artifacts already up-to-date.\n")
-				return
+			artifactsUpdated := manifest.Artifacts.UpgradeTo(&latestArtifacts)
+
+			// Update tooling version.
+			manifest.Tooling = &buildRofl.ToolingConfig{
+				Version: strings.TrimPrefix(version.Software, "v"),
 			}
 
 			// Update manifest.
@@ -585,7 +594,11 @@ var (
 				cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
 			}
 
-			fmt.Printf("Run `oasis rofl build` to build your ROFL app.\n")
+			if artifactsUpdated {
+				fmt.Printf("Run `oasis rofl build` to build your ROFL app.\n")
+			} else {
+				fmt.Printf("Artifacts already up-to-date.\n")
+			}
 		},
 	}
 

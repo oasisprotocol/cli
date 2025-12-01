@@ -1,7 +1,12 @@
 package rofl
 
-// LatestBuilderImage is the latest builder container image to use when building ROFL apps.
-const LatestBuilderImage = "ghcr.io/oasisprotocol/rofl-dev:v0.5.0@sha256:31573686552abeb0edebc450f6872831f0006a6cf38220cef7e0789d4376c2c1"
+// Builder images for different app kinds.
+const (
+	// LatestBuilderImage is the full builder with Rust toolchain for raw apps.
+	LatestBuilderImage = "ghcr.io/oasisprotocol/rofl-dev:v0.5.0@sha256:31573686552abeb0edebc450f6872831f0006a6cf38220cef7e0789d4376c2c1"
+	// LatestContainerBuilderImage is the minimal builder for container apps.
+	LatestContainerBuilderImage = "ghcr.io/oasisprotocol/rofl-container-builder:0.0.1@sha256:913ef97ab07dde31f08ce873f825bf3d4f32ad4102ff5797d7c3050c121c4dce"
+)
 
 // LatestBasicArtifacts are the latest TDX ROFL basic app artifacts.
 var LatestBasicArtifacts = ArtifactsConfig{

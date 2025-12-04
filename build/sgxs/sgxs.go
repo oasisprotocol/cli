@@ -15,10 +15,10 @@ import (
 // It requires the `ftxsgx-elf2sgxs` utility to be installed.
 func Elf2Sgxs(buildEnv env.ExecEnv, elfSgxPath, sgxsPath string, heapSize, stackSize, threads uint64) (err error) {
 	if elfSgxPath, err = buildEnv.PathToEnv(elfSgxPath); err != nil {
-		return
+		return err
 	}
 	if sgxsPath, err = buildEnv.PathToEnv(sgxsPath); err != nil {
-		return
+		return err
 	}
 
 	args := []string{
@@ -31,7 +31,7 @@ func Elf2Sgxs(buildEnv env.ExecEnv, elfSgxPath, sgxsPath string, heapSize, stack
 
 	cmd := exec.Command("ftxsgx-elf2sgxs", args...)
 	if err = buildEnv.WrapCommand(cmd); err != nil {
-		return
+		return err
 	}
 	if common.IsVerbose() {
 		fmt.Println(cmd)

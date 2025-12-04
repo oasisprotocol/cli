@@ -7,9 +7,12 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/oasisprotocol/oasis-core/go/common/version"
+
 	"github.com/oasisprotocol/cli/build/rofl"
 	"github.com/oasisprotocol/cli/cmd/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
+	cliVersion "github.com/oasisprotocol/cli/version"
 )
 
 var (
@@ -54,6 +57,9 @@ func MaybeLoadManifestAndSetNPA(cfg *cliConfig.Config, npa *common.NPASelection,
 	if err != nil {
 		return nil, nil, err
 	}
+
+	// Warn if manifest was created with an older CLI version.
+	checkToolingVersion(manifest)
 
 	d, ok := manifest.Deployments[deployment]
 	if !ok {
@@ -113,4 +119,33 @@ func GetOrcFilename(manifest *rofl.Manifest, deploymentName string) string {
 	normalizedName = orcFilenameDisallowedChars.ReplaceAllString(normalizedName, "-")
 	normalizedName = orcFilenameRepeatedChars.ReplaceAllString(normalizedName, "$1")
 	return fmt.Sprintf("%s.%s.orc", normalizedName, deploymentName)
+}
+
+// normalizeVersion strips the leading 'v' prefix from a version string for parsing.
+func normalizeVersion(s string) string {
+	return strings.TrimPrefix(s, "v")
+}
+
+// checkToolingVersion warns if the manifest was created with a different CLI version.
+func checkToolingVersion(manifest *rofl.Manifest) {
+	if manifest.Tooling == nil || manifest.Tooling.Version == "" {
+		common.Warnf("WARNING: Manifest has no tooling version. Consider running `oasis rofl upgrade`.")
+		return
+	}
+
+	manifestVer, err := version.FromString(normalizeVersion(manifest.Tooling.Version))
+	if err != nil {
+		common.Warnf("WARNING: Failed to parse manifest tooling version '%s'. Consider running `oasis rofl upgrade`.", manifest.Tooling.Version)
+		return
+	}
+	currentVer, err := version.FromString(normalizeVersion(cliVersion.Software))
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse CLI version '%s': %v", cliVersion.Software, err))
+	}
+
+	if manifestVer.ToU64() < currentVer.ToU64() {
+		common.Warnf("WARNING: Manifest was created with an older CLI version (%s < %s). Consider running `oasis rofl upgrade`.", manifest.Tooling.Version, cliVersion.Software)
+	} else if manifestVer.ToU64() > currentVer.ToU64() {
+		common.Warnf("WARNING: Manifest was created with a newer CLI version (%s > %s). Consider upgrading the CLI.", manifest.Tooling.Version, cliVersion.Software)
+	}
 }

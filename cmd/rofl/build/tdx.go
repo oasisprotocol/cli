@@ -132,46 +132,27 @@ func tdxPrepareStage2(
 	tmpDir string,
 	artifacts map[string]string,
 	initPath string,
-	extraFiles map[string]string,
+	extraFiles []extraFile,
 ) (*tdxStage2, error) {
-	// Create temporary directory and unpack stage 2 template into it.
 	fmt.Println("Preparing stage 2 root filesystem...")
-	rootfsDir := filepath.Join(tmpDir, "rootfs")
-	if err := os.Mkdir(rootfsDir, 0o755); err != nil {
-		return nil, fmt.Errorf("failed to create temporary rootfs directory: %w", err)
-	}
 
-	// Unpack template into temporary directory.
-	fmt.Println("Unpacking template...")
-	if err := extractArchive(artifacts[artifactStage2], rootfsDir); err != nil {
-		return nil, fmt.Errorf("failed to extract stage 2 template: %w", err)
-	}
-
-	// Add runtime as init.
-	fmt.Println("Adding runtime as init...")
-
+	// Print runtime hash.
 	initHash, err := sha256File(initPath)
 	if err != nil {
 		return nil, err
 	}
 	fmt.Printf("Runtime hash: %s\n", initHash)
 
-	if err := copyFile(initPath, filepath.Join(rootfsDir, "init"), 0o755); err != nil {
-		return nil, err
+	// Build list of files to inject into the rootfs.
+	filesToInject := []extraFile{
+		{HostPath: initPath, TarPath: "init", Mode: 0o755},
 	}
+	filesToInject = append(filesToInject, extraFiles...)
 
-	// Copy any extra files.
-	fmt.Println("Adding extra files...")
-	for src, dst := range extraFiles {
-		if err := copyFile(src, filepath.Join(rootfsDir, dst), 0o644); err != nil {
-			return nil, err
-		}
-	}
-
-	// Create the root filesystem.
+	// Create the root filesystem by streaming template and injecting files.
 	fmt.Println("Creating squashfs filesystem...")
 	rootfsImage := filepath.Join(tmpDir, "rootfs.squashfs")
-	rootfsSize, err := createSquashFs(buildEnv, rootfsImage, rootfsDir)
+	rootfsSize, err := createSquashFsFromTar(buildEnv, rootfsImage, artifacts[artifactStage2], filesToInject)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create rootfs image: %w", err)
 	}
@@ -282,6 +263,11 @@ func tdxBundleComponent(
 		)
 	default:
 		return fmt.Errorf("unsupported storage mode: %s", storageKind)
+	}
+
+	// Verify dm-verity integrity before qcow2 conversion.
+	if err = verifyRawImage(buildEnv, stage2); err != nil {
+		return fmt.Errorf("dm-verity verification failed: %w", err)
 	}
 
 	// Use qcow2 image format to support sparse files.

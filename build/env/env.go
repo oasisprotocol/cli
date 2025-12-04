@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/oasisprotocol/cli/cmd/common"
 )
@@ -86,6 +87,10 @@ type ContainerEnv struct {
 }
 
 var containerCmds = []string{"docker", "podman"}
+var (
+	containerCmdPath string
+	containerCmdOnce sync.Once
+)
 
 // NewContainerEnv creates a new Docker or Podman-based execution environment.
 func NewContainerEnv(image, baseDir, dirMount string) *ContainerEnv {
@@ -213,12 +218,20 @@ func (de *ContainerEnv) HasBinary(string) bool {
 
 // getContainerCmd finds a working docker or podman command and returns its path.
 func getContainerCmd() string {
-	for _, cmd := range containerCmds {
-		if path, err := exec.LookPath(cmd); err == nil && path != "" {
-			return path
+	containerCmdOnce.Do(func() {
+		for _, cmd := range containerCmds {
+			if path, err := exec.LookPath(cmd); err == nil && path != "" {
+				containerCmdPath = path
+				return
+			}
 		}
-	}
-	return ""
+	})
+	return containerCmdPath
+}
+
+// IsContainerRuntimeAvailable returns true if a container runtime (docker or podman) is available.
+func IsContainerRuntimeAvailable() bool {
+	return getContainerCmd() != ""
 }
 
 // IsAvailable implements ExecEnv.

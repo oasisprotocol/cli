@@ -7,7 +7,10 @@ import (
 	"maps"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 	"slices"
+	"strings"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -56,6 +59,7 @@ var (
 					fmt.Println("App validation passed.")
 					return nil
 				}
+
 				return err
 			}
 
@@ -78,52 +82,81 @@ var (
 				buildMode = buildModeProduction
 			}
 
-			// Prepare temporary build directory.
-			tmpDir, err := os.MkdirTemp("", "oasis-build")
-			if err != nil {
-				return fmt.Errorf("failed to create temporary build directory: %w", err)
-			}
-			defer os.RemoveAll(tmpDir)
-
 			// Ensure deterministic umask for builds.
 			setUmask(0o002)
 
-			var buildEnv env.ExecEnv
+			// Determine builder image to use.
+			builderImage := ""
+			if manifest.Artifacts != nil {
+				builderImage = strings.TrimSpace(manifest.Artifacts.Builder)
+				if manifest.Artifacts.Builder != "" && builderImage == "" {
+					return fmt.Errorf("builder image is empty after trimming whitespace")
+				}
+			}
+			// Native builds are only supported on Linux.
+			nativeBuildSupported := runtime.GOOS == "linux" && runtime.GOARCH == "amd64"
+
+			var (
+				buildEnv       env.ExecEnv
+				usingContainer bool
+				err            error
+				tmpDir         string
+			)
 			switch {
-			case manifest.Artifacts == nil || manifest.Artifacts.Builder == "" || noContainer:
+			case noContainer:
+				// Force native build regardless of manifest.
+				if !nativeBuildSupported {
+					return fmt.Errorf("native ROFL builds are only supported on linux/amd64; remove --no-container to use containerized builds on %s/%s", runtime.GOOS, runtime.GOARCH)
+				}
 				buildEnv = env.NewNativeEnv()
+			case builderImage == "":
+				// No builder image specified.
+				if nativeBuildSupported {
+					buildEnv = env.NewNativeEnv()
+				} else {
+					return fmt.Errorf("no builder image specified in manifest; run `oasis rofl upgrade` to add the default builder or set artifacts.builder")
+				}
 			default:
+				// Builder image specified.
+				if !env.IsContainerRuntimeAvailable() {
+					return fmt.Errorf("builder specified in manifest but no container runtime (docker or podman) is available")
+				}
+				fmt.Printf("Using container build environment (image: %s)\n", builderImage)
+				buildEnv, err = setupContainerEnv(builderImage)
+				if err != nil {
+					return err
+				}
+				usingContainer = true
+			}
+
+			// Prepare temporary build directory.
+			// When using a container, place temp files inside the project directory
+			// (.oasis-tmp) which is already bind-mounted. This is needed because:
+			// - On macOS, the default temp (/var/folders/...) is not shared with Docker
+			// - Using /tmp is problematic due to symlinks (/tmp -> /private/tmp)
+			tmpBase := ""
+			if usingContainer {
 				var baseDir string
 				baseDir, err = env.GetBasedir()
 				if err != nil {
 					return fmt.Errorf("failed to determine base directory: %w", err)
 				}
-
-				containerEnv := env.NewContainerEnv(
-					manifest.Artifacts.Builder,
-					baseDir,
-					"/src",
-				)
-				containerEnv.AddDirectory(tmpDir)
-				buildEnv = containerEnv
-
-				if buildEnv.IsAvailable() {
-					fmt.Printf("Initializing build environment...\n")
-					// Run a dummy command to make sure that all necessary Docker layers
-					// for the build environment are downloaded at the start instead of
-					// later in the build process.
-					// Also pipe all output from the process to stdout/stderr, so the user
-					// can follow the progress in real-time.
-					cmd := exec.Command("true")
-					cmd.Stdout = os.Stdout
-					cmd.Stderr = os.Stderr
-					if err = buildEnv.WrapCommand(cmd); err != nil {
-						return fmt.Errorf("unable to wrap command: %w", err)
-					}
-					if err = cmd.Run(); err != nil {
-						return fmt.Errorf("failed to initialize build environment: %w", err)
-					}
+				tmpBase = filepath.Join(baseDir, ".oasis-tmp")
+				// Clean up any leftover temp files from previous runs.
+				_ = os.RemoveAll(tmpBase)
+				if err = os.MkdirAll(tmpBase, 0o755); err != nil {
+					return fmt.Errorf("failed to create temporary build directory: %w", err)
 				}
+			}
+			tmpDir, err = os.MkdirTemp(tmpBase, "oasis-build")
+			if err != nil {
+				return fmt.Errorf("failed to create temporary build directory: %w", err)
+			}
+			if usingContainer {
+				// Clean up the .oasis-tmp base directory (which contains tmpDir).
+				defer os.RemoveAll(tmpBase)
+			} else {
+				defer os.RemoveAll(tmpDir)
 			}
 
 			if !buildEnv.IsAvailable() {
@@ -144,7 +177,7 @@ var (
 			os.Setenv("ROFL_DEPLOYMENT_PARATIME", deployment.ParaTime)
 			os.Setenv("ROFL_TMPDIR", tmpDir)
 
-			runScript(manifest, buildRofl.ScriptBuildPre)
+			runScript(manifest, buildRofl.ScriptBuildPre, buildEnv, usingContainer)
 
 			switch manifest.TEE {
 			case buildRofl.TEETypeSGX:
@@ -169,7 +202,7 @@ var (
 				return err
 			}
 
-			runScript(manifest, buildRofl.ScriptBuildPost)
+			runScript(manifest, buildRofl.ScriptBuildPost, buildEnv, usingContainer)
 
 			// Write the bundle out.
 			outFn := roflCommon.GetOrcFilename(manifest, roflCommon.DeploymentName)
@@ -196,7 +229,7 @@ var (
 				os.Setenv(fmt.Sprintf("ROFL_ENCLAVE_ID_%d", idx), string(data))
 			}
 
-			runScript(manifest, buildRofl.ScriptBundlePost)
+			runScript(manifest, buildRofl.ScriptBundlePost, buildEnv, usingContainer)
 
 			buildEnclaves := make(map[sgx.EnclaveIdentity]struct{})
 			for _, id := range ids {
@@ -303,6 +336,38 @@ var (
 		},
 	}
 )
+
+// setupContainerEnv creates and initializes a container build environment.
+func setupContainerEnv(builderImage string) (env.ExecEnv, error) {
+	baseDir, err := env.GetBasedir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to determine base directory: %w", err)
+	}
+
+	containerEnv := env.NewContainerEnv(
+		builderImage,
+		baseDir,
+		"/src",
+	)
+
+	fmt.Printf("Initializing build environment...\n")
+	// Run a dummy command to make sure that all necessary Docker layers
+	// for the build environment are downloaded at the start instead of
+	// later in the build process.
+	// Also pipe all output from the process to stdout/stderr, so the user
+	// can follow the progress in real-time.
+	cmd := exec.Command("true")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err = containerEnv.WrapCommand(cmd); err != nil {
+		return nil, fmt.Errorf("unable to wrap command: %w", err)
+	}
+	if err = cmd.Run(); err != nil {
+		return nil, fmt.Errorf("failed to initialize build environment with image %s (ensure the image is accessible and your container runtime can pull it): %w", builderImage, err)
+	}
+
+	return containerEnv, nil
+}
 
 func setupBuildEnv(deployment *buildRofl.Deployment, npa *common.NPASelection) {
 	// Configure app ID.

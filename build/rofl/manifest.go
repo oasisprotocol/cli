@@ -76,8 +76,17 @@ type Manifest struct {
 	// Scripts are custom scripts that are executed by the build system at specific stages.
 	Scripts map[string]string `yaml:"scripts,omitempty" json:"scripts,omitempty"`
 
+	// Tooling contains information about the tooling used to generate/update the manifest.
+	Tooling *ToolingConfig `yaml:"tooling,omitempty" json:"tooling,omitempty"`
+
 	// sourceFn is the filename from which the manifest has been loaded.
 	sourceFn string
+}
+
+// ToolingConfig contains information about the tooling used to manage the manifest.
+type ToolingConfig struct {
+	// Version is the CLI version that last modified this manifest.
+	Version string `yaml:"version" json:"version"`
 }
 
 // ManifestExists checks whether a manifest file exist. No attempt is made to load, parse or

@@ -459,6 +459,7 @@ func createVerityHashTree(buildEnv env.ExecEnv, fsFn, hashFn string) (string, er
 		return "", fmt.Errorf("%w\n%s", err, out.String())
 	}
 
+	// Fix permissions so files are accessible from the host.
 	if err = buildEnv.FixPermissions(fsFn); err != nil {
 		return "", err
 	}
@@ -476,22 +477,31 @@ func createVerityHashTree(buildEnv env.ExecEnv, fsFn, hashFn string) (string, er
 	return string(data), nil
 }
 
-// concatFiles appends the contents of file b to a.
-func concatFiles(a, b string) error {
-	df, err := os.OpenFile(a, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+// concatFiles appends the contents of file b to a using the given build environment.
+func concatFiles(buildEnv env.ExecEnv, a, b string) error {
+	aEnv, err := buildEnv.PathToEnv(a)
 	if err != nil {
+		return fmt.Errorf("failed to translate path: %w", err)
+	}
+	bEnv, err := buildEnv.PathToEnv(b)
+	if err != nil {
+		return fmt.Errorf("failed to translate path: %w", err)
+	}
+
+	// Use shell to append file b to file a instead of os/io packages. This ensures
+	// the operation works correctly with containerized builds where the host may not
+	// have write permissions to container-created files.
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("cat %q >> %q", bEnv, aEnv)) //nolint:gosec
+	var out strings.Builder
+	cmd.Stderr = &out
+	cmd.Stdout = &out
+	if err = buildEnv.WrapCommand(cmd); err != nil {
 		return err
 	}
-	defer df.Close()
-
-	sf, err := os.Open(b)
-	if err != nil {
-		return err
+	if err = cmd.Run(); err != nil {
+		return fmt.Errorf("%w\n%s", err, out.String())
 	}
-	defer sf.Close()
-
-	_, err = io.Copy(df, sf)
-	return err
+	return nil
 }
 
 // padWithEmptySpace pads the given file with empty space to make it the given size. See

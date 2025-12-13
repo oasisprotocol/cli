@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-
-	"github.com/oasisprotocol/cli/cmd/common"
 )
 
 // ExecEnv is an execution environment.
@@ -195,18 +193,18 @@ func (de *ContainerEnv) PathToEnv(path string) (string, error) {
 }
 
 // FixPermissions implements ExecEnv.
+// For container environments, we use chmod to make files accessible rather than chown,
+// because chown doesn't work correctly with rootless containers due to user namespace
+// UID mapping. Using chmod 666 works for both rootful and rootless containers.
 func (de *ContainerEnv) FixPermissions(path string) error {
-	path, err := de.PathToEnv(path)
+	pathEnv, err := de.PathToEnv(path)
 	if err != nil {
 		return err
 	}
 
-	cmd := exec.Command("chown", fmt.Sprintf("%d:%d", os.Getuid(), os.Getgid()), path) //nolint: gosec
+	cmd := exec.Command("chmod", "666", pathEnv)
 	if err = de.WrapCommand(cmd); err != nil {
 		return err
-	}
-	if common.IsVerbose() {
-		fmt.Println(cmd)
 	}
 	return cmd.Run()
 }

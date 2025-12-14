@@ -45,16 +45,23 @@ GIT_COMMIT_EXACT_TAG := $(shell \
 	git describe --tags --match 'v*' --exact-match &>/dev/null HEAD && echo YES || echo NO \
 )
 
+# Function for comparing two strings for equality.
+# NOTE: This will also return false if both strings are empty.
+eq = $(and $(findstring $(1),$(2)), $(findstring $(2),$(1)))
+
+# Check if git workspace is dirty.
+GIT_DIRTY := $(shell git diff --quiet 2>/dev/null || echo +dirty)
+
+VERSION := $(or \
+	$(and $(call eq,$(GIT_COMMIT_EXACT_TAG),YES), $(GIT_VERSION)$(GIT_DIRTY)), \
+	$(shell git describe --tags --abbrev=0)-git$(shell git describe --always --match '' 2>/dev/null)$(GIT_DIRTY) \
+)
+
 # Go binary to use for all Go commands.
 export OASIS_GO ?= go
 
 # Go command prefix to use in all Go commands.
 GO := env -u GOPATH $(OASIS_GO)
-
-VERSION := $(or \
-	$(and $(call eq,$(GIT_COMMIT_EXACT_TAG),YES), $(GIT_VERSION)), \
-	$(shell git describe --tags --abbrev=0)-git$(shell git describe --always --match '' --dirty=+dirty 2>/dev/null) \
-)
 
 # Project's version as the linker's string value definition.
 export GOLDFLAGS_VERSION := -X github.com/oasisprotocol/cli/version.Software=$(VERSION)

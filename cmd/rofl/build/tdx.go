@@ -166,7 +166,7 @@ func tdxPrepareStage2(
 	}
 
 	// Concatenate filesystem and hash tree into one image.
-	if err = concatFiles(rootfsImage, hashFile); err != nil {
+	if err = concatFiles(buildEnv, rootfsImage, hashFile); err != nil {
 		return nil, fmt.Errorf("failed to concatenate rootfs and hash tree files: %w", err)
 	}
 

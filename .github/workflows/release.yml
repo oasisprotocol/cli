@@ -24,11 +24,11 @@ jobs:
         with:
           go-version: "1.25.x"
       - name: Install GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           install-only: true
           distribution: goreleaser
-          version: 1.16.1
+          version: 2.13.1
       - name: Build and publish the next release
         run: |
           make release-build

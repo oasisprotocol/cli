@@ -99,7 +99,7 @@ func outputJSON(ctx context.Context, npa *common.NPASelection, conn connection.C
 // outputText returns providers in human-readable table format.
 func outputText(ctx context.Context, npa *common.NPASelection, conn connection.Connection, providers []*roflmarket.Provider) {
 	table := table.New()
-	table.SetHeader([]string{"Provider Address", "Scheduler App", "Nodes", "Offers", "Instances"})
+	table.Header("Provider Address", "Scheduler App", "Nodes", "Offers", "Instances")
 
 	rows := make([][]string, 0, len(providers))
 	for _, provider := range providers {
@@ -120,8 +120,8 @@ func outputText(ctx context.Context, npa *common.NPASelection, conn connection.C
 		})
 	}
 
-	table.AppendBulk(rows)
-	table.Render()
+	cobra.CheckErr(table.Bulk(rows))
+	cobra.CheckErr(table.Render())
 
 	// If --show-offers is enabled, display offers for each provider.
 	if roflCommon.ShowOffers {

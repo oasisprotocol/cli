@@ -18,7 +18,7 @@ var listCmd = &cobra.Command{
 	Run: func(_ *cobra.Command, _ []string) {
 		cfg := config.Global()
 		table := table.New()
-		table.SetHeader([]string{"Account", "Kind", "Address"})
+		table.Header("Account", "Kind", "Address")
 
 		var output [][]string
 		for name, acc := range cfg.Wallet.All {
@@ -37,7 +37,7 @@ var listCmd = &cobra.Command{
 			return output[i][0] < output[j][0]
 		})
 
-		table.AppendBulk(output)
-		table.Render()
+		cobra.CheckErr(table.Bulk(output))
+		cobra.CheckErr(table.Render())
 	},
 }

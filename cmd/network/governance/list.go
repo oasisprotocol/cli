@@ -28,7 +28,7 @@ var govListCmd = &cobra.Command{
 		cobra.CheckErr(err)
 
 		table := table.New()
-		table.SetHeader([]string{"ID", "Kind", "Submitter", "Created At", "Closes At", "State"})
+		table.Header("ID", "Kind", "Submitter", "Created At", "Closes At", "State")
 
 		proposals, err := conn.Consensus().Governance().Proposals(ctx, common.GetHeight())
 		if err != nil {
@@ -59,8 +59,8 @@ var govListCmd = &cobra.Command{
 			})
 		}
 
-		table.AppendBulk(output)
-		table.Render()
+		cobra.CheckErr(table.Bulk(output))
+		cobra.CheckErr(table.Render())
 	},
 }
 

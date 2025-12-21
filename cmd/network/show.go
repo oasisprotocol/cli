@@ -311,7 +311,7 @@ var showCmd = &cobra.Command{
 						continue
 					}
 					table := table.New()
-					table.SetHeader([]string{"Entity ID", "Node ID", "Role"})
+					table.Header("Entity ID", "Node ID", "Role")
 
 					runtimeID := runtime.ID
 					paratimeName := getParatimeName(cfg, runtimeID.String())
@@ -344,8 +344,8 @@ var showCmd = &cobra.Command{
 						})
 					}
 
-					table.AppendBulk(output)
-					table.Render()
+					cobra.CheckErr(table.Bulk(output))
+					cobra.CheckErr(table.Render())
 					fmt.Println()
 				}
 				return

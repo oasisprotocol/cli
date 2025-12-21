@@ -10,6 +10,8 @@ import (
 	"strconv"
 
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
@@ -489,12 +491,42 @@ func (s *runtimeStats) printStats() {
 
 func (s *runtimeStats) printEntityStats() {
 	fmt.Println("\n=== ENTITY STATISTICS ===")
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
-	table.SetCenterSeparator("|")
-	table.SetHeader(s.entitiesHeader)
-	table.AppendBulk(s.entitiesOutput)
-	table.Render()
+
+	// Configure table with left/right borders, no top/bottom borders, and pipe separators.
+	rendition := tw.Rendition{
+		Borders: tw.Border{
+			Left:   tw.On,
+			Right:  tw.On,
+			Top:    tw.Off,
+			Bottom: tw.Off,
+		},
+		Symbols: tw.NewSymbols(tw.StyleASCII),
+		Settings: tw.Settings{
+			Separators: tw.Separators{
+				BetweenColumns: tw.On,
+			},
+		},
+	}
+
+	table := tablewriter.NewTable(
+		os.Stdout,
+		tablewriter.WithRenderer(renderer.NewBlueprint(rendition)),
+		tablewriter.WithConfig(tablewriter.Config{
+			Row: tw.CellConfig{
+				Formatting: tw.CellFormatting{
+					AutoWrap: tw.WrapNormal,
+				},
+			},
+		}),
+	)
+	// Convert []string to []any for Header.
+	headerAny := make([]any, len(s.entitiesHeader))
+	for i, v := range s.entitiesHeader {
+		headerAny[i] = v
+	}
+	table.Header(headerAny...)
+	cobra.CheckErr(table.Bulk(s.entitiesOutput))
+	cobra.CheckErr(table.Render())
 }
 
 func init() {

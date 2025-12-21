@@ -1,3 +1,5 @@
+version: 2
+
 project_name: Oasis CLI
 
 before:
@@ -72,21 +74,21 @@ builds:
 archives:
   - name_template: "{{replace .ProjectName \" \" \"_\" | tolower}}_{{.Version}}_{{.Os}}_{{.Arch}}"
     wrap_in_directory: true
-    builds:
+    ids:
       - oasis-linux-amd64
       - oasis-linux-arm64
       - oasis-darwin-universal
       - oasis-windows-amd64
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [ 'zip' ]
 
 checksum:
   name_template: SHA256SUMS-{{.Version}}.txt
   algorithm: sha256
 
 snapshot:
-  name_template: "{{ incpatch .Version }}-next"
+  version_template: "{{ incpatch .Version }}-next"
 
 changelog:
   sort: asc

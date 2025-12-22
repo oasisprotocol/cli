@@ -18,7 +18,7 @@ var listCmd = &cobra.Command{
 	Run: func(_ *cobra.Command, _ []string) {
 		cfg := cliConfig.Global()
 		table := table.New()
-		table.SetHeader([]string{"Name", "Chain Context", "RPC"})
+		table.Header("Name", "Chain Context", "RPC")
 
 		var output [][]string
 		for name, net := range cfg.Networks.All {
@@ -39,7 +39,7 @@ var listCmd = &cobra.Command{
 			return output[i][0] < output[j][0]
 		})
 
-		table.AppendBulk(output)
-		table.Render()
+		cobra.CheckErr(table.Bulk(output))
+		cobra.CheckErr(table.Render())
 	},
 }

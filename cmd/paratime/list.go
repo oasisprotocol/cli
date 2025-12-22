@@ -23,7 +23,7 @@ var listCmd = &cobra.Command{
 	Run: func(_ *cobra.Command, _ []string) {
 		cfg := cliConfig.Global()
 		table := table.New()
-		table.SetHeader([]string{"Network", "Paratime", "ID", "Denomination(s)"})
+		table.Header("Network", "Paratime", "ID", "Denominations")
 
 		var output [][]string
 		for netName, net := range cfg.Networks.All {
@@ -50,8 +50,8 @@ var listCmd = &cobra.Command{
 			return output[i][1] < output[j][1]
 		})
 
-		table.AppendBulk(output)
-		table.Render()
+		cobra.CheckErr(table.Bulk(output))
+		cobra.CheckErr(table.Render())
 	},
 }
 

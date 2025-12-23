@@ -537,6 +537,43 @@ func upgradeArtifacts(upgrade []artifactUpgrade) bool {
 	return changed
 }
 
+// upgradePossible checks if any explicitly configured artifact differs from the latest.
+//
+// In contrast to upgradeArtifacts() empty existing fields will be assumed as up-to-date.
+func upgradePossible(check []artifactUpgrade) bool {
+	for _, artifact := range check {
+		if artifact.new == "" {
+			continue
+		}
+		if *artifact.existing != "" && *artifact.existing != artifact.new {
+			return true
+		}
+	}
+	return false
+}
+
+// UpgradePossible returns true iff any explicitly set artifacts differ from latest.
+// Empty fields are ignored (they use defaults from code, so already latest).
+func (ac *ArtifactsConfig) UpgradePossible(latest *ArtifactsConfig) bool {
+	if upgradePossible([]artifactUpgrade{
+		{&ac.Builder, latest.Builder},
+		{&ac.Firmware, latest.Firmware},
+		{&ac.Kernel, latest.Kernel},
+		{&ac.Stage2, latest.Stage2},
+	}) {
+		return true
+	}
+	return ac.Container.UpgradePossible(&latest.Container)
+}
+
+// UpgradePossible returns true iff any explicitly set container artifacts differ from latest.
+func (cc *ContainerArtifactsConfig) UpgradePossible(latest *ContainerArtifactsConfig) bool {
+	return upgradePossible([]artifactUpgrade{
+		{&cc.Compose, latest.Compose},
+		{&cc.Runtime, latest.Runtime},
+	})
+}
+
 // UpgradeTo upgrades the artifacts to the latest version by updating any relevant fields.
 //
 // Returns true iff any artifacts have been updated.

@@ -128,6 +128,40 @@ func (npa *NPASelection) ConsensusDenomination() (denom types.Denomination) {
 	return denom
 }
 
+// AddSelectorFlags adds network/paratime/account selector flags with completions.
+func AddSelectorFlags(cmd *cobra.Command) {
+	cmd.Flags().AddFlagSet(SelectorFlags)
+	_ = cmd.RegisterFlagCompletionFunc("network", CompleteNetworkNames)
+	_ = cmd.RegisterFlagCompletionFunc("paratime", CompleteParaTimeNames)
+	_ = cmd.RegisterFlagCompletionFunc("account", CompleteAccountNames)
+}
+
+// AddSelectorNPFlags adds network/paratime selector flags with completions.
+func AddSelectorNPFlags(cmd *cobra.Command) {
+	cmd.Flags().AddFlagSet(SelectorNPFlags)
+	_ = cmd.RegisterFlagCompletionFunc("network", CompleteNetworkNames)
+	_ = cmd.RegisterFlagCompletionFunc("paratime", CompleteParaTimeNames)
+}
+
+// AddSelectorNAFlags adds network/account selector flags with completions.
+func AddSelectorNAFlags(cmd *cobra.Command) {
+	cmd.Flags().AddFlagSet(SelectorNAFlags)
+	_ = cmd.RegisterFlagCompletionFunc("network", CompleteNetworkNames)
+	_ = cmd.RegisterFlagCompletionFunc("account", CompleteAccountNames)
+}
+
+// AddSelectorNFlags adds network selector flags with completions.
+func AddSelectorNFlags(cmd *cobra.Command) {
+	cmd.Flags().AddFlagSet(SelectorNFlags)
+	_ = cmd.RegisterFlagCompletionFunc("network", CompleteNetworkNames)
+}
+
+// AddAccountFlag adds account selector flag with completion.
+func AddAccountFlag(cmd *cobra.Command) {
+	cmd.Flags().AddFlagSet(AccountFlag)
+	_ = cmd.RegisterFlagCompletionFunc("account", CompleteAccountNames)
+}
+
 func init() {
 	AccountFlag = flag.NewFlagSet("", flag.ContinueOnError)
 	AccountFlag.StringVar(&selectedAccount, "account", "", "explicitly set account to use")

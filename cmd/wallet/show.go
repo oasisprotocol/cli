@@ -11,10 +11,11 @@ import (
 )
 
 var showCmd = &cobra.Command{
-	Use:     "show <name>",
-	Short:   "Show public account information",
-	Aliases: []string{"s"},
-	Args:    cobra.ExactArgs(1),
+	Use:               "show <name>",
+	Short:             "Show public account information",
+	Aliases:           []string{"s"},
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: common.CompleteAccountNames,
 	Run: func(_ *cobra.Command, args []string) {
 		name := args[0]
 

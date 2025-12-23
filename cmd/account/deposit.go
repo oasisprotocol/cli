@@ -20,9 +20,10 @@ import (
 )
 
 var depositCmd = &cobra.Command{
-	Use:   "deposit <amount> [to]",
-	Short: "Deposit tokens into ParaTime",
-	Args:  cobra.RangeArgs(1, 2),
+	Use:               "deposit <amount> [to]",
+	Short:             "Deposit tokens into ParaTime",
+	Args:              cobra.RangeArgs(1, 2),
+	ValidArgsFunction: common.AddressesAt(1), // [to] at position 2.
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
@@ -116,7 +117,7 @@ var depositCmd = &cobra.Command{
 }
 
 func init() {
-	depositCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(depositCmd)
 	depositCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	depositCmd.Flags().AddFlagSet(common.ForceFlag)
 }

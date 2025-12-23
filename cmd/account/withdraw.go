@@ -19,9 +19,10 @@ import (
 )
 
 var withdrawCmd = &cobra.Command{
-	Use:   "withdraw <amount> [to]",
-	Short: "Withdraw tokens from ParaTime",
-	Args:  cobra.RangeArgs(1, 2),
+	Use:               "withdraw <amount> [to]",
+	Short:             "Withdraw tokens from ParaTime",
+	Args:              cobra.RangeArgs(1, 2),
+	ValidArgsFunction: common.AddressesAt(1), // [to] at position 2.
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
@@ -133,7 +134,7 @@ var withdrawCmd = &cobra.Command{
 
 func init() {
 	withdrawCmd.Flags().AddFlagSet(SubtractFeeFlags)
-	withdrawCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(withdrawCmd)
 	withdrawCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	withdrawCmd.Flags().AddFlagSet(common.ForceFlag)
 }

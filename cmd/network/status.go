@@ -218,5 +218,5 @@ var statusCmd = &cobra.Command{
 
 func init() {
 	statusCmd.Flags().AddFlagSet(common.FormatFlag)
-	statusCmd.Flags().AddFlagSet(common.SelectorNFlags)
+	common.AddSelectorNFlags(statusCmd)
 }

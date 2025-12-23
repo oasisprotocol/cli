@@ -538,6 +538,6 @@ func init() {
 	roundFlag.Uint64Var(&selectedRound, "round", client.RoundLatest, "explicitly set block round to use")
 
 	showCmd.Flags().AddFlagSet(common.FormatFlag)
-	showCmd.Flags().AddFlagSet(common.SelectorNPFlags)
+	common.AddSelectorNPFlags(showCmd)
 	showCmd.Flags().AddFlagSet(roundFlag)
 }

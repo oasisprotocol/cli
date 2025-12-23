@@ -57,6 +57,6 @@ var registerCmd = &cobra.Command{
 }
 
 func init() {
-	registerCmd.Flags().AddFlagSet(common.SelectorNAFlags)
+	common.AddSelectorNAFlags(registerCmd)
 	registerCmd.Flags().AddFlagSet(common.TxFlags)
 }

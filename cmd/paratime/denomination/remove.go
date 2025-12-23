@@ -8,13 +8,15 @@ import (
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 
+	"github.com/oasisprotocol/cli/cmd/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
 var removeDenomCmd = &cobra.Command{
-	Use:   "remove <network> <paratime> <denomination>",
-	Short: "Remove denomination",
-	Args:  cobra.ExactArgs(3),
+	Use:               "remove <network> <paratime> <denomination>",
+	Short:             "Remove denomination",
+	Args:              cobra.ExactArgs(3),
+	ValidArgsFunction: common.CompleteNetworkThenParaTime,
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		networkArg, ptArg, denomArg := args[0], args[1], args[2]

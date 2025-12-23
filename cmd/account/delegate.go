@@ -18,9 +18,10 @@ import (
 )
 
 var delegateCmd = &cobra.Command{
-	Use:   "delegate <amount> <to>",
-	Short: "Delegate given amount of tokens to an entity",
-	Args:  cobra.ExactArgs(2),
+	Use:               "delegate <amount> <to>",
+	Short:             "Delegate given amount of tokens to an entity",
+	Args:              cobra.ExactArgs(2),
+	ValidArgsFunction: common.AddressesAt(1), // <to> at position 2.
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
@@ -122,6 +123,6 @@ var delegateCmd = &cobra.Command{
 }
 
 func init() {
-	delegateCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(delegateCmd)
 	delegateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 }

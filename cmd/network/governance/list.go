@@ -65,6 +65,6 @@ var govListCmd = &cobra.Command{
 }
 
 func init() {
-	govListCmd.Flags().AddFlagSet(common.SelectorNFlags)
+	common.AddSelectorNFlags(govListCmd)
 	govListCmd.Flags().AddFlagSet(common.HeightFlag)
 }

@@ -48,39 +48,62 @@ Go toolchain version: {{ toolchain }}
 `)
 }
 
+// isCompletionCommand checks if the CLI is being invoked for shell completion.
+// This is used to skip side effects (file creation, migrations) during tab-completion.
+func isCompletionCommand() bool {
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "completion", "__complete", "__completeNoDesc":
+			return true
+		}
+	}
+	return false
+}
+
+// ensureConfigExists creates the config file with defaults if it doesn't exist.
+func ensureConfigExists(v *viper.Viper, configPath string) {
+	if _, err := os.Stat(configPath); !errors.Is(err, fs.ErrNotExist) {
+		return
+	}
+	if _, err := os.Create(configPath); err != nil {
+		cobra.CheckErr(fmt.Errorf("failed to create configuration file: %w", err))
+	}
+	config.ResetDefaults()
+	_ = config.Save(v)
+}
+
 func initConfig() {
 	v := viper.New()
+	completionMode := isCompletionCommand()
 
 	if cfgFile != "" {
-		// Use config file from the flag.
 		v.SetConfigFile(cfgFile)
 	} else {
 		const configFilename = "cli.toml"
 		configDir := config.DefaultDirectory()
-		configPath := filepath.Join(configDir, configFilename)
 
 		v.AddConfigPath(configDir)
 		v.SetConfigType("toml")
 		v.SetConfigName(configFilename)
 
-		// Ensure the configuration file exists.
-		_ = os.MkdirAll(configDir, 0o700)
-		if _, err := os.Stat(configPath); errors.Is(err, fs.ErrNotExist) {
-			if _, err := os.Create(configPath); err != nil {
-				cobra.CheckErr(fmt.Errorf("failed to create configuration file: %w", err))
-			}
-
-			// Populate the initial configuration file with defaults.
-			config.ResetDefaults()
-			_ = config.Save(v)
+		// Skip file creation during completion to avoid side effects.
+		if !completionMode {
+			_ = os.MkdirAll(configDir, 0o700)
+			ensureConfigExists(v, filepath.Join(configDir, configFilename))
 		}
 	}
 
 	_ = v.ReadInConfig()
 
-	// Load and validate global configuration.
+	// Load global configuration.
 	err := config.Load(v)
 	cobra.CheckErr(err)
+
+	// Skip migrations and validation during completion to avoid side effects.
+	if completionMode {
+		return
+	}
+
 	changes, err := config.Global().Migrate()
 	cobra.CheckErr(err)
 	if changes {

@@ -9,13 +9,15 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 
+	"github.com/oasisprotocol/cli/cmd/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
 var setChainContextCmd = &cobra.Command{
-	Use:   "set-chain-context <name> [chain-context]",
-	Short: "Sets the chain context of the given network",
-	Args:  cobra.RangeArgs(1, 2),
+	Use:               "set-chain-context <name> [chain-context]",
+	Short:             "Sets the chain context of the given network",
+	Args:              cobra.RangeArgs(1, 2),
+	ValidArgsFunction: common.CompleteNetworkNames,
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		name := args[0]

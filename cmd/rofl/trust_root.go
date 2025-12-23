@@ -47,6 +47,6 @@ var trustRootCmd = &cobra.Command{
 }
 
 func init() {
-	trustRootCmd.Flags().AddFlagSet(common.SelectorNPFlags)
+	common.AddSelectorNPFlags(trustRootCmd)
 	trustRootCmd.Flags().AddFlagSet(common.HeightFlag)
 }

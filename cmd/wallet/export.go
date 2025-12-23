@@ -10,9 +10,10 @@ import (
 )
 
 var exportCmd = &cobra.Command{
-	Use:   "export <name>",
-	Short: "Export secret account information",
-	Args:  cobra.ExactArgs(1),
+	Use:               "export <name>",
+	Short:             "Export secret account information",
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: common.CompleteAccountNames,
 	Run: func(_ *cobra.Command, args []string) {
 		name := args[0]
 

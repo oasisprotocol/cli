@@ -464,6 +464,6 @@ func init() {
 	showVotesFlag := flag.NewFlagSet("", flag.ContinueOnError)
 	showVotesFlag.BoolVar(&showVotes, "show-votes", false, "individual entity votes")
 	govShowCmd.Flags().AddFlagSet(showVotesFlag)
-	govShowCmd.Flags().AddFlagSet(common.SelectorNFlags)
+	common.AddSelectorNFlags(govShowCmd)
 	govShowCmd.Flags().AddFlagSet(common.HeightFlag)
 }

@@ -154,6 +154,6 @@ func outputProviderText(npa *common.NPASelection, provider *roflmarket.Provider,
 }
 
 func init() {
-	showCmd.Flags().AddFlagSet(common.SelectorNPFlags)
+	common.AddSelectorNPFlags(showCmd)
 	showCmd.Flags().AddFlagSet(common.FormatFlag)
 }

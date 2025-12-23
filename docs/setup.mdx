@@ -151,6 +151,87 @@ This command will check for a newer version on GitHub, show you the
 release notes, and ask for confirmation before downloading and replacing
 the current binary.
 
+## Shell Completion
+
+The Oasis CLI supports shell completion for Bash, Zsh, Fish, and PowerShell.
+Completions allow you to press `Tab` to auto-complete commands, subcommands,
+and flags.
+
+<Tabs>
+  <TabItem value="Bash" label="Bash">
+    #### Temporary (current session)
+
+    ```shell
+    source <(oasis completion bash)
+    ```
+
+    #### Permanent
+
+    **Linux:**
+    ```shell
+    oasis completion bash > /etc/bash_completion.d/oasis
+    ```
+
+    **macOS (Homebrew):**
+    ```shell
+    oasis completion bash > $(brew --prefix)/etc/bash_completion.d/oasis
+    ```
+  </TabItem>
+
+  <TabItem value="Zsh" label="Zsh">
+    #### Temporary (current session)
+
+    ```shell
+    source <(oasis completion zsh)
+    ```
+
+    #### Permanent
+
+    First, ensure completion is enabled in your `~/.zshrc`:
+    ```shell
+    echo "autoload -U compinit; compinit" >> ~/.zshrc
+    ```
+
+    Then install the completion:
+    ```shell
+    oasis completion zsh > "${fpath[1]}/_oasis"
+    ```
+
+    Start a new shell for the changes to take effect.
+  </TabItem>
+
+  <TabItem value="Fish" label="Fish">
+    #### Temporary (current session)
+
+    ```shell
+    oasis completion fish | source
+    ```
+
+    #### Permanent
+
+    ```shell
+    oasis completion fish > ~/.config/fish/completions/oasis.fish
+    ```
+  </TabItem>
+
+  <TabItem value="PowerShell" label="PowerShell">
+    #### Temporary (current session)
+
+    ```powershell
+    oasis completion powershell | Out-String | Invoke-Expression
+    ```
+
+    #### Permanent
+
+    Add the following to your PowerShell profile:
+    ```powershell
+    oasis completion powershell | Out-String | Invoke-Expression
+    ```
+
+    To find your profile path, run `echo $PROFILE` in PowerShell.
+  </TabItem>
+</Tabs>
+
 ## Configuration
 
 When running the Oasis CLI for the first time, it will generate a configuration

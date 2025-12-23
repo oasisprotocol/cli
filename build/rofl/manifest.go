@@ -537,6 +537,50 @@ func upgradeArtifacts(upgrade []artifactUpgrade) bool {
 	return changed
 }
 
+// upgradePossible checks if any explicitly configured artifact differs from the latest.
+//
+// This has intentionally different semantics than upgradeArtifacts:
+//   - upgradeArtifacts: empty existing + non-empty new -> WRITES the new value
+//   - upgradePossible:  empty existing + non-empty new -> returns FALSE
+//
+// Rationale: When a manifest field is empty, the build uses the latest defaults
+// from code (LatestBasicArtifacts/LatestContainerArtifacts). So an empty field
+// means the user is already getting the latest, no notification needed. We only
+// notify when explicit overrides exist and are outdated.
+func upgradePossible(check []artifactUpgrade) bool {
+	for _, artifact := range check {
+		if artifact.new == "" {
+			continue
+		}
+		if *artifact.existing != "" && *artifact.existing != artifact.new {
+			return true
+		}
+	}
+	return false
+}
+
+// UpgradePossible returns true iff any explicitly set artifacts differ from latest.
+// Empty fields are ignored (they use defaults from code, so already latest).
+func (ac *ArtifactsConfig) UpgradePossible(latest *ArtifactsConfig) bool {
+	if upgradePossible([]artifactUpgrade{
+		{&ac.Builder, latest.Builder},
+		{&ac.Firmware, latest.Firmware},
+		{&ac.Kernel, latest.Kernel},
+		{&ac.Stage2, latest.Stage2},
+	}) {
+		return true
+	}
+	return ac.Container.UpgradePossible(&latest.Container)
+}
+
+// UpgradePossible returns true iff any explicitly set container artifacts differ from latest.
+func (cc *ContainerArtifactsConfig) UpgradePossible(latest *ContainerArtifactsConfig) bool {
+	return upgradePossible([]artifactUpgrade{
+		{&cc.Compose, latest.Compose},
+		{&cc.Runtime, latest.Runtime},
+	})
+}
+
 // UpgradeTo upgrades the artifacts to the latest version by updating any relevant fields.
 //
 // Returns true iff any artifacts have been updated.

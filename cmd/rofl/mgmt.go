@@ -595,7 +595,8 @@ var (
 			}
 
 			if artifactsUpdated {
-				fmt.Printf("Run `oasis rofl build` to build your ROFL app.\n")
+				fmt.Printf("Artifacts have been updated to the latest versions.\n")
+				fmt.Printf("Run `oasis rofl build` to build with the new artifacts.\n")
 			} else {
 				fmt.Printf("Artifacts already up-to-date.\n")
 			}

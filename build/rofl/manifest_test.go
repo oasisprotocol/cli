@@ -245,3 +245,55 @@ func TestUpgradeArtifacts(t *testing.T) {
 	changed = existing.UpgradeTo(&latest)
 	require.False(changed)
 }
+
+func TestUpgradePossible(t *testing.T) {
+	require := require.New(t)
+
+	existing := ArtifactsConfig{
+		Builder:  "a",
+		Firmware: "b",
+		Kernel:   "c",
+		Stage2:   "d",
+		Container: ContainerArtifactsConfig{
+			Runtime: "e",
+			Compose: "f",
+		},
+	}
+	latest := ArtifactsConfig{
+		Firmware: "b2",
+		Kernel:   "c2",
+		Stage2:   "d2",
+		Container: ContainerArtifactsConfig{
+			Runtime: "e2",
+		},
+	}
+
+	// Explicit overrides differing from latest -> upgradeable.
+	require.True(existing.UpgradePossible(&latest))
+
+	// After upgrading -> not upgradeable.
+	existing.UpgradeTo(&latest)
+	require.False(existing.UpgradePossible(&latest))
+
+	// Empty config (uses defaults from code) -> not upgradeable.
+	require.False((&ArtifactsConfig{}).UpgradePossible(&latest))
+
+	// Partial: explicit override differs -> upgradeable.
+	require.True((&ArtifactsConfig{Firmware: "old"}).UpgradePossible(&latest))
+
+	// Partial: explicit override matches latest -> not upgradeable.
+	require.False((&ArtifactsConfig{Firmware: "b2"}).UpgradePossible(&latest))
+
+	// Container field differs -> upgradeable.
+	require.True((&ArtifactsConfig{
+		Container: ContainerArtifactsConfig{Runtime: "old"},
+	}).UpgradePossible(&ArtifactsConfig{
+		Container: ContainerArtifactsConfig{Runtime: "new"},
+	}))
+
+	// ContainerArtifactsConfig directly.
+	containerLatest := ContainerArtifactsConfig{Runtime: "new"}
+	require.True((&ContainerArtifactsConfig{Runtime: "old"}).UpgradePossible(&containerLatest))
+	require.False((&ContainerArtifactsConfig{Runtime: "new"}).UpgradePossible(&containerLatest))
+	require.False((&ContainerArtifactsConfig{}).UpgradePossible(&containerLatest))
+}

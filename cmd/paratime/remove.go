@@ -5,14 +5,16 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/oasisprotocol/cli/cmd/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
 var removeCmd = &cobra.Command{
-	Use:     "remove <network> <name>",
-	Aliases: []string{"rm"},
-	Short:   "Remove an existing ParaTime",
-	Args:    cobra.ExactArgs(2),
+	Use:               "remove <network> <name>",
+	Aliases:           []string{"rm"},
+	Short:             "Remove an existing ParaTime",
+	Args:              cobra.ExactArgs(2),
+	ValidArgsFunction: common.CompleteNetworkThenParaTime,
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		network, name := args[0], args[1]

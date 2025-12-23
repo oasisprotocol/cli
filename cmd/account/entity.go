@@ -235,10 +235,10 @@ func init() {
 	entityInitCmd.Flags().AddFlagSet(common.AccountFlag)
 	entityInitCmd.Flags().AddFlagSet(common.AnswerYesFlag)
 
-	entityRegisterCmd.Flags().AddFlagSet(common.SelectorNAFlags)
+	common.AddSelectorNAFlags(entityRegisterCmd)
 	entityRegisterCmd.Flags().AddFlagSet(common.TxFlags)
 
-	entityDeregisterCmd.Flags().AddFlagSet(common.SelectorNAFlags)
+	common.AddSelectorNAFlags(entityDeregisterCmd)
 	entityDeregisterCmd.Flags().AddFlagSet(common.TxFlags)
 
 	entityMetadataUpdateCmd.Flags().StringVarP(&registryPath, "registry-dir", "r", "", "path to the metadata registry directory")

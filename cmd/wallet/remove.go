@@ -13,10 +13,11 @@ import (
 )
 
 var rmCmd = &cobra.Command{
-	Use:     "remove <name> [name ...]",
-	Aliases: []string{"rm"},
-	Short:   "Remove existing account(s)",
-	Args:    cobra.MinimumNArgs(1),
+	Use:               "remove <name> [name ...]",
+	Aliases:           []string{"rm"},
+	Short:             "Remove existing account(s)",
+	Args:              cobra.MinimumNArgs(1),
+	ValidArgsFunction: common.CompleteAccountNames,
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := config.Global()
 

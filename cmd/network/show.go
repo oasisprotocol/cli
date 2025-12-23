@@ -552,7 +552,7 @@ func showParameters(ctx context.Context, npa *common.NPASelection, height int64,
 }
 
 func init() {
-	showCmd.Flags().AddFlagSet(common.SelectorNFlags)
+	common.AddSelectorNFlags(showCmd)
 	showCmd.Flags().AddFlagSet(common.HeightFlag)
 	showCmd.Flags().AddFlagSet(common.FormatFlag)
 }

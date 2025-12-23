@@ -43,6 +43,65 @@ const (
 	poolPendingDelegation = "pending-delegation"
 )
 
+var (
+	// paraTimePoolMap maps ParaTime pool names to their addresses.
+	paraTimePoolMap = map[string]types.Address{
+		poolCommon:            accounts.CommonPoolAddress,
+		poolFeeAccumulator:    accounts.FeeAccumulatorAddress,
+		poolPendingDelegation: consensusaccounts.PendingDelegationAddress,
+		poolPendingWithdrawal: consensusaccounts.PendingWithdrawalAddress,
+		poolRewards:           rewards.RewardPoolAddress,
+	}
+
+	// consensusPoolMap maps consensus pool names to their addresses.
+	// Initialized in init() because addresses need conversion.
+	consensusPoolMap map[string]types.Address
+
+	// testAccountAddresses contains all valid test account addresses in "test:<name>" format.
+	testAccountAddresses []string
+
+	// paraTimePoolAddresses contains all valid ParaTime pool addresses in "pool:paratime:<name>" format.
+	paraTimePoolAddresses []string
+
+	// consensusPoolAddresses contains all valid consensus pool addresses in "pool:consensus:<name>" format.
+	consensusPoolAddresses []string
+)
+
+func init() {
+	consensusPoolMap = map[string]types.Address{
+		poolBurn:               types.NewAddressFromConsensus(staking.BurnAddress),
+		poolCommon:             types.NewAddressFromConsensus(staking.CommonPoolAddress),
+		poolFeeAccumulator:     types.NewAddressFromConsensus(staking.FeeAccumulatorAddress),
+		poolGovernanceDeposits: types.NewAddressFromConsensus(staking.GovernanceDepositsAddress),
+	}
+
+	// Build address lists for completion.
+	testPrefix := addressExplicitTest + addressExplicitSeparator
+	for name := range testing.TestAccounts {
+		testAccountAddresses = append(testAccountAddresses, testPrefix+name)
+	}
+	poolParaTimePrefix := addressExplicitPool + addressExplicitSeparator + addressExplicitParaTime + addressExplicitSeparator
+	for name := range paraTimePoolMap {
+		paraTimePoolAddresses = append(paraTimePoolAddresses, poolParaTimePrefix+name)
+	}
+	poolConsensusPrefix := addressExplicitPool + addressExplicitSeparator + addressExplicitConsensus + addressExplicitSeparator
+	for name := range consensusPoolMap {
+		consensusPoolAddresses = append(consensusPoolAddresses, poolConsensusPrefix+name)
+	}
+}
+
+// ParaTimeAddresses returns all paratime addresses in "paratime:<name>" format for the given config.
+func ParaTimeAddresses(cfg *config.Config) []string {
+	var names []string
+	paraTimePrefix := addressExplicitParaTime + addressExplicitSeparator
+	for _, net := range cfg.Networks.All {
+		for ptName := range net.ParaTimes.All {
+			names = append(names, paraTimePrefix+ptName)
+		}
+	}
+	return names
+}
+
 // LoadAccount loads the given named account.
 func LoadAccount(cfg *config.Config, name string) wallet.Account {
 	// Check if the specified account is a test account.
@@ -183,35 +242,15 @@ func ResolveAddress(net *configSdk.Network, address string) (*types.Address, *et
 		}
 		switch poolKind {
 		case addressExplicitParaTime:
-			switch poolName {
-			case poolCommon:
-				return &accounts.CommonPoolAddress, nil, nil
-			case poolFeeAccumulator:
-				return &accounts.FeeAccumulatorAddress, nil, nil
-			case poolPendingDelegation:
-				return &consensusaccounts.PendingDelegationAddress, nil, nil
-			case poolPendingWithdrawal:
-				return &consensusaccounts.PendingWithdrawalAddress, nil, nil
-			case poolRewards:
-				return &rewards.RewardPoolAddress, nil, nil
-			default:
-				return nil, nil, fmt.Errorf("unsupported ParaTime pool: %s", poolName)
+			if addr, ok := paraTimePoolMap[poolName]; ok {
+				return &addr, nil, nil
 			}
+			return nil, nil, fmt.Errorf("unsupported ParaTime pool: %s", poolName)
 		case addressExplicitConsensus:
-			var addr types.Address
-			switch poolName {
-			case poolBurn:
-				addr = types.NewAddressFromConsensus(staking.BurnAddress)
-			case poolCommon:
-				addr = types.NewAddressFromConsensus(staking.CommonPoolAddress)
-			case poolFeeAccumulator:
-				addr = types.NewAddressFromConsensus(staking.FeeAccumulatorAddress)
-			case poolGovernanceDeposits:
-				addr = types.NewAddressFromConsensus(staking.GovernanceDepositsAddress)
-			default:
-				return nil, nil, fmt.Errorf("unsupported consensus pool: %s", poolName)
+			if addr, ok := consensusPoolMap[poolName]; ok {
+				return &addr, nil, nil
 			}
-			return &addr, nil, nil
+			return nil, nil, fmt.Errorf("unsupported consensus pool: %s", poolName)
 		default:
 			return nil, nil, fmt.Errorf("unsupported pool kind: %s. Please use pool:<poolKind>:<poolName>, for example pool:paratime:pending-withdrawal", poolKind)
 		}

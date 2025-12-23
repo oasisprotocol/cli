@@ -442,17 +442,17 @@ func maybeLoadManifestAndSetNPA(cfg *cliConfig.Config, npa *common.NPASelection)
 }
 
 func init() {
-	initCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(initCmd)
 
-	createCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(createCmd)
 	createCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 
-	updateCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(updateCmd)
 	updateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 
-	updateOffersCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(updateOffersCmd)
 	updateOffersCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 
-	removeCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(removeCmd)
 	removeCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 }

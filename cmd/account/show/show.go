@@ -26,10 +26,11 @@ var (
 	showDelegations bool
 
 	Cmd = &cobra.Command{
-		Use:     "show [address]",
-		Short:   "Show balance and other information",
-		Aliases: []string{"s", "balance", "b"},
-		Args:    cobra.MaximumNArgs(1),
+		Use:               "show [address]",
+		Short:             "Show balance and other information",
+		Aliases:           []string{"s", "balance", "b"},
+		Args:              cobra.MaximumNArgs(1),
+		ValidArgsFunction: common.CompleteAccountAndAddressBookNames,
 		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
@@ -241,7 +242,7 @@ var (
 func init() {
 	f := flag.NewFlagSet("", flag.ContinueOnError)
 	f.BoolVar(&showDelegations, "show-delegations", false, "show incoming and outgoing delegations")
-	Cmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(Cmd)
 	Cmd.Flags().AddFlagSet(common.HeightFlag)
 	Cmd.Flags().AddFlagSet(f)
 }

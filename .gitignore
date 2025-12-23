@@ -1,5 +1,7 @@
 # Ignore Oasis CLI binary.
 oasis
+# Ignore generated completions (created by goreleaser).
+completions/
 # Ignore Python cache directories.
 __pycache__/
 # Ignore temporary files.

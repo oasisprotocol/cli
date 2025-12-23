@@ -487,15 +487,15 @@ func parseTokens(pt *config.ParaTime, tokens []string) []types.BaseUnits {
 }
 
 func init() {
-	contractShowCmd.Flags().AddFlagSet(common.SelectorFlags)
-	contractShowCodeCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(contractShowCmd)
+	common.AddSelectorFlags(contractShowCodeCmd)
 
-	contractDumpCodeCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(contractDumpCodeCmd)
 
 	contractsUploadFlags := flag.NewFlagSet("", flag.ContinueOnError)
 	contractsUploadFlags.StringVar(&contractInstantiatePolicy, "instantiate-policy", "everyone", "contract instantiation policy")
 
-	contractUploadCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(contractUploadCmd)
 	contractUploadCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	contractUploadCmd.Flags().AddFlagSet(contractsUploadFlags)
 
@@ -505,16 +505,16 @@ func init() {
 	contractsInstantiateFlags := flag.NewFlagSet("", flag.ContinueOnError)
 	contractsInstantiateFlags.StringVar(&contractUpgradesPolicy, "upgrades-policy", "owner", "contract upgrades policy")
 
-	contractInstantiateCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(contractInstantiateCmd)
 	contractInstantiateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	contractInstantiateCmd.Flags().AddFlagSet(contractsInstantiateFlags)
 	contractInstantiateCmd.Flags().AddFlagSet(contractsCallFlags)
 
-	contractCallCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(contractCallCmd)
 	contractCallCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	contractCallCmd.Flags().AddFlagSet(contractsCallFlags)
 
-	contractChangeUpgradePolicyCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(contractChangeUpgradePolicyCmd)
 	contractChangeUpgradePolicyCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 
 	contractsStorageDumpCmdFlags := flag.NewFlagSet("", flag.ContinueOnError)
@@ -526,10 +526,10 @@ func init() {
 	)
 	contractsStorageDumpCmdFlags.Uint64Var(&contractStorageDumpLimit, "limit", 0, "result set limit")
 	contractsStorageDumpCmdFlags.Uint64Var(&contractStorageDumpOffset, "offset", 0, "result set offset")
-	contractStorageDumpCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(contractStorageDumpCmd)
 	contractStorageDumpCmd.Flags().AddFlagSet(contractsStorageDumpCmdFlags)
 
-	contractStorageGetCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(contractStorageGetCmd)
 
 	contractStorageCmd.AddCommand(contractStorageDumpCmd)
 	contractStorageCmd.AddCommand(contractStorageGetCmd)

@@ -174,7 +174,7 @@ func init() {
 			"The minimum rate is rate_min_numerator divided by %v, and the maximum rate is "+
 			"rate_max_numerator divided by %v", staking.CommissionRateDenominator, staking.CommissionRateDenominator,
 	))
-	amendCommissionScheduleCmd.Flags().AddFlagSet(common.SelectorNAFlags)
+	common.AddSelectorNAFlags(amendCommissionScheduleCmd)
 	amendCommissionScheduleCmd.Flags().AddFlagSet(common.TxFlags)
 	amendCommissionScheduleCmd.Flags().AddFlagSet(f)
 }

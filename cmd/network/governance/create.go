@@ -205,13 +205,13 @@ var (
 )
 
 func init() {
-	govCreateProposalUpgradeCmd.Flags().AddFlagSet(common.SelectorNAFlags)
+	common.AddSelectorNAFlags(govCreateProposalUpgradeCmd)
 	govCreateProposalUpgradeCmd.Flags().AddFlagSet(common.TxFlags)
 
-	govCreateProposalParameterChangeCmd.Flags().AddFlagSet(common.SelectorNAFlags)
+	common.AddSelectorNAFlags(govCreateProposalParameterChangeCmd)
 	govCreateProposalUpgradeCmd.Flags().AddFlagSet(common.TxFlags)
 
-	govCreateProposalCancelUpgradeCmd.Flags().AddFlagSet(common.SelectorNAFlags)
+	common.AddSelectorNAFlags(govCreateProposalCancelUpgradeCmd)
 	govCreateProposalCancelUpgradeCmd.Flags().AddFlagSet(common.TxFlags)
 
 	govCreateProposalCmd.AddCommand(govCreateProposalUpgradeCmd)

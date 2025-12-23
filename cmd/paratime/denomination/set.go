@@ -9,6 +9,7 @@ import (
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 
+	"github.com/oasisprotocol/cli/cmd/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
@@ -16,9 +17,10 @@ var (
 	symbol string
 
 	setDenomCmd = &cobra.Command{
-		Use:   "set <network> <paratime> <denomination> <number_of_decimals> [--symbol <symbol>]",
-		Short: "Set denomination",
-		Args:  cobra.ExactArgs(4),
+		Use:               "set <network> <paratime> <denomination> <number_of_decimals> [--symbol <symbol>]",
+		Short:             "Set denomination",
+		Args:              cobra.ExactArgs(4),
+		ValidArgsFunction: common.CompleteNetworkThenParaTime,
 		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			networkArg, ptArg, denomArg, decimalsArg := args[0], args[1], args[2], args[3]

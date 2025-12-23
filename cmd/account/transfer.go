@@ -18,10 +18,11 @@ import (
 )
 
 var transferCmd = &cobra.Command{
-	Use:     "transfer <amount> [<denom>] <to>",
-	Short:   "Transfer given amount of tokens",
-	Aliases: []string{"t"},
-	Args:    cobra.RangeArgs(2, 3),
+	Use:               "transfer <amount> [<denom>] <to>",
+	Short:             "Transfer given amount of tokens",
+	Aliases:           []string{"t"},
+	Args:              cobra.RangeArgs(2, 3),
+	ValidArgsFunction: common.AddressesAt(1, 2), // <to> can be at position 2 or 3.
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
@@ -120,7 +121,7 @@ var transferCmd = &cobra.Command{
 
 func init() {
 	transferCmd.Flags().AddFlagSet(SubtractFeeFlags)
-	transferCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(transferCmd)
 	transferCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	transferCmd.Flags().AddFlagSet(common.ForceFlag)
 }

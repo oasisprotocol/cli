@@ -393,25 +393,25 @@ func showCommandArgs[V any](npa *common.NPASelection, raw []byte, args V) {
 }
 
 func init() {
-	restartCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(restartCmd)
 	restartCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	restartCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	restartCmd.Flags().AddFlagSet(roflCommon.WipeFlags)
 
-	stopCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(stopCmd)
 	stopCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	stopCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	stopCmd.Flags().AddFlagSet(roflCommon.WipeFlags)
 
-	removeCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(removeCmd)
 	removeCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	removeCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 
-	changeAdminCmd.Flags().AddFlagSet(common.AccountFlag)
+	common.AddAccountFlag(changeAdminCmd)
 	changeAdminCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	changeAdminCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 
-	topUpCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(topUpCmd)
 	topUpCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	topUpCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	topUpCmd.Flags().AddFlagSet(roflCommon.TermFlags)

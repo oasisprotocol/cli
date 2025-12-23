@@ -76,7 +76,14 @@ function init_cfg() {
 init_cfg
 
 # Replace "oasis" with the actual path to the Oasis CLI executable.
-CMD="$(sed "s#oasis#$OASIS_CMD#" $IN) ${CFG_FLAG} ${YES_FLAG}"
+# For __complete commands, insert --config right after the executable
+# (appending at end breaks completion parsing).
+CMD_CONTENT=$(cat $IN)
+if [[ "$CMD_CONTENT" == *"__complete"* ]]; then
+  CMD="$(sed "s#oasis#$OASIS_CMD ${CFG_FLAG}#" $IN)"
+else
+  CMD="$(sed "s#oasis#$OASIS_CMD#" $IN) ${CFG_FLAG} ${YES_FLAG}"
+fi
 echo "  ${CMD}"
 
 # Use UTC timezone.

@@ -6,7 +6,7 @@ Usage:
 Available Commands:
   account     Account operations
   addressbook Manage addresses in the local address book
-  completion  Generate the autocompletion script for the specified shell
+  completion  Generate shell completion script
   contract    WebAssembly smart contracts operations
   help        Help about any command
   network     Consensus layer operations

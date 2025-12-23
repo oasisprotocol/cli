@@ -530,6 +530,6 @@ func (s *runtimeStats) printEntityStats() {
 }
 
 func init() {
-	statsCmd.Flags().AddFlagSet(common.SelectorNPFlags)
+	common.AddSelectorNPFlags(statsCmd)
 	statsCmd.Flags().StringVarP(&fileCSV, "output-file", "o", "", "output statistics into specified CSV file")
 }

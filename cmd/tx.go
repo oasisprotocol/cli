@@ -186,12 +186,12 @@ func tryDecodeTx(rawTx []byte) (any, error) {
 }
 
 func init() {
-	txSubmitCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(txSubmitCmd)
 
-	txSignCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(txSignCmd)
 	txSignCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 
-	txShowCmd.Flags().AddFlagSet(common.SelectorNPFlags)
+	common.AddSelectorNPFlags(txShowCmd)
 
 	txCmd.AddCommand(txSubmitCmd)
 	txCmd.AddCommand(txSignCmd)

@@ -19,9 +19,10 @@ var (
 	description string
 
 	addCmd = &cobra.Command{
-		Use:   "add <network> <name> <id>",
-		Short: "Add a new ParaTime",
-		Args:  cobra.ExactArgs(3),
+		Use:               "add <network> <name> <id>",
+		Short:             "Add a new ParaTime",
+		Args:              cobra.ExactArgs(3),
+		ValidArgsFunction: common.NetworksAt(0), // <network> at position 1.
 		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			network, name, id := args[0], args[1], args[2]

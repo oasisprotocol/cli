@@ -289,6 +289,10 @@ var (
 
 					fmt.Println("Manifest enclave identities MATCH on-chain enclave identities.")
 				}
+
+				// Check if artifact upgrades are available and notify the user.
+				notifyUpgradeAvailable(manifest)
+
 				return nil
 			}
 
@@ -332,10 +336,44 @@ var (
 
 				fmt.Printf("Run `oasis rofl update` to update your ROFL app's on-chain configuration.\n")
 			}
+
+			// Check if artifact upgrades are available and notify the user.
+			notifyUpgradeAvailable(manifest)
+
 			return nil
 		},
 	}
 )
+
+// notifyUpgradeAvailable checks if artifact upgrades are available and prints a notification.
+func notifyUpgradeAvailable(manifest *buildRofl.Manifest) {
+	var latestArtifacts buildRofl.ArtifactsConfig
+	switch manifest.TEE {
+	case buildRofl.TEETypeTDX:
+		switch manifest.Kind {
+		case buildRofl.AppKindRaw:
+			latestArtifacts = buildRofl.LatestBasicArtifacts
+			latestArtifacts.Builder = buildRofl.LatestBuilderImage
+		case buildRofl.AppKindContainer:
+			latestArtifacts = buildRofl.LatestContainerArtifacts
+			latestArtifacts.Builder = buildRofl.LatestContainerBuilderImage
+		default:
+			return
+		}
+	default:
+		return
+	}
+
+	current := manifest.Artifacts
+	if current == nil {
+		current = &buildRofl.ArtifactsConfig{}
+	}
+
+	if current.UpgradePossible(&latestArtifacts) {
+		fmt.Println()
+		fmt.Println("NOTE: A new version of artifacts is available. Run `oasis rofl upgrade` to upgrade.")
+	}
+}
 
 // setupContainerEnv creates and initializes a container build environment.
 func setupContainerEnv(builderImage string) (env.ExecEnv, error) {

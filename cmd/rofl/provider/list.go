@@ -219,6 +219,6 @@ func ShowOfferSummary(npa *common.NPASelection, offer *roflmarket.Offer) {
 
 func init() {
 	listCmd.Flags().AddFlagSet(roflCommon.ShowOffersFlag)
-	listCmd.Flags().AddFlagSet(common.SelectorNPFlags)
+	common.AddSelectorNPFlags(listCmd)
 	listCmd.Flags().AddFlagSet(common.FormatFlag)
 }

@@ -15,9 +15,10 @@ import (
 )
 
 var govCastVoteCmd = &cobra.Command{
-	Use:   "cast-vote <proposal-id> { yes | no | abstain }",
-	Short: "Cast a governance vote on a proposal",
-	Args:  cobra.ExactArgs(2),
+	Use:               "cast-vote <proposal-id> { yes | no | abstain }",
+	Short:             "Cast a governance vote on a proposal",
+	Args:              cobra.ExactArgs(2),
+	ValidArgsFunction: common.StaticAt([]string{"yes", "no", "abstain"}, 1), // Vote options at position 2.
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
@@ -65,6 +66,6 @@ var govCastVoteCmd = &cobra.Command{
 }
 
 func init() {
-	govCastVoteCmd.Flags().AddFlagSet(common.SelectorNAFlags)
+	common.AddSelectorNAFlags(govCastVoteCmd)
 	govCastVoteCmd.Flags().AddFlagSet(common.TxFlags)
 }

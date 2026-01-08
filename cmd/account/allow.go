@@ -14,9 +14,10 @@ import (
 )
 
 var allowCmd = &cobra.Command{
-	Use:   "allow <beneficiary> <amount>",
-	Short: "Configure beneficiary allowance",
-	Args:  cobra.ExactArgs(2),
+	Use:               "allow <beneficiary> <amount>",
+	Short:             "Configure beneficiary allowance",
+	Args:              cobra.ExactArgs(2),
+	ValidArgsFunction: common.AddressesAt(0), // <beneficiary> at position 1.
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
@@ -63,6 +64,6 @@ var allowCmd = &cobra.Command{
 }
 
 func init() {
-	allowCmd.Flags().AddFlagSet(common.SelectorNAFlags)
+	common.AddSelectorNAFlags(allowCmd)
 	allowCmd.Flags().AddFlagSet(common.TxFlags)
 }

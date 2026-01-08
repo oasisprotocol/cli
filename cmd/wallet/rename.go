@@ -5,14 +5,16 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/oasisprotocol/cli/cmd/common"
 	"github.com/oasisprotocol/cli/config"
 )
 
 var renameCmd = &cobra.Command{
-	Use:     "rename <old> <new>",
-	Short:   "Rename an existing account",
-	Aliases: []string{"mv"},
-	Args:    cobra.ExactArgs(2),
+	Use:               "rename <old> <new>",
+	Short:             "Rename an existing account",
+	Aliases:           []string{"mv"},
+	Args:              cobra.ExactArgs(2),
+	ValidArgsFunction: common.AccountNamesAt(0),
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := config.Global()
 		oldName, newName := args[0], args[1]

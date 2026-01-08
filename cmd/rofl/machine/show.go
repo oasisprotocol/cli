@@ -221,6 +221,6 @@ func showMachinePorts(extraCfg *roflCmdBuild.AppExtraConfig, appID rofl.AppID, i
 }
 
 func init() {
-	showCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(showCmd)
 	showCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 }

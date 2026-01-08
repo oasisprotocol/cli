@@ -163,5 +163,5 @@ func calcTrustPeriod(debondingPeriod time.Duration) time.Duration {
 
 func init() {
 	trustCmd.Flags().AddFlagSet(common.FormatFlag)
-	trustCmd.Flags().AddFlagSet(common.SelectorNFlags)
+	common.AddSelectorNFlags(trustCmd)
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/oasisprotocol/cli/cmd/common"
 	"github.com/oasisprotocol/cli/config"
 	"github.com/oasisprotocol/cli/table"
 )
@@ -70,9 +71,10 @@ var (
 	}
 
 	abShowCmd = &cobra.Command{
-		Use:   "show <name>",
-		Short: "Show address information",
-		Args:  cobra.ExactArgs(1),
+		Use:               "show <name>",
+		Short:             "Show address information",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: common.CompleteAddressBookNames,
 		Run: func(_ *cobra.Command, args []string) {
 			name := args[0]
 			abEntry, ok := config.Global().AddressBook.All[name]
@@ -89,10 +91,11 @@ var (
 	}
 
 	abRmCmd = &cobra.Command{
-		Use:     "remove <name>",
-		Aliases: []string{"rm"},
-		Short:   "Remove an address from address book",
-		Args:    cobra.ExactArgs(1),
+		Use:               "remove <name>",
+		Aliases:           []string{"rm"},
+		Short:             "Remove an address from address book",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: common.CompleteAddressBookNames,
 		Run: func(_ *cobra.Command, args []string) {
 			cfg := config.Global()
 			name := args[0]
@@ -106,10 +109,11 @@ var (
 	}
 
 	abRenameCmd = &cobra.Command{
-		Use:     "rename <old> <new>",
-		Aliases: []string{"mv"},
-		Short:   "Rename address",
-		Args:    cobra.ExactArgs(2),
+		Use:               "rename <old> <new>",
+		Aliases:           []string{"mv"},
+		Short:             "Rename address",
+		Args:              cobra.ExactArgs(2),
+		ValidArgsFunction: common.AddressBookNamesAt(0),
 		Run: func(_ *cobra.Command, args []string) {
 			cfg := config.Global()
 			oldName, newName := args[0], args[1]

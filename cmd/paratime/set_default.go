@@ -5,13 +5,15 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/oasisprotocol/cli/cmd/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
 var setDefaultCmd = &cobra.Command{
-	Use:   "set-default <network> <name>",
-	Short: "Sets the given ParaTime as the default ParaTime for the given network",
-	Args:  cobra.ExactArgs(2),
+	Use:               "set-default <network> <name>",
+	Short:             "Sets the given ParaTime as the default ParaTime for the given network",
+	Args:              cobra.ExactArgs(2),
+	ValidArgsFunction: common.CompleteNetworkThenParaTime,
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		network, name := args[0], args[1]

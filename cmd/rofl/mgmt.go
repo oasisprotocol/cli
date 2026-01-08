@@ -880,7 +880,7 @@ func init() {
 	initCmd.Flags().BoolVar(&reset, "reset", false, "reset the existing ROFL manifest")
 	initCmd.Flags().AddFlagSet(common.AnswerYesFlag)
 
-	createCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(createCmd)
 	createCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	createCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	createCmd.Flags().AddFlagSet(roflCommon.NoUpdateFlag)
@@ -890,11 +890,11 @@ func init() {
 	updateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	updateCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 
-	removeCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(removeCmd)
 	removeCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	removeCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 
-	showCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(showCmd)
 	showCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	showCmd.Flags().AddFlagSet(common.FormatFlag)
 

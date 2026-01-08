@@ -18,9 +18,10 @@ import (
 )
 
 var undelegateCmd = &cobra.Command{
-	Use:   "undelegate <shares> <from>",
-	Short: "Undelegate given amount of shares from an entity",
-	Args:  cobra.ExactArgs(2),
+	Use:               "undelegate <shares> <from>",
+	Short:             "Undelegate given amount of shares from an entity",
+	Args:              cobra.ExactArgs(2),
+	ValidArgsFunction: common.AddressesAt(1), // <from> at position 2.
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		npa := common.GetNPASelection(cfg)
@@ -118,6 +119,6 @@ var undelegateCmd = &cobra.Command{
 }
 
 func init() {
-	undelegateCmd.Flags().AddFlagSet(common.SelectorFlags)
+	common.AddSelectorFlags(undelegateCmd)
 	undelegateCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 }

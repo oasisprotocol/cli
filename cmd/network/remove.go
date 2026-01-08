@@ -10,10 +10,11 @@ import (
 )
 
 var rmCmd = &cobra.Command{
-	Use:     "remove <name>",
-	Aliases: []string{"rm"},
-	Short:   "Remove an existing network",
-	Args:    cobra.ExactArgs(1),
+	Use:               "remove <name>",
+	Aliases:           []string{"rm"},
+	Short:             "Remove an existing network",
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: common.CompleteNetworkNames,
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
 		name := args[0]

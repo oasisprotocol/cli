@@ -5,6 +5,10 @@ project_name: Oasis CLI
 before:
   hooks:
     - go mod tidy
+    - mkdir -p completions
+    - sh -c "go run . completion bash > completions/oasis.bash"
+    - sh -c "go run . completion zsh > completions/oasis.zsh"
+    - sh -c "go run . completion fish > completions/oasis.fish"
 
 universal_binaries:
   - id: oasis-darwin-universal
@@ -82,6 +86,8 @@ archives:
     format_overrides:
       - goos: windows
         formats: [ 'zip' ]
+    files:
+      - completions/*
 
 checksum:
   name_template: SHA256SUMS-{{.Version}}.txt

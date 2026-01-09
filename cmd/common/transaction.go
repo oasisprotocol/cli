@@ -265,8 +265,16 @@ func PrepareParatimeTransaction(ctx context.Context, npa *NPASelection, account 
 			return 0, nil, "", fmt.Errorf("failed to estimate gas: %w", err)
 		}
 
-		// Inflate the estimate by 20% for good measure.
-		gas = (120 * gas) / 100
+		// Inflate the estimate for good measure.
+		var multiplier uint64
+		switch tx.Call.Method {
+		case "roflmarket.InstanceTopUp":
+			// Needs a higher buffer due to gas estimation returning early without simulating storage operations.
+			multiplier = 150 // 50%.
+		default:
+			multiplier = 120 // 20%.
+		}
+		gas = (multiplier * gas) / 100
 	}
 
 	// Compute fee.

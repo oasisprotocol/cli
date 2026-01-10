@@ -58,8 +58,9 @@ var (
 			nativeAddr, ethAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, targetAddress)
 			cobra.CheckErr(err)
 
-			if name := common.FindAccountName(nativeAddr.String()); name != "" {
-				fmt.Printf("Name:             %s\n", name)
+			if name := common.FindAccountNameForNetwork(npa.Network, nativeAddr.String()); name != "" {
+				// Show name along with preferred address (Ethereum first if available).
+				fmt.Printf("Name:             %s\n", common.PrettyAddress(npa.Network, *nativeAddr))
 			}
 
 			height, err := common.GetActualHeight(

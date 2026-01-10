@@ -31,7 +31,13 @@ func showPublicWalletInfo(name string, wallet wallet.Account, accCfg *config.Acc
 		kind = accCfg.PrettyKind()
 	}
 
-	fmt.Printf("Name:             %s\n", name)
+	// Prefer Ethereum address in parentheses when available (Ticket #523).
+	preferred := wallet.Address().String()
+	if eth := wallet.EthAddress(); eth != nil {
+		preferred = eth.Hex()
+	}
+
+	fmt.Printf("Name:             %s (%s)\n", name, preferred)
 	fmt.Printf("Kind:             %s\n", kind)
 	if signer := wallet.Signer(); signer != nil {
 		fmt.Printf("Public Key:       %s\n", signer.Public())

@@ -15,10 +15,10 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/miguelmota/go-ethereum-hdwallet v0.1.3
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a
+	github.com/oasisprotocol/curve25519-voi v0.0.0-20251114093237-2ab5a27a1729
 	github.com/oasisprotocol/deoxysii v0.0.0-20220228165953-2091330c22b7
 	github.com/oasisprotocol/metadata-registry-tools v0.0.0-20220406100644-7e9a2b991920
-	github.com/oasisprotocol/oasis-core/go v0.2505.0
+	github.com/oasisprotocol/oasis-core/go v0.2509.0
 	github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.16.0
 	github.com/olekukonko/tablewriter v1.1.2
 	github.com/opencontainers/image-spec v1.1.1
@@ -29,11 +29,11 @@ require (
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/wI2L/jsondiff v0.7.0
 	github.com/zondax/ledger-go v1.0.1
-	golang.org/x/crypto v0.41.0
-	golang.org/x/net v0.43.0
-	golang.org/x/sys v0.36.0
-	golang.org/x/term v0.34.0
-	golang.org/x/text v0.28.0
+	golang.org/x/crypto v0.45.0
+	golang.org/x/net v0.47.0
+	golang.org/x/sys v0.38.0
+	golang.org/x/term v0.37.0
+	golang.org/x/text v0.31.0
 	gopkg.in/yaml.v3 v3.0.1
 	oras.land/oras-go/v2 v2.6.0
 )
@@ -56,7 +56,7 @@ require (
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
-	github.com/cometbft/cometbft v0.37.15 // indirect
+	github.com/cometbft/cometbft v0.37.16 // indirect
 	github.com/consensys/gnark-crypto v0.18.0 // indirect
 	github.com/crate-crypto/go-eth-kzg v1.4.0 // indirect
 	github.com/crate-crypto/go-ipa v0.0.0-20240724233137-53bbb0ceb27a // indirect
@@ -101,7 +101,7 @@ require (
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
-	github.com/libp2p/go-libp2p v0.42.0 // indirect
+	github.com/libp2p/go-libp2p v0.44.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.19 // indirect
@@ -161,7 +161,7 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20250606033433-dcc06ee1d476 // indirect
-	golang.org/x/sync v0.16.0 // indirect
+	golang.org/x/sync v0.18.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/grpc v1.75.0 // indirect
 	google.golang.org/grpc/security/advancedtls v0.0.0-20221004221323-12db695f1648 // indirect

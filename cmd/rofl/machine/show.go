@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -59,7 +60,13 @@ var showCmd = &cobra.Command{
 		}
 
 		insDsc, err := conn.Runtime(npa.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *providerAddr, machineID)
-		cobra.CheckErr(err)
+		if err != nil {
+			// The "instance not found" error originates from Rust code, so we can't compare it nicely here.
+			if strings.Contains(err.Error(), "instance not found") {
+				cobra.CheckErr("Machine instance not found.\nTip: This often happens when instances expire. Run `oasis rofl deploy --replace-machine` to rent a new one.")
+			}
+			cobra.CheckErr(err)
+		}
 
 		insCmds, err := conn.Runtime(npa.ParaTime).ROFLMarket.InstanceCommands(ctx, client.RoundLatest, *providerAddr, machineID)
 		cobra.CheckErr(err)
@@ -80,11 +87,18 @@ var showCmd = &cobra.Command{
 		default:
 		}
 
+		paidUntil := time.Unix(int64(insDsc.PaidUntil), 0)
+		expired := !time.Now().Before(paidUntil)
+
 		fmt.Printf("Name:       %s\n", machineName)
 		fmt.Printf("Provider:   %s\n", insDsc.Provider)
 		fmt.Printf("ID:         %s\n", insDsc.ID)
 		fmt.Printf("Offer:      %s\n", insDsc.Offer)
-		fmt.Printf("Status:     %s\n", insDsc.Status)
+		fmt.Printf("Status:     %s", insDsc.Status)
+		if expired {
+			fmt.Printf(" (EXPIRED)")
+		}
+		fmt.Println()
 		fmt.Printf("Creator:    %s\n", insDsc.Creator)
 		fmt.Printf("Admin:      %s\n", insDsc.Admin)
 		switch insDsc.NodeID {
@@ -96,7 +110,7 @@ var showCmd = &cobra.Command{
 
 		fmt.Printf("Created at: %s\n", time.Unix(int64(insDsc.CreatedAt), 0))
 		fmt.Printf("Updated at: %s\n", time.Unix(int64(insDsc.UpdatedAt), 0))
-		fmt.Printf("Paid until: %s\n", time.Unix(int64(insDsc.PaidUntil), 0))
+		fmt.Printf("Paid until: %s\n", paidUntil)
 
 		if schedulerDsc != nil {
 			if proxyDomain, ok := schedulerDsc.Metadata[scheduler.MetadataKeyProxyDomain]; ok {

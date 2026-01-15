@@ -2,6 +2,7 @@ package show
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -58,8 +59,13 @@ var (
 			nativeAddr, ethAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, targetAddress)
 			cobra.CheckErr(err)
 
+			jsonOut := map[string]interface{}{}
 			if name := common.FindAccountName(nativeAddr.String()); name != "" {
-				fmt.Printf("Name:             %s\n", name)
+				if common.OutputFormat() == common.FormatJSON {
+					jsonOut["name"] = name
+				} else {
+					fmt.Printf("Name:             %s\n", name)
+				}
 			}
 
 			height, err := common.GetActualHeight(
@@ -78,15 +84,22 @@ var (
 
 			consensusAccount, err := c.Consensus().Staking().Account(ctx, ownerQuery)
 			cobra.CheckErr(err)
-			if ethAddr != nil {
-				fmt.Printf("Ethereum address: %s\n", ethAddr)
-			}
-			fmt.Printf("Native address:   %s\n", nativeAddr)
-			fmt.Println()
-			fmt.Printf("=== CONSENSUS LAYER (%s) ===\n", npa.NetworkName)
-			fmt.Printf("  Nonce: %d\n", consensusAccount.General.Nonce)
-			fmt.Println()
 
+			if common.OutputFormat() == common.FormatJSON {
+				jsonOut["ethereum_address"] = ethAddr
+				jsonOut["native_address"] = nativeAddr
+				jsonOut["nonce"] = consensusAccount.General.Nonce
+				jsonOut["network_name"] = npa.NetworkName
+			} else {
+				if ethAddr != nil {
+					fmt.Printf("Ethereum address: %s\n", ethAddr)
+				}
+				fmt.Printf("Native address:   %s\n", nativeAddr)
+				fmt.Println()
+				fmt.Printf("=== CONSENSUS LAYER (%s) ===\n", npa.NetworkName)
+				fmt.Printf("  Nonce: %d\n", consensusAccount.General.Nonce)
+				fmt.Println()
+			}
 			var (
 				outgoingDelegations          map[staking.Address]*staking.DelegationInfo
 				outgoingDebondingDelegations map[staking.Address][]*staking.DebondingDelegationInfo
@@ -98,17 +111,23 @@ var (
 				cobra.CheckErr(err)
 			}
 
-			prettyPrintAccountBalanceAndDelegationsFrom(
-				npa.Network,
-				nativeAddr,
-				consensusAccount.General,
-				outgoingDelegations,
-				outgoingDebondingDelegations,
-				"  ",
-				os.Stdout,
-			)
+			if common.OutputFormat() == common.FormatJSON {
+				jsonOut["general"] = &consensusAccount.General
+				jsonOut["outgoing_delegations"] = outgoingDelegations
+				jsonOut["outgoing_debonding_delegations"] = outgoingDebondingDelegations
+			} else {
+				prettyPrintAccountBalanceAndDelegationsFrom(
+					npa.Network,
+					nativeAddr,
+					consensusAccount.General,
+					outgoingDelegations,
+					outgoingDebondingDelegations,
+					"  ",
+					os.Stdout,
+				)
+			}
 
-			if len(consensusAccount.General.Allowances) > 0 {
+			if len(consensusAccount.General.Allowances) > 0 && common.OutputFormat() == common.FormatText {
 				fmt.Println("  Allowances for this Account:")
 				prettyPrintAllowances(
 					npa.Network,
@@ -127,40 +146,48 @@ var (
 				cobra.CheckErr(err)
 
 				if len(incomingDelegations) > 0 {
-					fmt.Println("  Active Delegations to this Account:")
-					prettyPrintDelegationsTo(
-						npa.Network,
-						nativeAddr,
-						consensusAccount.Escrow.Active,
-						incomingDelegations,
-						"    ",
-						os.Stdout,
-					)
-					fmt.Println()
+					if common.OutputFormat() == common.FormatJSON {
+						jsonOut["incoming_delegations"] = incomingDelegations
+					} else {
+						fmt.Println("  Active Delegations to this Account:")
+						prettyPrintDelegationsTo(
+							npa.Network,
+							nativeAddr,
+							consensusAccount.Escrow.Active,
+							incomingDelegations,
+							"    ",
+							os.Stdout,
+						)
+						fmt.Println()
+					}
 				}
 				if len(incomingDebondingDelegations) > 0 {
-					fmt.Println("  Debonding Delegations to this Account:")
-					prettyPrintDelegationsTo(
-						npa.Network,
-						nativeAddr,
-						consensusAccount.Escrow.Debonding,
-						incomingDebondingDelegations,
-						"    ",
-						os.Stdout,
-					)
-					fmt.Println()
+					if common.OutputFormat() == common.FormatJSON {
+						jsonOut["incoming_debonding_delegations"] = incomingDebondingDelegations
+					} else {
+						fmt.Println("  Debonding Delegations to this Account:")
+						prettyPrintDelegationsTo(
+							npa.Network,
+							nativeAddr,
+							consensusAccount.Escrow.Debonding,
+							incomingDebondingDelegations,
+							"    ",
+							os.Stdout,
+						)
+						fmt.Println()
+					}
 				}
 			}
 
 			cs := consensusAccount.Escrow.CommissionSchedule
-			if len(cs.Rates) > 0 || len(cs.Bounds) > 0 {
+			if (len(cs.Rates) > 0 || len(cs.Bounds) > 0) && common.OutputFormat() == common.FormatText {
 				fmt.Println("  Commission Schedule:")
 				cs.PrettyPrint(ctx, "    ", os.Stdout)
 				fmt.Println()
 			}
 
 			sa := consensusAccount.Escrow.StakeAccumulator
-			if len(sa.Claims) > 0 {
+			if len(sa.Claims) > 0 && common.OutputFormat() == common.FormatText {
 				fmt.Println("  Stake Accumulator:")
 				sa.PrettyPrint(ctx, "    ", os.Stdout)
 				fmt.Println()
@@ -199,21 +226,30 @@ var (
 				hasNonZeroNonce := nonce > 0
 
 				if hasNonZeroBalance || hasNonZeroNonce {
-					fmt.Printf("=== %s PARATIME ===\n", npa.ParaTimeName)
-					fmt.Printf("  Nonce: %d\n", nonce)
-					fmt.Println()
+					if common.OutputFormat() == common.FormatJSON {
+						jsonOut["paratime_name"] = npa.ParaTimeName
+						jsonOut["paratime_nonce"] = nonce
+					} else {
+						fmt.Printf("=== %s PARATIME ===\n", npa.ParaTimeName)
+						fmt.Printf("  Nonce: %d\n", nonce)
+						fmt.Println()
+					}
 
 					if hasNonZeroBalance {
-						fmt.Printf("  Balances for all denominations:\n")
-						for denom, balance := range rtBalances.Balances {
-							fmtAmnt := helpers.FormatParaTimeDenomination(npa.ParaTime, types.NewBaseUnits(balance, denom))
-							amnt, symbol, _ := strings.Cut(fmtAmnt, " ")
+						if common.OutputFormat() == common.FormatJSON {
+							jsonOut["paratime_balances"] = rtBalances.Balances
+						} else {
+							fmt.Printf("  Balances for all denominations:\n")
+							for denom, balance := range rtBalances.Balances {
+								fmtAmnt := helpers.FormatParaTimeDenomination(npa.ParaTime, types.NewBaseUnits(balance, denom))
+								amnt, symbol, _ := strings.Cut(fmtAmnt, " ")
 
-							fmt.Printf("  - Amount: %s\n", amnt)
-							fmt.Printf("    Symbol: %s\n", symbol)
+								fmt.Printf("  - Amount: %s\n", amnt)
+								fmt.Printf("    Symbol: %s\n", symbol)
+							}
+
+							fmt.Println()
 						}
-
-						fmt.Println()
 					}
 
 					if showDelegations {
@@ -231,9 +267,20 @@ var (
 								To: *nativeAddr,
 							},
 						)
-						prettyPrintParaTimeDelegations(ctx, c, height, npa, nativeAddr, rtDelegations, rtUndelegations, "  ", os.Stdout)
+						if common.OutputFormat() == common.FormatJSON {
+							jsonOut["paratime_delegations"] = rtDelegations
+							jsonOut["paratime_undelegations"] = rtUndelegations
+						} else {
+							prettyPrintParaTimeDelegations(ctx, c, height, npa, nativeAddr, rtDelegations, rtUndelegations, "  ", os.Stdout)
+						}
 					}
 				}
+			}
+
+			if common.OutputFormat() == common.FormatJSON {
+				data, err := json.MarshalIndent(jsonOut, "", "  ")
+				cobra.CheckErr(err)
+				fmt.Printf("%s\n", data)
 			}
 		},
 	}
@@ -244,5 +291,6 @@ func init() {
 	f.BoolVar(&showDelegations, "show-delegations", false, "show incoming and outgoing delegations")
 	common.AddSelectorFlags(Cmd)
 	Cmd.Flags().AddFlagSet(common.HeightFlag)
+	Cmd.Flags().AddFlagSet(common.FormatFlag)
 	Cmd.Flags().AddFlagSet(f)
 }

@@ -45,4 +45,6 @@ It boasts a number of handy features:
     calls
   - debugging tools for deployed Wasm contracts
   - inspection of blocks, transactions, results and events
+  - install via
+    [GitHub Action](https://github.com/oasisprotocol/setup-cli-action)
   

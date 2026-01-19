@@ -122,12 +122,16 @@ var (
 			}
 
 			// Resolve provider address.
-			providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
+			providerAddr, providerEthAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
 			if err != nil {
 				cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
 			}
 
-			fmt.Printf("Using provider: %s (%s)\n", machine.Provider, providerAddr)
+			providerStr := providerAddr.String()
+			if providerEthAddr != nil {
+				providerStr = providerEthAddr.Hex()
+			}
+			fmt.Printf("Using provider: %s\n", common.PrettyAddress(providerStr))
 
 			if roflCommon.ShowOffers {
 				// Display all offers supported by the provider.

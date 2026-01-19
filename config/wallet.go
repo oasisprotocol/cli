@@ -3,7 +3,10 @@ package config
 import (
 	"fmt"
 
+	ethCommon "github.com/ethereum/go-ethereum/common"
+
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
 	"github.com/oasisprotocol/cli/wallet"
@@ -79,6 +82,11 @@ func (w *Wallet) Create(name string, passphrase string, nw *Account) error {
 		return fmt.Errorf("failed to marshal account address: %w", err)
 	}
 	nw.Address = string(address)
+
+	// Store eth address so wallet list can show it without unlocking.
+	if ethAddr := acc.EthAddress(); ethAddr != nil {
+		nw.EthAddress = ethAddr.Hex()
+	}
 
 	if w.All == nil {
 		w.All = make(map[string]*Account)
@@ -219,6 +227,11 @@ func (w *Wallet) Import(name string, passphrase string, nw *Account, src *wallet
 	}
 	nw.Address = string(address)
 
+	// Store eth address (same as Create).
+	if ethAddr := acc.EthAddress(); ethAddr != nil {
+		nw.EthAddress = ethAddr.Hex()
+	}
+
 	if w.All == nil {
 		w.All = make(map[string]*Account)
 	}
@@ -252,6 +265,7 @@ type Account struct {
 	Description string `mapstructure:"description"`
 	Kind        string `mapstructure:"kind"`
 	Address     string `mapstructure:"address"`
+	EthAddress  string `mapstructure:"eth_address,omitempty"`
 
 	// Config contains kind-specific configuration for this wallet.
 	Config map[string]interface{} `mapstructure:",remain"`
@@ -270,6 +284,20 @@ func (a *Account) Validate() error {
 		return fmt.Errorf("malformed address '%s': %w", a.Address, err)
 	}
 
+	// Check that Ethereum address is valid and matches native address, if set.
+	if a.EthAddress != "" {
+		nativeAddr, ethAddr, err := helpers.ResolveEthOrOasisAddress(a.EthAddress)
+		if err != nil {
+			return fmt.Errorf("malformed eth address '%s': %w", a.EthAddress, err)
+		}
+		if nativeAddr == nil || ethAddr == nil {
+			return fmt.Errorf("eth address '%s' was not recognized as valid eth address", a.EthAddress)
+		}
+		if nativeAddr.String() != a.Address {
+			return fmt.Errorf("eth address '%s' (converted to '%s') mismatches stored address '%s'", a.EthAddress, nativeAddr.String(), a.Address)
+		}
+	}
+
 	// Check the algorithm is not empty.
 	if _, ok := a.Config["algorithm"]; !ok {
 		return fmt.Errorf("algorithm field not defined")
@@ -285,6 +313,19 @@ func (a *Account) GetAddress() types.Address {
 		panic(err)
 	}
 	return address
+}
+
+// GetEthAddress returns the Ethereum address object, if set.
+func (a *Account) GetEthAddress() *ethCommon.Address {
+	if a.EthAddress == "" {
+		return nil
+	}
+
+	_, ethAddr, err := helpers.ResolveEthOrOasisAddress(a.EthAddress)
+	if err != nil {
+		return nil
+	}
+	return ethAddr
 }
 
 // SetConfigFromFlags populates the kind-specific configuration from CLI flags.

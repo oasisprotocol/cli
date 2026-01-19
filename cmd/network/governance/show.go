@@ -276,7 +276,7 @@ var (
 			fmt.Printf("Network:         %s\n", npa.PrettyPrintNetwork())
 			fmt.Printf("Proposal ID:     %d\n", proposalID)
 			fmt.Printf("Status:          %s\n", proposal.State)
-			fmt.Printf("Submitted By:    %s\n", proposal.Submitter)
+			fmt.Printf("Submitted By:    %s\n", common.PrettyAddress(proposal.Submitter.String()))
 			fmt.Printf("Created At:      epoch %d\n", proposal.CreatedAt)
 
 			switch proposal.State {
@@ -391,24 +391,26 @@ var (
 				fmt.Println("=== VALIDATORS VOTED ===")
 				votersList := entitiesByDescendingStake(validatorVoters)
 				for i, val := range votersList {
+					valAddr := common.PrettyAddress(val.Address.String())
 					name := getName(val.Address)
 					stakePercentage := new(big.Float).SetInt(val.Stake.Clone().ToBigInt())
 					stakePercentage = stakePercentage.Mul(stakePercentage, new(big.Float).SetInt64(100))
 					stakePercentage = stakePercentage.Quo(stakePercentage, new(big.Float).SetInt(totalVotingStake.ToBigInt()))
 
 					if hasCorrectVotingPower {
-						fmt.Printf("  %d. %s,%s,%s (%.2f%%): %s\n", i+1, val.Address, name, val.Stake, stakePercentage, validatorVotes[val.Address])
+						fmt.Printf("  %d. %s,%s,%s (%.2f%%): %s\n", i+1, valAddr, name, val.Stake, stakePercentage, validatorVotes[val.Address])
 					} else {
-						fmt.Printf("  %d. %s,%s: %s\n", i+1, val.Address, name, validatorVotes[val.Address])
+						fmt.Printf("  %d. %s,%s: %s\n", i+1, valAddr, name, validatorVotes[val.Address])
 					}
 
 					// Display delegators that voted differently.
 					for voter, override := range validatorVoteOverrides[val.Address] {
+						voterAddr := common.PrettyAddress(voter.String())
 						voterName := getName(voter)
 						if hasCorrectVotingPower {
-							fmt.Printf("    - %s,%s,%s (%.2f%%) -> %s\n", voter, voterName, override.shares, override.sharePercent, override.vote)
+							fmt.Printf("    - %s,%s,%s (%.2f%%) -> %s\n", voterAddr, voterName, override.shares, override.sharePercent, override.vote)
 						} else {
-							fmt.Printf("    - %s,%s -> %s\n", voter, voterName, override.vote)
+							fmt.Printf("    - %s,%s -> %s\n", voterAddr, voterName, override.vote)
 						}
 					}
 				}
@@ -418,16 +420,18 @@ var (
 					fmt.Println("=== VALIDATORS NOT VOTED ===")
 					nonVotersList := entitiesByDescendingStake(validatorNonVoters)
 					for i, val := range nonVotersList {
+						valAddr := common.PrettyAddress(val.Address.String())
 						name := getName(val.Address)
 						stakePercentage := new(big.Float).SetInt(val.Stake.Clone().ToBigInt())
 						stakePercentage = stakePercentage.Mul(stakePercentage, new(big.Float).SetInt64(100))
 						stakePercentage = stakePercentage.Quo(stakePercentage, new(big.Float).SetInt(totalVotingStake.ToBigInt()))
-						fmt.Printf("  %d. %s,%s,%s (%.2f%%)", i+1, val.Address, name, val.Stake, stakePercentage)
+						fmt.Printf("  %d. %s,%s,%s (%.2f%%)", i+1, valAddr, name, val.Stake, stakePercentage)
 						fmt.Println()
 						// Display delegators that voted differently.
 						for voter, override := range validatorVoteOverrides[val.Address] {
+							voterAddr := common.PrettyAddress(voter.String())
 							voterName := getName(voter)
-							fmt.Printf("    - %s,%s,%s (%.2f%%) -> %s", voter, voterName, override.shares, override.sharePercent, override.vote)
+							fmt.Printf("    - %s,%s,%s (%.2f%%) -> %s", voterAddr, voterName, override.shares, override.sharePercent, override.vote)
 							fmt.Println()
 						}
 					}

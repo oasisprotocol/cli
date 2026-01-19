@@ -188,7 +188,7 @@ func SignConsensusTransaction(
 		return tx, nil
 	}
 
-	PrintTransactionBeforeSigning(npa, tx)
+	PrintTransactionBeforeSigning(npa, tx, nil)
 
 	// Sign the transaction.
 	// NOTE: We build our own domain separation context here as we need to support multiple chain
@@ -345,7 +345,7 @@ func SignParaTimeTransaction(
 		return tx, meta, nil
 	}
 
-	PrintTransactionBeforeSigning(npa, tx)
+	PrintTransactionBeforeSigning(npa, tx, txDetails)
 
 	// Sign the transaction.
 	ts := tx.PrepareForSigning()
@@ -363,9 +363,14 @@ func SignParaTimeTransaction(
 
 // PrintTransactionRaw prints the transaction which can be either signed or unsigned.
 func PrintTransactionRaw(npa *NPASelection, tx interface{}) {
+	PrintTransactionRawWithTxDetails(npa, tx, nil)
+}
+
+// PrintTransactionRawWithTxDetails is like PrintTransactionRaw but passes txDetails to the pretty-printer.
+func PrintTransactionRawWithTxDetails(npa *NPASelection, tx interface{}, txDetails *signature.TxDetails) {
 	switch tx.(type) {
 	case consensusPretty.PrettyPrinter:
-		fmt.Print(PrettyPrint(npa, "", tx))
+		fmt.Print(PrettyPrintWithTxDetails(npa, "", tx, txDetails))
 	default:
 		fmt.Printf("[unsupported transaction type: %T]\n", tx)
 	}
@@ -374,7 +379,12 @@ func PrintTransactionRaw(npa *NPASelection, tx interface{}) {
 // PrintTransaction prints the transaction which can be either signed or unsigned together with
 // information about the selected network/ParaTime.
 func PrintTransaction(npa *NPASelection, tx interface{}) {
-	PrintTransactionRaw(npa, tx)
+	PrintTransactionWithTxDetails(npa, tx, nil)
+}
+
+// PrintTransactionWithTxDetails is like PrintTransaction but passes txDetails to the pretty-printer.
+func PrintTransactionWithTxDetails(npa *NPASelection, tx interface{}, txDetails *signature.TxDetails) {
+	PrintTransactionRawWithTxDetails(npa, tx, txDetails)
 
 	fmt.Println()
 	fmt.Printf("Network:  %s", npa.PrettyPrintNetwork())
@@ -392,10 +402,10 @@ func PrintTransaction(npa *NPASelection, tx interface{}) {
 }
 
 // PrintTransactionBeforeSigning prints the transaction and asks the user for confirmation.
-func PrintTransactionBeforeSigning(npa *NPASelection, tx interface{}) {
+func PrintTransactionBeforeSigning(npa *NPASelection, tx interface{}, txDetails *signature.TxDetails) {
 	fmt.Printf("You are about to sign the following transaction:\n")
 
-	PrintTransaction(npa, tx)
+	PrintTransactionWithTxDetails(npa, tx, txDetails)
 
 	fmt.Printf("Account:  %s", npa.AccountName)
 	if len(npa.Account.Description) > 0 {

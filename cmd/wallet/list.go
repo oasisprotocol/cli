@@ -25,10 +25,15 @@ var listCmd = &cobra.Command{
 			if cfg.Wallet.Default == name {
 				name += common.DefaultMarker
 			}
+
+			addrStr := acc.Address
+			if ethAddr := acc.GetEthAddress(); ethAddr != nil {
+				addrStr = ethAddr.Hex()
+			}
 			output = append(output, []string{
 				name,
 				acc.PrettyKind(),
-				acc.Address,
+				addrStr,
 			})
 		}
 

@@ -512,7 +512,7 @@ var (
 			case nil:
 				fmt.Printf("none\n")
 			default:
-				fmt.Printf("%s\n", *appCfg.Admin)
+				fmt.Printf("%s\n", common.PrettyAddress(appCfg.Admin.String()))
 			}
 			stakedAmnt := helpers.FormatParaTimeDenomination(npa.ParaTime, appCfg.Stake)
 			fmt.Printf("Staked amount: %s\n", stakedAmnt)

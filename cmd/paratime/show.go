@@ -201,7 +201,11 @@ var (
 							fmt.Printf("Chain ID:  %s\n", ethTx.ChainId())
 							fmt.Printf("Nonce:     %d\n", ethTx.Nonce())
 							fmt.Printf("Type:      %d\n", ethTx.Type())
-							fmt.Printf("To:        %s\n", ethTx.To())
+							toStr := "<contract creation>"
+							if to := ethTx.To(); to != nil {
+								toStr = common.PrettyAddress(to.Hex())
+							}
+							fmt.Printf("To:        %s\n", toStr)
 							fmt.Printf("Value:     %s\n", ethTx.Value())
 							fmt.Printf("Gas limit: %d\n", ethTx.Gas())
 							fmt.Printf("Gas price: %s\n", ethTx.GasPrice())

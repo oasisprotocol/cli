@@ -2,7 +2,7 @@ You are about to sign the following transaction:
 Format: plain
 Method: accounts.Transfer
 Body:
-  To: test:dave (oasis1qrk58a6j2qn065m6p06jgjyt032f7qucy5wqeqpt)
+  To: test:dave (0xDce075E1C39b1ae0b75D554558b6451A226ffe00)
   Amount: 1.5 TEST
 Authorized signer(s):
   1. A1ik9X/7X/eGSoSYOKSIJqM7pZ5It/gHbF+wraxi33u3 (secp256k1eth)

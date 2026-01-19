@@ -61,7 +61,7 @@ var (
 
 			fmt.Printf("ID:              %d\n", inst.ID)
 			fmt.Printf("Code ID:         %d\n", inst.CodeID)
-			fmt.Printf("Creator:         %s\n", inst.Creator)
+			fmt.Printf("Creator:         %s\n", common.PrettyAddress(inst.Creator.String()))
 			fmt.Printf("Upgrades policy: %s\n", formatPolicy(&inst.UpgradesPolicy))
 		},
 	}
@@ -90,7 +90,7 @@ var (
 			fmt.Printf("ID:                 %d\n", code.ID)
 			fmt.Printf("Hash:               %s\n", code.Hash)
 			fmt.Printf("ABI:                %s (sv: %d)\n", code.ABI, code.ABISubVersion)
-			fmt.Printf("Uploader:           %s\n", code.Uploader)
+			fmt.Printf("Uploader:           %s\n", common.PrettyAddress(code.Uploader.String()))
 			fmt.Printf("Instantiate policy: %s\n", formatPolicy(&code.InstantiatePolicy))
 		},
 	}

@@ -83,9 +83,20 @@ var (
 
 			nativeAddr, ethAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, targetAddress)
 			cobra.CheckErr(err)
-			out.EthereumAddress = ethAddr
 			out.NativeAddress = nativeAddr
-			out.Name = common.FindAccountName(nativeAddr.String())
+			addrCtx := common.GenAddressFormatContext()
+			out.Name = addrCtx.Names[nativeAddr.String()]
+
+			// If eth address is not available, try to get it from locally-known mappings
+			// (wallet/addressbook/test accounts). No unlock required.
+			if ethAddr == nil {
+				if ethHex := addrCtx.Eth[nativeAddr.String()]; ethHex != "" && ethCommon.IsHexAddress(ethHex) {
+					eth := ethCommon.HexToAddress(ethHex)
+					ethAddr = &eth
+				}
+			}
+
+			out.EthereumAddress = ethAddr
 
 			height, err := common.GetActualHeight(
 				ctx,

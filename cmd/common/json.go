@@ -172,7 +172,11 @@ func PrettyPrint(npa *NPASelection, prefix string, blob interface{}) string {
 			ctx = context.WithValue(ctx, config.ContextKeyParaTimeCfg, npa.ParaTime)
 		}
 		ctx = context.WithValue(ctx, signature.ContextKeySigContext, &sigCtx)
-		ctx = context.WithValue(ctx, types.ContextKeyAccountNames, GenAccountNames())
+
+		// Provide network-aware names and native->ETH mapping for address formatting.
+		addrCtx := GenAddressFormatContextForNetwork(npa.Network)
+		ctx = context.WithValue(ctx, types.ContextKeyAccountNames, addrCtx.Names)
+		ctx = context.WithValue(ctx, types.ContextKeyAccountEthMap, addrCtx.Eth)
 
 		// Set up chain context for signature verification during pretty-printing.
 		coreSignature.UnsafeResetChainContext()

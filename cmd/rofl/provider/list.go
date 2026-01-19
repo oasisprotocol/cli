@@ -101,6 +101,9 @@ func outputText(ctx context.Context, npa *common.NPASelection, conn connection.C
 	table := table.New()
 	table.Header("Provider Address", "Scheduler App", "Nodes", "Offers", "Instances")
 
+	// Precompute address formatting context for efficiency (network-aware for paratime/ROFL names).
+	addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+
 	rows := make([][]string, 0, len(providers))
 	for _, provider := range providers {
 		// Format node count.
@@ -112,7 +115,7 @@ func outputText(ctx context.Context, npa *common.NPASelection, conn connection.C
 		}
 
 		rows = append(rows, []string{
-			provider.Address.String(),
+			common.PrettyAddressWith(addrCtx, provider.Address.String()),
 			provider.SchedulerApp.String(),
 			nodesList,
 			fmt.Sprintf("%d", provider.OffersCount),
@@ -127,20 +130,22 @@ func outputText(ctx context.Context, npa *common.NPASelection, conn connection.C
 	if roflCommon.ShowOffers {
 		fmt.Println()
 		for _, provider := range providers {
-			showProviderOffersExpanded(ctx, npa, conn, provider)
+			showProviderOffersExpanded(ctx, npa, conn, provider, addrCtx)
 		}
 	}
 }
 
 // showProviderOffersExpanded returns all offers for a given provider with expanded display.
-func showProviderOffersExpanded(ctx context.Context, npa *common.NPASelection, conn connection.Connection, provider *roflmarket.Provider) {
+func showProviderOffersExpanded(ctx context.Context, npa *common.NPASelection, conn connection.Connection, provider *roflmarket.Provider, addrCtx common.AddressFormatContext) {
 	offers, err := conn.Runtime(npa.ParaTime).ROFLMarket.Offers(ctx, client.RoundLatest, provider.Address)
 	if err != nil {
 		cobra.CheckErr(fmt.Errorf("failed to query offers for provider %s: %w", provider.Address, err))
 	}
 
+	prettyAddr := common.PrettyAddressWith(addrCtx, provider.Address.String())
+
 	if len(offers) == 0 {
-		fmt.Printf("Provider %s: No offers\n", provider.Address)
+		fmt.Printf("Provider %s: No offers\n", prettyAddr)
 		return
 	}
 
@@ -154,7 +159,7 @@ func showProviderOffersExpanded(ctx context.Context, npa *common.NPASelection, c
 		return false
 	})
 
-	fmt.Printf("Provider %s (%d offers):\n", provider.Address, len(offers))
+	fmt.Printf("Provider %s (%d offers):\n", prettyAddr, len(offers))
 	for _, offer := range offers {
 		ShowOfferSummary(npa, offer)
 	}

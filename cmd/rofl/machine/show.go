@@ -60,6 +60,8 @@ var showCmd = &cobra.Command{
 			cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
 		}
 
+		addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+
 		insDsc, err := conn.Runtime(npa.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *providerAddr, machineID)
 		if err != nil {
 			// The "instance not found" error originates from Rust code, so we can't compare it nicely here.
@@ -103,7 +105,7 @@ var showCmd = &cobra.Command{
 		expired := !time.Now().Before(paidUntil)
 
 		fmt.Printf("Name:       %s\n", machineName)
-		fmt.Printf("Provider:   %s\n", insDsc.Provider)
+		fmt.Printf("Provider:   %s\n", common.PrettyAddressWith(addrCtx, insDsc.Provider.String()))
 		fmt.Printf("ID:         %s\n", insDsc.ID)
 		fmt.Printf("Offer:      %s\n", insDsc.Offer)
 		fmt.Printf("Status:     %s", insDsc.Status)
@@ -111,8 +113,8 @@ var showCmd = &cobra.Command{
 			fmt.Printf(" (EXPIRED)")
 		}
 		fmt.Println()
-		fmt.Printf("Creator:    %s\n", insDsc.Creator)
-		fmt.Printf("Admin:      %s\n", insDsc.Admin)
+		fmt.Printf("Creator:    %s\n", common.PrettyAddressWith(addrCtx, insDsc.Creator.String()))
+		fmt.Printf("Admin:      %s\n", common.PrettyAddressWith(addrCtx, insDsc.Admin.String()))
 		switch insDsc.NodeID {
 		case nil:
 			fmt.Printf("Node ID:    <none>\n")

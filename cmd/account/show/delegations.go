@@ -16,6 +16,8 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/consensusaccounts"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
+
+	"github.com/oasisprotocol/cli/cmd/common"
 )
 
 const amountFieldName = "Amount:"
@@ -87,6 +89,12 @@ func prettyPrintDelegationDescriptions(
 
 	fmt.Fprintf(w, "%sDelegations:\n", prefix)
 
+	// Guard against empty slice to prevent panic when accessing delDescriptions[0].
+	if len(delDescriptions) == 0 {
+		fmt.Fprintf(w, "%s  <none>\n", prefix)
+		return
+	}
+
 	sort.Sort(byEndTimeAmountAddress(delDescriptions))
 
 	// Get the length of name of the longest field to display for each
@@ -102,8 +110,12 @@ func prettyPrintDelegationDescriptions(
 		lenLongest = lenLongestString(addressFieldName, amountFieldName, endTimeFieldName)
 	}
 
+	// Precompute address formatting context for efficiency (network-aware for paratime names).
+	addrCtx := common.GenAddressFormatContextForNetwork(network)
+
 	for _, desc := range delDescriptions {
-		fmt.Fprintf(w, "%s  - %-*s %s", prefix, lenLongest, addressFieldName, desc.address)
+		prettyAddr := common.PrettyAddressWith(addrCtx, desc.address.String())
+		fmt.Fprintf(w, "%s  - %-*s %s", prefix, lenLongest, addressFieldName, prettyAddr)
 		if desc.self {
 			fmt.Fprintf(w, " (self)")
 		}

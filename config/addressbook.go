@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
-	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
@@ -155,7 +154,9 @@ func (a *AddressBookEntry) GetAddress() types.Address {
 func (a *AddressBookEntry) GetEthAddress() *ethCommon.Address {
 	if a.EthAddress != "" {
 		_, ethAddr, err := helpers.ResolveEthOrOasisAddress(a.EthAddress)
-		cobra.CheckErr(err)
+		if err != nil {
+			return nil
+		}
 
 		return ethAddr
 	}

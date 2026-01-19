@@ -13,6 +13,7 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+	"golang.org/x/term"
 
 	consensus "github.com/oasisprotocol/oasis-core/go/consensus/api"
 	roothash "github.com/oasisprotocol/oasis-core/go/roothash/api"
@@ -64,13 +65,19 @@ var (
 			// Determine which address to show. If an explicit argument was given, use that
 			// otherwise use the default account.
 			var targetAddress string
+			var walletNameForEth string
 			switch {
 			case len(args) >= 1:
 				// Explicit argument given.
 				targetAddress = args[0]
+				if _, ok := cfg.Wallet.All[targetAddress]; ok {
+					// Wallet account selected by name.
+					walletNameForEth = targetAddress
+				}
 			case npa.Account != nil:
 				// Default account is selected.
 				targetAddress = npa.Account.Address
+				walletNameForEth = npa.AccountName
 			default:
 				// No address given and no wallet configured.
 				cobra.CheckErr("no address given and no wallet configured")
@@ -83,9 +90,33 @@ var (
 
 			nativeAddr, ethAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, targetAddress)
 			cobra.CheckErr(err)
-			out.EthereumAddress = ethAddr
 			out.NativeAddress = nativeAddr
-			out.Name = common.FindAccountName(nativeAddr.String())
+			out.Name = common.FindAccountNameForNetwork(npa.Network, nativeAddr.String())
+
+			// If eth address is not available, try to get it from wallet config (no unlock required).
+			if ethAddr == nil {
+				for _, walletCfg := range cfg.Wallet.All {
+					if walletCfg.Address == nativeAddr.String() {
+						ethAddr = walletCfg.GetEthAddress()
+						break
+					}
+				}
+			}
+
+			// If eth address is still not available and the user selected a wallet account,
+			// load it (may require passphrase) to derive and persist eth_address metadata.
+			if ethAddr == nil && walletNameForEth != "" {
+				if walletCfg, ok := cfg.Wallet.All[walletNameForEth]; ok && walletCfg.SupportsEthAddress() {
+					// Avoid prompting in non-interactive contexts (e.g. piping output).
+					if term.IsTerminal(int(os.Stdin.Fd())) && term.IsTerminal(int(os.Stdout.Fd())) {
+						acc := common.LoadAccount(cfg, walletNameForEth)
+						ethAddr = acc.EthAddress()
+					}
+				}
+			}
+
+			// Ensure output reflects the final resolved/derived Ethereum address (if any).
+			out.EthereumAddress = ethAddr
 
 			height, err := common.GetActualHeight(
 				ctx,

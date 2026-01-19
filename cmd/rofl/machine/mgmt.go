@@ -74,10 +74,11 @@ var (
 			machine, machineName, machineID := resolveMachine(args, deployment)
 
 			// Resolve provider address.
-			providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
+			providerAddr, providerEthAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
 			if err != nil {
 				cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
 			}
+			addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
 
 			// When not in offline mode, connect to the given network endpoint.
 			ctx := context.Background()
@@ -87,7 +88,7 @@ var (
 				cobra.CheckErr(err)
 			}
 
-			fmt.Printf("Using provider:     %s (%s)\n", machine.Provider, providerAddr)
+			fmt.Printf("Using provider:     %s\n", common.PrettyResolvedAddressWith(addrCtx, providerAddr, providerEthAddr))
 			fmt.Printf("Canceling machine:  %s [%s]\n", machineName, machine.ID)
 			common.Warn("WARNING: Canceling a machine will permanently destroy it including any persistent storage!")
 			roflCommon.PrintRentRefundWarning()
@@ -144,13 +145,14 @@ var (
 			machine, machineName, machineID := resolveMachine(args, deployment)
 
 			// Resolve provider address.
-			providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
+			providerAddr, providerEthAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
 			if err != nil {
 				cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
 			}
+			addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
 
 			// Resolve new admin address.
-			newAdminAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, newAdminAddress)
+			newAdminAddr, newAdminEthAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, newAdminAddress)
 			if err != nil {
 				cobra.CheckErr(fmt.Sprintf("Invalid admin address: %s", err))
 			}
@@ -163,7 +165,7 @@ var (
 				cobra.CheckErr(err)
 			}
 
-			fmt.Printf("Provider:  %s (%s)\n", machine.Provider, providerAddr)
+			fmt.Printf("Provider:  %s\n", common.PrettyResolvedAddressWith(addrCtx, providerAddr, providerEthAddr))
 			fmt.Printf("Machine:   %s [%s]\n", machineName, machine.ID)
 
 			// Resolve old admin in online mode.
@@ -171,10 +173,10 @@ var (
 				insDsc, err := conn.Runtime(npa.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *providerAddr, machineID)
 				cobra.CheckErr(err)
 
-				fmt.Printf("Old admin: %s\n", insDsc.Admin)
+				fmt.Printf("Old admin: %s\n", common.PrettyAddressWith(addrCtx, insDsc.Admin.String()))
 			}
 
-			fmt.Printf("New admin: %s\n", newAdminAddr)
+			fmt.Printf("New admin: %s\n", common.PrettyResolvedAddressWith(addrCtx, newAdminAddr, newAdminEthAddr))
 
 			// Prepare transaction.
 			tx := roflmarket.NewInstanceChangeAdmin(nil, &roflmarket.InstanceChangeAdmin{
@@ -216,10 +218,11 @@ var (
 			machine, machineName, machineID := resolveMachine(args, deployment)
 
 			// Resolve provider address.
-			providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
+			providerAddr, providerEthAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
 			if err != nil {
 				cobra.CheckErr(fmt.Sprintf("invalid provider address: %s", err))
 			}
+			addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
 
 			// Parse machine payment term.
 			if roflCommon.Term == "" {
@@ -254,7 +257,7 @@ var (
 				}
 			}
 
-			fmt.Printf("Using provider:     %s (%s)\n", machine.Provider, providerAddr)
+			fmt.Printf("Using provider:     %s\n", common.PrettyResolvedAddressWith(addrCtx, providerAddr, providerEthAddr))
 			fmt.Printf("Top-up machine:     %s [%s]\n", machineName, machine.ID)
 			if txCfg.Offline {
 				fmt.Printf("Top-up term:        %d x %s\n", roflCommon.TermCount, roflCommon.Term)
@@ -343,10 +346,11 @@ func queueCommand(cliArgs []string, method string, args any, msgAfter string) {
 	machine, machineName, machineID := resolveMachine(cliArgs, deployment)
 
 	// Resolve provider address.
-	providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
+	providerAddr, providerEthAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
 	if err != nil {
 		cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
 	}
+	addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
 
 	// When not in offline mode, connect to the given network endpoint.
 	ctx := context.Background()
@@ -356,7 +360,7 @@ func queueCommand(cliArgs []string, method string, args any, msgAfter string) {
 		cobra.CheckErr(err)
 	}
 
-	fmt.Printf("Using provider: %s (%s)\n", machine.Provider, providerAddr)
+	fmt.Printf("Using provider: %s\n", common.PrettyResolvedAddressWith(addrCtx, providerAddr, providerEthAddr))
 	fmt.Printf("Machine:        %s [%s]\n", machineName, machine.ID)
 	fmt.Printf("Command:        %s\n", method)
 	fmt.Printf("Args:\n")

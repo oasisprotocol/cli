@@ -20,12 +20,15 @@ var createCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
 		cfg := config.Global()
-		name := "account-1"
-		if len(args) > 0 {
-			name = args[0]
-		}
 
-		checkAccountExists(cfg, name)
+		var name string
+		switch len(args) {
+		case 0:
+			name = generateAccountName(cfg)
+		default:
+			name = args[0]
+			checkAccountExists(cfg, name)
+		}
 
 		af, err := wallet.Load(accKind)
 		cobra.CheckErr(err)
@@ -48,6 +51,19 @@ var createCmd = &cobra.Command{
 		err = cfg.Save()
 		cobra.CheckErr(err)
 	},
+}
+
+func generateAccountName(cfg *config.Config) string {
+	for i := 1; ; i++ {
+		name := fmt.Sprintf("account_%d", i)
+		if _, ok := cfg.Wallet.All[name]; ok {
+			continue
+		}
+		if _, ok := cfg.AddressBook.All[name]; ok {
+			continue
+		}
+		return name
+	}
 }
 
 func checkAccountExists(cfg *config.Config, name string) {

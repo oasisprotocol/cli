@@ -80,7 +80,7 @@ and other validator information corresponding to:
 
 - a given address,
 - the name of the [address book entry] or
-- the name of one of the accounts in your wallet.
+- the name of one of the accounts in your [wallet].
 
 The address is looked up both on the consensus layer and the ParaTime, if
 selected.
@@ -197,6 +197,7 @@ For more details on registering entities, nodes and ParaTimes, see the
 [Oasis Core Registry service][oasis-core-registry].
 
 [address book entry]: ./addressbook.md
+[wallet]: ./wallet.md
 [show-native-token]: ./network#show-native-token
 
 :::info

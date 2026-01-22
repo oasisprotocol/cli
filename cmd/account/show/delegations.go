@@ -11,8 +11,6 @@ import (
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
 	"github.com/spf13/cobra"
 
-	"github.com/oasisprotocol/cli/cmd/common"
-
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
@@ -259,7 +257,7 @@ func prettyPrintParaTimeDelegations(
 	ctx context.Context,
 	c connection.Connection,
 	height int64,
-	npa *common.NPASelection,
+	network *config.Network,
 	addr *types.Address,
 	rtDelegations []*consensusaccounts.ExtendedDelegationInfo,
 	rtUndelegations []*consensusaccounts.UndelegationInfo,
@@ -316,21 +314,21 @@ func prettyPrintParaTimeDelegations(
 
 	if len(delegations) > 0 {
 		fmt.Fprintf(w, "%sActive Delegations from this Account:\n", prefix)
-		fmt.Fprintf(w, "%sTotal: %s\n", innerPrefix, helpers.FormatConsensusDenomination(npa.Network, totalDeg))
+		fmt.Fprintf(w, "%sTotal: %s\n", innerPrefix, helpers.FormatConsensusDenomination(network, totalDeg))
 		fmt.Fprintln(w)
 
 		sort.Sort(byEndTimeAmountAddress(delegations))
-		prettyPrintDelegationDescriptions(npa.Network, delegations, "To:", innerPrefix, w)
+		prettyPrintDelegationDescriptions(network, delegations, "To:", innerPrefix, w)
 		fmt.Fprintln(w)
 	}
 
 	if len(undelegations) > 0 {
 		fmt.Fprintf(w, "%sDebonding Delegations from this Account:\n", prefix)
-		fmt.Fprintf(w, "%sTotal: %s\n", innerPrefix, helpers.FormatConsensusDenomination(npa.Network, totalUndeg))
+		fmt.Fprintf(w, "%sTotal: %s\n", innerPrefix, helpers.FormatConsensusDenomination(network, totalUndeg))
 		fmt.Fprintln(w)
 
 		sort.Sort(byEndTimeAmountAddress(undelegations))
-		prettyPrintDelegationDescriptions(npa.Network, undelegations, "To:", innerPrefix, w)
+		prettyPrintDelegationDescriptions(network, undelegations, "To:", innerPrefix, w)
 		fmt.Fprintln(w)
 	}
 }

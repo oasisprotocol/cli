@@ -3,6 +3,7 @@ package machine
 import (
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"net"
 	"strings"
@@ -63,9 +64,20 @@ var showCmd = &cobra.Command{
 		if err != nil {
 			// The "instance not found" error originates from Rust code, so we can't compare it nicely here.
 			if strings.Contains(err.Error(), "instance not found") {
-				cobra.CheckErr("Machine instance not found.\nTip: This often happens when instances expire. Run `oasis rofl deploy --replace-machine` to rent a new one.")
+				switch common.OutputFormat() {
+				case common.FormatJSON:
+					fmt.Printf("{ \"error\": \"%s\" }\n", err)
+				case common.FormatText:
+					cobra.CheckErr("Machine instance not found.\nTip: This often happens when instances expire. Run `oasis rofl deploy --replace-machine` to rent a new one.")
+				}
 			}
 			cobra.CheckErr(err)
+		}
+		if common.OutputFormat() == common.FormatJSON {
+			data, err := json.MarshalIndent(insDsc, "", "  ")
+			cobra.CheckErr(err)
+			fmt.Printf("%s\n", data)
+			return
 		}
 
 		insCmds, err := conn.Runtime(npa.ParaTime).ROFLMarket.InstanceCommands(ctx, client.RoundLatest, *providerAddr, machineID)
@@ -236,5 +248,6 @@ func showMachinePorts(extraCfg *roflCmdBuild.AppExtraConfig, appID rofl.AppID, i
 
 func init() {
 	common.AddSelectorFlags(showCmd)
+	showCmd.Flags().AddFlagSet(common.FormatFlag)
 	showCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 }

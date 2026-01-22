@@ -22,6 +22,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
 
 	"github.com/oasisprotocol/cli/build/env"
+	"github.com/oasisprotocol/cli/cmd/common"
 )
 
 const artifactCacheDir = "build_cache"
@@ -29,8 +30,10 @@ const artifactCacheDir = "build_cache"
 // maybeDownloadArtifact downloads the given artifact and optionally verifies its integrity against
 // the hash provided in the URI fragment.
 func maybeDownloadArtifact(kind, uri string) string {
-	fmt.Printf("Downloading %s artifact...\n", kind)
-	fmt.Printf("  URI: %s\n", uri)
+	if common.OutputFormat() != common.FormatJSON {
+		fmt.Printf("Downloading %s artifact...\n", kind)
+		fmt.Printf("  URI: %s\n", uri)
+	}
 
 	url, err := url.Parse(uri)
 	if err != nil {
@@ -49,7 +52,7 @@ func maybeDownloadArtifact(kind, uri string) string {
 	if url.Fragment != "" {
 		knownHash = url.Fragment
 	}
-	if knownHash != "" {
+	if knownHash != "" && common.OutputFormat() != common.FormatJSON {
 		fmt.Printf("  Hash: %s\n", knownHash)
 	}
 
@@ -77,7 +80,9 @@ func maybeDownloadArtifact(kind, uri string) string {
 		}
 		f.Close()
 
-		fmt.Printf("  (using cached artifact)\n")
+		if common.OutputFormat() != common.FormatJSON {
+			fmt.Printf("  (using cached artifact)\n")
+		}
 	case errors.Is(err, os.ErrNotExist):
 		// Does not exist in cache, download.
 		f, err = os.Create(cacheFn)

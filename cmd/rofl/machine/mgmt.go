@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -20,13 +21,14 @@ import (
 	buildRoflProvider "github.com/oasisprotocol/cli/build/rofl/provider"
 	"github.com/oasisprotocol/cli/build/rofl/scheduler"
 	"github.com/oasisprotocol/cli/cmd/common"
+	roflCmdBuild "github.com/oasisprotocol/cli/cmd/rofl/build"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
 var (
 	restartCmd = &cobra.Command{
-		Use:   "restart [<machine-name>]",
+		Use:   "restart [<machine-name> | <provider-address>:<machine-id>]",
 		Short: "Restart a running machine or start a stopped one",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
@@ -42,7 +44,7 @@ var (
 	}
 
 	stopCmd = &cobra.Command{
-		Use:     "stop [<machine-name>]",
+		Use:     "stop [<machine-name> | <provider-address>:<machine-id>]",
 		Short:   "Stop a machine",
 		Aliases: []string{"terminate"},
 		Args:    cobra.MaximumNArgs(1),
@@ -59,116 +61,99 @@ var (
 	}
 
 	removeCmd = &cobra.Command{
-		Use:     "remove [<machine-name>]",
+		Use:     "remove [<machine-name> | <provider-address>:<machine-id>]",
 		Short:   "Cancel rental and remove the machine",
 		Aliases: []string{"cancel", "rm"},
 		Args:    cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
-			txCfg := common.GetTransactionConfig()
-
-			manifest, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
+			mCfg, err := resolveMachineCfg(args, &roflCommon.ManifestOptions{
 				NeedAppID: true,
 				NeedAdmin: false,
 			})
-
-			machine, machineName, machineID := resolveMachine(args, deployment)
-
-			// Resolve provider address.
-			providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
-			if err != nil {
-				cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
-			}
+			cobra.CheckErr(err)
 
 			// When not in offline mode, connect to the given network endpoint.
 			ctx := context.Background()
 			var conn connection.Connection
-			if !txCfg.Offline {
-				conn, err = connection.Connect(ctx, npa.Network)
+			if !common.GetTransactionConfig().Offline {
+				conn, err = connection.Connect(ctx, mCfg.NPA.Network)
 				cobra.CheckErr(err)
 			}
 
-			fmt.Printf("Using provider:     %s (%s)\n", machine.Provider, providerAddr)
-			fmt.Printf("Canceling machine:  %s [%s]\n", machineName, machine.ID)
+			fmt.Printf("Using provider:     %s (%s)\n", mCfg.Machine.Provider, mCfg.ProviderAddr)
+			fmt.Printf("Canceling machine:  %s [%s]\n", mCfg.MachineName, mCfg.Machine.ID)
 			common.Warn("WARNING: Canceling a machine will permanently destroy it including any persistent storage!")
 			roflCommon.PrintRentRefundWarning()
 
 			// Prepare transaction.
 			tx := roflmarket.NewInstanceCancelTx(nil, &roflmarket.InstanceCancel{
-				Provider: *providerAddr,
-				ID:       machineID,
+				Provider: *mCfg.ProviderAddr,
+				ID:       mCfg.MachineID,
 			})
 
-			acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
-			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
+			acc := common.LoadAccount(cliConfig.Global(), mCfg.NPA.AccountName)
+			sigTx, meta, err := common.SignParaTimeTransaction(ctx, mCfg.NPA, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
-			if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil) {
+			if !common.BroadcastOrExportTransaction(ctx, mCfg.NPA, conn, sigTx, meta, nil) {
 				return
 			}
 
 			fmt.Printf("Machine removed.\n")
 
 			// Update manifest to clear the machine ID as it has been cancelled.
-			machine.ID = ""
+			mCfg.Machine.ID = ""
 
-			if err = manifest.Save(); err != nil {
-				cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
+			if mCfg.Manifest != nil {
+				if err = mCfg.Manifest.Save(); err != nil {
+					cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
+				}
 			}
 		},
 	}
 
 	changeAdminCmd = &cobra.Command{
-		Use:   "change-admin [<machine-name>] <new-admin>",
+		Use:   "change-admin [<machine-name> | <provider-address>:<machine-id>] <new-admin>",
 		Short: "Change the machine administrator",
 		Args:  cobra.RangeArgs(1, 2),
 		Run: func(_ *cobra.Command, args []string) {
 			txCfg := common.GetTransactionConfig()
-
-			_, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
+			mCfg, err := resolveMachineCfg(args, &roflCommon.ManifestOptions{
 				NeedAppID: true,
 				NeedAdmin: false,
 			})
+			cobra.CheckErr(err)
 
 			var newAdminAddress string
 			switch len(args) {
 			case 1:
 				// Just admin address.
 				newAdminAddress = args[0]
-				args = nil
 			case 2:
 				// Machine and admin address.
 				newAdminAddress = args[1]
-				args = args[:1]
-			}
-
-			machine, machineName, machineID := resolveMachine(args, deployment)
-
-			// Resolve provider address.
-			providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
-			if err != nil {
-				cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
 			}
 
 			// Resolve new admin address.
-			newAdminAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, newAdminAddress)
+			newAdminAddr, _, err := common.ResolveLocalAccountOrAddress(mCfg.NPA.Network, newAdminAddress)
 			if err != nil {
-				cobra.CheckErr(fmt.Sprintf("Invalid admin address: %s", err))
+				cobra.CheckErr(fmt.Errorf("invalid admin address: %w", err))
 			}
 
 			// When not in offline mode, connect to the given network endpoint.
 			ctx := context.Background()
 			var conn connection.Connection
 			if !txCfg.Offline {
-				conn, err = connection.Connect(ctx, npa.Network)
+				conn, err = connection.Connect(ctx, mCfg.NPA.Network)
 				cobra.CheckErr(err)
 			}
 
-			fmt.Printf("Provider:  %s (%s)\n", machine.Provider, providerAddr)
-			fmt.Printf("Machine:   %s [%s]\n", machineName, machine.ID)
+			fmt.Printf("Provider:  %s (%s)\n", mCfg.Machine.Provider, mCfg.ProviderAddr)
+			fmt.Printf("Machine:   %s [%s]\n", mCfg.MachineName, mCfg.Machine.ID)
 
 			// Resolve old admin in online mode.
 			if !txCfg.Offline {
-				insDsc, err := conn.Runtime(npa.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *providerAddr, machineID)
+				insDsc, err := conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *mCfg.ProviderAddr, mCfg.MachineID)
 				cobra.CheckErr(err)
 
 				fmt.Printf("Old admin: %s\n", insDsc.Admin)
@@ -178,16 +163,16 @@ var (
 
 			// Prepare transaction.
 			tx := roflmarket.NewInstanceChangeAdmin(nil, &roflmarket.InstanceChangeAdmin{
-				Provider: *providerAddr,
-				ID:       machineID,
+				Provider: *mCfg.ProviderAddr,
+				ID:       mCfg.MachineID,
 				Admin:    *newAdminAddr,
 			})
 
-			acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
-			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
+			acc := common.LoadAccount(cliConfig.Global(), mCfg.NPA.AccountName)
+			sigTx, meta, err := common.SignParaTimeTransaction(ctx, mCfg.NPA, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
-			if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil) {
+			if !common.BroadcastOrExportTransaction(ctx, mCfg.NPA, conn, sigTx, meta, nil) {
 				return
 			}
 
@@ -196,29 +181,22 @@ var (
 	}
 
 	topUpCmd = &cobra.Command{
-		Use:   "top-up [<machine-name>]",
+		Use:   "top-up [<machine-name> | <provider-address>:<machine-id>]",
 		Short: "Top-up payment for a machine",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
 			txCfg := common.GetTransactionConfig()
 
-			_, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
+			mCfg, err := resolveMachineCfg(args, &roflCommon.ManifestOptions{
 				NeedAppID: true,
 				NeedAdmin: false,
 			})
+			cobra.CheckErr(err)
 			ctx := context.Background()
 
 			// This is required for the price pretty printer to work...
-			if npa.ParaTime != nil {
-				ctx = context.WithValue(ctx, config.ContextKeyParaTimeCfg, npa.ParaTime)
-			}
-
-			machine, machineName, machineID := resolveMachine(args, deployment)
-
-			// Resolve provider address.
-			providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
-			if err != nil {
-				cobra.CheckErr(fmt.Sprintf("invalid provider address: %s", err))
+			if mCfg.NPA.ParaTime != nil {
+				ctx = context.WithValue(ctx, config.ContextKeyParaTimeCfg, mCfg.NPA.ParaTime)
 			}
 
 			// Parse machine payment term.
@@ -234,28 +212,40 @@ var (
 			var conn connection.Connection
 			var offer *roflmarket.Offer
 			if !txCfg.Offline {
-				conn, err = connection.Connect(ctx, npa.Network)
+				conn, err = connection.Connect(ctx, mCfg.NPA.Network)
 				cobra.CheckErr(err)
 
 				// Fetch chosen offer, so we can calculate price.
-				offers, err := conn.Runtime(npa.ParaTime).ROFLMarket.Offers(ctx, client.RoundLatest, *providerAddr)
+				offers, err := conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.Offers(ctx, client.RoundLatest, *mCfg.ProviderAddr)
 				if err != nil {
-					cobra.CheckErr(fmt.Errorf("failed to query provider: %s", err))
+					cobra.CheckErr(fmt.Errorf("failed to query provider: %w", err))
 				}
 
 				for _, of := range offers {
-					if of.Metadata[buildRoflProvider.SchedulerMetadataOfferKey] == machine.Offer {
+					if of.Metadata[buildRoflProvider.SchedulerMetadataOfferKey] == mCfg.Machine.Offer {
 						offer = of
 						break
 					}
 				}
 				if offer == nil {
-					cobra.CheckErr(fmt.Errorf("unable to find existing machine offer (%s) among market offers", machine.Offer))
+					machineDsc, err := conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *mCfg.ProviderAddr, mCfg.MachineID)
+					if err != nil {
+						cobra.CheckErr(fmt.Errorf("failed to query machine: %w", err))
+					}
+					for _, of := range offers {
+						if of.ID == machineDsc.Offer {
+							offer = of
+							break
+						}
+					}
+				}
+				if offer == nil {
+					cobra.CheckErr(fmt.Errorf("unable to find existing machine offer (%s) among market offers", mCfg.Machine.Offer))
 				}
 			}
 
-			fmt.Printf("Using provider:     %s (%s)\n", machine.Provider, providerAddr)
-			fmt.Printf("Top-up machine:     %s [%s]\n", machineName, machine.ID)
+			fmt.Printf("Using provider:     %s (%s)\n", mCfg.Machine.Provider, mCfg.ProviderAddr)
+			fmt.Printf("Top-up machine:     %s [%s]\n", mCfg.MachineName, mCfg.Machine.ID)
 			if txCfg.Offline {
 				fmt.Printf("Top-up term:        %d x %s\n", roflCommon.TermCount, roflCommon.Term)
 			} else {
@@ -276,17 +266,17 @@ var (
 
 			// Prepare transaction.
 			tx := roflmarket.NewInstanceTopUpTx(nil, &roflmarket.InstanceTopUp{
-				Provider:  *providerAddr,
-				ID:        machineID,
+				Provider:  *mCfg.ProviderAddr,
+				ID:        mCfg.MachineID,
 				Term:      term,
 				TermCount: roflCommon.TermCount,
 			})
 
-			acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
-			sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
+			acc := common.LoadAccount(cliConfig.Global(), mCfg.NPA.AccountName)
+			sigTx, meta, err := common.SignParaTimeTransaction(ctx, mCfg.NPA, acc, conn, tx, nil)
 			cobra.CheckErr(err)
 
-			if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil) {
+			if !common.BroadcastOrExportTransaction(ctx, mCfg.NPA, conn, sigTx, meta, nil) {
 				return
 			}
 
@@ -295,7 +285,76 @@ var (
 	}
 )
 
-func resolveMachine(args []string, deployment *buildRofl.Deployment) (*buildRofl.Machine, string, roflmarket.InstanceID) {
+// machineCfg contains all resolved machine configuration and related metadata.
+type machineCfg struct {
+	Machine      *buildRofl.Machine
+	MachineName  string
+	MachineID    roflmarket.InstanceID
+	Manifest     *buildRofl.Manifest
+	ExtraCfg     *roflCmdBuild.AppExtraConfig
+	ProviderAddr *types.Address
+	NPA          *common.NPASelection
+}
+
+// resolveMachineCfg resolves machine configuration from command-line arguments or manifest file.
+// If args contains a provider:machine-id pair, it constructs the configuration from that.
+// Otherwise, it loads the manifest file and resolves the machine from the deployment section.
+// The function also resolves the provider address and validates the configuration.
+func resolveMachineCfg(args []string, manifestOpts *roflCommon.ManifestOptions) (*machineCfg, error) {
+	mCfg, err := resolveMachineCfgFromArgs(args)
+	if err != nil {
+		return nil, err
+	}
+
+	if mCfg != nil {
+		mCfg.NPA = common.GetNPASelection(cliConfig.Global())
+	} else {
+		var deployment *buildRofl.Deployment
+		mCfg = &machineCfg{}
+		mCfg.Manifest, deployment, mCfg.NPA = roflCommon.LoadManifestAndSetNPA(manifestOpts)
+		mCfg.Machine, mCfg.MachineName, mCfg.MachineID = resolveMachineFromManifest(args, deployment)
+
+		var appID rofl.AppID
+		if err = appID.UnmarshalText([]byte(deployment.AppID)); err != nil {
+			return nil, fmt.Errorf("malformed app id: %w", err)
+		}
+
+		if mCfg.ExtraCfg, err = roflCmdBuild.ValidateApp(mCfg.Manifest, roflCmdBuild.ValidationOpts{
+			Offline: true,
+		}); err != nil {
+			return nil, fmt.Errorf("failed to validate app: %w", err)
+		}
+	}
+
+	if mCfg.ProviderAddr, _, err = common.ResolveLocalAccountOrAddress(mCfg.NPA.Network, mCfg.Machine.Provider); err != nil {
+		return nil, fmt.Errorf("invalid provider address: %w", err)
+	}
+
+	return mCfg, nil
+}
+
+func resolveMachineCfgFromArgs(args []string) (*machineCfg, error) {
+	mCfg := &machineCfg{}
+	if len(args) == 0 {
+		return nil, nil
+	}
+	parts := strings.Split(args[0], ":")
+	if len(parts) != 2 {
+		return nil, nil
+	}
+
+	mCfg.MachineName = args[0]
+	mCfg.Machine = &buildRofl.Machine{
+		Provider: parts[0],
+		ID:       parts[1],
+	}
+	if err := mCfg.MachineID.UnmarshalText([]byte(mCfg.Machine.ID)); err != nil {
+		return nil, fmt.Errorf("malformed machine ID: %w", err)
+	}
+	return mCfg, nil
+}
+
+func resolveMachineFromManifest(args []string, deployment *buildRofl.Deployment) (*buildRofl.Machine, string, roflmarket.InstanceID) {
 	machineName := buildRofl.DefaultMachineName
 	if len(args) > 0 {
 		machineName = args[0]
@@ -333,50 +392,41 @@ func resolveMachine(args []string, deployment *buildRofl.Deployment) (*buildRofl
 }
 
 func queueCommand(cliArgs []string, method string, args any, msgAfter string) {
-	txCfg := common.GetTransactionConfig()
-
-	_, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
+	mCfg, err := resolveMachineCfg(cliArgs, &roflCommon.ManifestOptions{
 		NeedAppID: true,
 		NeedAdmin: false,
 	})
-
-	machine, machineName, machineID := resolveMachine(cliArgs, deployment)
-
-	// Resolve provider address.
-	providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
-	if err != nil {
-		cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
-	}
+	cobra.CheckErr(err)
 
 	// When not in offline mode, connect to the given network endpoint.
 	ctx := context.Background()
 	var conn connection.Connection
-	if !txCfg.Offline {
-		conn, err = connection.Connect(ctx, npa.Network)
+	if !common.GetTransactionConfig().Offline {
+		conn, err = connection.Connect(ctx, mCfg.NPA.Network)
 		cobra.CheckErr(err)
 	}
 
-	fmt.Printf("Using provider: %s (%s)\n", machine.Provider, providerAddr)
-	fmt.Printf("Machine:        %s [%s]\n", machineName, machine.ID)
+	fmt.Printf("Using provider: %s (%s)\n", mCfg.Machine.Provider, mCfg.ProviderAddr)
+	fmt.Printf("Machine:        %s [%s]\n", mCfg.MachineName, mCfg.Machine.ID)
 	fmt.Printf("Command:        %s\n", method)
 	fmt.Printf("Args:\n")
-	fmt.Println(common.PrettyPrint(npa, "  ", args))
+	fmt.Println(common.PrettyPrint(mCfg.NPA, "  ", args))
 
 	// Prepare transaction.
 	tx := roflmarket.NewInstanceExecuteCmdsTx(nil, &roflmarket.InstanceExecuteCmds{
-		Provider: *providerAddr,
-		ID:       machineID,
+		Provider: *mCfg.ProviderAddr,
+		ID:       mCfg.MachineID,
 		Cmds: [][]byte{cbor.Marshal(scheduler.Command{
 			Method: method,
 			Args:   cbor.Marshal(args),
 		})},
 	})
 
-	acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
-	sigTx, meta, err := common.SignParaTimeTransaction(ctx, npa, acc, conn, tx, nil)
+	acc := common.LoadAccount(cliConfig.Global(), mCfg.NPA.AccountName)
+	sigTx, meta, err := common.SignParaTimeTransaction(ctx, mCfg.NPA, acc, conn, tx, nil)
 	cobra.CheckErr(err)
 
-	if !common.BroadcastOrExportTransaction(ctx, npa, conn, sigTx, meta, nil) {
+	if !common.BroadcastOrExportTransaction(ctx, mCfg.NPA, conn, sigTx, meta, nil) {
 		return
 	}
 

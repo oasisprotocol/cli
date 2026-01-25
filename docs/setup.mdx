@@ -10,7 +10,8 @@ import TabItem from '@theme/TabItem';
 ## Download and Run
 
 The Oasis team provides CLI binaries for Linux,
-macOS and Windows operating systems.
+macOS and Windows operating systems, as well as
+a GitHub Action for CI/CD installs.
 If you want to run it on another platform,
 you can [build the CLI from source][cli-source].
 
@@ -140,6 +141,42 @@ follow the instructions for **your platform** below:
        oasis --version
        ```
   </TabItem>
+
+  <TabItem value="gh-action" label="GitHub Action">
+    To setup Oasis CLI for GitHub CI/CD workflows, we recommend using
+    our [setup-cli-action](https://github.com/oasisprotocol/setup-cli-action)
+    GitHub Action.
+
+    #### Setup
+
+    Simply add a Setup Oasis CLI step to your workflow:
+
+    ```yaml
+    steps:
+    - name: Setup Oasis CLI
+      uses: oasisprotocol/setup-cli-action
+    ```
+
+    #### Verify
+
+    ```yaml
+    - name: Check Oasis CLI version
+      run: oasis --version
+    ```
+
+    #### Configuration
+
+    Optionally you can use the version parameter to install a different version of the CLI.
+
+    ```yaml
+    steps:
+    - name: Setup Oasis CLI
+      uses: oasisprotocol/setup-cli-action
+      with:
+        version: '0.14.3'
+    ```
+  </TabItem>
+
 </Tabs>
 
 ## Update

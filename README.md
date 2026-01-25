@@ -17,6 +17,11 @@ This is the official command-line interface (CLI) for interacting with the
 [Oasis Runtime SDK]:
   https://github.com/oasisprotocol/oasis-sdk/tree/main/runtime-sdk
 
+## Installation
+
+For multiple Oasis CLI installation methods, please
+refer to the [Setup Guide](docs/setup.mdx).
+
 ## Building
 
 To build the CLI, run the following:

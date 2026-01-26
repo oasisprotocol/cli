@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -20,13 +21,14 @@ import (
 	buildRoflProvider "github.com/oasisprotocol/cli/build/rofl/provider"
 	"github.com/oasisprotocol/cli/build/rofl/scheduler"
 	"github.com/oasisprotocol/cli/cmd/common"
+	roflCmdBuild "github.com/oasisprotocol/cli/cmd/rofl/build"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
 var (
 	restartCmd = &cobra.Command{
-		Use:   "restart [<machine-name>]",
+		Use:   "restart [<machine-name> | <provider-address>:<machine-id>]",
 		Short: "Restart a running machine or start a stopped one",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
@@ -42,7 +44,7 @@ var (
 	}
 
 	stopCmd = &cobra.Command{
-		Use:     "stop [<machine-name>]",
+		Use:     "stop [<machine-name> | <provider-address>:<machine-id>]",
 		Short:   "Stop a machine",
 		Aliases: []string{"terminate"},
 		Args:    cobra.MaximumNArgs(1),
@@ -59,30 +61,21 @@ var (
 	}
 
 	removeCmd = &cobra.Command{
-		Use:     "remove [<machine-name>]",
+		Use:     "remove [<machine-name> | <provider-address>:<machine-id>]",
 		Short:   "Cancel rental and remove the machine",
 		Aliases: []string{"cancel", "rm"},
 		Args:    cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
-			txCfg := common.GetTransactionConfig()
-
-			manifest, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
+			machine, machineName, machineID, manifest, _, providerAddr, npa := resolveMachineManifestNpa(args, &roflCommon.ManifestOptions{
 				NeedAppID: true,
 				NeedAdmin: false,
 			})
 
-			machine, machineName, machineID := resolveMachine(args, deployment)
-
-			// Resolve provider address.
-			providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
-			if err != nil {
-				cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
-			}
-
 			// When not in offline mode, connect to the given network endpoint.
 			ctx := context.Background()
+			var err error
 			var conn connection.Connection
-			if !txCfg.Offline {
+			if !common.GetTransactionConfig().Offline {
 				conn, err = connection.Connect(ctx, npa.Network)
 				cobra.CheckErr(err)
 			}
@@ -111,20 +104,21 @@ var (
 			// Update manifest to clear the machine ID as it has been cancelled.
 			machine.ID = ""
 
-			if err = manifest.Save(); err != nil {
-				cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
+			if manifest != nil {
+				if err = manifest.Save(); err != nil {
+					cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
+				}
 			}
 		},
 	}
 
 	changeAdminCmd = &cobra.Command{
-		Use:   "change-admin [<machine-name>] <new-admin>",
+		Use:   "change-admin [<machine-name> | <provider-address>:<machine-id>] <new-admin>",
 		Short: "Change the machine administrator",
 		Args:  cobra.RangeArgs(1, 2),
 		Run: func(_ *cobra.Command, args []string) {
 			txCfg := common.GetTransactionConfig()
-
-			_, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
+			machine, machineName, machineID, _, _, providerAddr, npa := resolveMachineManifestNpa(args, &roflCommon.ManifestOptions{
 				NeedAppID: true,
 				NeedAdmin: false,
 			})
@@ -134,25 +128,15 @@ var (
 			case 1:
 				// Just admin address.
 				newAdminAddress = args[0]
-				args = nil
 			case 2:
 				// Machine and admin address.
 				newAdminAddress = args[1]
-				args = args[:1]
-			}
-
-			machine, machineName, machineID := resolveMachine(args, deployment)
-
-			// Resolve provider address.
-			providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
-			if err != nil {
-				cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
 			}
 
 			// Resolve new admin address.
 			newAdminAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, newAdminAddress)
 			if err != nil {
-				cobra.CheckErr(fmt.Sprintf("Invalid admin address: %s", err))
+				cobra.CheckErr(fmt.Errorf("invalid admin address: %w", err))
 			}
 
 			// When not in offline mode, connect to the given network endpoint.
@@ -196,13 +180,13 @@ var (
 	}
 
 	topUpCmd = &cobra.Command{
-		Use:   "top-up [<machine-name>]",
+		Use:   "top-up [<machine-name> | <provider-address>:<machine-id>]",
 		Short: "Top-up payment for a machine",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
 			txCfg := common.GetTransactionConfig()
 
-			_, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
+			machine, machineName, machineID, _, _, providerAddr, npa := resolveMachineManifestNpa(args, &roflCommon.ManifestOptions{
 				NeedAppID: true,
 				NeedAdmin: false,
 			})
@@ -211,14 +195,6 @@ var (
 			// This is required for the price pretty printer to work...
 			if npa.ParaTime != nil {
 				ctx = context.WithValue(ctx, config.ContextKeyParaTimeCfg, npa.ParaTime)
-			}
-
-			machine, machineName, machineID := resolveMachine(args, deployment)
-
-			// Resolve provider address.
-			providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
-			if err != nil {
-				cobra.CheckErr(fmt.Sprintf("invalid provider address: %s", err))
 			}
 
 			// Parse machine payment term.
@@ -231,6 +207,7 @@ var (
 			}
 
 			// When not in offline mode, connect to the given network endpoint.
+			var err error
 			var conn connection.Connection
 			var offer *roflmarket.Offer
 			if !txCfg.Offline {
@@ -240,13 +217,25 @@ var (
 				// Fetch chosen offer, so we can calculate price.
 				offers, err := conn.Runtime(npa.ParaTime).ROFLMarket.Offers(ctx, client.RoundLatest, *providerAddr)
 				if err != nil {
-					cobra.CheckErr(fmt.Errorf("failed to query provider: %s", err))
+					cobra.CheckErr(fmt.Errorf("failed to query provider: %w", err))
 				}
 
 				for _, of := range offers {
 					if of.Metadata[buildRoflProvider.SchedulerMetadataOfferKey] == machine.Offer {
 						offer = of
 						break
+					}
+				}
+				if offer == nil {
+					machineDsc, err := conn.Runtime(npa.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *providerAddr, machineID)
+					if err != nil {
+						cobra.CheckErr(fmt.Errorf("failed to query machine: %w", err))
+					}
+					for _, of := range offers {
+						if of.ID == machineDsc.Offer {
+							offer = of
+							break
+						}
 					}
 				}
 				if offer == nil {
@@ -295,7 +284,56 @@ var (
 	}
 )
 
-func resolveMachine(args []string, deployment *buildRofl.Deployment) (*buildRofl.Machine, string, roflmarket.InstanceID) {
+func resolveMachineManifestNpa(args []string, manifestOpts *roflCommon.ManifestOptions) (machineCfg *buildRofl.Machine, machineName string, machineID roflmarket.InstanceID, manifest *buildRofl.Manifest, extraCfg *roflCmdBuild.AppExtraConfig, providerAddr *types.Address, npa *common.NPASelection) {
+	var err error
+	machineCfg, machineName, machineID = resolveMachineFromArgs(args)
+	if machineCfg != nil {
+		cfg := cliConfig.Global()
+		npa = common.GetNPASelection(cfg)
+	} else {
+		var deployment *buildRofl.Deployment
+		manifest, deployment, npa = roflCommon.LoadManifestAndSetNPA(manifestOpts)
+
+		machineCfg, machineName, machineID = resolveMachineFromManifest(args, deployment)
+
+		var appID rofl.AppID
+		if err = appID.UnmarshalText([]byte(deployment.AppID)); err != nil {
+			cobra.CheckErr(fmt.Errorf("malformed app id: %w", err))
+		}
+
+		if extraCfg, err = roflCmdBuild.ValidateApp(manifest, roflCmdBuild.ValidationOpts{
+			Offline: true,
+		}); err != nil {
+			cobra.CheckErr(fmt.Errorf("failed to validate app: %w", err))
+		}
+	}
+
+	if providerAddr, _, err = common.ResolveLocalAccountOrAddress(npa.Network, machineCfg.Provider); err != nil {
+		cobra.CheckErr(fmt.Errorf("invalid provider address: %w", err))
+	}
+
+	return machineCfg, machineName, machineID, manifest, extraCfg, providerAddr, npa
+}
+
+func resolveMachineFromArgs(args []string) (*buildRofl.Machine, string, roflmarket.InstanceID) {
+	if len(args) > 0 {
+		parts := strings.Split(args[0], ":")
+		if len(parts) == 2 {
+			m := &buildRofl.Machine{
+				Provider: parts[0],
+				ID:       parts[1],
+			}
+			var machineID roflmarket.InstanceID
+			if err := machineID.UnmarshalText([]byte(m.ID)); err != nil {
+				cobra.CheckErr(fmt.Errorf("malformed machine ID: %w", err))
+			}
+			return m, args[0], machineID
+		}
+	}
+	return nil, "", roflmarket.InstanceID{}
+}
+
+func resolveMachineFromManifest(args []string, deployment *buildRofl.Deployment) (*buildRofl.Machine, string, roflmarket.InstanceID) {
 	machineName := buildRofl.DefaultMachineName
 	if len(args) > 0 {
 		machineName = args[0]
@@ -333,25 +371,16 @@ func resolveMachine(args []string, deployment *buildRofl.Deployment) (*buildRofl
 }
 
 func queueCommand(cliArgs []string, method string, args any, msgAfter string) {
-	txCfg := common.GetTransactionConfig()
-
-	_, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
+	machine, machineName, machineID, _, _, providerAddr, npa := resolveMachineManifestNpa(cliArgs, &roflCommon.ManifestOptions{
 		NeedAppID: true,
 		NeedAdmin: false,
 	})
 
-	machine, machineName, machineID := resolveMachine(cliArgs, deployment)
-
-	// Resolve provider address.
-	providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
-	if err != nil {
-		cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
-	}
-
 	// When not in offline mode, connect to the given network endpoint.
 	ctx := context.Background()
+	var err error
 	var conn connection.Connection
-	if !txCfg.Offline {
+	if !common.GetTransactionConfig().Offline {
 		conn, err = connection.Connect(ctx, npa.Network)
 		cobra.CheckErr(err)
 	}

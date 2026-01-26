@@ -20,27 +20,19 @@ import (
 )
 
 var logsCmd = &cobra.Command{
-	Use:   "logs [<machine-name>]",
+	Use:   "logs [<machine-name> | <provider-address>:<machine-id>]",
 	Short: "Show logs from the given machine",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		_, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
+		_, _, machineID, _, _, providerAddr, npa := resolveMachineManifestNpa(args, &roflCommon.ManifestOptions{
 			NeedAppID: true,
 			NeedAdmin: false,
 		})
-
-		machine, _, machineID := resolveMachine(args, deployment)
 
 		// Establish connection with the target network.
 		ctx := context.Background()
 		conn, err := connection.Connect(ctx, npa.Network)
 		cobra.CheckErr(err)
-
-		// Resolve provider address.
-		providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
-		if err != nil {
-			cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
-		}
 
 		providerDsc, err := conn.Runtime(npa.ParaTime).ROFLMarket.Provider(ctx, client.RoundLatest, *providerAddr)
 		cobra.CheckErr(err)
@@ -54,7 +46,7 @@ var logsCmd = &cobra.Command{
 		}
 		var schedulerRAK ed25519.PublicKey
 		if err := schedulerRAK.UnmarshalText([]byte(schedulerRAKRaw)); err != nil {
-			cobra.CheckErr(fmt.Sprintf("Malformed scheduler RAK metadata: %s", err))
+			cobra.CheckErr(fmt.Errorf("malformed scheduler RAK metadata: %w", err))
 		}
 		pk := types.PublicKey{PublicKey: schedulerRAK}
 

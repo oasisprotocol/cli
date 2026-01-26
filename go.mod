@@ -11,7 +11,7 @@ require (
 	github.com/compose-spec/compose-go/v2 v2.8.2
 	github.com/ethereum/go-ethereum v1.16.7
 	github.com/foxboron/go-uefi v0.0.0-20241017190036-fab4fdf2f2f3
-	github.com/github/go-spdx/v2 v2.3.3
+	github.com/github/go-spdx/v2 v2.3.6
 	github.com/google/uuid v1.6.0
 	github.com/miguelmota/go-ethereum-hdwallet v0.1.3
 	github.com/mitchellh/mapstructure v1.5.0

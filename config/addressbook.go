@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
-	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
@@ -127,11 +126,11 @@ func (a *AddressBookEntry) Validate() error {
 	}
 
 	if a.EthAddress != "" {
-		nativeAddr, _, err := helpers.ResolveEthOrOasisAddress(a.EthAddress)
+		nativeAddr, ethAddr, err := helpers.ResolveEthOrOasisAddress(a.EthAddress)
 		if err != nil {
 			return fmt.Errorf("malformed address '%s': %w", a.EthAddress, err)
 		}
-		if nativeAddr == nil {
+		if nativeAddr == nil || ethAddr == nil {
 			return fmt.Errorf("eth address '%s' was not recognized as valid eth address", a.EthAddress)
 		}
 		if nativeAddr.String() != a.Address {
@@ -155,7 +154,9 @@ func (a *AddressBookEntry) GetAddress() types.Address {
 func (a *AddressBookEntry) GetEthAddress() *ethCommon.Address {
 	if a.EthAddress != "" {
 		_, ethAddr, err := helpers.ResolveEthOrOasisAddress(a.EthAddress)
-		cobra.CheckErr(err)
+		if err != nil {
+			return nil
+		}
 
 		return ethAddr
 	}

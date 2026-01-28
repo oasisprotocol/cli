@@ -27,6 +27,8 @@ var govListCmd = &cobra.Command{
 		conn, err := connection.Connect(ctx, npa.Network)
 		cobra.CheckErr(err)
 
+		addrCtx := common.GenAddressFormatContext()
+
 		table := table.New()
 		table.Header("ID", "Kind", "Submitter", "Created At", "Closes At", "State")
 
@@ -52,7 +54,7 @@ var govListCmd = &cobra.Command{
 			output = append(output, []string{
 				fmt.Sprintf("%d", proposal.ID),
 				kind,
-				proposal.Submitter.String(),
+				common.PrettyAddressWith(addrCtx, proposal.Submitter.String()),
 				fmt.Sprintf("%d", proposal.CreatedAt),
 				fmt.Sprintf("%d", proposal.ClosesAt),
 				proposal.State.String(),

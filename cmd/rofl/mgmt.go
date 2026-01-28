@@ -506,13 +506,15 @@ var (
 				return
 			}
 
+			addrCtx := common.GenAddressFormatContext()
+
 			fmt.Printf("App ID:        %s\n", appCfg.ID)
 			fmt.Printf("Admin:         ")
 			switch appCfg.Admin {
 			case nil:
 				fmt.Printf("none\n")
 			default:
-				fmt.Printf("%s\n", *appCfg.Admin)
+				fmt.Printf("%s\n", common.PrettyAddressWith(addrCtx, appCfg.Admin.String()))
 			}
 			stakedAmnt := helpers.FormatParaTimeDenomination(npa.ParaTime, appCfg.Stake)
 			fmt.Printf("Staked amount: %s\n", stakedAmnt)

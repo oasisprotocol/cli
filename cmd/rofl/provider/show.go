@@ -85,20 +85,24 @@ func outputProviderJSON(provider *roflmarket.Provider, offers []*roflmarket.Offe
 
 // outputProviderText outputs provider details in human-readable format.
 func outputProviderText(npa *common.NPASelection, provider *roflmarket.Provider, offers []*roflmarket.Offer) {
-	fmt.Printf("Provider: %s\n", provider.Address)
+	// Precompute address formatting context for efficiency.
+	addrCtx := common.GenAddressFormatContext()
+
+	fmt.Printf("Provider: %s\n", common.PrettyAddressWith(addrCtx, provider.Address.String()))
 	fmt.Println()
 
 	// Basic information.
 	fmt.Println("=== Basic Information ===")
 	fmt.Printf("Scheduler App:    %s\n", provider.SchedulerApp)
 
-	// Payment address.
+	// Payment address with pretty formatting.
 	var paymentAddr string
 	switch {
 	case provider.PaymentAddress.Native != nil:
-		paymentAddr = provider.PaymentAddress.Native.String()
+		paymentAddr = common.PrettyAddressWith(addrCtx, provider.PaymentAddress.Native.String())
 	case provider.PaymentAddress.Eth != nil:
-		paymentAddr = fmt.Sprintf("0x%x", provider.PaymentAddress.Eth[:])
+		ethAddr := fmt.Sprintf("0x%x", provider.PaymentAddress.Eth[:])
+		paymentAddr = common.PrettyAddressWith(addrCtx, ethAddr)
 	default:
 		paymentAddr = "<none>"
 	}

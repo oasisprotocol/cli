@@ -85,8 +85,8 @@ func outputProviderJSON(provider *roflmarket.Provider, offers []*roflmarket.Offe
 
 // outputProviderText outputs provider details in human-readable format.
 func outputProviderText(npa *common.NPASelection, provider *roflmarket.Provider, offers []*roflmarket.Offer) {
-	// Precompute address formatting context for efficiency (network-aware for paratime/ROFL names).
-	addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+	// Precompute address formatting context for efficiency.
+	addrCtx := common.GenAddressFormatContext()
 
 	fmt.Printf("Provider: %s\n", common.PrettyAddressWith(addrCtx, provider.Address.String()))
 	fmt.Println()

@@ -506,7 +506,7 @@ var (
 				return
 			}
 
-			addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+			addrCtx := common.GenAddressFormatContext()
 
 			fmt.Printf("App ID:        %s\n", appCfg.ID)
 			fmt.Printf("Admin:         ")

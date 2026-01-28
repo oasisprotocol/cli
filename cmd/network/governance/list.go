@@ -27,7 +27,7 @@ var govListCmd = &cobra.Command{
 		conn, err := connection.Connect(ctx, npa.Network)
 		cobra.CheckErr(err)
 
-		addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+		addrCtx := common.GenAddressFormatContext()
 
 		table := table.New()
 		table.Header("ID", "Kind", "Submitter", "Created At", "Closes At", "State")

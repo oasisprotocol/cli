@@ -80,8 +80,8 @@ func outputAppsText(network *config.Network, apps []*rofl.AppConfig) {
 	tbl := table.New()
 	tbl.Header("App ID", "Name", "Version", "Admin")
 
-	// Precompute address formatting context for efficiency (network-aware for paratime/ROFL names).
-	addrCtx := common.GenAddressFormatContextForNetwork(network)
+	// Precompute address formatting context for efficiency.
+	addrCtx := common.GenAddressFormatContext()
 
 	rows := make([][]string, 0, len(apps))
 	for _, app := range apps {

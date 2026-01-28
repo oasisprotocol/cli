@@ -173,8 +173,8 @@ func PrettyPrint(npa *NPASelection, prefix string, blob interface{}) string {
 		}
 		ctx = context.WithValue(ctx, signature.ContextKeySigContext, &sigCtx)
 
-		// Provide network-aware names and native->ETH mapping for address formatting.
-		addrCtx := GenAddressFormatContextForNetwork(npa.Network)
+		// Provide locally-known names and native->ETH mapping for address formatting.
+		addrCtx := GenAddressFormatContext()
 		ctx = context.WithValue(ctx, types.ContextKeyAccountNames, addrCtx.Names)
 		ctx = context.WithValue(ctx, types.ContextKeyAccountEthMap, addrCtx.Eth)
 

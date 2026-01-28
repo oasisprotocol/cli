@@ -60,7 +60,7 @@ var showCmd = &cobra.Command{
 			cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
 		}
 
-		addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+		addrCtx := common.GenAddressFormatContext()
 
 		insDsc, err := conn.Runtime(npa.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *providerAddr, machineID)
 		if err != nil {

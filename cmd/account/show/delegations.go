@@ -110,8 +110,8 @@ func prettyPrintDelegationDescriptions(
 		lenLongest = lenLongestString(addressFieldName, amountFieldName, endTimeFieldName)
 	}
 
-	// Precompute address formatting context for efficiency (network-aware for paratime names).
-	addrCtx := common.GenAddressFormatContextForNetwork(network)
+	// Precompute address formatting context for efficiency.
+	addrCtx := common.GenAddressFormatContext()
 
 	for _, desc := range delDescriptions {
 		prettyAddr := common.PrettyAddressWith(addrCtx, desc.address.String())

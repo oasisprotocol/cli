@@ -265,7 +265,7 @@ type Account struct {
 	Description string `mapstructure:"description"`
 	Kind        string `mapstructure:"kind"`
 	Address     string `mapstructure:"address"`
-	EthAddress  string `mapstructure:"eth_address"`
+	EthAddress  string `mapstructure:"eth_address,omitempty"`
 
 	// Config contains kind-specific configuration for this wallet.
 	Config map[string]interface{} `mapstructure:",remain"`

@@ -203,7 +203,7 @@ var (
 							fmt.Printf("Type:      %d\n", ethTx.Type())
 							toStr := "<contract creation>"
 							if to := ethTx.To(); to != nil {
-								addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+								addrCtx := common.GenAddressFormatContext()
 								toStr = common.PrettyAddressWith(addrCtx, to.Hex())
 							}
 							fmt.Printf("To:        %s\n", toStr)

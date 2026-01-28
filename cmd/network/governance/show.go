@@ -54,7 +54,7 @@ var (
 		Run: func(_ *cobra.Command, args []string) {
 			cfg := cliConfig.Global()
 			npa := common.GetNPASelection(cfg)
-			addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+			addrCtx := common.GenAddressFormatContext()
 
 			// Determine the proposal ID to query.
 			proposalID, err := strconv.ParseUint(args[0], 10, 64)

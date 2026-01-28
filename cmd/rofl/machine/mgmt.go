@@ -78,7 +78,7 @@ var (
 			if err != nil {
 				cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
 			}
-			addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+			addrCtx := common.GenAddressFormatContext()
 
 			// When not in offline mode, connect to the given network endpoint.
 			ctx := context.Background()
@@ -149,7 +149,7 @@ var (
 			if err != nil {
 				cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
 			}
-			addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+			addrCtx := common.GenAddressFormatContext()
 
 			// Resolve new admin address.
 			newAdminAddr, newAdminEthAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, newAdminAddress)
@@ -222,7 +222,7 @@ var (
 			if err != nil {
 				cobra.CheckErr(fmt.Sprintf("invalid provider address: %s", err))
 			}
-			addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+			addrCtx := common.GenAddressFormatContext()
 
 			// Parse machine payment term.
 			if roflCommon.Term == "" {
@@ -350,7 +350,7 @@ func queueCommand(cliArgs []string, method string, args any, msgAfter string) {
 	if err != nil {
 		cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
 	}
-	addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+	addrCtx := common.GenAddressFormatContext()
 
 	// When not in offline mode, connect to the given network endpoint.
 	ctx := context.Background()

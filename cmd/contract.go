@@ -59,7 +59,7 @@ var (
 			inst, err := conn.Runtime(npa.ParaTime).Contracts.Instance(ctx, client.RoundLatest, contracts.InstanceID(instanceID))
 			cobra.CheckErr(err)
 
-			addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+			addrCtx := common.GenAddressFormatContext()
 
 			fmt.Printf("ID:              %d\n", inst.ID)
 			fmt.Printf("Code ID:         %d\n", inst.CodeID)
@@ -89,7 +89,7 @@ var (
 			code, err := conn.Runtime(npa.ParaTime).Contracts.Code(ctx, client.RoundLatest, contracts.CodeID(codeID))
 			cobra.CheckErr(err)
 
-			addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+			addrCtx := common.GenAddressFormatContext()
 
 			fmt.Printf("ID:                 %d\n", code.ID)
 			fmt.Printf("Hash:               %s\n", code.Hash)

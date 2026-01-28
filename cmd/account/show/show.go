@@ -91,20 +91,23 @@ var (
 			nativeAddr, ethAddr, err := common.ResolveLocalAccountOrAddress(npa.Network, targetAddress)
 			cobra.CheckErr(err)
 			out.NativeAddress = nativeAddr
-			out.Name = common.FindAccountNameForNetwork(npa.Network, nativeAddr.String())
+			addrCtx := common.GenAddressFormatContext()
+			out.Name = addrCtx.Names[nativeAddr.String()]
 
-			// If eth address is not available, try to get it from wallet config (no unlock required).
+			// If eth address is not available, try to get it from locally-known mappings
+			// (wallet/addressbook/test accounts). No unlock required.
 			if ethAddr == nil {
-				for _, walletCfg := range cfg.Wallet.All {
-					if walletCfg.Address == nativeAddr.String() {
-						ethAddr = walletCfg.GetEthAddress()
-						break
-					}
+				if ethHex := addrCtx.Eth[nativeAddr.String()]; ethHex != "" && ethCommon.IsHexAddress(ethHex) {
+					eth := ethCommon.HexToAddress(ethHex)
+					ethAddr = &eth
 				}
 			}
 
 			// If eth address is still not available and the user selected a wallet account,
 			// load it (may require passphrase) to derive and persist eth_address metadata.
+			//
+			// NOTE: We only do this for an explicitly selected wallet account to avoid surprising
+			// interactive prompts when a user provides an arbitrary address.
 			if ethAddr == nil && walletNameForEth != "" {
 				if walletCfg, ok := cfg.Wallet.All[walletNameForEth]; ok && walletCfg.SupportsEthAddress() {
 					// Avoid prompting in non-interactive contexts (e.g. piping output).

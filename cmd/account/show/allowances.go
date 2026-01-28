@@ -62,8 +62,8 @@ func prettyPrintAllowanceDescriptions(
 	// element so we can align all values.
 	lenLongest := lenLongestString(beneficiaryFieldName, amountFieldName)
 
-	// Precompute address formatting context for efficiency (network-aware for paratime names).
-	addrCtx := common.GenAddressFormatContextForNetwork(network)
+	// Precompute address formatting context for efficiency.
+	addrCtx := common.GenAddressFormatContext()
 
 	for _, desc := range allowDescriptions {
 		prettyAddr := common.PrettyAddressWith(addrCtx, desc.beneficiary.String())

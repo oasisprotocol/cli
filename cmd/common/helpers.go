@@ -3,12 +3,12 @@ package common
 import (
 	"fmt"
 	"os"
+	"sort"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/cobra"
 
 	staking "github.com/oasisprotocol/oasis-core/go/staking/api"
-	configSdk "github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/testing"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
@@ -46,17 +46,12 @@ func CheckForceErr(err interface{}) {
 	cobra.CheckErr(errMsg)
 }
 
-// GenAccountNames generates a map of all addresses -> account name for pretty printing.
-// Priority order (later entries overwrite earlier): test accounts < addressbook < wallet.
-// This ensures wallet identity takes precedence over addressbook labels for the same address.
+// GenAccountNames generates a map of all known native addresses -> account name for pretty printing.
+// It includes test accounts, configured networks (paratimes/ROFL defaults), addressbook and wallet.
+//
+// Priority order (later entries overwrite earlier):
+// test accounts < network entries < addressbook < wallet.
 func GenAccountNames() types.AccountNames {
-	return GenAccountNamesForNetwork(nil)
-}
-
-// GenAccountNamesForNetwork generates a map of all addresses -> account name for pretty printing,
-// including network-specific entries (paratimes, ROFL providers) when a network is provided.
-// Priority order (later entries overwrite earlier): test accounts < network entries < addressbook < wallet.
-func GenAccountNamesForNetwork(net *configSdk.Network) types.AccountNames {
 	an := types.AccountNames{}
 
 	// Test accounts have lowest priority.
@@ -65,15 +60,34 @@ func GenAccountNamesForNetwork(net *configSdk.Network) types.AccountNames {
 	}
 
 	// Network-derived entries (paratimes, ROFL providers) have second-lowest priority.
-	if net != nil {
-		// Include ParaTime runtime addresses as paratime:<name>.
-		for ptName, pt := range net.ParaTimes.All {
-			rtAddr := types.NewAddressFromConsensus(staking.NewRuntimeAddress(pt.Namespace()))
-			an[rtAddr.String()] = fmt.Sprintf("paratime:%s", ptName)
+	cfg := config.Global()
+	netNames := make([]string, 0, len(cfg.Networks.All))
+	for name := range cfg.Networks.All {
+		netNames = append(netNames, name)
+	}
+	sort.Strings(netNames)
+	for _, netName := range netNames {
+		net := cfg.Networks.All[netName]
+		if net == nil {
+			continue
 		}
 
-		// Include ROFL default provider addresses as rofl:provider:<paratime>.
-		for ptName, pt := range net.ParaTimes.All {
+		// Include ParaTime runtime addresses as paratime:<name>.
+		ptNames := make([]string, 0, len(net.ParaTimes.All))
+		for ptName := range net.ParaTimes.All {
+			ptNames = append(ptNames, ptName)
+		}
+		sort.Strings(ptNames)
+		for _, ptName := range ptNames {
+			pt := net.ParaTimes.All[ptName]
+			if pt == nil {
+				continue
+			}
+
+			rtAddr := types.NewAddressFromConsensus(staking.NewRuntimeAddress(pt.Namespace()))
+			an[rtAddr.String()] = fmt.Sprintf("paratime:%s", ptName)
+
+			// Include ROFL default provider addresses as rofl:provider:<paratime>.
 			if svc, ok := buildRoflProvider.DefaultRoflServices[pt.ID]; ok {
 				if svc.Provider != "" {
 					if a, _, err := helpers.ResolveEthOrOasisAddress(svc.Provider); err == nil && a != nil {
@@ -85,12 +99,12 @@ func GenAccountNamesForNetwork(net *configSdk.Network) types.AccountNames {
 	}
 
 	// Addressbook entries have medium priority.
-	for name, acc := range config.Global().AddressBook.All {
+	for name, acc := range cfg.AddressBook.All {
 		an[acc.GetAddress().String()] = name
 	}
 
 	// Wallet entries have highest priority.
-	for name, acc := range config.Global().Wallet.All {
+	for name, acc := range cfg.Wallet.All {
 		an[acc.GetAddress().String()] = name
 	}
 
@@ -103,27 +117,17 @@ func FindAccountName(address string) string {
 	return an[address]
 }
 
-// FindAccountNameForNetwork finds account's name in the context of a specific network.
-func FindAccountNameForNetwork(net *configSdk.Network, address string) string {
-	an := GenAccountNamesForNetwork(net)
-	return an[address]
-}
-
 // AddressFormatContext contains precomputed maps for address formatting.
 type AddressFormatContext struct {
 	// Names maps native address string to account name.
 	Names types.AccountNames
-	// Eth maps native address string to Ethereum hex address string (if known).
+	// Eth maps native address string to Ethereum hex address string, if known.
+	// This is optional metadata coming from wallet/addressbook/test accounts (and never derived from chain state).
 	Eth map[string]string
 }
 
 // GenAccountEthMap generates a map of native address string -> eth hex address (if known).
 func GenAccountEthMap() map[string]string {
-	return GenAccountEthMapForNetwork(nil)
-}
-
-// GenAccountEthMapForNetwork generates a map of native address string -> eth hex address (if known).
-func GenAccountEthMapForNetwork(_ *configSdk.Network) map[string]string {
 	eth := make(map[string]string)
 
 	// From test accounts.
@@ -152,15 +156,9 @@ func GenAccountEthMapForNetwork(_ *configSdk.Network) map[string]string {
 
 // GenAddressFormatContext builds both name and eth address maps for formatting.
 func GenAddressFormatContext() AddressFormatContext {
-	return GenAddressFormatContextForNetwork(nil)
-}
-
-// GenAddressFormatContextForNetwork builds both name and eth address maps for formatting,
-// including network-specific entries when a network is provided.
-func GenAddressFormatContextForNetwork(net *configSdk.Network) AddressFormatContext {
 	return AddressFormatContext{
-		Names: GenAccountNamesForNetwork(net),
-		Eth:   GenAccountEthMapForNetwork(net),
+		Names: GenAccountNames(),
+		Eth:   GenAccountEthMap(),
 	}
 }
 
@@ -232,11 +230,4 @@ func PrettyResolvedAddressWith(ctx AddressFormatContext, nativeAddr *types.Addre
 // If the address is unknown, it returns the original address string unchanged.
 func PrettyAddress(addr string) string {
 	return PrettyAddressWith(GenAddressFormatContext(), addr)
-}
-
-// PrettyAddressForNetwork formats an address for display with network context.
-// This includes network-derived names like paratime addresses and ROFL providers.
-func PrettyAddressForNetwork(net *configSdk.Network, addr types.Address) string {
-	ctx := GenAddressFormatContextForNetwork(net)
-	return PrettyAddressWith(ctx, addr.String())
 }

@@ -127,7 +127,7 @@ var (
 				cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
 			}
 
-			addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+			addrCtx := common.GenAddressFormatContext()
 			fmt.Printf("Using provider: %s\n", common.PrettyResolvedAddressWith(addrCtx, providerAddr, providerEthAddr))
 
 			if roflCommon.ShowOffers {

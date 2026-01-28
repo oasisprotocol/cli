@@ -49,7 +49,7 @@ func prettyPrintEntityNodes(ctx context.Context, npa *common.NPASelection, staki
 		return err
 	}
 
-	addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+	addrCtx := common.GenAddressFormatContext()
 
 	fmt.Printf("=== ENTITY ===\n")
 

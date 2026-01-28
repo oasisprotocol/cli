@@ -101,8 +101,8 @@ func outputText(ctx context.Context, npa *common.NPASelection, conn connection.C
 	table := table.New()
 	table.Header("Provider Address", "Scheduler App", "Nodes", "Offers", "Instances")
 
-	// Precompute address formatting context for efficiency (network-aware for paratime/ROFL names).
-	addrCtx := common.GenAddressFormatContextForNetwork(npa.Network)
+	// Precompute address formatting context for efficiency.
+	addrCtx := common.GenAddressFormatContext()
 
 	rows := make([][]string, 0, len(providers))
 	for _, provider := range providers {

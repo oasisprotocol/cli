@@ -126,11 +126,11 @@ func (a *AddressBookEntry) Validate() error {
 	}
 
 	if a.EthAddress != "" {
-		nativeAddr, _, err := helpers.ResolveEthOrOasisAddress(a.EthAddress)
+		nativeAddr, ethAddr, err := helpers.ResolveEthOrOasisAddress(a.EthAddress)
 		if err != nil {
 			return fmt.Errorf("malformed address '%s': %w", a.EthAddress, err)
 		}
-		if nativeAddr == nil {
+		if nativeAddr == nil || ethAddr == nil {
 			return fmt.Errorf("eth address '%s' was not recognized as valid eth address", a.EthAddress)
 		}
 		if nativeAddr.String() != a.Address {

@@ -152,6 +152,12 @@ func JSONMarshalUniversalValue(v interface{}) []byte {
 // For types implementing consensusPretty.PrettyPrinter, it uses the custom pretty printer.
 // For other types, it does basic JSON indentation and cleanup of common delimiters.
 func PrettyPrint(npa *NPASelection, prefix string, blob interface{}) string {
+	return PrettyPrintWithTxDetails(npa, prefix, blob, nil)
+}
+
+// PrettyPrintWithTxDetails is like PrettyPrint but also includes transaction-specific details in the
+// signature context (if the blob is a transaction pretty-printer).
+func PrettyPrintWithTxDetails(npa *NPASelection, prefix string, blob interface{}, txDetails *signature.TxDetails) string {
 	ret := ""
 	switch rtx := blob.(type) {
 	case consensusPretty.PrettyPrinter:
@@ -164,6 +170,7 @@ func PrettyPrint(npa *NPASelection, prefix string, blob interface{}) string {
 			RuntimeID:    ns,
 			ChainContext: npa.Network.ChainContext,
 			Base:         types.SignatureContextBase,
+			TxDetails:    txDetails,
 		}
 		ctx := context.Background()
 		ctx = context.WithValue(ctx, consensusPretty.ContextKeyTokenSymbol, npa.Network.Denomination.Symbol)

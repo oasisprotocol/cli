@@ -25,42 +25,31 @@ import (
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
 )
 
+type machineShowOutput struct {
+	Machine         *roflmarket.Instance        `json:"machine,omitempty"`
+	MachineCommands []*roflmarket.QueuedCommand `json:"machine_commands,omitempty"`
+	Provider        *roflmarket.Provider        `json:"provider,omitempty"`
+	Replica         *rofl.Registration          `json:"replica,omitempty"`
+}
+
 var showCmd = &cobra.Command{
-	Use:   "show [<machine-name>]",
+	Use:   "show [<machine-name> | <provider-address>:<machine-id>]",
 	Short: "Show information about a machine",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		manifest, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
+		var out machineShowOutput
+		mCfg, err := resolveMachineCfg(args, &roflCommon.ManifestOptions{
 			NeedAppID: true,
 			NeedAdmin: false,
 		})
-
-		machine, machineName, machineID := resolveMachine(args, deployment)
-
-		var appID rofl.AppID
-		if err := appID.UnmarshalText([]byte(deployment.AppID)); err != nil {
-			cobra.CheckErr(fmt.Sprintf("malformed app id: %s", err))
-		}
-
-		extraCfg, err := roflCmdBuild.ValidateApp(manifest, roflCmdBuild.ValidationOpts{
-			Offline: true,
-		})
-		if err != nil {
-			cobra.CheckErr(fmt.Sprintf("failed to validate app: %s", err))
-		}
+		cobra.CheckErr(err)
 
 		// Establish connection with the target network.
 		ctx := context.Background()
-		conn, err := connection.Connect(ctx, npa.Network)
+		conn, err := connection.Connect(ctx, mCfg.NPA.Network)
 		cobra.CheckErr(err)
 
-		// Resolve provider address.
-		providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
-		if err != nil {
-			cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
-		}
-
-		insDsc, err := conn.Runtime(npa.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *providerAddr, machineID)
+		out.Machine, err = conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *mCfg.ProviderAddr, mCfg.MachineID)
 		if err != nil {
 			// The "instance not found" error originates from Rust code, so we can't compare it nicely here.
 			if strings.Contains(err.Error(), "instance not found") {
@@ -73,152 +62,156 @@ var showCmd = &cobra.Command{
 			}
 			cobra.CheckErr(err)
 		}
-		if common.OutputFormat() == common.FormatJSON {
-			data, err := json.MarshalIndent(insDsc, "", "  ")
-			cobra.CheckErr(err)
-			fmt.Printf("%s\n", data)
-			return
-		}
 
-		insCmds, err := conn.Runtime(npa.ParaTime).ROFLMarket.InstanceCommands(ctx, client.RoundLatest, *providerAddr, machineID)
+		out.MachineCommands, err = conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.InstanceCommands(ctx, client.RoundLatest, *mCfg.ProviderAddr, mCfg.MachineID)
 		cobra.CheckErr(err)
 
-		providerDsc, err := conn.Runtime(npa.ParaTime).ROFLMarket.Provider(ctx, client.RoundLatest, *providerAddr)
+		out.Provider, err = conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.Provider(ctx, client.RoundLatest, *mCfg.ProviderAddr)
 		cobra.CheckErr(err)
 
-		var schedulerDsc *rofl.Registration
-		switch schedulerRAKRaw, ok := insDsc.Metadata[scheduler.MetadataKeySchedulerRAK]; ok {
+		switch schedulerRAKRaw, ok := out.Machine.Metadata[scheduler.MetadataKeySchedulerRAK]; ok {
 		case true:
 			var schedulerRAK ed25519.PublicKey
 			if err := schedulerRAK.UnmarshalText([]byte(schedulerRAKRaw)); err != nil {
-				cobra.CheckErr(fmt.Sprintf("Malformed scheduler RAK metadata: %s", err))
+				cobra.CheckErr(fmt.Errorf("malformed scheduler RAK metadata: %w", err))
 			}
 			pk := types.PublicKey{PublicKey: schedulerRAK}
 
-			schedulerDsc, _ = conn.Runtime(npa.ParaTime).ROFL.AppInstance(ctx, client.RoundLatest, providerDsc.SchedulerApp, pk)
+			out.Replica, _ = conn.Runtime(mCfg.NPA.ParaTime).ROFL.AppInstance(ctx, client.RoundLatest, out.Provider.SchedulerApp, pk)
 		default:
 		}
 
-		paidUntil := time.Unix(int64(insDsc.PaidUntil), 0)
-		expired := !time.Now().Before(paidUntil)
-
-		fmt.Printf("Name:       %s\n", machineName)
-		fmt.Printf("Provider:   %s\n", insDsc.Provider)
-		fmt.Printf("ID:         %s\n", insDsc.ID)
-		fmt.Printf("Offer:      %s\n", insDsc.Offer)
-		fmt.Printf("Status:     %s", insDsc.Status)
-		if expired {
-			fmt.Printf(" (EXPIRED)")
-		}
-		fmt.Println()
-		fmt.Printf("Creator:    %s\n", insDsc.Creator)
-		fmt.Printf("Admin:      %s\n", insDsc.Admin)
-		switch insDsc.NodeID {
-		case nil:
-			fmt.Printf("Node ID:    <none>\n")
-		default:
-			fmt.Printf("Node ID:    %s\n", insDsc.NodeID)
-		}
-
-		fmt.Printf("Created at: %s\n", time.Unix(int64(insDsc.CreatedAt), 0))
-		fmt.Printf("Updated at: %s\n", time.Unix(int64(insDsc.UpdatedAt), 0))
-		fmt.Printf("Paid until: %s\n", paidUntil)
-
-		if schedulerDsc != nil {
-			if proxyDomain, ok := schedulerDsc.Metadata[scheduler.MetadataKeyProxyDomain]; ok {
-				numericMachineID := binary.BigEndian.Uint64(machineID[:])
-				proxyDomain = fmt.Sprintf("m%d.%s", numericMachineID, proxyDomain)
-
-				fmt.Printf("Proxy:\n")
-				fmt.Printf("  Domain: %s\n", proxyDomain)
-
-				showMachinePorts(extraCfg, appID, insDsc, proxyDomain)
-			}
-		}
-
-		if len(insDsc.Metadata) > 0 {
-			fmt.Printf("Metadata:\n")
-			for key, value := range insDsc.Metadata {
-				fmt.Printf("  %s: %s\n", key, value)
-			}
-		}
-
-		fmt.Printf("Resources:\n")
-
-		fmt.Printf("  TEE:     ")
-		switch insDsc.Resources.TEE {
-		case roflmarket.TeeTypeSGX:
-			fmt.Printf("Intel SGX\n")
-		case roflmarket.TeeTypeTDX:
-			fmt.Printf("Intel TDX\n")
-		default:
-			fmt.Printf("[unknown: %d]\n", insDsc.Resources.TEE)
-		}
-
-		fmt.Printf("  Memory:  %d MiB\n", insDsc.Resources.Memory)
-		fmt.Printf("  vCPUs:   %d\n", insDsc.Resources.CPUCount)
-		fmt.Printf("  Storage: %d MiB\n", insDsc.Resources.Storage)
-		if insDsc.Resources.GPU != nil {
-			fmt.Printf("  GPU:\n")
-			if insDsc.Resources.GPU.Model != "" {
-				fmt.Printf("    Model: %s\n", insDsc.Resources.GPU.Model)
-			} else {
-				fmt.Printf("    Model: <any>\n")
-			}
-			fmt.Printf("    Count: %d\n", insDsc.Resources.GPU.Count)
-		}
-
-		switch insDsc.Deployment {
-		default:
-			fmt.Printf("Deployment:\n")
-			fmt.Printf("  App ID: %s\n", insDsc.Deployment.AppID)
-
-			if len(insDsc.Deployment.Metadata) > 0 {
-				fmt.Printf("  Metadata:\n")
-				for key, value := range insDsc.Deployment.Metadata {
-					fmt.Printf("    %s: %s\n", key, value)
-				}
-			}
-		case nil:
-			fmt.Printf("Deployment: <no current deployment>\n")
-		}
-
-		// Show commands.
-		fmt.Printf("Commands:\n")
-		if len(insCmds) > 0 {
-			for _, qc := range insCmds {
-				fmt.Printf("  - ID: %s\n", qc.ID)
-
-				var cmd scheduler.Command
-				err := cbor.Unmarshal(qc.Cmd, &cmd)
-				switch err {
-				case nil:
-					// Decodable scheduler command.
-					fmt.Printf("    Method: %s\n", cmd.Method)
-					fmt.Printf("    Args:\n")
-
-					switch cmd.Method {
-					case scheduler.MethodDeploy:
-						showCommandArgs(npa, cmd.Args, scheduler.DeployRequest{})
-					case scheduler.MethodRestart:
-						showCommandArgs(npa, cmd.Args, scheduler.RestartRequest{})
-					case scheduler.MethodTerminate:
-						showCommandArgs(npa, cmd.Args, scheduler.TerminateRequest{})
-					default:
-						showCommandArgs(npa, cmd.Args, make(map[string]any))
-					}
-				default:
-					// Unknown command format.
-					fmt.Printf("    <unknown format: %X>\n", qc.Cmd)
-				}
-			}
+		if common.OutputFormat() == common.FormatJSON {
+			data, err := json.MarshalIndent(out, "", "  ")
+			cobra.CheckErr(err)
+			fmt.Printf("%s\n", data)
 		} else {
-			fmt.Printf("  <no queued commands>\n")
+			prettyPrintMachine(mCfg, &out)
 		}
 	},
 }
 
-func showMachinePorts(extraCfg *roflCmdBuild.AppExtraConfig, appID rofl.AppID, insDsc *roflmarket.Instance, domain string) {
+// prettyPrintMachine prints a compact human-readable info of the ROFL machine.
+func prettyPrintMachine(mCfg *machineCfg, out *machineShowOutput) {
+	paidUntil := time.Unix(int64(out.Machine.PaidUntil), 0) //nolint:gosec
+	expired := !time.Now().Before(paidUntil)
+
+	fmt.Printf("Name:       %s\n", mCfg.MachineName)
+	fmt.Printf("Provider:   %s\n", out.Machine.Provider)
+	fmt.Printf("ID:         %s\n", out.Machine.ID)
+	fmt.Printf("Offer:      %s\n", out.Machine.Offer)
+	fmt.Printf("Status:     %s", out.Machine.Status)
+	if expired {
+		fmt.Printf(" (EXPIRED)")
+	}
+	fmt.Println()
+	fmt.Printf("Creator:    %s\n", out.Machine.Creator)
+	fmt.Printf("Admin:      %s\n", out.Machine.Admin)
+	switch out.Machine.NodeID {
+	case nil:
+		fmt.Printf("Node ID:    <none>\n")
+	default:
+		fmt.Printf("Node ID:    %s\n", out.Machine.NodeID)
+	}
+
+	fmt.Printf("Created at: %s\n", time.Unix(int64(out.Machine.CreatedAt), 0)) //nolint:gosec
+	fmt.Printf("Updated at: %s\n", time.Unix(int64(out.Machine.UpdatedAt), 0)) //nolint:gosec
+	fmt.Printf("Paid until: %s\n", paidUntil)
+
+	if out.Replica != nil {
+		if proxyDomain, ok := out.Replica.Metadata[scheduler.MetadataKeyProxyDomain]; ok {
+			numericMachineID := binary.BigEndian.Uint64(mCfg.MachineID[:])
+			proxyDomain = fmt.Sprintf("m%d.%s", numericMachineID, proxyDomain)
+
+			fmt.Printf("Proxy:\n")
+			fmt.Printf("  Domain: %s\n", proxyDomain)
+
+			prettyPrintMachinePorts(mCfg.ExtraCfg, out.Machine.Deployment.AppID, out.Machine, proxyDomain)
+		}
+	}
+
+	if len(out.Machine.Metadata) > 0 {
+		fmt.Printf("Metadata:\n")
+		for key, value := range out.Machine.Metadata {
+			fmt.Printf("  %s: %s\n", key, value)
+		}
+	}
+
+	fmt.Printf("Resources:\n")
+
+	fmt.Printf("  TEE:     ")
+	switch out.Machine.Resources.TEE {
+	case roflmarket.TeeTypeSGX:
+		fmt.Printf("Intel SGX\n")
+	case roflmarket.TeeTypeTDX:
+		fmt.Printf("Intel TDX\n")
+	default:
+		fmt.Printf("[unknown: %d]\n", out.Machine.Resources.TEE)
+	}
+
+	fmt.Printf("  Memory:  %d MiB\n", out.Machine.Resources.Memory)
+	fmt.Printf("  vCPUs:   %d\n", out.Machine.Resources.CPUCount)
+	fmt.Printf("  Storage: %d MiB\n", out.Machine.Resources.Storage)
+	if out.Machine.Resources.GPU != nil {
+		fmt.Printf("  GPU:\n")
+		if out.Machine.Resources.GPU.Model != "" {
+			fmt.Printf("    Model: %s\n", out.Machine.Resources.GPU.Model)
+		} else {
+			fmt.Printf("    Model: <any>\n")
+		}
+		fmt.Printf("    Count: %d\n", out.Machine.Resources.GPU.Count)
+	}
+
+	switch out.Machine.Deployment {
+	default:
+		fmt.Printf("Deployment:\n")
+		fmt.Printf("  App ID: %s\n", out.Machine.Deployment.AppID)
+
+		if len(out.Machine.Deployment.Metadata) > 0 {
+			fmt.Printf("  Metadata:\n")
+			for key, value := range out.Machine.Deployment.Metadata {
+				fmt.Printf("    %s: %s\n", key, value)
+			}
+		}
+	case nil:
+		fmt.Printf("Deployment: <no current deployment>\n")
+	}
+
+	// Show commands.
+	fmt.Printf("Commands:\n")
+	if len(out.MachineCommands) > 0 {
+		for _, qc := range out.MachineCommands {
+			fmt.Printf("  - ID: %s\n", qc.ID)
+
+			var cmd scheduler.Command
+			err := cbor.Unmarshal(qc.Cmd, &cmd)
+			switch err {
+			case nil:
+				// Decodable scheduler command.
+				fmt.Printf("    Method: %s\n", cmd.Method)
+				fmt.Printf("    Args:\n")
+
+				switch cmd.Method {
+				case scheduler.MethodDeploy:
+					showCommandArgs(mCfg.NPA, cmd.Args, scheduler.DeployRequest{})
+				case scheduler.MethodRestart:
+					showCommandArgs(mCfg.NPA, cmd.Args, scheduler.RestartRequest{})
+				case scheduler.MethodTerminate:
+					showCommandArgs(mCfg.NPA, cmd.Args, scheduler.TerminateRequest{})
+				default:
+					showCommandArgs(mCfg.NPA, cmd.Args, make(map[string]any))
+				}
+			default:
+				// Unknown command format.
+				fmt.Printf("    <unknown format: %X>\n", qc.Cmd)
+			}
+		}
+	} else {
+		fmt.Printf("  <no queued commands>\n")
+	}
+}
+
+func prettyPrintMachinePorts(extraCfg *roflCmdBuild.AppExtraConfig, appID rofl.AppID, insDsc *roflmarket.Instance, domain string) {
 	if extraCfg == nil || len(extraCfg.Ports) == 0 {
 		return
 	}

@@ -1,0 +1,22 @@
+Name:       oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz:000000000000055c
+Provider:   oasis1qp2ens0hsp7gh23wajxa4hpetkdek3swyyulyrmz
+ID:         000000000000055c
+Offer:      0000000000000003
+Status:     accepted
+Creator:    oasis1qpupfu7e2n6pkezeaw0yhj8mcem8anj64ytrayne
+Admin:      oasis1qpupfu7e2n6pkezeaw0yhj8mcem8anj64ytrayne
+Node ID:    1owPK3eT21k0ajRG7VfHRgp4JPXobCQtzuglz6ZSJis=
+Created at: 2026-01-30 15:00:30 +0100 CET
+Updated at: 2026-01-30 15:00:42 +0100 CET
+Paid until: 2026-01-30 16:00:30 +0100 CET
+Resources:
+  TEE:     Intel TDX
+  Memory:  4096 MiB
+  vCPUs:   2
+  Storage: 20000 MiB
+Deployment:
+  App ID: rofl1qqrg6gwykxr799vnphdd9umkse3q3nlp35shlyc7
+  Metadata:
+    net.oasis.deployment.orc.ref: rofl.sh/cbe7a44c-fd8d-489b-ae06-712fbc7cabb0:1750329424@sha256:bfec9638b7b7de6395a31dc5313cd72ce64034d40393c1cf6c9bc7fff55678c4
+Commands:
+  <no queued commands>

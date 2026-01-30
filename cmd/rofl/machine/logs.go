@@ -20,32 +20,25 @@ import (
 )
 
 var logsCmd = &cobra.Command{
-	Use:   "logs [<machine-name>]",
+	Use:   "logs [<machine-name> | <provider-address>:<machine-id>]",
 	Short: "Show logs from the given machine",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		_, deployment, npa := roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
+		mCfg, err := resolveMachineCfg(args, &roflCommon.ManifestOptions{
 			NeedAppID: true,
 			NeedAdmin: false,
 		})
-
-		machine, _, machineID := resolveMachine(args, deployment)
+		cobra.CheckErr(err)
 
 		// Establish connection with the target network.
 		ctx := context.Background()
-		conn, err := connection.Connect(ctx, npa.Network)
+		conn, err := connection.Connect(ctx, mCfg.NPA.Network)
 		cobra.CheckErr(err)
 
-		// Resolve provider address.
-		providerAddr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, machine.Provider)
-		if err != nil {
-			cobra.CheckErr(fmt.Sprintf("Invalid provider address: %s", err))
-		}
-
-		providerDsc, err := conn.Runtime(npa.ParaTime).ROFLMarket.Provider(ctx, client.RoundLatest, *providerAddr)
+		providerDsc, err := conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.Provider(ctx, client.RoundLatest, *mCfg.ProviderAddr)
 		cobra.CheckErr(err)
 
-		insDsc, err := conn.Runtime(npa.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *providerAddr, machineID)
+		insDsc, err := conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *mCfg.ProviderAddr, mCfg.MachineID)
 		cobra.CheckErr(err)
 
 		schedulerRAKRaw, ok := insDsc.Metadata[scheduler.MetadataKeySchedulerRAK]
@@ -54,31 +47,31 @@ var logsCmd = &cobra.Command{
 		}
 		var schedulerRAK ed25519.PublicKey
 		if err := schedulerRAK.UnmarshalText([]byte(schedulerRAKRaw)); err != nil {
-			cobra.CheckErr(fmt.Sprintf("Malformed scheduler RAK metadata: %s", err))
+			cobra.CheckErr(fmt.Errorf("malformed scheduler RAK metadata: %w", err))
 		}
 		pk := types.PublicKey{PublicKey: schedulerRAK}
 
-		schedulerDsc, err := conn.Runtime(npa.ParaTime).ROFL.AppInstance(ctx, client.RoundLatest, providerDsc.SchedulerApp, pk)
+		schedulerDsc, err := conn.Runtime(mCfg.NPA.ParaTime).ROFL.AppInstance(ctx, client.RoundLatest, providerDsc.SchedulerApp, pk)
 		cobra.CheckErr(err)
 
 		client, err := scheduler.NewClient(schedulerDsc)
 		cobra.CheckErr(err)
 
 		// TODO: Cache authentication token so we don't need to re-authenticate.
-		acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
+		acc := common.LoadAccount(cliConfig.Global(), mCfg.NPA.AccountName)
 
 		sigCtx := &signature.RichContext{
-			RuntimeID:    npa.ParaTime.Namespace(),
-			ChainContext: npa.Network.ChainContext,
+			RuntimeID:    mCfg.NPA.ParaTime.Namespace(),
+			ChainContext: mCfg.NPA.Network.ChainContext,
 			Base:         []byte(scheduler.StdAuthContextBase),
 		}
-		authRequest, err := scheduler.SignLogin(sigCtx, acc.Signer(), client.Host(), *providerAddr)
+		authRequest, err := scheduler.SignLogin(sigCtx, acc.Signer(), client.Host(), *mCfg.ProviderAddr)
 		cobra.CheckErr(err)
 
 		err = client.Login(ctx, authRequest)
 		cobra.CheckErr(err)
 
-		logs, err := client.LogsGet(ctx, machineID, time.Time{})
+		logs, err := client.LogsGet(ctx, mCfg.MachineID, time.Time{})
 		cobra.CheckErr(err)
 		for _, line := range logs {
 			fmt.Println(line)

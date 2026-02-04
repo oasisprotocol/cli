@@ -112,7 +112,7 @@ func outputText(ctx context.Context, npa *common.NPASelection, conn connection.C
 		}
 
 		rows = append(rows, []string{
-			provider.Address.String(),
+			common.PrettyAddress(provider.Address.String()),
 			provider.SchedulerApp.String(),
 			nodesList,
 			fmt.Sprintf("%d", provider.OffersCount),
@@ -139,8 +139,10 @@ func showProviderOffersExpanded(ctx context.Context, npa *common.NPASelection, c
 		cobra.CheckErr(fmt.Errorf("failed to query offers for provider %s: %w", provider.Address, err))
 	}
 
+	prettyAddr := common.PrettyAddress(provider.Address.String())
+
 	if len(offers) == 0 {
-		fmt.Printf("Provider %s: No offers\n", provider.Address)
+		fmt.Printf("Provider %s: No offers\n", prettyAddr)
 		return
 	}
 
@@ -154,7 +156,7 @@ func showProviderOffersExpanded(ctx context.Context, npa *common.NPASelection, c
 		return false
 	})
 
-	fmt.Printf("Provider %s (%d offers):\n", provider.Address, len(offers))
+	fmt.Printf("Provider %s (%d offers):\n", prettyAddr, len(offers))
 	for _, offer := range offers {
 		ShowOfferSummary(npa, offer)
 	}

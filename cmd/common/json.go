@@ -152,6 +152,11 @@ func JSONMarshalUniversalValue(v interface{}) []byte {
 // For types implementing consensusPretty.PrettyPrinter, it uses the custom pretty printer.
 // For other types, it does basic JSON indentation and cleanup of common delimiters.
 func PrettyPrint(npa *NPASelection, prefix string, blob interface{}) string {
+	return PrettyPrintWithTxDetails(npa, prefix, blob, nil)
+}
+
+// PrettyPrintWithTxDetails is like PrettyPrint but passes txDetails to the signature context.
+func PrettyPrintWithTxDetails(npa *NPASelection, prefix string, blob interface{}, txDetails *signature.TxDetails) string {
 	ret := ""
 	switch rtx := blob.(type) {
 	case consensusPretty.PrettyPrinter:
@@ -164,6 +169,7 @@ func PrettyPrint(npa *NPASelection, prefix string, blob interface{}) string {
 			RuntimeID:    ns,
 			ChainContext: npa.Network.ChainContext,
 			Base:         types.SignatureContextBase,
+			TxDetails:    txDetails,
 		}
 		ctx := context.Background()
 		ctx = context.WithValue(ctx, consensusPretty.ContextKeyTokenSymbol, npa.Network.Denomination.Symbol)
@@ -172,7 +178,19 @@ func PrettyPrint(npa *NPASelection, prefix string, blob interface{}) string {
 			ctx = context.WithValue(ctx, config.ContextKeyParaTimeCfg, npa.ParaTime)
 		}
 		ctx = context.WithValue(ctx, signature.ContextKeySigContext, &sigCtx)
-		ctx = context.WithValue(ctx, types.ContextKeyAccountNames, GenAccountNames())
+
+		// Provide locally-known names and native->ETH mapping for address formatting.
+		addrCtx := GenAddressFormatContext()
+
+		// Inject the original Ethereum "To" address into the eth map so that
+		// FormatNamedAddressWith can prefer it over the native representation.
+		if txDetails != nil && txDetails.OrigTo != nil {
+			native := types.NewAddressFromEth(txDetails.OrigTo.Bytes()).String()
+			addrCtx.Eth[native] = txDetails.OrigTo.Hex()
+		}
+
+		ctx = context.WithValue(ctx, types.ContextKeyAccountNames, addrCtx.Names)
+		ctx = context.WithValue(ctx, types.ContextKeyAccountEthMap, addrCtx.Eth)
 
 		// Set up chain context for signature verification during pretty-printing.
 		coreSignature.UnsafeResetChainContext()

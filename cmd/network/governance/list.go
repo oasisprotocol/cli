@@ -52,7 +52,7 @@ var govListCmd = &cobra.Command{
 			output = append(output, []string{
 				fmt.Sprintf("%d", proposal.ID),
 				kind,
-				proposal.Submitter.String(),
+				common.PrettyAddress(proposal.Submitter.String()),
 				fmt.Sprintf("%d", proposal.CreatedAt),
 				fmt.Sprintf("%d", proposal.ClosesAt),
 				proposal.State.String(),

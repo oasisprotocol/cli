@@ -130,6 +130,16 @@ func LoadAccount(cfg *config.Config, name string) wallet.Account {
 	acc, err := cfg.Wallet.Load(name, passphrase)
 	cobra.CheckErr(err)
 
+	// Persist eth address on unlock so future commands can show it without unlocking again.
+	if accCfg, ok := cfg.Wallet.All[name]; ok && accCfg.EthAddress == "" {
+		if ethAddr := acc.EthAddress(); ethAddr != nil {
+			accCfg.EthAddress = ethAddr.Hex()
+			if err := cfg.Save(); err != nil {
+				Warnf("Warning: failed to persist eth_address for wallet account '%s': %v", name, err)
+			}
+		}
+	}
+
 	return acc
 }
 
@@ -200,8 +210,7 @@ func ResolveLocalAccountOrAddress(net *configSdk.Network, address string) (*type
 	// Check if address is the account name in the wallet.
 	if acc, ok := config.Global().Wallet.All[address]; ok {
 		addr := acc.GetAddress()
-		// TODO: Implement acc.GetEthAddress()
-		return &addr, nil, nil
+		return &addr, acc.GetEthAddress(), nil
 	}
 
 	// Check if address is the name of an address book entry.

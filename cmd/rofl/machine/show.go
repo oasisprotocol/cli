@@ -97,7 +97,7 @@ func prettyPrintMachine(mCfg *machineCfg, out *machineShowOutput) {
 	expired := !time.Now().Before(paidUntil)
 
 	fmt.Printf("Name:       %s\n", mCfg.MachineName)
-	fmt.Printf("Provider:   %s\n", out.Machine.Provider)
+	fmt.Printf("Provider:   %s\n", common.PrettyAddress(out.Machine.Provider.String()))
 	fmt.Printf("ID:         %s\n", out.Machine.ID)
 	fmt.Printf("Offer:      %s\n", out.Machine.Offer)
 	fmt.Printf("Status:     %s", out.Machine.Status)
@@ -105,8 +105,8 @@ func prettyPrintMachine(mCfg *machineCfg, out *machineShowOutput) {
 		fmt.Printf(" (EXPIRED)")
 	}
 	fmt.Println()
-	fmt.Printf("Creator:    %s\n", out.Machine.Creator)
-	fmt.Printf("Admin:      %s\n", out.Machine.Admin)
+	fmt.Printf("Creator:    %s\n", common.PrettyAddress(out.Machine.Creator.String()))
+	fmt.Printf("Admin:      %s\n", common.PrettyAddress(out.Machine.Admin.String()))
 	switch out.Machine.NodeID {
 	case nil:
 		fmt.Printf("Node ID:    <none>\n")

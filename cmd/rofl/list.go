@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 
@@ -58,7 +59,7 @@ Use --format json for machine-readable output.`,
 			return
 		}
 
-		outputAppsText(apps)
+		outputAppsText(npa.Network, apps)
 	},
 }
 
@@ -75,7 +76,7 @@ func outputAppsJSON(apps []*rofl.AppConfig) {
 }
 
 // outputAppsText returns apps in human-readable table format.
-func outputAppsText(apps []*rofl.AppConfig) {
+func outputAppsText(_ *config.Network, apps []*rofl.AppConfig) {
 	tbl := table.New()
 	tbl.Header("App ID", "Name", "Version", "Admin")
 
@@ -87,10 +88,9 @@ func outputAppsText(apps []*rofl.AppConfig) {
 		// Extract version from metadata.
 		version := app.Metadata["net.oasis.rofl.version"]
 
-		// Format admin address.
 		var admin string
 		if app.Admin != nil {
-			admin = app.Admin.String()
+			admin = common.PrettyAddress(app.Admin.String())
 		}
 
 		rows = append(rows, []string{

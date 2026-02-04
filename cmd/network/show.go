@@ -52,7 +52,7 @@ func prettyPrintEntityNodes(ctx context.Context, npa *common.NPASelection, staki
 	fmt.Printf("=== ENTITY ===\n")
 
 	entityAddr := staking.NewAddress(entity.ID)
-	fmt.Printf("Entity Address: %s\n", entityAddr.String())
+	fmt.Printf("Entity Address: %s\n", common.PrettyAddress(entityAddr.String()))
 
 	fmt.Printf("Entity ID:      %s\n", entity.ID.String())
 
@@ -86,7 +86,7 @@ func prettyPrintEntityNodes(ctx context.Context, npa *common.NPASelection, staki
 	fmt.Printf("=== NODES ===\n")
 	for i, node := range entity.Nodes {
 		nodeAddr := staking.NewAddress(node)
-		fmt.Printf("Node Address: %s\n", nodeAddr.String())
+		fmt.Printf("Node Address: %s\n", common.PrettyAddress(nodeAddr.String()))
 		fmt.Printf("Node ID:      %s\n", node.String())
 		idQuery2 := &registry.IDQuery{
 			Height: height,

@@ -80,7 +80,7 @@ var (
 				cobra.CheckErr(err)
 			}
 
-			fmt.Printf("Using provider:     %s (%s)\n", mCfg.Machine.Provider, mCfg.ProviderAddr)
+			fmt.Printf("Using provider:     %s\n", common.PrettyAddress(mCfg.ProviderAddr.String()))
 			fmt.Printf("Canceling machine:  %s [%s]\n", mCfg.MachineName, mCfg.Machine.ID)
 			common.Warn("WARNING: Canceling a machine will permanently destroy it including any persistent storage!")
 			roflCommon.PrintRentRefundWarning()
@@ -135,7 +135,7 @@ var (
 			}
 
 			// Resolve new admin address.
-			newAdminAddr, _, err := common.ResolveLocalAccountOrAddress(mCfg.NPA.Network, newAdminAddress)
+			newAdminAddr, newAdminEthAddr, err := common.ResolveLocalAccountOrAddress(mCfg.NPA.Network, newAdminAddress)
 			if err != nil {
 				cobra.CheckErr(fmt.Errorf("invalid admin address: %w", err))
 			}
@@ -148,7 +148,7 @@ var (
 				cobra.CheckErr(err)
 			}
 
-			fmt.Printf("Provider:  %s (%s)\n", mCfg.Machine.Provider, mCfg.ProviderAddr)
+			fmt.Printf("Provider:  %s\n", common.PrettyAddress(mCfg.ProviderAddr.String()))
 			fmt.Printf("Machine:   %s [%s]\n", mCfg.MachineName, mCfg.Machine.ID)
 
 			// Resolve old admin in online mode.
@@ -156,10 +156,14 @@ var (
 				insDsc, err := conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *mCfg.ProviderAddr, mCfg.MachineID)
 				cobra.CheckErr(err)
 
-				fmt.Printf("Old admin: %s\n", insDsc.Admin)
+				fmt.Printf("Old admin: %s\n", common.PrettyAddress(insDsc.Admin.String()))
 			}
 
-			fmt.Printf("New admin: %s\n", newAdminAddr)
+			newAdminStr := newAdminAddr.String()
+			if newAdminEthAddr != nil {
+				newAdminStr = newAdminEthAddr.Hex()
+			}
+			fmt.Printf("New admin: %s\n", common.PrettyAddress(newAdminStr))
 
 			// Prepare transaction.
 			tx := roflmarket.NewInstanceChangeAdmin(nil, &roflmarket.InstanceChangeAdmin{
@@ -244,7 +248,7 @@ var (
 				}
 			}
 
-			fmt.Printf("Using provider:     %s (%s)\n", mCfg.Machine.Provider, mCfg.ProviderAddr)
+			fmt.Printf("Using provider:     %s\n", common.PrettyAddress(mCfg.ProviderAddr.String()))
 			fmt.Printf("Top-up machine:     %s [%s]\n", mCfg.MachineName, mCfg.Machine.ID)
 			if txCfg.Offline {
 				fmt.Printf("Top-up term:        %d x %s\n", roflCommon.TermCount, roflCommon.Term)
@@ -406,7 +410,7 @@ func queueCommand(cliArgs []string, method string, args any, msgAfter string) {
 		cobra.CheckErr(err)
 	}
 
-	fmt.Printf("Using provider: %s (%s)\n", mCfg.Machine.Provider, mCfg.ProviderAddr)
+	fmt.Printf("Using provider: %s\n", common.PrettyAddress(mCfg.ProviderAddr.String()))
 	fmt.Printf("Machine:        %s [%s]\n", mCfg.MachineName, mCfg.Machine.ID)
 	fmt.Printf("Command:        %s\n", method)
 	fmt.Printf("Args:\n")

@@ -58,7 +58,7 @@ var remoteSignerCmd = &cobra.Command{
 		err = srv.Start()
 		cobra.CheckErr(err)
 
-		fmt.Printf("Address: %s\n", acc.Address())
+		fmt.Printf("Address: %s\n", common.PrettyAddress(acc.Address().String()))
 		fmt.Printf("Node Args:\n  --signer.backend=remote \\\n  --signer.remote.address=unix:%s\n", socketPath)
 		fmt.Printf("\n*** REMOTE SIGNER READY ***\n")
 

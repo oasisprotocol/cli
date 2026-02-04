@@ -2,7 +2,7 @@ You are about to sign the following transaction:
 Format: plain
 Method: accounts.Transfer
 Body:
-  To: meghan (oasis1qrjzcve7y6qp3nqs3n7ghavw68vkdh3epcv64ega)
+  To: meghan (0xBe8B38ED9b0794e7ab9EbEfC1e710b4F4EC6F6C1)
   Amount: 2.5 ROSE
 Authorized signer(s):
   1. ArEjDxsPfDvfeLlity4mjGzy8E/nI4umiC8vYQh+eh/c (secp256k1eth)

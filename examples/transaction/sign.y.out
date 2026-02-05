@@ -1,7 +1,7 @@
 You are about to sign the following transaction:
 Method: staking.Transfer
 Body:
-  To:     oasis1qrydpazemvuwtnp3efm7vmfvg3tde044qg6cxwzx
+  To:     test:bob (oasis1qrydpazemvuwtnp3efm7vmfvg3tde044qg6cxwzx)
   Amount: 1.0 TEST
 Nonce:  32
 Fee:

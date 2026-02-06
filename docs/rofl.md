@@ -223,6 +223,8 @@ offer:
 - `--term <hour|month|year>` specifies the base rent period. It takes the first
   available provider term by default.
 - `--term-count <number>` specifies the multiplier. Default is `1`.
+- `--replace-machine` if the existing machine in the manifest file expired,
+  rent a new machine and replace the existing machine ID.
 
 ![code shell](../examples/rofl/deploy.in.static)
 

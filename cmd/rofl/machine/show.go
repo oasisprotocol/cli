@@ -2,10 +2,12 @@ package machine
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"net"
+	"sort"
 	"strings"
 	"time"
 
@@ -132,9 +134,7 @@ func prettyPrintMachine(mCfg *machineCfg, out *machineShowOutput) {
 
 	if len(out.Machine.Metadata) > 0 {
 		fmt.Printf("Metadata:\n")
-		for key, value := range out.Machine.Metadata {
-			fmt.Printf("  %s: %s\n", key, value)
-		}
+		prettyPrintMachineMetadata(out.Machine.Metadata, "  ", "  ")
 	}
 
 	fmt.Printf("Resources:\n")
@@ -169,9 +169,7 @@ func prettyPrintMachine(mCfg *machineCfg, out *machineShowOutput) {
 
 		if len(out.Machine.Deployment.Metadata) > 0 {
 			fmt.Printf("  Metadata:\n")
-			for key, value := range out.Machine.Deployment.Metadata {
-				fmt.Printf("    %s: %s\n", key, value)
-			}
+			prettyPrintMachineMetadata(out.Machine.Deployment.Metadata, "    ", "  ")
 		}
 	case nil:
 		fmt.Printf("Deployment: <no current deployment>\n")
@@ -235,6 +233,45 @@ func prettyPrintMachinePorts(extraCfg *roflCmdBuild.AppExtraConfig, appID rofl.A
 
 		if i < len(extraCfg.Ports)-1 {
 			fmt.Println()
+		}
+	}
+}
+
+func prettyPrintMachineMetadata(metadata map[string]string, prefix, indent string) {
+	fallBackPrint := func(key, value, prefix string) {
+		fmt.Printf("%s%s: %s\n", prefix, key, value)
+	}
+
+	// Sort metadata keys for consistent output.
+	keys := make([]string, 0, len(metadata))
+	for key := range metadata {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		value := metadata[key]
+		switch key {
+		case scheduler.MetadataKeyPermissions:
+			cborValue, err := base64.StdEncoding.DecodeString(value)
+			if err != nil {
+				fallBackPrint(key, value, prefix)
+				continue
+			}
+			var permissions map[string][]types.Address
+			if err = cbor.Unmarshal(cborValue, &permissions); err != nil {
+				fallBackPrint(key, value, prefix)
+				continue
+			}
+			fmt.Printf("%s%s:\n", prefix, key)
+			for p, addresses := range permissions {
+				fmt.Printf("%s%s:\n", prefix+indent, p)
+				for _, a := range addresses {
+					fmt.Printf("%s- %s\n", prefix+indent+indent, common.PrettyAddress(a.String()))
+				}
+			}
+		default:
+			fallBackPrint(key, value, prefix)
 		}
 	}
 }

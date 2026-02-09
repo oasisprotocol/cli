@@ -13,6 +13,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common"
 	coreSignature "github.com/oasisprotocol/oasis-core/go/common/crypto/signature"
 	consensusPretty "github.com/oasisprotocol/oasis-core/go/common/prettyprint"
+	coreStaking "github.com/oasisprotocol/oasis-core/go/staking/api"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
@@ -191,6 +192,7 @@ func PrettyPrintWithTxDetails(npa *NPASelection, prefix string, blob interface{}
 
 		ctx = context.WithValue(ctx, types.ContextKeyAccountNames, addrCtx.Names)
 		ctx = context.WithValue(ctx, types.ContextKeyAccountEthMap, addrCtx.Eth)
+		ctx = context.WithValue(ctx, coreStaking.ContextKeyAccountNames, coreStaking.AccountNames(addrCtx.Names))
 
 		// Set up chain context for signature verification during pretty-printing.
 		coreSignature.UnsafeResetChainContext()

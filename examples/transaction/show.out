@@ -4,7 +4,7 @@ Signer: NcPzNW3YU2T+ugNUtUWtoQnRvbOL9dYSaBfbjHLP1pE=
 Content:
   Method: staking.Transfer
   Body:
-    To:     oasis1qrydpazemvuwtnp3efm7vmfvg3tde044qg6cxwzx
+    To:     test:bob (oasis1qrydpazemvuwtnp3efm7vmfvg3tde044qg6cxwzx)
     Amount: 1.0 TEST
   Nonce:  1
   Fee:

@@ -8,10 +8,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/oasisprotocol/oasis-core/go/common/quantity"
+	consensusStaking "github.com/oasisprotocol/oasis-core/go/staking/api"
 
 	sdkConfig "github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	sdkSignature "github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/accounts"
+	sdkTesting "github.com/oasisprotocol/oasis-sdk/client-sdk/go/testing"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 )
 
@@ -52,4 +54,28 @@ func TestPrettyPrintWithTxDetails_PreservesUnnamedEthTo(t *testing.T) {
 	out := PrettyPrintWithTxDetails(npa, "", tx, &sdkSignature.TxDetails{OrigTo: &ethAddr})
 
 	require.Contains(out, "To: "+ethAddr.Hex()+" ("+to.String()+")")
+}
+
+func TestPrettyPrint_FormatsStakingAllowBeneficiary(t *testing.T) {
+	require := require.New(t)
+
+	npa := &NPASelection{
+		NetworkName: "testnet",
+		Network: &sdkConfig.Network{
+			ChainContext: "test-chain-context",
+			Denomination: sdkConfig.DenominationInfo{
+				Symbol:   "TEST",
+				Decimals: 9,
+			},
+		},
+	}
+
+	tx := consensusStaking.NewAllowTx(0, nil, &consensusStaking.Allow{
+		Beneficiary:  sdkTesting.Bob.Address.ConsensusAddress(),
+		AmountChange: *quantity.NewFromUint64(10),
+	})
+
+	out := PrettyPrint(npa, "", tx)
+
+	require.Contains(out, "Beneficiary:   test:bob ("+sdkTesting.Bob.Address.String()+")")
 }

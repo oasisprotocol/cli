@@ -1,4 +1,4 @@
-package build
+package build //revive:disable
 
 import (
 	"context"
@@ -298,7 +298,7 @@ func validateComposeFile(composeFile string, manifest *buildRofl.Manifest, opts 
 		var imageSize uint64
 		for _, layer := range mf.Layers {
 			if layer.Size > 0 {
-				imageSize += uint64(layer.Size)
+				imageSize += uint64(layer.Size) //nolint: gosec
 			}
 		}
 		totalSize += imageSize

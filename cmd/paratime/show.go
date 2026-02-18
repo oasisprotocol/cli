@@ -449,7 +449,7 @@ func prettyPrintEvent(indent string, evIndex int, ev *types.Event) {
 }
 
 func jsonPrintEvents(evs []*types.Event) {
-	out := []map[string]interface{}{}
+	out := []map[string]interface{}{} //nolint: prealloc
 
 	for _, ev := range evs {
 		fields := make(map[string]interface{})

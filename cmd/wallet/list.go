@@ -20,7 +20,7 @@ var listCmd = &cobra.Command{
 		table := table.New()
 		table.Header("Account", "Kind", "Address")
 
-		var output [][]string
+		var output [][]string //nolint: prealloc
 		for name, acc := range cfg.Wallet.All {
 			if cfg.Wallet.Default == name {
 				name += common.DefaultMarker

@@ -40,7 +40,7 @@ func EntitiesFromOasisscan(ctx context.Context) (map[types.Address]*Entity, erro
 		return nil, err
 	}
 	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := client.Do(req) //nolint: gosec
 	if err != nil {
 		return nil, err
 	}

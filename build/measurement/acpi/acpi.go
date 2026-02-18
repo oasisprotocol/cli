@@ -71,7 +71,7 @@ func GenerateTablesQemu(resources *bundle.TDXResources) ([]byte, []byte, []byte,
 		binary.LittleEndian.PutUint32(tpl[rangeMinimumOffset:], 0x80000000)
 		binary.LittleEndian.PutUint32(tpl[lengthOffset:], 0x60000000)
 	} else {
-		memSizeBytes := uint32(resources.Memory * 1024 * 1024) //nolint: gosec
+		memSizeBytes := uint32(resources.Memory * 1024 * 1024)
 		binary.LittleEndian.PutUint32(tpl[rangeMinimumOffset:], memSizeBytes)
 		binary.LittleEndian.PutUint32(tpl[lengthOffset:], 0xe0000000-memSizeBytes)
 	}

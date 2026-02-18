@@ -1,4 +1,4 @@
-package build
+package build //revive:disable
 
 import (
 	"archive/tar"
@@ -42,7 +42,7 @@ func maybeDownloadArtifact(kind, uri string) string {
 
 	// In case the URI represents a local file, check that it exists and return it.
 	if url.Host == "" {
-		_, err = os.Stat(url.Path)
+		_, err = os.Stat(url.Path) //nolint: gosec
 		cobra.CheckErr(err)
 		return url.Path
 	}

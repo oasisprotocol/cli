@@ -41,7 +41,7 @@ var (
 
 			if !common.GetAnswerYes() {
 				// Ask for import kind.
-				var supportedKinds []string
+				var supportedKinds []string //nolint: prealloc
 				for _, kind := range af.SupportedImportKinds() {
 					supportedKinds = append(supportedKinds, string(kind))
 				}

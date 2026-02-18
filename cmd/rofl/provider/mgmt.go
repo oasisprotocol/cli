@@ -245,7 +245,7 @@ var (
 			var (
 				add    []roflmarket.Offer
 				update []roflmarket.Offer
-				remove []roflmarket.OfferID
+				remove []roflmarket.OfferID //nolint: prealloc
 			)
 			for _, offer := range manifest.Offers {
 				var offerDsc *roflmarket.Offer

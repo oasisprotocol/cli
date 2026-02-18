@@ -66,7 +66,7 @@ func prepareChunks(pathBytes, context, message []byte, chunkSize int, ctxLen boo
 			return nil, fmt.Errorf("maximum supported context size is 255 bytes")
 		}
 
-		body = []byte{byte(len(context))}
+		body = []byte{byte(len(context))} //nolint: gosec
 	}
 	body = append(body, context...)
 	body = append(body, message...)

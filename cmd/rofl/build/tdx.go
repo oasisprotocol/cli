@@ -1,4 +1,4 @@
-package build
+package build //revive:disable
 
 import (
 	"fmt"
@@ -144,7 +144,7 @@ func tdxPrepareStage2(
 	fmt.Printf("Runtime hash: %s\n", initHash)
 
 	// Build list of files to inject into the rootfs.
-	filesToInject := []extraFile{
+	filesToInject := []extraFile{ //nolint: prealloc
 		{HostPath: initPath, TarPath: "init", Mode: 0o755},
 	}
 	filesToInject = append(filesToInject, extraFiles...)

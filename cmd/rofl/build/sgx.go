@@ -1,4 +1,4 @@
-package build
+package build //revive:disable
 
 import (
 	"crypto/rand"
@@ -80,7 +80,7 @@ func sgxBuild(
 
 	// Compute MRENCLAVE.
 	var b []byte
-	if b, err = os.ReadFile(sgxsPath); err != nil {
+	if b, err = os.ReadFile(sgxsPath); err != nil { //nolint: gosec
 		cobra.CheckErr(fmt.Errorf("failed to read SGXS binary: %w", err))
 	}
 	var enclaveHash sgx.MrEnclave

@@ -28,7 +28,7 @@ var (
 			table := table.New()
 			table.Header("Name", "Address")
 
-			var output [][]string
+			var output [][]string //nolint: prealloc
 			for name, acc := range cfg.AddressBook.All {
 				addrStr := acc.Address
 				if ethAddr := acc.GetEthAddress(); ethAddr != nil {

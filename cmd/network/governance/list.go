@@ -35,7 +35,7 @@ var govListCmd = &cobra.Command{
 			cobra.CheckErr(fmt.Errorf("failed to fetch proposals: %w", err))
 		}
 
-		var output [][]string
+		var output [][]string //nolint: prealloc
 		for _, proposal := range proposals {
 			var kind string
 			switch {

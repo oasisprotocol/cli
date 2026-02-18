@@ -193,7 +193,7 @@ func (ld *ledgerDevice) getPublicKeyRaw(pathBytes []byte, ins byte, requireConfi
 	header := []byte{claConsumer, ins, p1, 0, 0}
 	message := append([]byte{}, header...)
 	message = append(message, pathBytes...)
-	message[4] = byte(len(message) - len(header)) // update length
+	message[4] = byte(len(message) - len(header)) //nolint: gosec // update length
 
 	response, err := ld.raw.Exchange(message)
 	if err != nil {
@@ -217,7 +217,7 @@ func (ld *ledgerDevice) SignEd25519(path []uint32, context, message []byte) ([]b
 
 	var finalResponse []byte
 	for idx, chunk := range chunks {
-		payloadLen := byte(len(chunk))
+		payloadLen := byte(len(chunk)) //nolint: gosec
 
 		var payloadDesc byte
 		switch idx {
@@ -229,7 +229,7 @@ func (ld *ledgerDevice) SignEd25519(path []uint32, context, message []byte) ([]b
 			payloadDesc = payloadChunkAdd
 		}
 
-		message := []byte{claConsumer, insSignEd25519, payloadDesc, 0, payloadLen}
+		message := []byte{claConsumer, insSignEd25519, payloadDesc, 0, payloadLen} //nolint: prealloc
 		message = append(message, chunk...)
 
 		response, err := ld.raw.Exchange(message)
@@ -309,7 +309,7 @@ func (ld *ledgerDevice) signRt(pathBytes []byte, sigCtx signature.Context, messa
 
 	var finalResponse []byte
 	for idx, chunk := range chunks {
-		payloadLen := byte(len(chunk))
+		payloadLen := byte(len(chunk)) //nolint: gosec
 
 		var payloadDesc byte
 		switch idx {
@@ -321,7 +321,7 @@ func (ld *ledgerDevice) signRt(pathBytes []byte, sigCtx signature.Context, messa
 			payloadDesc = payloadChunkAdd
 		}
 
-		message := []byte{claConsumer, instruction, payloadDesc, 0, payloadLen}
+		message := []byte{claConsumer, instruction, payloadDesc, 0, payloadLen} //nolint: prealloc
 		message = append(message, chunk...)
 
 		response, err := ld.raw.Exchange(message)

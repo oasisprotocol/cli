@@ -101,7 +101,7 @@ func TestUpdate_PositiveFlow(t *testing.T) {
 	// Custom downloader that works over plain HTTP for the test server.
 	download = func(ctx context.Context, url string) (string, error) {
 		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-		res, err := http.DefaultClient.Do(req)
+		res, err := http.DefaultClient.Do(req) //nolint: gosec
 		if err != nil {
 			return "", err
 		}

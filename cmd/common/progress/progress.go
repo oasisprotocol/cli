@@ -18,7 +18,7 @@ func PrintProgressBar(f io.Writer, msg string, done uint64, total uint64, final 
 	// Note that we need to do this every time in case the user has resized their terminal.
 	terminalWidth := 80
 	if file, ok := f.(*os.File); ok {
-		width, _, err := term.GetSize(int(file.Fd()))
+		width, _, err := term.GetSize(int(file.Fd())) //nolint: gosec
 		// Cap the maximum width to 80 to improve readability on wide terminals.
 		if err == nil && width < terminalWidth {
 			terminalWidth = width
@@ -34,7 +34,7 @@ func PrintProgressBar(f io.Writer, msg string, done uint64, total uint64, final 
 		// previously had a progress bar there (so that we erase it).
 		out := fmt.Sprintf("%s %s", msg, doneMiB)
 		blank := strings.Repeat(" ", terminalWidth-len(out)-1)
-		fmt.Fprintf(f, "\r%s%s", out, blank)
+		fmt.Fprintf(f, "\r%s%s", out, blank) //nolint: gosec
 	} else {
 		// If the total size is known, calculate percentage done and draw progress bar.
 		ratioDone := float64(done) / float64(total)
@@ -54,7 +54,7 @@ func PrintProgressBar(f io.Writer, msg string, done uint64, total uint64, final 
 			bar := strings.Repeat("#", doneWidth)
 			bar += strings.Repeat(" ", availableWidth-doneWidth)
 
-			fmt.Fprintf(f, "\r%s %.2f%% [%s] %s", msg, percentDone, bar, doneMiB)
+			fmt.Fprintf(f, "\r%s %.2f%% [%s] %s", msg, percentDone, bar, doneMiB) //nolint: gosec
 		}
 	}
 

@@ -1,6 +1,6 @@
 //go:build !unix
 
-package build
+package build //revive:disable
 
 func setUmask(mask int) {
 }

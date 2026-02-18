@@ -1,4 +1,4 @@
-package build
+package build //revive:disable
 
 import (
 	"fmt"

@@ -108,7 +108,7 @@ func fetchLatest(ctx context.Context) (*ghRelease, error) {
 			req.Header.Set("Authorization", "Bearer "+t)
 		}
 
-		res, err := httpClient.Do(req)
+		res, err := httpClient.Do(req) //nolint: gosec
 		if err != nil {
 			return nil, err
 		}
@@ -197,7 +197,7 @@ func doDownload(ctx context.Context, url string) (string, error) {
 	}
 
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	res, err := httpClient.Do(req)
+	res, err := httpClient.Do(req) //nolint: gosec
 	if err != nil {
 		return "", err
 	}
@@ -253,14 +253,14 @@ func replaceExecutable(dest string, r io.Reader, perm os.FileMode) error {
 		return err
 	}
 
-	if err = os.Rename(tmpPath, dest); err == nil {
+	if err = os.Rename(tmpPath, dest); err == nil { //nolint: gosec
 		cleanup = false
 		return nil
 	}
 
 	if runtime.GOOS == osWindows {
 		pending := dest + ".new"
-		if err2 := os.Rename(tmpPath, pending); err2 != nil {
+		if err2 := os.Rename(tmpPath, pending); err2 != nil { //nolint: gosec
 			return fmt.Errorf("rename failed (%v / %v)", err, err2)
 		}
 		scheduleWindowsMove(pending, dest)

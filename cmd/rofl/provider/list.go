@@ -205,7 +205,7 @@ func ShowOfferSummary(npa *common.NPASelection, offer *roflmarket.Offer) {
 	switch {
 	case offer.Payment.Native != nil:
 		if len(offer.Payment.Native.Terms) > 0 {
-			var terms []string
+			var terms []string //nolint: prealloc
 			for term, amount := range offer.Payment.Native.Terms {
 				bu := types.NewBaseUnits(amount, offer.Payment.Native.Denomination)
 				formattedAmount := helpers.FormatParaTimeDenomination(npa.ParaTime, bu)

@@ -20,7 +20,7 @@ var listCmd = &cobra.Command{
 		table := table.New()
 		table.Header("Name", "Chain Context", "RPC")
 
-		var output [][]string
+		var output [][]string //nolint: prealloc
 		for name, net := range cfg.Networks.All {
 			displayName := name
 			if cfg.Networks.Default == name {

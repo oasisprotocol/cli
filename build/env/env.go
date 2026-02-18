@@ -123,7 +123,7 @@ func (de *ContainerEnv) WrapCommand(cmd *exec.Cmd) error {
 		return fmt.Errorf("bad working directory: %w", err)
 	}
 
-	var envArgs []string //nolint: prealloc
+	var envArgs []string
 	for _, envKV := range cmd.Env {
 		envArgs = append(envArgs, "--env", envKV)
 	}

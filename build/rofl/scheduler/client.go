@@ -120,7 +120,7 @@ func (c *Client) post(ctx context.Context, path string, request, response any) e
 	}
 	c.mu.Unlock()
 
-	rsp, err := c.hc.Do(rq)
+	rsp, err := c.hc.Do(rq) //nolint: gosec
 	if err != nil {
 		return err
 	}

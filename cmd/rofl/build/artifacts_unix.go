@@ -1,6 +1,6 @@
 //go:build unix
 
-package build
+package build //revive:disable
 
 import (
 	"golang.org/x/sys/unix"

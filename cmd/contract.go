@@ -474,7 +474,7 @@ func parseData(data string) interface{} {
 }
 
 func parseTokens(pt *config.ParaTime, tokens []string) []types.BaseUnits {
-	result := []types.BaseUnits{}
+	result := []types.BaseUnits{} //nolint: prealloc
 	for _, raw := range tokens {
 		// TODO: Support parsing denominations.
 		amount, err := helpers.ParseParaTimeDenomination(pt, raw, types.NativeDenomination)

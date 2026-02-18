@@ -197,7 +197,7 @@ func encodeGUID(guid string) []byte {
 
 // measureTdxEfiVariable measures an EFI variable event.
 func measureTdxEfiVariable(vendorGUID string, varName string) []byte {
-	var data []byte
+	var data []byte //nolint: prealloc
 	data = append(data, encodeGUID(vendorGUID)...)
 
 	var encLen [8]byte
@@ -268,7 +268,7 @@ func (m *tdvfMetadata) computeMrtd(fw []byte, variant int) []byte {
 				// All the other bytes contain 0.
 				var buf [128]byte
 				copy(buf[:9], []byte("MR.EXTEND"))
-				binary.LittleEndian.PutUint64(buf[16:24], s.memoryAddress+page*pageSize+uint64(i*mrExtendGranularity)) //nolint: gosec
+				binary.LittleEndian.PutUint64(buf[16:24], s.memoryAddress+page*pageSize+uint64(i*mrExtendGranularity))
 				_, _ = h.Write(buf[:])
 
 				// The other two extension buffers contain the chunk’s content.

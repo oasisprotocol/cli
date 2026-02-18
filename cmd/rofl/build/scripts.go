@@ -1,4 +1,4 @@
-package build
+package build //revive:disable
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ func runScript(manifest *buildRofl.Manifest, name string, buildEnv env.ExecEnv, 
 	if shell == "" {
 		shell = "/bin/sh"
 	}
-	cmd := exec.Command(shell, "-c", script)
+	cmd := exec.Command(shell, "-c", script) //nolint: gosec
 
 	if useContainer {
 		if err := buildEnv.WrapCommand(cmd); err != nil {

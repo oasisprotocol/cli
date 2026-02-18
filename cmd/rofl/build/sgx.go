@@ -45,21 +45,37 @@ func sgxBuild(
 		cobra.CheckErr(fmt.Errorf("failed to build ELF binary: %w", err))
 	}
 
-	// Then build for the SGX target.
-	fmt.Println("Building SGXS binary...")
-	elfSgxPath, err := cargo.Build(buildEnv, true, locked, "x86_64-fortanix-unknown-sgx", nil)
-	if err != nil {
-		cobra.CheckErr(fmt.Errorf("failed to build SGXS binary: %w", err))
-	}
+	var sgxsPath string
+	switch buildMode {
+	case buildModeProduction:
+		// Build proper SGX target.
+		fmt.Println("Building SGXS binary...")
+		elfSgxPath, err := cargo.Build(buildEnv, true, locked, "x86_64-fortanix-unknown-sgx", nil)
+		if err != nil {
+			cobra.CheckErr(fmt.Errorf("failed to build SGXS binary: %w", err))
+		}
 
-	sgxThreads := uint64(32)
-	sgxHeapSize := manifest.Resources.Memory * 1024 * 1024
-	sgxStackSize := uint64(2 * 1024 * 1024)
+		sgxThreads := uint64(32)
+		sgxHeapSize := manifest.Resources.Memory * 1024 * 1024
+		sgxStackSize := uint64(2 * 1024 * 1024)
 
-	sgxsPath := fmt.Sprintf("%s.sgxs", elfSgxPath)
-	err = sgxs.Elf2Sgxs(buildEnv, elfSgxPath, sgxsPath, sgxHeapSize, sgxStackSize, sgxThreads)
-	if err != nil {
-		cobra.CheckErr(fmt.Errorf("failed to generate SGXS binary: %w", err))
+		sgxsPath = fmt.Sprintf("%s.sgxs", elfSgxPath)
+		err = sgxs.Elf2Sgxs(buildEnv, elfSgxPath, sgxsPath, sgxHeapSize, sgxStackSize, sgxThreads)
+		if err != nil {
+			cobra.CheckErr(fmt.Errorf("failed to generate SGXS binary: %w", err))
+		}
+	case buildModeUnsafe:
+		// Generate dummy SGXS file.
+		fmt.Println("Building dummy SGXS binary...")
+		tmpFile, err := os.CreateTemp("", "app.sgxs")
+		if err != nil {
+			cobra.CheckErr(fmt.Errorf("failed to create dummy SGXS file: %w", err))
+		}
+		if _, err := tmpFile.Write([]byte("dummy\n")); err != nil {
+			cobra.CheckErr(fmt.Errorf("failed to write to dummy SGXS file: %w", err))
+		}
+		tmpFile.Close()
+		sgxsPath = tmpFile.Name()
 	}
 
 	// Compute MRENCLAVE.

@@ -8,15 +8,16 @@ import (
 	"fmt"
 	"net"
 	"sort"
-	"strings"
+	//"strings"
 	"time"
 
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/ed25519"
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-core/go/common/cbor"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/ed25519"
+	//"github.com/oasisprotocol/oasis-sdk/client-sdk/go/crypto/signature/ed25519"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/roflmarket"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
@@ -25,6 +26,7 @@ import (
 	"github.com/oasisprotocol/cli/cmd/common"
 	roflCmdBuild "github.com/oasisprotocol/cli/cmd/rofl/build"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
+	"github.com/oasisprotocol/cli/config"
 )
 
 type machineShowOutput struct {
@@ -39,57 +41,70 @@ var showCmd = &cobra.Command{
 	Short: "Show information about a machine",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
-		var out machineShowOutput
+		/*var out machineShowOutput
 		mCfg, err := resolveMachineCfg(args, &roflCommon.ManifestOptions{
 			NeedAppID: true,
 			NeedAdmin: false,
 		})
-		cobra.CheckErr(err)
+		cobra.CheckErr(err)*/
 
 		// Establish connection with the target network.
 		ctx := context.Background()
-		conn, err := connection.Connect(ctx, mCfg.NPA.Network)
+		//conn, err := connection.Connect(ctx, mCfg.NPA.Network)
+		npa := common.GetNPASelection(config.Global())
+		conn, err := connection.Connect(ctx, npa.Network)
 		cobra.CheckErr(err)
 
-		out.Machine, err = conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *mCfg.ProviderAddr, mCfg.MachineID)
-		if err != nil {
-			// The "instance not found" error originates from Rust code, so we can't compare it nicely here.
-			if strings.Contains(err.Error(), "instance not found") {
-				switch common.OutputFormat() {
-				case common.FormatJSON:
-					fmt.Printf("{ \"error\": \"%s\" }\n", err)
-				case common.FormatText:
-					cobra.CheckErr("Machine instance not found.\nTip: This often happens when instances expire. Run `oasis rofl deploy --replace-machine` to rent a new one.")
-				}
-			}
+		pk := types.PublicKey{PublicKey: ed25519.NewPublicKey(args[0])}
+		var appID rofl.AppID
+		if err = appID.UnmarshalText([]byte("rofl1qqn9xndja7e2pnxhttktmecvwzz0yqwxsquqyxdf")); err != nil {
 			cobra.CheckErr(err)
 		}
 
-		out.MachineCommands, err = conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.InstanceCommands(ctx, client.RoundLatest, *mCfg.ProviderAddr, mCfg.MachineID)
-		cobra.CheckErr(err)
+		r, _ := conn.Runtime(npa.ParaTime).ROFL.AppInstance(ctx, client.RoundLatest, appID, pk)
+		rSer, _ := json.Marshal(r)
+		fmt.Printf("%s\n", rSer)
+		prettyPrintMachineMetadata(r.Metadata, "    ", "  ")
 
-		out.Provider, err = conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.Provider(ctx, client.RoundLatest, *mCfg.ProviderAddr)
-		cobra.CheckErr(err)
-
-		switch schedulerRAKRaw, ok := out.Machine.Metadata[scheduler.MetadataKeySchedulerRAK]; ok {
-		case true:
-			var schedulerRAK ed25519.PublicKey
-			if err := schedulerRAK.UnmarshalText([]byte(schedulerRAKRaw)); err != nil {
-				cobra.CheckErr(fmt.Errorf("malformed scheduler RAK metadata: %w", err))
-			}
-			pk := types.PublicKey{PublicKey: schedulerRAK}
-
-			out.Replica, _ = conn.Runtime(mCfg.NPA.ParaTime).ROFL.AppInstance(ctx, client.RoundLatest, out.Provider.SchedulerApp, pk)
-		default:
-		}
-
-		if common.OutputFormat() == common.FormatJSON {
-			data, err := json.MarshalIndent(out, "", "  ")
-			cobra.CheckErr(err)
-			fmt.Printf("%s\n", data)
-		} else {
-			prettyPrintMachine(mCfg, &out)
-		}
+		//out.Machine, err = conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *mCfg.ProviderAddr, mCfg.MachineID)
+		//if err != nil {
+		//	// The "instance not found" error originates from Rust code, so we can't compare it nicely here.
+		//	if strings.Contains(err.Error(), "instance not found") {
+		//		switch common.OutputFormat() {
+		//		case common.FormatJSON:
+		//			fmt.Printf("{ \"error\": \"%s\" }\n", err)
+		//		case common.FormatText:
+		//			cobra.CheckErr("Machine instance not found.\nTip: This often happens when instances expire. Run `oasis rofl deploy --replace-machine` to rent a new one.")
+		//		}
+		//	}
+		//	cobra.CheckErr(err)
+		//}
+		//
+		//out.MachineCommands, err = conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.InstanceCommands(ctx, client.RoundLatest, *mCfg.ProviderAddr, mCfg.MachineID)
+		//cobra.CheckErr(err)
+		//
+		//out.Provider, err = conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.Provider(ctx, client.RoundLatest, *mCfg.ProviderAddr)
+		//cobra.CheckErr(err)
+		//
+		//switch schedulerRAKRaw, ok := out.Machine.Metadata[scheduler.MetadataKeySchedulerRAK]; ok {
+		//case true:
+		//	var schedulerRAK ed25519.PublicKey
+		//	if err := schedulerRAK.UnmarshalText([]byte(schedulerRAKRaw)); err != nil {
+		//		cobra.CheckErr(fmt.Errorf("malformed scheduler RAK metadata: %w", err))
+		//	}
+		//	pk := types.PublicKey{PublicKey: schedulerRAK}
+		//
+		//	out.Replica, _ = conn.Runtime(mCfg.NPA.ParaTime).ROFL.AppInstance(ctx, client.RoundLatest, out.Provider.SchedulerApp, pk)
+		//default:
+		//}
+		//
+		//if common.OutputFormat() == common.FormatJSON {
+		//	data, err := json.MarshalIndent(out, "", "  ")
+		//	cobra.CheckErr(err)
+		//	fmt.Printf("%s\n", data)
+		//} else {
+		//	prettyPrintMachine(mCfg, &out)
+		//}
 	},
 }
 

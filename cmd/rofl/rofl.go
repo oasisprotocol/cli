@@ -23,6 +23,7 @@ func init() {
 	Cmd.AddCommand(removeCmd)
 	Cmd.AddCommand(showCmd)
 	Cmd.AddCommand(listCmd)
+	Cmd.AddCommand(setDefaultCmd)
 	Cmd.AddCommand(trustRootCmd)
 	Cmd.AddCommand(build.Cmd)
 	Cmd.AddCommand(identityCmd)

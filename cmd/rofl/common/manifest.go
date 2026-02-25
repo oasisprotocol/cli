@@ -40,8 +40,9 @@ func LoadManifestAndSetNPA(opts *ManifestOptions) (*rofl.Manifest, *rofl.Deploym
 	cfg := cliConfig.Global()
 	npa := common.GetNPASelection(cfg)
 
-	manifest, d, err := MaybeLoadManifestAndSetNPA(cfg, npa, DeploymentName, opts)
+	manifest, resolvedName, d, err := MaybeLoadManifestAndSetNPA(cfg, npa, DeploymentName, opts)
 	cobra.CheckErr(err)
+	DeploymentName = resolvedName
 	if opts != nil && opts.NeedAppID && !d.HasAppID() {
 		cobra.CheckErr(fmt.Errorf("deployment '%s' does not have an app ID set, maybe you need to run `oasis rofl create`", DeploymentName))
 	}
@@ -51,34 +52,44 @@ func LoadManifestAndSetNPA(opts *ManifestOptions) (*rofl.Manifest, *rofl.Deploym
 // MaybeLoadManifestAndSetNPA loads the ROFL app manifest and reconfigures the
 // network/paratime/account selection.
 //
-// In case there is an error in loading the manifest, it is returned.
-func MaybeLoadManifestAndSetNPA(cfg *cliConfig.Config, npa *common.NPASelection, deployment string, opts *ManifestOptions) (*rofl.Manifest, *rofl.Deployment, error) {
+// In case there is an error in loading the manifest, it is returned. The resolved deployment name
+// is always returned alongside the deployment.
+func MaybeLoadManifestAndSetNPA(cfg *cliConfig.Config, npa *common.NPASelection, deployment string, opts *ManifestOptions) (*rofl.Manifest, string, *rofl.Deployment, error) {
 	manifest, err := rofl.LoadManifest()
 	if err != nil {
-		return nil, nil, err
+		return nil, "", nil, err
 	}
 
 	// Warn if manifest was created with an older CLI version.
 	checkToolingVersion(manifest)
 
+	// Resolve deployment name when not explicitly provided.
+	if deployment == "" {
+		deployment = manifest.DefaultDeployment()
+	}
+	if deployment == "" {
+		if len(manifest.Deployments) == 0 {
+			return nil, "", nil, fmt.Errorf("no deployments configured\nHint: use `oasis rofl create` to register a new ROFL app and create a deployment")
+		}
+		printAvailableDeployments(manifest)
+		return nil, "", nil, fmt.Errorf("no deployment selected\nHint: Run this command with --deployment to select one or `oasis rofl set-default <name>` to set a default deployment")
+	}
+
 	d, ok := manifest.Deployments[deployment]
 	if !ok {
-		fmt.Println("The following deployments are configured in the app manifest:")
-		for name := range manifest.Deployments {
-			fmt.Printf("  - %s\n", name)
-		}
-		return nil, nil, fmt.Errorf("deployment '%s' does not exist", deployment)
+		printAvailableDeployments(manifest)
+		return nil, "", nil, fmt.Errorf("deployment '%s' does not exist", deployment)
 	}
 
 	switch d.Network {
 	case "":
 		if npa.Network == nil {
-			return nil, nil, fmt.Errorf("no network selected")
+			return nil, "", nil, fmt.Errorf("no network selected")
 		}
 	default:
 		npa.Network = cfg.Networks.All[d.Network]
 		if npa.Network == nil {
-			return nil, nil, fmt.Errorf("network '%s' does not exist", d.Network)
+			return nil, "", nil, fmt.Errorf("network '%s' does not exist", d.Network)
 		}
 		npa.NetworkName = d.Network
 	}
@@ -88,7 +99,7 @@ func MaybeLoadManifestAndSetNPA(cfg *cliConfig.Config, npa *common.NPASelection,
 	default:
 		npa.ParaTime = npa.Network.ParaTimes.All[d.ParaTime]
 		if npa.ParaTime == nil {
-			return nil, nil, fmt.Errorf("paratime '%s' does not exist", d.ParaTime)
+			return nil, "", nil, fmt.Errorf("paratime '%s' does not exist", d.ParaTime)
 		}
 		npa.ParaTimeName = d.ParaTime
 	}
@@ -104,12 +115,22 @@ func MaybeLoadManifestAndSetNPA(cfg *cliConfig.Config, npa *common.NPASelection,
 			npa.Account = accCfg
 			npa.AccountName = d.Admin
 		case opts != nil && opts.NeedAdmin:
-			return nil, nil, err
+			return nil, "", nil, err
 		default:
 			// Admin account is not valid, but it is also not required, so do not override.
 		}
 	}
-	return manifest, d, nil
+	return manifest, deployment, d, nil
+}
+
+func printAvailableDeployments(manifest *rofl.Manifest) {
+	if len(manifest.Deployments) == 0 {
+		return
+	}
+	fmt.Println("The following deployments are configured in the app manifest:")
+	for name := range manifest.Deployments {
+		fmt.Printf("  - %s\n", name)
+	}
 }
 
 // GetOrcFilename generates a filename based on the project name and deployment.

@@ -2,8 +2,6 @@ package common
 
 import (
 	flag "github.com/spf13/pflag"
-
-	buildRofl "github.com/oasisprotocol/cli/build/rofl"
 )
 
 var (
@@ -46,7 +44,7 @@ func init() {
 	WipeFlags.BoolVar(&WipeStorage, "wipe-storage", false, "whether to wipe machine storage")
 
 	DeploymentFlags = flag.NewFlagSet("", flag.ContinueOnError)
-	DeploymentFlags.StringVar(&DeploymentName, "deployment", buildRofl.DefaultDeploymentName, "deployment name")
+	DeploymentFlags.StringVar(&DeploymentName, "deployment", "", "deployment name")
 
 	NoUpdateFlag = flag.NewFlagSet("", flag.ContinueOnError)
 	NoUpdateFlag.BoolVar(&NoUpdate, "no-update-manifest", false, "do not update the manifest")

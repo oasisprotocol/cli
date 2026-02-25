@@ -180,13 +180,20 @@ func (m *Manifest) Validate() error {
 		return fmt.Errorf("bad resources config: %w", err)
 	}
 
+	var defaultNames []string
 	for name, d := range m.Deployments {
 		if d == nil {
 			return fmt.Errorf("bad deployment: %s", name)
 		}
+		if d.Default {
+			defaultNames = append(defaultNames, name)
+		}
 		if err := d.Validate(); err != nil {
 			return fmt.Errorf("bad deployment '%s': %w", name, err)
 		}
+	}
+	if len(defaultNames) > 1 {
+		return fmt.Errorf("multiple deployments marked as default: %s", strings.Join(defaultNames, ", "))
 	}
 
 	return nil
@@ -250,9 +257,47 @@ func (m *Manifest) Save() error {
 	return enc.Encode(m)
 }
 
-// DefaultDeploymentName is the name of the default deployment that must always be defined and is
-// used in case no deployment is passed.
+// DefaultDeploymentName is the legacy name of the default deployment. It is used as a fallback
+// when no deployment is explicitly marked as default.
 const DefaultDeploymentName = "default"
+
+// DefaultDeployment returns the name of the default deployment. Resolution order:
+//  1. Deployment explicitly marked as default (default: true).
+//  2. Legacy fallback: deployment named "default".
+//  3. If exactly one deployment exists, use it.
+//
+// Returns an empty string if no default can be determined.
+func (m *Manifest) DefaultDeployment() string {
+	for name, d := range m.Deployments {
+		if d != nil && d.Default {
+			return name
+		}
+	}
+	if _, ok := m.Deployments[DefaultDeploymentName]; ok {
+		return DefaultDeploymentName
+	}
+	if len(m.Deployments) == 1 {
+		for name := range m.Deployments {
+			return name
+		}
+	}
+	return ""
+}
+
+// SetDefaultDeployment sets the given deployment as the default, clearing the flag from all others.
+func (m *Manifest) SetDefaultDeployment(name string) error {
+	d := m.Deployments[name]
+	if d == nil {
+		return fmt.Errorf("deployment '%s' does not exist", name)
+	}
+	for _, other := range m.Deployments {
+		if other != nil {
+			other.Default = false
+		}
+	}
+	d.Default = true
+	return nil
+}
 
 // DefaultMachineName is the name of the default machine into which the app is deployed when no
 // specific machine is passed.
@@ -260,6 +305,8 @@ const DefaultMachineName = "default"
 
 // Deployment describes a single ROFL app deployment.
 type Deployment struct {
+	// Default indicates whether this is the default deployment.
+	Default bool `yaml:"default,omitempty" json:"default,omitempty"`
 	// AppID is the Bech32-encoded ROFL app ID.
 	AppID string `yaml:"app_id,omitempty" json:"app_id,omitempty"`
 	// Network is the identifier of the network to deploy to.

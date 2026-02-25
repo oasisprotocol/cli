@@ -83,6 +83,24 @@ func TestManifestValidation(t *testing.T) {
 	err = m.Validate()
 	require.NoError(err)
 
+	// Multiple defaults should be rejected.
+	m.Deployments["default"].Default = true
+	m.Deployments["testnet"] = &Deployment{
+		Default:  true,
+		Network:  "testnet",
+		ParaTime: "sapphire",
+	}
+	err = m.Validate()
+	require.ErrorContains(err, "multiple deployments marked as default")
+
+	// Single default is fine.
+	m.Deployments["default"].Default = false
+	err = m.Validate()
+	require.NoError(err)
+
+	// Clean up for subsequent tests.
+	delete(m.Deployments, "testnet")
+
 	// Add ephemeral storage configuration.
 	m.Resources.Storage = &StorageConfig{}
 	err = m.Validate()
@@ -296,4 +314,60 @@ func TestUpgradePossible(t *testing.T) {
 	require.True((&ContainerArtifactsConfig{Runtime: "old"}).UpgradePossible(&containerLatest))
 	require.False((&ContainerArtifactsConfig{Runtime: "new"}).UpgradePossible(&containerLatest))
 	require.False((&ContainerArtifactsConfig{}).UpgradePossible(&containerLatest))
+}
+
+func TestDefaultDeployment(t *testing.T) {
+	require := require.New(t)
+
+	m := Manifest{}
+
+	// No deployments -> empty.
+	require.Empty(m.DefaultDeployment())
+
+	// Single deployment -> use it regardless of name.
+	m.Deployments = map[string]*Deployment{
+		"testnet": {Network: "testnet", ParaTime: "sapphire"},
+	}
+	require.Equal("testnet", m.DefaultDeployment())
+
+	// Legacy "default" key is preferred over arbitrary single deployment when multiple exist.
+	m.Deployments["default"] = &Deployment{Network: "mainnet", ParaTime: "sapphire"}
+	require.Equal("default", m.DefaultDeployment())
+
+	// Explicit default flag takes precedence.
+	m.Deployments["testnet"].Default = true
+	require.Equal("testnet", m.DefaultDeployment())
+
+	// With only the "default" key and no flag, fallback works.
+	delete(m.Deployments, "testnet")
+	require.Equal("default", m.DefaultDeployment())
+
+	// Multiple deployments, none marked default, no "default" key -> empty.
+	m.Deployments = map[string]*Deployment{
+		"testnet": {Network: "testnet", ParaTime: "sapphire"},
+		"mainnet": {Network: "mainnet", ParaTime: "sapphire"},
+	}
+	require.Empty(m.DefaultDeployment())
+}
+
+func TestSetDefaultDeployment(t *testing.T) {
+	require := require.New(t)
+
+	m := Manifest{
+		Deployments: map[string]*Deployment{
+			"testnet": {Default: true, Network: "testnet", ParaTime: "sapphire"},
+			"mainnet": {Network: "mainnet", ParaTime: "sapphire"},
+		},
+	}
+
+	// Setting non-existent deployment fails.
+	err := m.SetDefaultDeployment("staging")
+	require.ErrorContains(err, "deployment 'staging' does not exist")
+
+	// Setting mainnet as default clears testnet.
+	err = m.SetDefaultDeployment("mainnet")
+	require.NoError(err)
+	require.False(m.Deployments["testnet"].Default)
+	require.True(m.Deployments["mainnet"].Default)
+	require.Equal("mainnet", m.DefaultDeployment())
 }

@@ -211,22 +211,34 @@ var (
 			manifest, err := buildRofl.LoadManifest()
 			cobra.CheckErr(err)
 
+			// Resolve deployment name: explicit flag > network name for new deployments.
+			deploymentName := roflCommon.DeploymentName
+			if deploymentName == "" {
+				deploymentName = npa.NetworkName
+			}
+
 			// Load or create a deployment.
-			deployment, ok := manifest.Deployments[roflCommon.DeploymentName]
+			deployment, ok := manifest.Deployments[deploymentName]
 			switch ok {
 			case true:
 				if deployment.AppID != "" {
-					cobra.CheckErr(fmt.Errorf("ROFL app identifier already defined (%s) for deployment '%s', refusing to overwrite", deployment.AppID, roflCommon.DeploymentName))
+					cobra.CheckErr(fmt.Errorf("ROFL app identifier already defined (%s) for deployment '%s', refusing to overwrite", deployment.AppID, deploymentName))
 				}
 
 				// An existing deployment is defined, but without an AppID. Load everything else for
 				// the deployment and proceed with creating a new app.
+				roflCommon.DeploymentName = deploymentName
 				manifest, deployment, npa = roflCommon.LoadManifestAndSetNPA(&roflCommon.ManifestOptions{
 					NeedAppID: false,
 					NeedAdmin: true,
 				})
+
+				// Mark as default if no default is currently set (must be after reload).
+				if manifest.DefaultDeployment() == "" {
+					deployment.Default = true
+				}
 			case false:
-				// No deployment defined, create a new default one.
+				// No deployment defined, create a new one named after the network.
 				npa.MustHaveAccount()
 				npa.MustHaveParaTime()
 				if txCfg.Offline {
@@ -283,10 +295,15 @@ var (
 						Hash:   blk.Hash.Hex(),
 					},
 				}
+				// Mark as default if this is the first deployment.
+				if len(manifest.Deployments) == 0 {
+					deployment.Default = true
+				}
 				if manifest.Deployments == nil {
 					manifest.Deployments = make(map[string]*buildRofl.Deployment)
 				}
-				manifest.Deployments[roflCommon.DeploymentName] = deployment
+				manifest.Deployments[deploymentName] = deployment
+				roflCommon.DeploymentName = deploymentName
 			}
 
 			idScheme, ok := identifierSchemes[scheme]
@@ -298,7 +315,7 @@ var (
 			tx := rofl.NewCreateTx(nil, &rofl.Create{
 				Policy:   *deployment.Policy.AsDescriptor(),
 				Scheme:   idScheme,
-				Metadata: manifest.GetMetadata(roflCommon.DeploymentName),
+				Metadata: manifest.GetMetadata(deploymentName),
 			})
 
 			acc := common.LoadAccount(cfg, npa.AccountName)

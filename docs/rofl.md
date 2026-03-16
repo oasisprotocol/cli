@@ -336,11 +336,17 @@ Run `rofl remove` to deregister your ROFL app:
 The deposit required to register the ROFL app will be returned to the current
 administrator account.
 
-:::danger Secrets will be permanently lost
+:::danger Secrets and key generation seed will be permanently lost
 
-All secrets stored on-chain will be permanently lost when the ROFL app is
-deregistered! If you backed up your manifest file, those secrets will also be
-unretrievable since they were encrypted with a ROFL deployment-specific keypair.
+All [secrets] stored on-chain will be permanently lost when the ROFL app is
+deregistered! If you backed up your manifest file, those secrets will not be
+recoverable since they were encrypted with a ROFL deployment-specific keypair.
+
+Similarly, the ROFL's internal seed for [key generation] will be lost, so you
+will not be able to generate the same keys in another ROFL.
+
+[secrets]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/features/secrets
+[key generation]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/features/appd.md#key-generation
 
 :::
 

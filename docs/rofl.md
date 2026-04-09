@@ -328,29 +328,33 @@ their latest versions. This includes:
 ### Change ROFL app administrator {#set-admin}
 
 Run `rofl set-admin` to transfer ownership of a ROFL app to a new
-administrator. The transaction is signed by the current admin and, on success,
-the manifest is updated with the new admin.
+administrator. The ROFL app administrator owns the application, including
+upgrades, policy changes and removal. The transaction must be signed by the
+current admin.
+
+If the current directory contains a ROFL manifest, the manifest is updated with
+the new admin after a successful transaction.
 
 ![code shell](../examples/rofl/set-admin.in.static)
+
+To change the administrator directly on an existing app without a local
+manifest, run:
+
+![code shell](../examples/rofl/set-admin-address.in.static)
+
+This mode requires network access and does not modify the manifest.
 
 ### Change ROFL machine administrator {#machine-set-admin}
 
 Run `rofl machine set-admin` to change the administrator of an individual
-machine instance.
+machine instance. This is independent of the ROFL app administrator and only
+affects management of the specific machine instance.
 
 ![code shell](../examples/rofl/machine-set-admin.in.static)
 
-:::info ROFL admin vs machine admin
+To change the administrator of the machine without a local manifest, run:
 
-The **ROFL admin** (changed via `oasis rofl set-admin`) owns the
-application — transfer ownership, upgrades, policy changes, removal.
-
-The **machine admin** (changed via `oasis rofl machine set-admin`) manages
-an individual machine instance — execution, restarts, stops.
-
-These are independent roles.
-
-:::
+![code shell](../examples/rofl/machine-set-admin-address.in.static)
 
 ### Remove ROFL app from the network {#remove}
 

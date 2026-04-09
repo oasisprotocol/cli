@@ -29,6 +29,7 @@ func init() {
 	Cmd.AddCommand(identityCmd)
 	Cmd.AddCommand(secretCmd)
 	Cmd.AddCommand(upgradeCmd)
+	Cmd.AddCommand(setAdminCmd)
 	Cmd.AddCommand(provider.Cmd)
 	Cmd.AddCommand(machine.Cmd)
 }

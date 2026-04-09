@@ -113,9 +113,10 @@ var (
 	}
 
 	changeAdminCmd = &cobra.Command{
-		Use:   "change-admin [<machine-name> | <provider-address>:<machine-id>] <new-admin>",
-		Short: "Change the machine administrator",
-		Args:  cobra.RangeArgs(1, 2),
+		Use:     "set-admin [<machine-name> | <provider-address>:<machine-id>] <new-admin>",
+		Short:   "Change the machine administrator",
+		Aliases: []string{"change-admin"},
+		Args:    cobra.RangeArgs(1, 2),
 		Run: func(_ *cobra.Command, args []string) {
 			txCfg := common.GetTransactionConfig()
 			mCfg, err := resolveMachineCfg(args, &roflCommon.ManifestOptions{

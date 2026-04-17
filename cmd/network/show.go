@@ -26,6 +26,7 @@ import (
 
 	"github.com/oasisprotocol/cli/cmd/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
+	"github.com/oasisprotocol/cli/metadata"
 	"github.com/oasisprotocol/cli/table"
 )
 
@@ -306,12 +307,40 @@ var showCmd = &cobra.Command{
 				})
 				cobra.CheckErr(err)
 
+				// Build a lookup map from entity ID to entity name.
+				fromRegistry, err := metadata.EntitiesFromRegistry(ctx)
+				if err != nil {
+					common.Warnf("Warning: failed to query metadata registry: %v\n", err)
+				}
+				fromOasisscan, err := metadata.EntitiesFromOasisscan(ctx)
+				if err != nil {
+					common.Warnf("Warning: failed to query oasisscan: %v\n", err)
+				}
+				entityNameByID := make(map[string]string)
+				for _, src := range []struct {
+					m      *map[types.Address]*metadata.Entity
+					suffix string
+				}{
+					{&fromRegistry, ""},
+					{&fromOasisscan, " (from oasisscan)"},
+				} {
+					if src.m == nil || *src.m == nil {
+						continue
+					}
+					for _, ent := range *src.m {
+						if _, exists := entityNameByID[ent.ID.String()]; exists {
+							continue
+						}
+						entityNameByID[ent.ID.String()] = ent.Name + src.suffix
+					}
+				}
+
 				for _, runtime := range runtimes {
 					if runtime.Kind != registry.KindCompute {
 						continue
 					}
 					table := table.New()
-					table.Header("Entity ID", "Node ID", "Role")
+					table.Header("Entity Name", "Entity ID", "Node ID", "Role")
 
 					runtimeID := runtime.ID
 					paratimeName := getParatimeName(cfg, runtimeID.String())
@@ -337,7 +366,13 @@ var showCmd = &cobra.Command{
 						node, err := registryConn.GetNode(ctx, nodeQuery)
 						cobra.CheckErr(err)
 
+						name := entityNameByID[node.EntityID.String()]
+						if name == "" {
+							name = "unknown"
+						}
+
 						output = append(output, []string{
+							name,
 							node.EntityID.String(),
 							member.PublicKey.String(),
 							member.Role.String(),

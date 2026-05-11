@@ -128,7 +128,7 @@ func prettyPrintMachine(mCfg *machineCfg, out *machineShowOutput) {
 			fmt.Printf("Proxy:\n")
 			fmt.Printf("  Domain: %s\n", proxyDomain)
 
-			prettyPrintMachinePorts(mCfg.ExtraCfg, out.Machine.Deployment.AppID, out.Machine, proxyDomain)
+			prettyPrintMachinePorts(mCfg.ExtraCfg, out.Replica.App, out.Machine, proxyDomain)
 		}
 	}
 

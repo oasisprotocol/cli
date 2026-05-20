@@ -103,34 +103,6 @@ chapter for details.
 [ROFL Prerequisites]: https://github.com/oasisprotocol/oasis-sdk/blob/main/docs/rofl/workflow/prerequisites.md
 [npa]: ./account.md#npa
 
-### Deployment-specific artifacts {#deployment-artifacts}
-
-Artifacts can be configured globally or per deployment. Deployment artifacts are
-overlaid field by field on top of global artifacts, so a deployment can override
-only the compose file while reusing the same firmware, kernel, stage 2 image and
-container runtime.
-
-This is useful when public deployment-specific environment variables belong in
-the compose file while encrypted secrets remain in the selected deployment
-section:
-
-```yaml
-artifacts:
-  container:
-    compose: compose.yaml
-
-deployments:
-  testnet:
-    network: testnet
-    paratime: sapphire
-    artifacts:
-      container:
-        compose: compose.testnet.yaml
-```
-
-Commands that build, validate, deploy, or show machine proxy configuration
-use the effective artifacts for the selected deployment.
-
 ## Secrets management {#secret}
 
 ### Set secret {#secret-set}

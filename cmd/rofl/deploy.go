@@ -64,7 +64,7 @@ var (
 				cobra.CheckErr(fmt.Sprintf("malformed app id: %s", err))
 			}
 
-			extraCfg, err := roflCmdBuild.ValidateApp(manifest, roflCmdBuild.ValidationOpts{
+			extraCfg, err := roflCmdBuild.ValidateApp(manifest, roflCommon.DeploymentName, roflCmdBuild.ValidationOpts{
 				Offline: true,
 			})
 			if err != nil {

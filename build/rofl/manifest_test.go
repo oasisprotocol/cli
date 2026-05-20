@@ -190,6 +190,133 @@ func TestManifestSerialization(t *testing.T) {
 	require.NoError(err, "dec.Validate")
 }
 
+func TestDeploymentArtifactsSerialization(t *testing.T) {
+	require := require.New(t)
+
+	const manifestYaml = `
+name: my-container-app
+version: 0.1.0
+tee: tdx
+kind: container
+resources:
+  memory: 512
+  cpus: 1
+  storage:
+    kind: disk-persistent
+    size: 512
+artifacts:
+  firmware: global-firmware
+  kernel: global-kernel
+  stage2: global-stage2
+  container:
+    runtime: global-runtime
+    compose: compose.yaml
+deployments:
+  testnet:
+    network: testnet
+    paratime: sapphire
+    artifacts:
+      container:
+        compose: compose.testnet.yaml
+`
+
+	var m Manifest
+	err := yaml.Unmarshal([]byte(manifestYaml), &m)
+	require.NoError(err, "yaml.Unmarshal")
+	require.NoError(m.Validate())
+	require.NotNil(m.Artifacts)
+	require.Equal("compose.yaml", m.Artifacts.Container.Compose)
+	require.NotNil(m.Deployments["testnet"].Artifacts)
+	require.Equal("compose.testnet.yaml", m.Deployments["testnet"].Artifacts.Container.Compose)
+
+	enc, err := yaml.Marshal(m)
+	require.NoError(err, "yaml.Marshal")
+
+	var dec Manifest
+	err = yaml.Unmarshal(enc, &dec)
+	require.NoError(err, "yaml.Unmarshal(round-trip)")
+	require.EqualValues(m, dec, "serialization should round-trip")
+	require.NoError(dec.Validate())
+}
+
+func TestResolveArtifacts(t *testing.T) {
+	require := require.New(t)
+
+	const (
+		defaultFirmware   = "default-firmware"
+		defaultStage2     = "default-stage2"
+		defaultRuntime    = "default-runtime"
+		globalKernel      = "global-kernel"
+		globalCompose     = "global-compose"
+		deploymentStage2  = "deployment-stage2"
+		deploymentCompose = "deployment-compose"
+	)
+
+	defaults := ArtifactsConfig{
+		Firmware: defaultFirmware,
+		Kernel:   "default-kernel",
+		Stage2:   defaultStage2,
+		Container: ContainerArtifactsConfig{
+			Runtime: defaultRuntime,
+			Compose: "default-compose",
+		},
+	}
+	m := Manifest{
+		Artifacts: &ArtifactsConfig{
+			Kernel: globalKernel,
+			Container: ContainerArtifactsConfig{
+				Compose: globalCompose,
+			},
+		},
+		Deployments: map[string]*Deployment{
+			"testnet": {
+				Network:  "testnet",
+				ParaTime: "sapphire",
+				Artifacts: &ArtifactsConfig{
+					Stage2: deploymentStage2,
+					Container: ContainerArtifactsConfig{
+						Compose: deploymentCompose,
+					},
+				},
+			},
+			"mainnet": {
+				Network:  "mainnet",
+				ParaTime: "sapphire",
+			},
+		},
+	}
+
+	require.Equal(ArtifactsConfig{
+		Firmware: defaultFirmware,
+		Kernel:   globalKernel,
+		Stage2:   deploymentStage2,
+		Container: ContainerArtifactsConfig{
+			Runtime: defaultRuntime,
+			Compose: deploymentCompose,
+		},
+	}, m.ResolveArtifacts("testnet", defaults))
+
+	require.Equal(ArtifactsConfig{
+		Firmware: defaultFirmware,
+		Kernel:   globalKernel,
+		Stage2:   defaultStage2,
+		Container: ContainerArtifactsConfig{
+			Runtime: defaultRuntime,
+			Compose: globalCompose,
+		},
+	}, m.ResolveArtifacts("mainnet", defaults))
+
+	require.Equal(ArtifactsConfig{
+		Firmware: defaultFirmware,
+		Kernel:   globalKernel,
+		Stage2:   defaultStage2,
+		Container: ContainerArtifactsConfig{
+			Runtime: defaultRuntime,
+			Compose: globalCompose,
+		},
+	}, m.ResolveArtifacts("missing", defaults))
+}
+
 func TestLoadManifest(t *testing.T) {
 	require := require.New(t)
 
@@ -261,6 +388,36 @@ func TestUpgradeArtifacts(t *testing.T) {
 	require.Equal("f", existing.Container.Compose)
 
 	changed = existing.UpgradeTo(&latest)
+	require.False(changed)
+}
+
+func TestUpgradeExplicitArtifacts(t *testing.T) {
+	require := require.New(t)
+
+	existing := ArtifactsConfig{
+		Kernel: "old-kernel",
+		Container: ContainerArtifactsConfig{
+			Compose: "compose.testnet.yaml",
+		},
+	}
+	latest := ArtifactsConfig{
+		Firmware: "latest-firmware",
+		Kernel:   "latest-kernel",
+		Stage2:   "latest-stage2",
+		Container: ContainerArtifactsConfig{
+			Runtime: "latest-runtime",
+		},
+	}
+
+	changed := existing.UpgradeExplicitTo(&latest)
+	require.True(changed)
+	require.Equal("", existing.Firmware)
+	require.Equal("latest-kernel", existing.Kernel)
+	require.Equal("", existing.Stage2)
+	require.Equal("", existing.Container.Runtime)
+	require.Equal("compose.testnet.yaml", existing.Container.Compose)
+
+	changed = existing.UpgradeExplicitTo(&latest)
 	require.False(changed)
 }
 

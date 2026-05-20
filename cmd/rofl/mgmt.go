@@ -582,8 +582,7 @@ var (
 			cobra.CheckErr(err)
 
 			var latestArtifacts buildRofl.ArtifactsConfig
-			switch manifest.TEE {
-			case buildRofl.TEETypeTDX:
+			if manifest.TEE == buildRofl.TEETypeTDX {
 				switch manifest.Kind {
 				case buildRofl.AppKindRaw:
 					latestArtifacts = buildRofl.LatestBasicArtifacts // Copy.
@@ -591,15 +590,24 @@ var (
 				case buildRofl.AppKindContainer:
 					latestArtifacts = buildRofl.LatestContainerArtifacts // Copy.
 					latestArtifacts.Builder = buildRofl.LatestContainerBuilderImage
-				default:
 				}
-			default:
 			}
 
 			if manifest.Artifacts == nil {
 				manifest.Artifacts = &buildRofl.ArtifactsConfig{}
 			}
 			artifactsUpdated := manifest.Artifacts.UpgradeTo(&latestArtifacts)
+			var deploymentArtifactsUpdated []string
+			for name, deployment := range manifest.Deployments {
+				if deployment == nil || deployment.Artifacts == nil {
+					continue
+				}
+				if deployment.Artifacts.UpgradeExplicitTo(&latestArtifacts) {
+					deploymentArtifactsUpdated = append(deploymentArtifactsUpdated, name)
+					artifactsUpdated = true
+				}
+			}
+			sort.Strings(deploymentArtifactsUpdated)
 
 			// Update tooling version.
 			manifest.Tooling = &buildRofl.ToolingConfig{
@@ -613,6 +621,9 @@ var (
 
 			if artifactsUpdated {
 				fmt.Printf("Artifacts have been updated to the latest versions.\n")
+				if len(deploymentArtifactsUpdated) > 0 {
+					fmt.Printf("Updated deployment artifact overrides: %s.\n", strings.Join(deploymentArtifactsUpdated, ", "))
+				}
 				fmt.Printf("Run `oasis rofl build` to build with the new artifacts.\n")
 			} else {
 				fmt.Printf("Artifacts already up-to-date.\n")

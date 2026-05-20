@@ -35,10 +35,11 @@ func tdxBuildRaw(
 	npa *common.NPASelection,
 	manifest *buildRofl.Manifest,
 	deployment *buildRofl.Deployment,
+	artifactsCfg buildRofl.ArtifactsConfig,
 	bnd *bundle.Bundle,
 	locked bool,
 ) error {
-	wantedArtifacts := tdxWantedArtifacts(manifest, buildRofl.LatestBasicArtifacts)
+	wantedArtifacts := tdxWantedArtifacts(artifactsCfg)
 	artifacts := tdxFetchArtifacts(wantedArtifacts)
 
 	fmt.Println("Building a TDX-based Rust ROFL application...")
@@ -83,9 +84,8 @@ type artifact struct {
 	uri  string
 }
 
-// tdxWantedArtifacts returns the list of wanted artifacts based on the passed manifest and a set of
-// defaults. In case an artifact is not defined in the manifest, it is taken from defaults.
-func tdxWantedArtifacts(manifest *buildRofl.Manifest, defaults buildRofl.ArtifactsConfig) []*artifact {
+// tdxWantedArtifacts returns the list of wanted artifacts based on resolved artifact config.
+func tdxWantedArtifacts(artifactsCfg buildRofl.ArtifactsConfig) []*artifact {
 	var artifacts []*artifact
 	for _, a := range []struct {
 		kind   string
@@ -97,13 +97,7 @@ func tdxWantedArtifacts(manifest *buildRofl.Manifest, defaults buildRofl.Artifac
 		{artifactContainerRuntime, func(ac *buildRofl.ArtifactsConfig) string { return ac.Container.Runtime }},
 		{artifactContainerCompose, func(ac *buildRofl.ArtifactsConfig) string { return ac.Container.Compose }},
 	} {
-		var uri string
-		if manifest.Artifacts != nil {
-			uri = a.getter(manifest.Artifacts)
-		}
-		if uri == "" {
-			uri = a.getter(&defaults)
-		}
+		uri := a.getter(&artifactsCfg)
 		if uri != "" {
 			artifacts = append(artifacts, &artifact{a.kind, uri})
 		}

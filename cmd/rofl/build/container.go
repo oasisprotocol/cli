@@ -17,16 +17,21 @@ func tdxBuildContainer(
 	npa *common.NPASelection,
 	manifest *buildRofl.Manifest,
 	deployment *buildRofl.Deployment,
+	artifactsCfg buildRofl.ArtifactsConfig,
 	bnd *bundle.Bundle,
 ) error {
 	fmt.Println("Building a container-based TDX ROFL application...")
 
-	wantedArtifacts := tdxWantedArtifacts(manifest, buildRofl.LatestContainerArtifacts)
+	wantedArtifacts := tdxWantedArtifacts(artifactsCfg)
 	artifacts := tdxFetchArtifacts(wantedArtifacts)
+	composePath, ok := artifacts[artifactContainerCompose]
+	if !ok {
+		return fmt.Errorf("missing compose.yaml artifact")
+	}
 
 	// Validate compose file.
 	fmt.Println("Validating compose file...")
-	if _, err := validateComposeFile(artifacts[artifactContainerCompose], manifest, ValidationOpts{}); err != nil {
+	if _, err := validateComposeFile(composePath, manifest, ValidationOpts{}); err != nil {
 		common.CheckForceErr(fmt.Errorf("compose file validation failed: %w", err))
 	}
 
@@ -34,7 +39,7 @@ func tdxBuildContainer(
 	initPath := artifacts[artifactContainerRuntime]
 
 	stage2, err := tdxPrepareStage2(buildEnv, tmpDir, artifacts, initPath, []extraFile{
-		{HostPath: artifacts[artifactContainerCompose], TarPath: "etc/oasis/containers/compose.yaml", Mode: 0o644},
+		{HostPath: composePath, TarPath: "etc/oasis/containers/compose.yaml", Mode: 0o644},
 	})
 	if err != nil {
 		return err

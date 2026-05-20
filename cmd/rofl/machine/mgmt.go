@@ -324,7 +324,7 @@ func resolveMachineCfg(args []string, manifestOpts *roflCommon.ManifestOptions) 
 			return nil, fmt.Errorf("malformed app id: %w", err)
 		}
 
-		if mCfg.ExtraCfg, err = roflCmdBuild.ValidateApp(mCfg.Manifest, roflCmdBuild.ValidationOpts{
+		if mCfg.ExtraCfg, err = roflCmdBuild.ValidateApp(mCfg.Manifest, roflCommon.DeploymentName, roflCmdBuild.ValidationOpts{
 			Offline: true,
 		}); err != nil {
 			return nil, fmt.Errorf("failed to validate app: %w", err)

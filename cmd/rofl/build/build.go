@@ -54,7 +54,7 @@ var (
 
 			if onlyValidate {
 				fmt.Println("Validating app...")
-				_, err := ValidateApp(manifest, ValidationOpts{})
+				_, err := ValidateApp(manifest, roflCommon.DeploymentName, ValidationOpts{})
 				if err == nil {
 					fmt.Println("App validation passed.")
 					return nil
@@ -86,10 +86,11 @@ var (
 			setUmask(0o002)
 
 			// Determine builder image to use.
+			builderArtifacts := manifest.ResolveArtifacts(roflCommon.DeploymentName, buildRofl.ArtifactsConfig{})
 			builderImage := ""
-			if manifest.Artifacts != nil {
-				builderImage = strings.TrimSpace(manifest.Artifacts.Builder)
-				if manifest.Artifacts.Builder != "" && builderImage == "" {
+			if builderArtifacts.Builder != "" {
+				builderImage = strings.TrimSpace(builderArtifacts.Builder)
+				if builderImage == "" {
 					return fmt.Errorf("builder image is empty after trimming whitespace")
 				}
 			}
@@ -191,9 +192,11 @@ var (
 				// TDX.
 				switch manifest.Kind {
 				case buildRofl.AppKindRaw:
-					err = tdxBuildRaw(buildEnv, tmpDir, npa, manifest, deployment, bnd, doVerify)
+					artifactsCfg := manifest.ResolveArtifacts(roflCommon.DeploymentName, buildRofl.LatestBasicArtifacts)
+					err = tdxBuildRaw(buildEnv, tmpDir, npa, manifest, deployment, artifactsCfg, bnd, doVerify)
 				case buildRofl.AppKindContainer:
-					err = tdxBuildContainer(buildEnv, tmpDir, npa, manifest, deployment, bnd)
+					artifactsCfg := manifest.ResolveArtifacts(roflCommon.DeploymentName, buildRofl.LatestContainerArtifacts)
+					err = tdxBuildContainer(buildEnv, tmpDir, npa, manifest, deployment, artifactsCfg, bnd)
 				}
 			default:
 				return fmt.Errorf("unsupported TEE kind: %s", manifest.TEE)
@@ -291,7 +294,7 @@ var (
 				}
 
 				// Check if artifact upgrades are available and notify the user.
-				notifyUpgradeAvailable(manifest)
+				notifyUpgradeAvailable(manifest, roflCommon.DeploymentName)
 
 				return nil
 			}
@@ -338,7 +341,7 @@ var (
 			}
 
 			// Check if artifact upgrades are available and notify the user.
-			notifyUpgradeAvailable(manifest)
+			notifyUpgradeAvailable(manifest, roflCommon.DeploymentName)
 
 			return nil
 		},
@@ -346,33 +349,34 @@ var (
 )
 
 // notifyUpgradeAvailable checks if artifact upgrades are available and prints a notification.
-func notifyUpgradeAvailable(manifest *buildRofl.Manifest) {
-	var latestArtifacts buildRofl.ArtifactsConfig
-	switch manifest.TEE {
-	case buildRofl.TEETypeTDX:
-		switch manifest.Kind {
-		case buildRofl.AppKindRaw:
-			latestArtifacts = buildRofl.LatestBasicArtifacts
-			latestArtifacts.Builder = buildRofl.LatestBuilderImage
-		case buildRofl.AppKindContainer:
-			latestArtifacts = buildRofl.LatestContainerArtifacts
-			latestArtifacts.Builder = buildRofl.LatestContainerBuilderImage
-		default:
-			return
-		}
-	default:
+func notifyUpgradeAvailable(manifest *buildRofl.Manifest, deploymentName string) {
+	latestArtifacts, ok := latestUpgradeableArtifacts(manifest)
+	if !ok {
 		return
 	}
 
-	current := manifest.Artifacts
-	if current == nil {
-		current = &buildRofl.ArtifactsConfig{}
-	}
-
+	current := manifest.ResolveArtifacts(deploymentName, buildRofl.ArtifactsConfig{})
 	if current.UpgradePossible(&latestArtifacts) {
 		fmt.Println()
 		fmt.Println("NOTE: A new version of artifacts is available. Run `oasis rofl upgrade` to upgrade.")
 	}
+}
+
+func latestUpgradeableArtifacts(manifest *buildRofl.Manifest) (buildRofl.ArtifactsConfig, bool) {
+	if manifest.TEE != buildRofl.TEETypeTDX {
+		return buildRofl.ArtifactsConfig{}, false
+	}
+	switch manifest.Kind {
+	case buildRofl.AppKindRaw:
+		latestArtifacts := buildRofl.LatestBasicArtifacts
+		latestArtifacts.Builder = buildRofl.LatestBuilderImage
+		return latestArtifacts, true
+	case buildRofl.AppKindContainer:
+		latestArtifacts := buildRofl.LatestContainerArtifacts
+		latestArtifacts.Builder = buildRofl.LatestContainerBuilderImage
+		return latestArtifacts, true
+	}
+	return buildRofl.ArtifactsConfig{}, false
 }
 
 // setupContainerEnv creates and initializes a container build environment.

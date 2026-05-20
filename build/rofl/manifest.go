@@ -231,6 +231,21 @@ func (m *Manifest) GetMetadata(deployment string) map[string]string {
 	return meta
 }
 
+// ResolveArtifacts resolves the artifact configuration for the given deployment by overlaying
+// global manifest artifacts and then deployment-specific artifacts on top of the provided defaults.
+func (m *Manifest) ResolveArtifacts(deployment string, defaults ArtifactsConfig) ArtifactsConfig {
+	resolved := defaults
+	resolved.Merge(m.Artifacts)
+
+	if deployment != "" {
+		if d := m.Deployments[deployment]; d != nil {
+			resolved.Merge(d.Artifacts)
+		}
+	}
+
+	return resolved
+}
+
 // SourceFileName returns the filename of the manifest file from which the manifest was loaded or
 // an empty string in case the filename is not available.
 func (m *Manifest) SourceFileName() string {
@@ -319,6 +334,8 @@ type Deployment struct {
 	Debug bool `yaml:"debug,omitempty" json:"debug,omitempty"`
 	// OCIRepository is the optional OCI repository where one can push the ORC to.
 	OCIRepository string `yaml:"oci_repository,omitempty" json:"oci_repository,omitempty"`
+	// Artifacts are optional deployment-specific artifact location overrides.
+	Artifacts *ArtifactsConfig `yaml:"artifacts,omitempty" json:"artifacts,omitempty"`
 	// TrustRoot is the optional trust root configuration.
 	TrustRoot *TrustRootConfig `yaml:"trust_root,omitempty" json:"trust_root,omitempty"`
 	// Policy is the ROFL app policy.
@@ -564,6 +581,26 @@ type ArtifactsConfig struct {
 	Container ContainerArtifactsConfig `yaml:"container,omitempty" json:"container,omitempty"`
 }
 
+// Merge overlays non-empty artifact fields from another artifact configuration.
+func (ac *ArtifactsConfig) Merge(other *ArtifactsConfig) {
+	if other == nil {
+		return
+	}
+	if other.Builder != "" {
+		ac.Builder = other.Builder
+	}
+	if other.Firmware != "" {
+		ac.Firmware = other.Firmware
+	}
+	if other.Kernel != "" {
+		ac.Kernel = other.Kernel
+	}
+	if other.Stage2 != "" {
+		ac.Stage2 = other.Stage2
+	}
+	ac.Container.Merge(&other.Container)
+}
+
 type artifactUpgrade struct {
 	existing *string
 	new      string
@@ -597,6 +634,22 @@ func upgradePossible(check []artifactUpgrade) bool {
 		}
 	}
 	return false
+}
+
+// upgradeExplicitArtifacts upgrades only explicitly configured artifact fields.
+func upgradeExplicitArtifacts(upgrade []artifactUpgrade) bool {
+	var changed bool
+	for _, artifact := range upgrade {
+		if artifact.new == "" || *artifact.existing == "" {
+			continue
+		}
+		if *artifact.existing == artifact.new {
+			continue
+		}
+		*artifact.existing = artifact.new
+		changed = true
+	}
+	return changed
 }
 
 // UpgradePossible returns true iff any explicitly set artifacts differ from latest.
@@ -636,6 +689,21 @@ func (ac *ArtifactsConfig) UpgradeTo(latest *ArtifactsConfig) bool {
 	return changed
 }
 
+// UpgradeExplicitTo upgrades only explicitly configured artifacts to the latest version.
+//
+// Returns true iff any artifacts have been updated.
+func (ac *ArtifactsConfig) UpgradeExplicitTo(latest *ArtifactsConfig) bool {
+	var changed bool
+	changed = upgradeExplicitArtifacts([]artifactUpgrade{
+		{&ac.Builder, latest.Builder},
+		{&ac.Firmware, latest.Firmware},
+		{&ac.Kernel, latest.Kernel},
+		{&ac.Stage2, latest.Stage2},
+	})
+	changed = ac.Container.UpgradeExplicitTo(&latest.Container) || changed
+	return changed
+}
+
 // ContainerArtifactsConfig is the container artifacts configuration.
 type ContainerArtifactsConfig struct {
 	// Runtime is the URI/path to the container runtime artifact (empty to use default).
@@ -644,11 +712,34 @@ type ContainerArtifactsConfig struct {
 	Compose string `yaml:"compose,omitempty" json:"compose,omitempty"`
 }
 
+// Merge overlays non-empty container artifact fields from another container artifact configuration.
+func (cc *ContainerArtifactsConfig) Merge(other *ContainerArtifactsConfig) {
+	if other == nil {
+		return
+	}
+	if other.Runtime != "" {
+		cc.Runtime = other.Runtime
+	}
+	if other.Compose != "" {
+		cc.Compose = other.Compose
+	}
+}
+
 // UpgradeTo upgrades the artifacts to the latest version by updating any relevant fields.
 //
 // Returns true iff any artifacts have been updated.
 func (cc *ContainerArtifactsConfig) UpgradeTo(latest *ContainerArtifactsConfig) bool {
 	return upgradeArtifacts([]artifactUpgrade{
+		{&cc.Compose, latest.Compose},
+		{&cc.Runtime, latest.Runtime},
+	})
+}
+
+// UpgradeExplicitTo upgrades only explicitly configured container artifacts to the latest version.
+//
+// Returns true iff any artifacts have been updated.
+func (cc *ContainerArtifactsConfig) UpgradeExplicitTo(latest *ContainerArtifactsConfig) bool {
+	return upgradeExplicitArtifacts([]artifactUpgrade{
 		{&cc.Compose, latest.Compose},
 		{&cc.Runtime, latest.Runtime},
 	})

@@ -43,8 +43,8 @@ type PortMapping struct {
 	CustomDomain string
 }
 
-// ValidateApp validates the ROFL app manifest.
-func ValidateApp(manifest *buildRofl.Manifest, opts ValidationOpts) (*AppExtraConfig, error) {
+// ValidateApp validates the ROFL app manifest for the selected deployment.
+func ValidateApp(manifest *buildRofl.Manifest, deploymentName string, opts ValidationOpts) (*AppExtraConfig, error) {
 	switch manifest.TEE {
 	case buildRofl.TEETypeSGX:
 		if manifest.Kind != buildRofl.AppKindRaw {
@@ -54,21 +54,17 @@ func ValidateApp(manifest *buildRofl.Manifest, opts ValidationOpts) (*AppExtraCo
 		switch manifest.Kind {
 		case buildRofl.AppKindRaw:
 		case buildRofl.AppKindContainer:
-			wantedArtifacts := tdxWantedArtifacts(manifest, buildRofl.LatestContainerArtifacts)
-
-			var composeAf *artifact
-			for _, a := range wantedArtifacts {
-				if a.kind == artifactContainerCompose {
-					composeAf = a
-					break
+			artifactsCfg := manifest.ResolveArtifacts(deploymentName, buildRofl.LatestContainerArtifacts)
+			composeURI := artifactsCfg.Container.Compose
+			if composeURI == "" {
+				if deploymentName != "" {
+					return nil, fmt.Errorf("missing compose.yaml artifact for deployment '%s'", deploymentName)
 				}
-			}
-			if composeAf == nil {
 				return nil, fmt.Errorf("missing compose.yaml artifact")
 			}
 
 			// Only fetch the compose.yaml artifact.
-			artifacts := tdxFetchArtifacts([]*artifact{composeAf})
+			artifacts := tdxFetchArtifacts([]*artifact{{kind: artifactContainerCompose, uri: composeURI}})
 
 			// Validate compose.yaml.
 			appCfg, err := validateComposeFile(artifacts[artifactContainerCompose], manifest, opts)

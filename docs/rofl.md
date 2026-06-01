@@ -541,7 +541,7 @@ needs to have a hardcoded *trust root*. Typically, it consists of:
 - the [chain domain separation context],
 - the specific consensus block hash and its height.
 
-To obtain the latest trust root in rust programming language, run
+To obtain the latest trust root in JSON format, run
 `oasis rofl trust-root`:
 
 ![code shell](../examples/rofl/trust-root.in.static)
@@ -554,3 +554,20 @@ You can also define specific [Network and ParaTime][npa] parameters:
 
 [ParaTime ID]: https://github.com/oasisprotocol/oasis-core/blob/master/docs/runtime/identifiers.md
 [chain domain separation context]: https://github.com/oasisprotocol/oasis-core/blob/master/docs/crypto.md#chain-domain-separation
+
+### Set the trust root in the app manifest {#set-trust-root}
+
+The consensus block height and hash of the [trust root](#trust-root) are stored
+in the deployment section of the `rofl.yaml` app manifest and are embedded into
+the app at build time. Instead of editing the manifest by hand, you can fetch
+the latest trust root and update the manifest automatically by running
+`oasis rofl set-trust-root`:
+
+![code shell](../examples/rofl/set-trust-root.in.static)
+
+![code](../examples/rofl/set-trust-root.out.static)
+
+By default the latest finalized consensus block is used. You can also pass the
+block `height` (and optionally the block `hash`) as positional arguments to pin
+a specific block, or `--deployment` to update a non-default deployment. After
+setting the trust root, run [`oasis rofl build`](#build) for it to take effect.

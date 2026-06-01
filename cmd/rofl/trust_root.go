@@ -12,6 +12,14 @@ import (
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
+// trustRoot is the consensus trust root for a ROFL application.
+type trustRoot struct {
+	Height       uint64 `json:"height"`
+	Hash         string `json:"hash"`
+	RuntimeID    string `json:"runtime_id"`
+	ChainContext string `json:"chain_context"`
+}
+
 var trustRootCmd = &cobra.Command{
 	Use:   "trust-root",
 	Short: "Show a recent trust root for a ROFL application",
@@ -36,13 +44,16 @@ var trustRootCmd = &cobra.Command{
 		blk, err := conn.Consensus().Core().GetBlock(ctx, height)
 		cobra.CheckErr(err)
 
-		// TODO: Support different output formats.
-		fmt.Printf("TrustRoot {\n")
-		fmt.Printf("    height: %d,\n", height)
-		fmt.Printf("    hash: \"%s\".into(),\n", blk.Hash)
-		fmt.Printf("    runtime_id: \"%s\".into(),\n", npa.ParaTime.ID)
-		fmt.Printf("    chain_context: \"%s\".to_string(),\n", npa.Network.ChainContext)
-		fmt.Printf("}\n")
+		tr := trustRoot{
+			Height:       uint64(height),
+			Hash:         blk.Hash.Hex(),
+			RuntimeID:    npa.ParaTime.ID,
+			ChainContext: npa.Network.ChainContext,
+		}
+
+		out, err := common.PrettyJSONMarshal(tr)
+		cobra.CheckErr(err)
+		fmt.Println(string(out))
 	},
 }
 

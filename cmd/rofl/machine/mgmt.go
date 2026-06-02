@@ -186,9 +186,10 @@ var (
 	}
 
 	topUpCmd = &cobra.Command{
-		Use:   "top-up [<machine-name> | <provider-address>:<machine-id>]",
-		Short: "Top-up payment for a machine",
-		Args:  cobra.MaximumNArgs(1),
+		Use:     "top-up [<machine-name> | <provider-address>:<machine-id>]",
+		Short:   "Top-up payment for a machine",
+		Aliases: []string{"topup"},
+		Args:    cobra.MaximumNArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
 			txCfg := common.GetTransactionConfig()
 

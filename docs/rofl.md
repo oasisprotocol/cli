@@ -388,33 +388,7 @@ information and your offers.
 
 An example provider configuration file looks like this:
 
-```yaml title="rofl-provider.yaml"
-# Network name in your Oasis CLI
-network: testnet
-# ParaTime name in your Oasis CLI
-paratime: sapphire
-# Account name in your Oasis CLI
-provider: rofl_provider
-# List of Base64-encoded node IDs allowed to execute ROFL apps
-nodes:
-  -
-# Address of the scheduler app
-scheduler_app: rofl1qrqw99h0f7az3hwt2cl7yeew3wtz0fxunu7luyfg 
-# Account name or address of who receives ROFL machine rental payments
-payment_address: rofl_provider
-offers:
-  - id: small # Short human-readable name
-    resources:
-      tee: tdx # Possible values: sgx, tdx
-      memory: 4096 # In MiB
-      cpus: 2
-      storage: 20000 # In MiB
-    payment:
-      native: # Possible keys: native, evm
-        terms:
-          hourly: 10 # Possible keys: hourly, monthly, yearly
-    capacity: 50 # Max number of actively rented machines
-```
+![code yaml title="rofl-provider.yaml"](../examples/rofl/rofl-provider.yaml)
 
 #### Initialize a ROFL provider {#provider-init}
 

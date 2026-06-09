@@ -1,0 +1,27 @@
+# Network name in your Oasis CLI
+network: testnet
+# ParaTime name in your Oasis CLI
+paratime: sapphire
+# Account name in your Oasis CLI
+provider: rofl_provider
+# List of Base64-encoded node IDs allowed to execute ROFL apps
+nodes:
+  - 5MsgQwijUlpH9+0Hbyors5jwmx7tTmKMA4c9leV3prI=
+# Address of the scheduler app:
+# - Sapphire Testnet: rofl1qrqw99h0f7az3hwt2cl7yeew3wtz0fxunu7luyfg
+# - Sapphire Mainnet: rofl1qr95suussttd2g9ehu3zcpgx8ewtwgayyuzsl0x2
+scheduler_app: rofl1qrqw99h0f7az3hwt2cl7yeew3wtz0fxunu7luyfg
+# Account name or address of who receives ROFL machine rental payments
+payment_address: rofl_provider
+offers:
+  - id: small # Short human-readable name
+    resources:
+      tee: tdx # Possible values: sgx, tdx
+      memory: 4096 # In MiB
+      cpus: 2
+      storage: 20000 # In MiB
+    payment:
+      native: # Possible keys: native, evm
+        terms:
+          hourly: 10 # Possible keys: hourly, monthly, yearly
+    capacity: 50 # Max number of actively rented machines

@@ -1,0 +1,1 @@
+echo -n "https://api.example.com" | oasis rofl public-var set API_URL -

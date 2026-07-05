@@ -186,6 +186,56 @@ Run `rofl secret rm <secret-name>` to remove the secret from your manifest file.
 
 ![code shell](../examples/rofl/secret-rm.in.static)
 
+## Public variables management {#public-var}
+
+Public variables are stored unencrypted in ROFL app metadata and on-chain.
+They are exposed to containers as environment variables. Use [`rofl secret`]
+to store confidential values.
+
+[`rofl secret`]: #secret
+
+### Set public variable {#public-var-set}
+
+Run `rofl public-var set <name> <filename>|-` to store a public variable in the
+manifest file.
+
+If you have the value in a file, run:
+
+![code shell](../examples/rofl/public-var-set-file.in.static)
+
+You can also feed the value from standard input:
+
+![code shell](../examples/rofl/public-var-set-stdin.in.static)
+
+Use `--force` to replace an existing public variable.
+
+### Import public variables from `.env` files {#public-var-import}
+
+Run `rofl public-var import <dot-env-file>|-` to bulk-import public variables
+from a [dotenv](https://github.com/motdotla/dotenv) compatible file (key=value
+with `#` comments).
+
+![code shell](../examples/rofl/public-var-import.in.static)
+
+Each `KEY=VALUE` pair becomes a separate public variable in your manifest. Use
+`--force` to replace existing public variables.
+
+### Get public variable info {#public-var-get}
+
+Run `rofl public-var get <name>` to show the value currently stored in your
+manifest file.
+
+![code shell](../examples/rofl/public-var-get.in.static)
+
+![code](../examples/rofl/public-var-get.out.static)
+
+### Remove public variable {#public-var-rm}
+
+Run `rofl public-var rm <name>` to remove the public variable from your manifest
+file.
+
+![code shell](../examples/rofl/public-var-rm.in.static)
+
 ## Update ROFL app config on-chain {#update}
 
 Use `rofl update` command to push the ROFL app's configuration to the chain:

@@ -652,6 +652,7 @@ var (
 			if err := appID.UnmarshalText([]byte(deployment.AppID)); err != nil {
 				cobra.CheckErr(fmt.Errorf("malformed ROFL app ID: %w", err))
 			}
+			cobra.CheckErr(checkNoPublicVarNamed(deployment.Metadata, secretName))
 
 			// Establish connection with the target network.
 			ctx := context.Background()
@@ -769,6 +770,8 @@ var (
 
 			var imported, updated int
 			for _, name := range names {
+				cobra.CheckErr(checkNoPublicVarNamed(deployment.Metadata, name))
+
 				value := []byte(entries[name])
 
 				encValue, err := buildRofl.EncryptSecret(name, value, appCfg.SEK)

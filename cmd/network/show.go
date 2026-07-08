@@ -93,6 +93,10 @@ func prettyPrintEntityNodes(ctx context.Context, npa *common.NPASelection, staki
 			ID:     node,
 		}
 
+		// TODO: Fix eager termination of pretty printing and handle the case
+		// where node descriptor has already expired, but node status still
+		// returns as debonding period has not yet passed.
+		// See: https://github.com/oasisprotocol/cli/issues/707.
 		nodeStatus, err := registryConn.GetNodeStatus(ctx, idQuery2)
 		if err != nil {
 			fmt.Println("  Node is not active")

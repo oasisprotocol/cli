@@ -39,7 +39,7 @@ var (
 	txGasPrice   string
 	txFeeDenom   string
 	txEncrypted  bool
-	txUnsigned   bool
+	TxUnsigned   bool
 	txFormat     string
 	txOutputFile string
 )
@@ -80,7 +80,7 @@ func GetTransactionConfig() *TransactionConfig {
 
 // shouldExportTransaction returns true if the transaction should be exported instead of broadcast.
 func shouldExportTransaction() bool {
-	return txOffline || txUnsigned || txOutputFile != ""
+	return txOffline || TxUnsigned || txOutputFile != ""
 }
 
 // isRuntimeTx returns true, if given object is a signed or unsigned runtime transaction.
@@ -184,7 +184,7 @@ func SignConsensusTransaction(
 	if tx.Nonce == invalidNonce || tx.Fee.Gas == invalidGasLimit {
 		return nil, fmt.Errorf("nonce and/or gas limit must be specified in offline mode")
 	}
-	if txUnsigned {
+	if TxUnsigned {
 		// Return an unsigned transaction.
 		return tx, nil
 	}
@@ -341,7 +341,7 @@ func SignParaTimeTransaction(
 		tx.Call = *encCall
 	}
 
-	if txUnsigned {
+	if TxUnsigned {
 		// Return an unsigned transaction.
 		return tx, meta, nil
 	}
@@ -630,7 +630,7 @@ func init() {
 	RuntimeTxFlags.StringVar(&txFeeDenom, "fee-denom", "", "override fee denomination (defaults to native)")
 	RuntimeTxFlags.BoolVar(&txEncrypted, "encrypted", false, "encrypt transaction call data (requires online mode)")
 	RuntimeTxFlags.AddFlagSet(AnswerYesFlag)
-	RuntimeTxFlags.BoolVar(&txUnsigned, "unsigned", false, "do not sign transaction")
+	RuntimeTxFlags.BoolVar(&TxUnsigned, "unsigned", false, "do not sign transaction")
 	RuntimeTxFlags.StringVar(&txFormat, "format", "json", "transaction output format (for offline/unsigned modes) [json, cbor, safe]")
 	RuntimeTxFlags.StringVarP(&txOutputFile, "output-file", "o", "", "output transaction into specified file instead of broadcasting")
 
@@ -640,7 +640,7 @@ func init() {
 	TxFlags.Uint64Var(&txGasLimit, "gas-limit", invalidGasLimit, "override gas limit to use (disable estimation)")
 	TxFlags.StringVar(&txGasPrice, "gas-price", "", "override gas price to use")
 	TxFlags.AddFlagSet(AnswerYesFlag)
-	TxFlags.BoolVar(&txUnsigned, "unsigned", false, "do not sign transaction")
+	TxFlags.BoolVar(&TxUnsigned, "unsigned", false, "do not sign transaction")
 	TxFlags.StringVar(&txFormat, "format", "json", "transaction output format (for offline/unsigned modes) [json, cbor]")
 	TxFlags.StringVarP(&txOutputFile, "output-file", "o", "", "output transaction into specified file instead of broadcasting")
 }

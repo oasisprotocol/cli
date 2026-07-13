@@ -524,15 +524,20 @@ more.
 
 ### Output format {#format}
 
-Use `--format json` or `--format cbor` to select the output file
-format. By default the JSON encoding is selected so that the file is
-human-readable and that 3rd party applications can easily manage it. If you want
-to output the transaction in the same format that will be stored on-chain or you
-are using a 3rd party tool for signing the content of the transaction file
-directly use the CBOR encoding.
+Use `--format` with the following values:
 
-This parameter only works together with [`--unsigned`] and/or
+- `json` (default): A human-readable format useful to examine the transaction or
+  to import it into a 3rd party application.
+- `cbor`: The same transaction format that will be stored on-chain. Useful for
+  signing it with Oasis CLI running on an air-gapped machine or with another
+  external wallet.
+- `safe`: The Safe Transaction Builder batch that can be imported to
+  [safe.oasis.io] for multisig and submission on Sapphire.
+
+The `--format` parameter only works together with [`--unsigned`] and/or
 [`--output-file`] parameters.
+
+[safe.oasis.io]: https://docs.oasis.io/general/manage-tokens/holding-rose-tokens/custody-providers#oasis-safe
 
 ### Offline Mode {#offline}
 

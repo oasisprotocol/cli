@@ -50,6 +50,7 @@ const (
 
 	formatJSON = "json"
 	formatCBOR = "cbor"
+	formatSafe = "safe"
 )
 
 var (
@@ -420,7 +421,7 @@ func PrintTransactionBeforeSigning(npa *NPASelection, tx interface{}, txDetails 
 }
 
 // ExportTransaction exports a (signed) transaction based on configuration.
-func ExportTransaction(sigTx interface{}) {
+func ExportTransaction(pt *config.ParaTime, sigTx interface{}) {
 	// Determine output destination.
 	var err error
 	outputFile := os.Stdout
@@ -440,6 +441,9 @@ func ExportTransaction(sigTx interface{}) {
 		cobra.CheckErr(err)
 	case formatCBOR:
 		data = cbor.Marshal(sigTx)
+	case formatSafe:
+		data, err = exportSafe(pt, sigTx)
+		cobra.CheckErr(err)
 	default:
 		cobra.CheckErr(fmt.Errorf("unknown transaction format: %s", txFormat))
 	}
@@ -463,7 +467,7 @@ func BroadcastOrExportTransaction(
 	result interface{},
 ) bool {
 	if shouldExportTransaction() {
-		ExportTransaction(tx)
+		ExportTransaction(npa.ParaTime, tx)
 		return false
 	}
 
@@ -627,7 +631,7 @@ func init() {
 	RuntimeTxFlags.BoolVar(&txEncrypted, "encrypted", false, "encrypt transaction call data (requires online mode)")
 	RuntimeTxFlags.AddFlagSet(AnswerYesFlag)
 	RuntimeTxFlags.BoolVar(&txUnsigned, "unsigned", false, "do not sign transaction")
-	RuntimeTxFlags.StringVar(&txFormat, "format", "json", "transaction output format (for offline/unsigned modes) [json, cbor]")
+	RuntimeTxFlags.StringVar(&txFormat, "format", "json", "transaction output format (for offline/unsigned modes) [json, cbor, safe]")
 	RuntimeTxFlags.StringVarP(&txOutputFile, "output-file", "o", "", "output transaction into specified file instead of broadcasting")
 
 	TxFlags = flag.NewFlagSet("", flag.ContinueOnError)

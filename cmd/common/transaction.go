@@ -39,7 +39,7 @@ var (
 	txGasPrice   string
 	txFeeDenom   string
 	txEncrypted  bool
-	txUnsigned   bool
+	TxUnsigned   bool
 	txFormat     string
 	txOutputFile string
 )
@@ -50,6 +50,7 @@ const (
 
 	formatJSON = "json"
 	formatCBOR = "cbor"
+	formatSafe = "safe"
 )
 
 var (
@@ -79,7 +80,7 @@ func GetTransactionConfig() *TransactionConfig {
 
 // shouldExportTransaction returns true if the transaction should be exported instead of broadcast.
 func shouldExportTransaction() bool {
-	return txOffline || txUnsigned || txOutputFile != ""
+	return txOffline || TxUnsigned || txOutputFile != ""
 }
 
 // isRuntimeTx returns true, if given object is a signed or unsigned runtime transaction.
@@ -183,7 +184,7 @@ func SignConsensusTransaction(
 	if tx.Nonce == invalidNonce || tx.Fee.Gas == invalidGasLimit {
 		return nil, fmt.Errorf("nonce and/or gas limit must be specified in offline mode")
 	}
-	if txUnsigned {
+	if TxUnsigned {
 		// Return an unsigned transaction.
 		return tx, nil
 	}
@@ -340,7 +341,7 @@ func SignParaTimeTransaction(
 		tx.Call = *encCall
 	}
 
-	if txUnsigned {
+	if TxUnsigned {
 		// Return an unsigned transaction.
 		return tx, meta, nil
 	}
@@ -420,7 +421,7 @@ func PrintTransactionBeforeSigning(npa *NPASelection, tx interface{}, txDetails 
 }
 
 // ExportTransaction exports a (signed) transaction based on configuration.
-func ExportTransaction(sigTx interface{}) {
+func ExportTransaction(pt *config.ParaTime, sigTx interface{}) {
 	// Determine output destination.
 	var err error
 	outputFile := os.Stdout
@@ -440,6 +441,9 @@ func ExportTransaction(sigTx interface{}) {
 		cobra.CheckErr(err)
 	case formatCBOR:
 		data = cbor.Marshal(sigTx)
+	case formatSafe:
+		data, err = exportSafe(pt, sigTx)
+		cobra.CheckErr(err)
 	default:
 		cobra.CheckErr(fmt.Errorf("unknown transaction format: %s", txFormat))
 	}
@@ -463,7 +467,7 @@ func BroadcastOrExportTransaction(
 	result interface{},
 ) bool {
 	if shouldExportTransaction() {
-		ExportTransaction(tx)
+		ExportTransaction(npa.ParaTime, tx)
 		return false
 	}
 
@@ -626,8 +630,8 @@ func init() {
 	RuntimeTxFlags.StringVar(&txFeeDenom, "fee-denom", "", "override fee denomination (defaults to native)")
 	RuntimeTxFlags.BoolVar(&txEncrypted, "encrypted", false, "encrypt transaction call data (requires online mode)")
 	RuntimeTxFlags.AddFlagSet(AnswerYesFlag)
-	RuntimeTxFlags.BoolVar(&txUnsigned, "unsigned", false, "do not sign transaction")
-	RuntimeTxFlags.StringVar(&txFormat, "format", "json", "transaction output format (for offline/unsigned modes) [json, cbor]")
+	RuntimeTxFlags.BoolVar(&TxUnsigned, "unsigned", false, "do not sign transaction")
+	RuntimeTxFlags.StringVar(&txFormat, "format", "json", "transaction output format (for offline/unsigned modes) [json, cbor, safe]")
 	RuntimeTxFlags.StringVarP(&txOutputFile, "output-file", "o", "", "output transaction into specified file instead of broadcasting")
 
 	TxFlags = flag.NewFlagSet("", flag.ContinueOnError)
@@ -636,7 +640,7 @@ func init() {
 	TxFlags.Uint64Var(&txGasLimit, "gas-limit", invalidGasLimit, "override gas limit to use (disable estimation)")
 	TxFlags.StringVar(&txGasPrice, "gas-price", "", "override gas price to use")
 	TxFlags.AddFlagSet(AnswerYesFlag)
-	TxFlags.BoolVar(&txUnsigned, "unsigned", false, "do not sign transaction")
+	TxFlags.BoolVar(&TxUnsigned, "unsigned", false, "do not sign transaction")
 	TxFlags.StringVar(&txFormat, "format", "json", "transaction output format (for offline/unsigned modes) [json, cbor]")
 	TxFlags.StringVarP(&txOutputFile, "output-file", "o", "", "output transaction into specified file instead of broadcasting")
 }

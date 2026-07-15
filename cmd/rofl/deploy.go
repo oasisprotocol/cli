@@ -147,8 +147,6 @@ var (
 				return
 			}
 
-			acc := common.LoadAccount(cliConfig.Global(), npa.AccountName)
-
 			ociRepository := ociRepository(deployment)
 			orcFilename := roflCommon.GetOrcFilename(manifest, roflCommon.DeploymentName)
 			fmt.Printf("Pushing ROFL app to OCI repository '%s'...\n", ociRepository)
@@ -178,6 +176,10 @@ var (
 				machineDeployment.Metadata[scheduler.MetadataKeyProxyCustomDomains] = customDomains
 			}
 
+			acc := common.LoadAccount(cliConfig.Global(), cliConfig.Global().Wallet.Default)
+			if !common.TxUnsigned {
+				acc = common.LoadAccount(cliConfig.Global(), npa.AccountName)
+			}
 			obtainMachine := func() (*buildRofl.Machine, *roflmarket.Instance, error) {
 				if deployOffer != "" {
 					machine.Offer = deployOffer

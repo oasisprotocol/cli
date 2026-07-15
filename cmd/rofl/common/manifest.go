@@ -105,8 +105,8 @@ func MaybeLoadManifestAndSetNPA(cfg *cliConfig.Config, npa *common.NPASelection,
 	}
 	switch {
 	case d.Admin == "":
-		// No admin in manifest, leave unchanged.
-	case npa.AccountSetExplicitly:
+		// No admin in manifest, leave unchanged; ignore for unsigned transactions entirely.
+	case npa.AccountSetExplicitly, common.TxUnsigned:
 		// Account explicitly overridden on the command line, leave unchanged.
 	default:
 		accCfg, err := common.LoadAccountConfig(cfg, d.Admin)

@@ -76,7 +76,7 @@ var depositCmd = &cobra.Command{
 		cobra.CheckErr(err)
 
 		if txCfg.Export {
-			common.ExportTransaction(sigTx)
+			common.ExportTransaction(npa.ParaTime, sigTx)
 			return
 		}
 

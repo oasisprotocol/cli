@@ -111,7 +111,7 @@ var (
 			}
 
 			// Export signed transaction.
-			common.ExportTransaction(sigTx)
+			common.ExportTransaction(npa.ParaTime, sigTx)
 		},
 	}
 
@@ -136,6 +136,12 @@ var (
 )
 
 func tryDecodeTx(rawTx []byte) (any, error) {
+	// Check whether this is a wrapped Safe transaction first since none of the
+	// formats below would otherwise recognize it.
+	if tx, err := common.DecodeSafe(rawTx); err == nil {
+		return tx, nil
+	}
+
 	// Determine what kind of a transaction this is by attempting to decode it as either a
 	// consensus layer transaction or a runtime transaction. Either could also be unsigned.
 	txTypes := []struct {

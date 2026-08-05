@@ -20,6 +20,9 @@ var (
 	// ShowOffersFlag is the flag for showing all provider offers.
 	ShowOffersFlag *flag.FlagSet
 
+	// ShowPrivateOffersFlag is the flag for including private offers in offer listings.
+	ShowPrivateOffersFlag *flag.FlagSet
+
 	// DeploymentName is the name of the ROFL app deployment.
 	DeploymentName string
 
@@ -37,6 +40,9 @@ var (
 
 	// ShowOffers controls whether to display all offers for each provider.
 	ShowOffers bool
+
+	// ShowPrivateOffers controls whether private offers are included in offer listings.
+	ShowPrivateOffers bool
 )
 
 func init() {
@@ -55,4 +61,7 @@ func init() {
 
 	ShowOffersFlag = flag.NewFlagSet("", flag.ContinueOnError)
 	ShowOffersFlag.BoolVar(&ShowOffers, "show-offers", false, "show all offers for each provider")
+
+	ShowPrivateOffersFlag = flag.NewFlagSet("", flag.ContinueOnError)
+	ShowPrivateOffersFlag.BoolVarP(&ShowPrivateOffers, "all", "a", false, "include private offers in offer listings")
 }

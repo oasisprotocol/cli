@@ -32,6 +32,7 @@ This command queries on-chain provider data and displays provider addresses,
 scheduler app IDs, node counts, and offer/instance counts.
 
 Use --show-offers to expand and display all offers for each provider.
+Private offers are hidden by default, use --all to include them.
 Use --format json for machine-readable output.`,
 	Args: cobra.NoArgs,
 	Run: func(_ *cobra.Command, _ []string) {
@@ -85,7 +86,7 @@ func outputJSON(ctx context.Context, npa *common.NPASelection, conn connection.C
 			if err != nil {
 				cobra.CheckErr(fmt.Errorf("failed to query offers for provider %s: %w", provider.Address, err))
 			}
-			pwo.Offers = offers
+			pwo.Offers = roflCommon.FilterOffers(offers)
 		}
 
 		output = append(output, pwo)
@@ -138,6 +139,7 @@ func showProviderOffersExpanded(ctx context.Context, npa *common.NPASelection, c
 	if err != nil {
 		cobra.CheckErr(fmt.Errorf("failed to query offers for provider %s: %w", provider.Address, err))
 	}
+	offers = roflCommon.FilterOffers(offers)
 
 	prettyAddr := common.PrettyAddress(provider.Address.String())
 
@@ -183,7 +185,12 @@ func ShowOfferSummary(npa *common.NPASelection, offer *roflmarket.Offer) {
 		}
 	}
 
-	fmt.Printf("  - %s [%s]\n", name, offer.ID)
+	var private string
+	if provider.IsOfferPrivate(offer) {
+		private = " (private)"
+	}
+
+	fmt.Printf("  - %s [%s]%s\n", name, offer.ID, private)
 	fmt.Printf("    TEE: %s | Memory: %d MiB | vCPUs: %d | Storage: %.2f GiB%s\n",
 		tee,
 		offer.Resources.Memory,
@@ -221,6 +228,7 @@ func ShowOfferSummary(npa *common.NPASelection, offer *roflmarket.Offer) {
 
 func init() {
 	listCmd.Flags().AddFlagSet(roflCommon.ShowOffersFlag)
+	listCmd.Flags().AddFlagSet(roflCommon.ShowPrivateOffersFlag)
 	common.AddSelectorNPFlags(listCmd)
 	listCmd.Flags().AddFlagSet(common.FormatFlag)
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
 	"github.com/oasisprotocol/cli/cmd/common"
+	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
@@ -27,6 +28,7 @@ var showCmd = &cobra.Command{
 This command queries on-chain provider data and displays all provider details
 including address, scheduler app, nodes, payment address, and all offers.
 
+Private offers are hidden by default, use --all to include them.
 Use --format json for machine-readable output including provider metadata.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(_ *cobra.Command, args []string) {
@@ -56,6 +58,7 @@ Use --format json for machine-readable output including provider metadata.`,
 		if err != nil {
 			cobra.CheckErr(fmt.Errorf("failed to query offers for provider: %w", err))
 		}
+		offers = roflCommon.FilterOffers(offers)
 
 		// Output format handling.
 		if common.OutputFormat() == common.FormatJSON {
@@ -155,5 +158,6 @@ func outputProviderText(npa *common.NPASelection, provider *roflmarket.Provider,
 
 func init() {
 	common.AddSelectorNPFlags(showCmd)
+	showCmd.Flags().AddFlagSet(roflCommon.ShowPrivateOffersFlag)
 	showCmd.Flags().AddFlagSet(common.FormatFlag)
 }

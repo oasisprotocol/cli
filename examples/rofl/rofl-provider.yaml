@@ -25,3 +25,28 @@ offers:
         terms:
           hourly: 10 # Possible keys: hourly, monthly, yearly
     capacity: 50 # Max number of actively rented machines
+  - id: internal_small # An offer reserved for your own team
+    resources:
+      tee: tdx
+      memory: 4096
+      cpus: 2
+      storage: 20000
+    payment:
+      native:
+        terms:
+          hourly: 0
+    capacity: 10
+    # Only these accounts can rent machines from this offer. Account names in
+    # your Oasis CLI, your address book or plain addresses can be used. If
+    # omitted, anyone can rent a machine.
+    allowed_creators:
+      - oasis1qrk58a6j2qn065m6p06jgjyt032f7qucy5wqeqpt
+      - oasis1qqnf0s9p8z79zfutszt0hwlh7w7jjrfqnq997mlw
+    # Allowed SHA256 hashes of the machine artifacts. Possible keys: firmware,
+    # kernel, initrd, stage2. If a key is omitted, any artifact of that kind is
+    # allowed.
+    allowed_artifacts:
+      firmware:
+        - 4f2b3c1d0e9a8b7c6d5e4f3a2b1c0d9e8f7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c
+    # Hide this offer from public offer listings.
+    private: true

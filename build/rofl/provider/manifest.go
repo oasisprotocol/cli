@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
@@ -185,9 +187,21 @@ type Offer struct {
 	// provisioning of new instances for this offer. Each accepted instance will automatically
 	// decrement capacity.
 	Capacity uint64 `yaml:"capacity" json:"capacity"`
+	// AllowedCreators is the list of accounts (names or addresses) allowed to rent machines from
+	// this offer. When empty, anyone can rent a machine.
+	AllowedCreators []string `yaml:"allowed_creators,omitempty" json:"allowed_creators,omitempty"`
+	// AllowedArtifacts is the map of artifact kind to the list of allowed SHA256 hashes of that
+	// artifact. When a kind is not present, any artifact of that kind is allowed.
+	AllowedArtifacts map[string][]string `yaml:"allowed_artifacts,omitempty" json:"allowed_artifacts,omitempty"`
+	// Private hides the offer from public offer listings. Note that this is only a listing hint
+	// and does not restrict who may rent the offer, use AllowedCreators for that.
+	Private bool `yaml:"private,omitempty" json:"private,omitempty"`
 	// Metadata is arbitrary metadata (key-value pairs) assigned by the provider.
 	Metadata map[string]string `yaml:"metadata,omitempty" json:"metadata,omitempty"`
 }
+
+// ArtifactKinds are the artifact kinds recognized by the scheduler in AllowedArtifacts.
+var ArtifactKinds = []string{"firmware", "kernel", "initrd", "stage2"}
 
 // Validate validates the offer.
 func (o *Offer) Validate() error {
@@ -200,7 +214,37 @@ func (o *Offer) Validate() error {
 	if err := o.Payment.Validate(); err != nil {
 		return fmt.Errorf("invalid payment specifier: %w", err)
 	}
+	for _, creator := range o.AllowedCreators {
+		if strings.TrimSpace(creator) == "" {
+			return fmt.Errorf("malformed allowed creator: empty account")
+		}
+		if strings.Contains(creator, ",") {
+			return fmt.Errorf("malformed allowed creator '%s': must not contain a comma", creator)
+		}
+	}
+	for kind, hashes := range o.AllowedArtifacts {
+		if !slices.Contains(ArtifactKinds, kind) {
+			return fmt.Errorf("invalid allowed artifact kind '%s' (supported: %s)", kind, strings.Join(ArtifactKinds, ", "))
+		}
+		for _, hash := range hashes {
+			if _, err := parseArtifactHash(hash); err != nil {
+				return fmt.Errorf("invalid allowed %s artifact: %w", kind, err)
+			}
+		}
+	}
 	return nil
+}
+
+// parseArtifactHash validates and normalizes a hex-encoded SHA256 artifact hash.
+func parseArtifactHash(hash string) (string, error) {
+	raw, err := hex.DecodeString(strings.TrimSpace(hash))
+	if err != nil {
+		return "", fmt.Errorf("malformed hash '%s': %w", hash, err)
+	}
+	if len(raw) != sha256.Size {
+		return "", fmt.Errorf("malformed hash '%s': expected %d bytes, got %d", hash, sha256.Size, len(raw))
+	}
+	return hex.EncodeToString(raw), nil
 }
 
 // schedulerMetadataPrefix is the prefix used for all scheduler metadata.
@@ -209,15 +253,42 @@ const schedulerMetadataPrefix = "net.oasis.scheduler."
 // SchedulerMetadataOfferKey is the metadata key used for the offer name.
 const SchedulerMetadataOfferKey = schedulerMetadataPrefix + "offer"
 
+const (
+	// SchedulerMetadataOfferAllowedCreatorsKey is the metadata key holding a comma-separated list
+	// of accounts allowed to rent machines from the offer. When absent or empty, anyone can rent
+	// a machine.
+	SchedulerMetadataOfferAllowedCreatorsKey = SchedulerMetadataOfferKey + ".allowed_creators"
+
+	// SchedulerMetadataOfferAllowedArtifactsPrefix is the prefix of the metadata keys holding a
+	// comma-separated list of allowed SHA256 artifact hashes. The artifact kind is the suffix
+	// following the prefix (e.g. `net.oasis.scheduler.offer.allowed_artifacts.firmware`). When a
+	// key for a kind is absent, any artifact of that kind is allowed.
+	SchedulerMetadataOfferAllowedArtifactsPrefix = SchedulerMetadataOfferKey + ".allowed_artifacts."
+
+	// SchedulerMetadataOfferPrivateKey is the metadata key hinting that the offer should be hidden
+	// from public offer listings.
+	SchedulerMetadataOfferPrivateKey = SchedulerMetadataOfferKey + ".private"
+
+	// SchedulerMetadataValueTrue is the metadata value that enables a boolean flag such as
+	// SchedulerMetadataOfferPrivateKey.
+	SchedulerMetadataValueTrue = "1"
+)
+
 // NoteMetadataKey is the metadata key for offer-specific one-line notification such as a discount or a warning.
 const NoteMetadataKey = "net.oasis.note"
 
 // DescriptionMetadataKey is the metadata key for longer offer-specific description such as intended applications.
 const DescriptionMetadataKey = "net.oasis.description"
 
+// AddressResolver resolves an account name or address into the corresponding account address.
+type AddressResolver func(nameOrAddress string) (types.Address, error)
+
 // GetMetadata derives metadata from the attributes defined in the offer and combines it with the
 // specified metadata.
-func (o *Offer) GetMetadata() map[string]string {
+//
+// The given resolver is used to resolve the accounts in AllowedCreators. Any metadata explicitly
+// specified in Metadata takes precedence over the derived one.
+func (o *Offer) GetMetadata(resolve AddressResolver) (map[string]string, error) {
 	meta := make(map[string]string)
 	for _, md := range []struct {
 		name  string
@@ -238,16 +309,65 @@ func (o *Offer) GetMetadata() map[string]string {
 		meta[NoteMetadataKey] = o.Note
 	}
 
+	if len(o.AllowedCreators) > 0 {
+		creators := make([]string, 0, len(o.AllowedCreators))
+		for _, rawCreator := range o.AllowedCreators {
+			addr, err := resolve(strings.TrimSpace(rawCreator))
+			if err != nil {
+				return nil, fmt.Errorf("invalid allowed creator '%s': %w", rawCreator, err)
+			}
+			creators = append(creators, addr.String())
+		}
+		meta[SchedulerMetadataOfferAllowedCreatorsKey] = joinMetadataList(creators)
+	}
+
+	for kind, rawHashes := range o.AllowedArtifacts {
+		hashes := make([]string, 0, len(rawHashes))
+		for _, rawHash := range rawHashes {
+			hash, err := parseArtifactHash(rawHash)
+			if err != nil {
+				return nil, fmt.Errorf("invalid allowed %s artifact: %w", kind, err)
+			}
+			hashes = append(hashes, hash)
+		}
+		meta[SchedulerMetadataOfferAllowedArtifactsPrefix+kind] = joinMetadataList(hashes)
+	}
+
+	if o.Private {
+		meta[SchedulerMetadataOfferPrivateKey] = SchedulerMetadataValueTrue
+	}
+
 	maps.Copy(meta, o.Metadata)
-	return meta
+	return meta, nil
+}
+
+// joinMetadataList sorts and deduplicates the given items and serializes them into a
+// comma-separated metadata value.
+//
+// The items are sorted so that reordering them in the manifest does not result in a spurious
+// on-chain offer update.
+func joinMetadataList(items []string) string {
+	slices.Sort(items)
+	return strings.Join(slices.Compact(items), ",")
+}
+
+// IsOfferPrivate returns true iff the given on-chain offer is marked as private and should thus be
+// hidden from public offer listings.
+func IsOfferPrivate(offer *roflmarket.Offer) bool {
+	return offer.Metadata[SchedulerMetadataOfferPrivateKey] == SchedulerMetadataValueTrue
 }
 
 // AsDescriptor returns the configuration as an on-chain descriptor.
-func (o *Offer) AsDescriptor(pt *config.ParaTime) (*roflmarket.Offer, error) {
+func (o *Offer) AsDescriptor(pt *config.ParaTime, resolve AddressResolver) (*roflmarket.Offer, error) {
+	metadata, err := o.GetMetadata(resolve)
+	if err != nil {
+		return nil, err
+	}
+
 	offer := roflmarket.Offer{
 		Resources: *o.Resources.AsDescriptor(),
 		Capacity:  o.Capacity,
-		Metadata:  o.GetMetadata(),
+		Metadata:  metadata,
 	}
 
 	payment, err := o.Payment.AsDescriptor(pt)

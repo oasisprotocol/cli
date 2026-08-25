@@ -32,7 +32,6 @@ import (
 	"github.com/oasisprotocol/cli/cmd/common"
 	roflCmdBuild "github.com/oasisprotocol/cli/cmd/rofl/build"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
-	roflProvider "github.com/oasisprotocol/cli/cmd/rofl/provider"
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
@@ -140,8 +139,8 @@ var (
 
 				fmt.Println()
 				fmt.Printf("Offers available from the selected provider:\n")
-				for _, offer := range offers {
-					roflProvider.ShowOfferSummary(npa, offer)
+				for _, offer := range roflCommon.FilterOffers(offers) {
+					roflCommon.ShowOfferSummary(npa, offer)
 				}
 				fmt.Println()
 				return
@@ -190,24 +189,34 @@ var (
 				cobra.CheckErr(err)
 				var offer *roflmarket.Offer
 				for _, of := range offers {
-					if of.Metadata[provider.SchedulerMetadataOfferKey] == machine.Offer || machine.Offer == "" {
+					switch machine.Offer {
+					case "":
+						// No offer requested, automatically pick the first public one.
+						if provider.IsOfferPrivate(of) {
+							continue
+						}
 						machine.Offer = of.Metadata[provider.SchedulerMetadataOfferKey]
-						offer = of
-						break
+					default:
+						// An explicitly requested offer may also be a private one.
+						if of.Metadata[provider.SchedulerMetadataOfferKey] != machine.Offer {
+							continue
+						}
 					}
+					offer = of
+					break
 				}
 				if offer == nil {
 					fmt.Println()
 					fmt.Printf("Offers available from the selected provider:\n")
-					for _, of := range offers {
-						roflProvider.ShowOfferSummary(npa, of)
+					for _, of := range roflCommon.FilterOffers(offers) {
+						roflCommon.ShowOfferSummary(npa, of)
 					}
 					fmt.Println()
 					return nil, nil, fmt.Errorf("offer '%s' not found for provider '%s'", machine.Offer, providerAddr)
 				}
 
 				fmt.Printf("Taking offer:\n")
-				roflProvider.ShowOfferSummary(npa, offer)
+				roflCommon.ShowOfferSummary(npa, offer)
 
 				term := detectTerm(offer)
 				if roflCommon.TermCount < 1 {
@@ -451,6 +460,7 @@ func init() {
 	deployCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	deployCmd.Flags().AddFlagSet(providerFlags)
 	deployCmd.Flags().AddFlagSet(roflCommon.ShowOffersFlag)
+	deployCmd.Flags().AddFlagSet(roflCommon.ShowPrivateOffersFlag)
 	deployCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 	deployCmd.Flags().AddFlagSet(roflCommon.WipeFlags)
 	deployCmd.Flags().AddFlagSet(roflCommon.TermFlags)

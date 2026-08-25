@@ -268,8 +268,9 @@ offer:
 - `--provider <address>` specifies the provider to rent the machine from. On
   Sapphire Testnet, the Oasis-managed provider will be selected by default.
 - `--offer <offer_name>` specifies the offer of the machine to rent. By default
-  it takes the most recent offer. Run `--show-offers` to list offers and
-  specifications.
+  it takes the most recent non-private offer. Run `--show-offers` to list offers
+  and specifications, optionally combined with `--all` to also list
+  [private](#provider-offer-access-policy) offers.
 - `--term <hour|month|year>` specifies the base rent period. It takes the first
   available provider term by default.
 - `--term-count <number>` specifies the multiplier. Default is `1`.
@@ -494,6 +495,57 @@ in your provider manifest file.
 To update your provider policies, run [`rofl provider update`](#provider-update)
 instead.
 
+#### Restrict who can rent an offer {#provider-offer-access-policy}
+
+Sometimes you want an offer to be used only by yourself or your team. For
+example, you can have market-priced offers that can be rented by anyone and
+"internal" offers that are free of charge for your team.
+
+The access policy is defined per-offer in your provider manifest file and is
+stored **on-chain** as part of the offer metadata. This means you can change it
+by running [`rofl provider update-offers`](#provider-update-offers), without
+having to reconfigure and restart your ROFL node. The ROFL Scheduler picks up
+the new policy in the next round.
+
+The following offer fields are supported:
+
+- `allowed_creators` is the list of accounts allowed to rent machines from this
+  offer. Account names in your wallet, entries of your [address book] or plain
+  addresses can be used. If omitted or empty, anyone can rent a machine.
+- `allowed_artifacts` maps the artifact kind (`firmware`, `kernel`, `initrd` or
+  `stage2`) to the list of allowed SHA256 hashes of that artifact. If a kind is
+  omitted, any artifact of that kind is allowed.
+- `private` hides the offer from public offer listings when set to `true`. This
+  is only a listing hint and does **not** restrict who can rent the offer,
+  combine it with `allowed_creators` for that.
+
+For example:
+
+```yaml title="rofl-provider.yaml"
+offers:
+  - id: internal_small
+    # ...resources, payment and capacity omitted...
+    allowed_creators:
+      - oasis1qrk58a6j2qn065m6p06jgjyt032f7qucy5wqeqpt
+      - oasis1qqnf0s9p8z79zfutszt0hwlh7w7jjrfqnq997mlw
+    private: true
+```
+
+These fields are a convenience wrapper around the `net.oasis.scheduler.offer.*`
+offer metadata keys recognized by the ROFL Scheduler. You can also set the
+corresponding keys in the offer's `metadata` section directly, in which case
+they take precedence over the fields above.
+
+:::caution
+
+The ROFL Scheduler ignores malformed entries and only reports them as a warning
+in its logs. Run `rofl provider show <address> --all` after updating your offers
+to confirm that the policy is stored on-chain as intended.
+
+:::
+
+[address book]: ./addressbook.md
+
 #### List ROFL providers {#provider-list}
 
 Use `rofl provider list` to display all ROFL providers registered on the
@@ -511,6 +563,9 @@ To see detailed information about all offers from each provider, use the
 
 ![code shell](../examples/rofl/provider-list-show-offers.in.static)
 
+Offers marked as [private](#provider-offer-access-policy) are omitted from the
+listing. Pass `--all` (or `-a`) to include them.
+
 #### Show ROFL provider details {#provider-show}
 
 Use `rofl provider show <address>` to display detailed information about a
@@ -526,6 +581,9 @@ This command provides comprehensive information including:
 - List of endorsed nodes
 - Stake amount
 - Detailed information about all offers (resources, pricing terms, capacity)
+
+Offers marked as [private](#provider-offer-access-policy) are omitted. Pass
+`--all` (or `-a`) to include them.
 
 Use `--format json` to get the full provider metadata in machine-readable
 format.

@@ -15,6 +15,7 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/rofl"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/roflmarket"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
 	"github.com/oasisprotocol/cli/build/rofl/provider"
 	"github.com/oasisprotocol/cli/cmd/common"
@@ -127,7 +128,7 @@ var (
 			// Offers.
 			for idx, offerCfg := range manifest.Offers {
 				var offer *roflmarket.Offer
-				offer, err = offerCfg.AsDescriptor(npa.ParaTime)
+				offer, err = offerCfg.AsDescriptor(npa.ParaTime, addressResolver(npa))
 				if err != nil {
 					cobra.CheckErr(fmt.Errorf("bad offer configuration %d: %w", idx, err))
 				}
@@ -249,7 +250,7 @@ var (
 			)
 			for _, offer := range manifest.Offers {
 				var offerDsc *roflmarket.Offer
-				offerDsc, err = offer.AsDescriptor(npa.ParaTime)
+				offerDsc, err = offer.AsDescriptor(npa.ParaTime, addressResolver(npa))
 				cobra.CheckErr(err)
 
 				existingOffer, ok := existingOfferMap[offer.ID]
@@ -385,6 +386,18 @@ var (
 		},
 	}
 )
+
+// addressResolver returns a resolver for account names and addresses used in the provider
+// manifest, bound to the currently selected network.
+func addressResolver(npa *common.NPASelection) provider.AddressResolver {
+	return func(nameOrAddress string) (types.Address, error) {
+		addr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, nameOrAddress)
+		if err != nil {
+			return types.Address{}, err
+		}
+		return *addr, nil
+	}
+}
 
 // loadManifestAndSetNPA loads the ROFL provider manifest and reconfigures the
 // network/paratime/account selection.

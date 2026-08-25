@@ -293,7 +293,7 @@ var (
 					fmt.Printf("  - %s\n", offerID)
 
 					oldOffer, _ := json.Marshal(existingOfferMap[offerID])
-					newOffer, _ := json.Marshal(offer)
+					newOffer, _ := json.Marshal(&offer)
 
 					var patch jsondiff.Patch
 					patch, err = jsondiff.CompareJSON(oldOffer, newOffer)

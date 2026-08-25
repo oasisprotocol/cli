@@ -351,6 +351,25 @@ func joinMetadataList(items []string) string {
 	return strings.Join(slices.Compact(items), ",")
 }
 
+// splitMetadataList deserializes a comma-separated metadata value into the list of its items.
+func splitMetadataList(value string) []string {
+	items := strings.Split(value, ",")
+	result := make([]string, 0, len(items))
+	for _, item := range items {
+		if item = strings.TrimSpace(item); item == "" {
+			continue
+		}
+		result = append(result, item)
+	}
+	return result
+}
+
+// OfferAllowedCreators returns the accounts allowed to rent machines from the given on-chain
+// offer. When the returned list is empty, anyone can rent a machine.
+func OfferAllowedCreators(offer *roflmarket.Offer) []string {
+	return splitMetadataList(offer.Metadata[SchedulerMetadataOfferAllowedCreatorsKey])
+}
+
 // IsOfferPrivate returns true iff the given on-chain offer is marked as private and should thus be
 // hidden from public offer listings.
 func IsOfferPrivate(offer *roflmarket.Offer) bool {

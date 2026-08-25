@@ -151,7 +151,7 @@ func outputProviderText(npa *common.NPASelection, provider *roflmarket.Provider,
 		})
 
 		for _, offer := range offers {
-			ShowOfferSummary(npa, offer)
+			roflCommon.ShowOfferSummary(npa, offer)
 		}
 	}
 }

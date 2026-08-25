@@ -181,3 +181,25 @@ func TestIsOfferPrivate(t *testing.T) {
 		Metadata: map[string]string{SchedulerMetadataOfferPrivateKey: SchedulerMetadataValueTrue},
 	}))
 }
+
+func TestOfferAllowedCreators(t *testing.T) {
+	require := require.New(t)
+
+	alice, bob := testAddresses["alice"], testAddresses["bob"]
+
+	require.Empty(OfferAllowedCreators(&roflmarket.Offer{}))
+	require.Empty(OfferAllowedCreators(&roflmarket.Offer{
+		Metadata: map[string]string{SchedulerMetadataOfferAllowedCreatorsKey: ""},
+	}))
+	require.Equal([]string{alice, bob}, OfferAllowedCreators(&roflmarket.Offer{
+		Metadata: map[string]string{
+			SchedulerMetadataOfferAllowedCreatorsKey: alice + "," + bob,
+		},
+	}))
+	// Stray whitespace and empty items are ignored.
+	require.Equal([]string{alice}, OfferAllowedCreators(&roflmarket.Offer{
+		Metadata: map[string]string{
+			SchedulerMetadataOfferAllowedCreatorsKey: " " + alice + " ,, ",
+		},
+	}))
+}

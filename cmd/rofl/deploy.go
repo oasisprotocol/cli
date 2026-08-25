@@ -32,7 +32,6 @@ import (
 	"github.com/oasisprotocol/cli/cmd/common"
 	roflCmdBuild "github.com/oasisprotocol/cli/cmd/rofl/build"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
-	roflProvider "github.com/oasisprotocol/cli/cmd/rofl/provider"
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
@@ -141,7 +140,7 @@ var (
 				fmt.Println()
 				fmt.Printf("Offers available from the selected provider:\n")
 				for _, offer := range roflCommon.FilterOffers(offers) {
-					roflProvider.ShowOfferSummary(npa, offer)
+					roflCommon.ShowOfferSummary(npa, offer)
 				}
 				fmt.Println()
 				return
@@ -210,14 +209,14 @@ var (
 					fmt.Println()
 					fmt.Printf("Offers available from the selected provider:\n")
 					for _, of := range roflCommon.FilterOffers(offers) {
-						roflProvider.ShowOfferSummary(npa, of)
+						roflCommon.ShowOfferSummary(npa, of)
 					}
 					fmt.Println()
 					return nil, nil, fmt.Errorf("offer '%s' not found for provider '%s'", machine.Offer, providerAddr)
 				}
 
 				fmt.Printf("Taking offer:\n")
-				roflProvider.ShowOfferSummary(npa, offer)
+				roflCommon.ShowOfferSummary(npa, offer)
 
 				term := detectTerm(offer)
 				if roflCommon.TermCount < 1 {

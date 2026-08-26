@@ -128,7 +128,7 @@ func prettyPrintMachine(mCfg *machineCfg, out *machineShowOutput) {
 			fmt.Printf("Proxy:\n")
 			fmt.Printf("  Domain: %s\n", proxyDomain)
 
-			prettyPrintMachinePorts(mCfg.ExtraCfg, out.Replica.App, out.Machine, proxyDomain)
+			prettyPrintMachinePorts(mCfg.ExtraCfg, out.Machine, proxyDomain)
 		}
 	}
 
@@ -209,7 +209,7 @@ func prettyPrintMachine(mCfg *machineCfg, out *machineShowOutput) {
 	}
 }
 
-func prettyPrintMachinePorts(extraCfg *roflCmdBuild.AppExtraConfig, appID rofl.AppID, insDsc *roflmarket.Instance, domain string) {
+func prettyPrintMachinePorts(extraCfg *roflCmdBuild.AppExtraConfig, insDsc *roflmarket.Instance, domain string) {
 	if extraCfg == nil || len(extraCfg.Ports) == 0 {
 		return
 	}
@@ -223,12 +223,18 @@ func prettyPrintMachinePorts(extraCfg *roflCmdBuild.AppExtraConfig, appID rofl.A
 		default:
 			fmt.Printf("    %s (%s): https://%s\n", p.Port, p.ServiceName, p.CustomDomain)
 
-			domainToken := scheduler.DomainVerificationToken(insDsc, appID, p.CustomDomain)
 			addrs, err := net.LookupHost(genericDomain)
 			if err == nil {
 				fmt.Printf("      * Point A record of your domain to: %s\n", addrs[0])
 			}
-			fmt.Printf("      * Add TXT record to your domain: oasis-rofl-verification=%s\n", domainToken)
+
+			switch insDsc.Deployment {
+			case nil:
+				fmt.Printf("      * Deploy the app to obtain the TXT record for your domain\n")
+			default:
+				domainToken := scheduler.DomainVerificationToken(insDsc, insDsc.Deployment.AppID, p.CustomDomain)
+				fmt.Printf("      * Add TXT record to your domain: oasis-rofl-verification=%s\n", domainToken)
+			}
 		}
 
 		if i < len(extraCfg.Ports)-1 {

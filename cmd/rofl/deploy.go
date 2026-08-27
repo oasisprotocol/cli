@@ -19,6 +19,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/crypto/hash"
 	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx"
+	"github.com/oasisprotocol/oasis-core/go/runtime/bundle"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
@@ -148,6 +149,11 @@ var (
 
 			ociRepository := ociRepository(deployment)
 			orcFilename := roflCommon.GetOrcFilename(manifest, roflCommon.DeploymentName)
+
+			if err := validateOrcEnclaveIdentity(orcFilename, deployment); err != nil && !deployForce {
+				cobra.CheckErr(err)
+			}
+
 			fmt.Printf("Pushing ROFL app to OCI repository '%s'...\n", ociRepository)
 			ociDigest, manifestHash := pushBundleToOciRepository(orcFilename, ociRepository)
 			// Save the OCI repository field to the configuration file so we avoid multiple uploads.
@@ -372,6 +378,40 @@ func pushBundleToOciRepository(orcFilename string, ociRepository string) (string
 	}
 
 	return ociDigest, manifestHash
+}
+
+// validateOrcEnclaveIdentity checks that the enclave identity baked into the built ORC bundle
+// matches the manifest's current enclave identity. Used to catch stale bundles.
+func validateOrcEnclaveIdentity(orcFilename string, deployment *buildRofl.Deployment) error {
+	bnd, err := bundle.Open(orcFilename)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("ROFL app bundle '%s' not found. Run `oasis rofl build` first", orcFilename)
+		}
+		return fmt.Errorf("failed to open ROFL app bundle '%s': %w", orcFilename, err)
+	}
+	defer bnd.Close()
+
+	ids, err := roflCommon.ComputeEnclaveIdentity(bnd, "")
+	if err != nil {
+		return fmt.Errorf("failed to compute enclave identity of '%s': %w", orcFilename, err)
+	}
+	orcEnclaves := make(map[sgx.EnclaveIdentity]struct{})
+	for _, id := range ids {
+		orcEnclaves[id.Enclave] = struct{}{}
+	}
+
+	latestManifestEnclaves := make(map[sgx.EnclaveIdentity]struct{})
+	for _, eid := range deployment.Policy.Enclaves {
+		if eid.IsLatest() {
+			latestManifestEnclaves[eid.ID] = struct{}{}
+		}
+	}
+
+	if !maps.Equal(orcEnclaves, latestManifestEnclaves) {
+		return fmt.Errorf("enclave identity in '%s' does not match the one in ROFL manifest. Run `oasis rofl build` to rebuild it (use --force to deploy anyway)", orcFilename)
+	}
+	return nil
 }
 
 // detectTerm returns the preferred (longest) period of the given offer.

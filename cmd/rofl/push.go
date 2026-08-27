@@ -21,6 +21,10 @@ var pushCmd = &cobra.Command{
 		orcFilename := roflCommon.GetOrcFilename(manifest, roflCommon.DeploymentName)
 		ociRepository := ociRepository(deployment)
 
+		if err := validateOrcEnclaveIdentity(orcFilename, deployment); err != nil && !deployForce {
+			cobra.CheckErr(err)
+		}
+
 		if common.OutputFormat() == common.FormatText {
 			fmt.Printf("Pushing ROFL app to OCI repository '%s'...\n", ociRepository)
 		}

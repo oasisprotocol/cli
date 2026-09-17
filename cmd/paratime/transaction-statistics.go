@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -12,10 +13,12 @@ import (
 
 	ethCommon "github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/oasisprotocol/oasis-core/go/common/prettyprint"
 	"github.com/oasisprotocol/oasis-core/go/roothash/api/block"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/client"
 	configSdk "github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
+	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/accounts"
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
@@ -90,13 +93,38 @@ type txStats struct {
 	Filters   []*Filter
 	Dates     []string
 	DailyTxes [][]int
+
+	// Date -> Denomination -> Filter -> Amount of daily transferred tokens.
+	// The first element of the filter dimension are the totals over all
+	// transactions.
+	DailyAmounts []map[types.Denomination][]types.Quantity
+	// Denominations encountered while scraping the blocks.
+	Denominations []types.Denomination
+
+	paratime *configSdk.ParaTime
 }
 
-func newTxStats(filters []*Filter) *txStats {
+func newTxStats(filters []*Filter, paratime *configSdk.ParaTime) *txStats {
 	return &txStats{
 		Filters:   filters,
 		Dates:     nil,
 		DailyTxes: nil,
+		paratime:  paratime,
+	}
+}
+
+// addAmount adds the given amount to the daily total of the filter with the
+// given index, where index 0 are the totals over all transactions.
+func (t *txStats) addAmount(filterIdx int, amount types.BaseUnits) {
+	amounts := t.DailyAmounts[len(t.DailyAmounts)-1]
+	if _, ok := amounts[amount.Denomination]; !ok {
+		amounts[amount.Denomination] = make([]types.Quantity, len(t.Filters)+1)
+		if !slices.Contains(t.Denominations, amount.Denomination) {
+			t.Denominations = append(t.Denominations, amount.Denomination)
+		}
+	}
+	if err := amounts[amount.Denomination][filterIdx].Add(&amount.Amount); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: unable to add amount %s: %v\n", amount.String(), err)
 	}
 }
 
@@ -112,13 +140,15 @@ func (t *txStats) AnalyzeRuntimeBlocks(roundFrom, roundTo uint64, rt connection.
 		if len(t.Dates) == 0 || t.Dates[len(t.Dates)-1] != blkDate {
 			t.Dates = append(t.Dates, blkDate)
 			t.DailyTxes = append(t.DailyTxes, make([]int, len(t.Filters)+1))
+			t.DailyAmounts = append(t.DailyAmounts, map[types.Denomination][]types.Quantity{})
 		}
-		txes, err := rt.GetTransactions(ctx, round)
+		txes, err := rt.GetTransactionsWithResults(ctx, round)
 		if err != nil {
 			return err
 		}
 
-		for _, tx := range txes {
+		for _, txr := range txes {
+			tx := txr.Tx
 			var txFrom, txTo *types.Address
 			if len(tx.AuthProofs) == 1 && tx.AuthProofs[0].Module != "" {
 				// Module-specific transaction encoding scheme.
@@ -152,6 +182,35 @@ func (t *txStats) AnalyzeRuntimeBlocks(roundFrom, roundTo uint64, rt connection.
 					t.DailyTxes[len(t.DailyTxes)-1][i+1]++
 				}
 			}
+
+			// Sum up the tokens transferred by this transaction. Since a single
+			// transaction may move tokens between multiple accounts (e.g. an EVM
+			// call transferring the native token), we consider each emitted
+			// accounts.Transfer event separately and match the filters against
+			// the sender and the recipient of the event itself.
+			for _, rawEv := range txr.Events {
+				evs, err := accounts.DecodeEvent(rawEv)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "warning: malformed accounts event of transaction %s in round %d: %v\n", tx.Hash(), round, err)
+					continue
+				}
+				for _, decodedEv := range evs {
+					ev, ok := decodedEv.(*accounts.Event)
+					if !ok || ev.Transfer == nil {
+						continue
+					}
+					// Fees are not tokens transferred by the user.
+					if ev.Transfer.To.Equal(accounts.FeeAccumulatorAddress) || ev.Transfer.From.Equal(accounts.FeeAccumulatorAddress) {
+						continue
+					}
+					t.addAmount(0, ev.Transfer.Amount)
+					for i, r := range t.Filters {
+						if r.Match(&ev.Transfer.From, &ev.Transfer.To) {
+							t.addAmount(i+1, ev.Transfer.Amount)
+						}
+					}
+				}
+			}
 		}
 		t.DailyTxes[len(t.DailyTxes)-1][0] += len(txes)
 		round++
@@ -168,18 +227,36 @@ func (t *txStats) PrintStats() {
 func (t *txStats) CSVStats() [][]string {
 	csvData := make([][]string, len(t.Dates)+1)
 
-	csvData[0] = make([]string, len(t.Filters)+2)
-	csvData[0][0] = "date"
-	csvData[0][1] = "all"
-	for i, r := range t.Filters {
-		csvData[0][i+2] = r.Name
+	// Transaction count columns followed by the transferred amount columns of
+	// each encountered denomination.
+	csvData[0] = []string{"date", "all"}
+	for _, r := range t.Filters {
+		csvData[0] = append(csvData[0], r.Name)
 	}
-	for i, d := range t.DailyTxes {
-		csvData[i+1] = make([]string, len(d)+1)
-		csvData[i+1][0] = t.Dates[i]
-		for j, dVal := range d {
-			csvData[i+1][j+1] = fmt.Sprintf("%d", dVal)
+	for _, denom := range t.Denominations {
+		symbol := t.paratime.GetDenominationInfo(string(denom)).Symbol
+		csvData[0] = append(csvData[0], fmt.Sprintf("all amount (%s)", symbol))
+		for _, r := range t.Filters {
+			csvData[0] = append(csvData[0], fmt.Sprintf("%s amount (%s)", r.Name, symbol))
 		}
+	}
+
+	for i, d := range t.DailyTxes {
+		row := []string{t.Dates[i]}
+		for _, dVal := range d {
+			row = append(row, fmt.Sprintf("%d", dVal))
+		}
+		for _, denom := range t.Denominations {
+			decimals := t.paratime.GetDenominationInfo(string(denom)).Decimals
+			amounts, ok := t.DailyAmounts[i][denom]
+			if !ok {
+				amounts = make([]types.Quantity, len(t.Filters)+1)
+			}
+			for _, amount := range amounts {
+				row = append(row, prettyprint.QuantityFrac(amount, decimals))
+			}
+		}
+		csvData[i+1] = row
 	}
 
 	return csvData
@@ -258,7 +335,10 @@ var txStatsCmd = &cobra.Command{
 	Long: "Produces daily transactions statistics for consensus or any ParaTime.\n" +
 		"It connects to a client node directly and scrapes the blocks\n" +
 		"corresponding to the given date range. Optionally, it filters out the\n" +
-		"transactions satisfying from and/or to addresses.",
+		"transactions satisfying from and/or to addresses.\n\n" +
+		"Apart from the number of transactions, it also reports the amount of\n" +
+		"tokens transferred by them, obtained from the emitted accounts transfer\n" +
+		"events. The transaction fees are not included.",
 	Aliases: []string{"tx-stats"},
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := cliConfig.Global()
@@ -278,7 +358,7 @@ var txStatsCmd = &cobra.Command{
 		conn, err := connection.Connect(ctx, npa.Network)
 		cobra.CheckErr(err)
 
-		stats := newTxStats(filters)
+		stats := newTxStats(filters, npa.ParaTime)
 		var from, to uint64
 		switch npa.ParaTime {
 		case nil:

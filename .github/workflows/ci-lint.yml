@@ -29,11 +29,11 @@ jobs:
           # e.g. "Merge 3e621938d65caaa67f8e35d145335d889d470fc8 into 19a39b2f66cd7a165082d1486b2f1eb36ec2354a".
           ref: ${{ github.event.pull_request.head.sha }}
           # Fetch all history so gitlint can check the relevant commits.
-          fetch-depth: '0'
+          fetch-depth: "0"
       - name: Set up Python 3
         uses: actions/setup-python@v6
         with:
-          python-version: '3.x'
+          python-version: "3.x"
       - name: Set up Node.js 20
         uses: actions/setup-node@v6
         with:
@@ -41,7 +41,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: "1.26.x"
+          go-version: "1.27.x"
           cache: false
       - name: Install gitlint
         run: |
@@ -63,7 +63,7 @@ jobs:
         # 'make lint-go'.
         uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.10.1
+          version: v2.14.0
         # Always run this step so that all linting errors can be seen at once.
         if: always()
       - name: Ensure a clean code checkout

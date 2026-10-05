@@ -80,7 +80,7 @@ func sgxBuild(
 
 	// Compute MRENCLAVE.
 	var b []byte
-	if b, err = os.ReadFile(sgxsPath); err != nil { //nolint: gosec
+	if b, err = os.ReadFile(sgxsPath); err != nil {
 		cobra.CheckErr(fmt.Errorf("failed to read SGXS binary: %w", err))
 	}
 	var enclaveHash sgx.MrEnclave

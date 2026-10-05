@@ -320,7 +320,7 @@ func prettyPrintCBOR(indent string, kind string, data []byte) {
 
 func convertPrettyStruct(in interface{}) (interface{}, error) {
 	v := reflect.ValueOf(in)
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		v = v.Elem()
 	}
 

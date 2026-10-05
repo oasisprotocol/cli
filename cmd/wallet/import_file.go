@@ -31,11 +31,11 @@ var importFileCmd = &cobra.Command{
 		cobra.CheckErr(err)
 
 		block, _ := pem.Decode(rawFile)
-		if block == nil { //nolint: staticcheck
+		if block == nil {
 			cobra.CheckErr(fmt.Errorf("failed to decode PEM file"))
 		}
 
-		algorithm, err := detectAlgorithm(block.Type) //nolint: staticcheck
+		algorithm, err := detectAlgorithm(block.Type)
 		cobra.CheckErr(err)
 
 		// Ask for passphrase.
@@ -50,7 +50,7 @@ var importFileCmd = &cobra.Command{
 
 		src := &wallet.ImportSource{
 			Kind: wallet.ImportKindPrivateKey,
-			Data: encodeKeyData(algorithm, block.Bytes), //nolint: staticcheck
+			Data: encodeKeyData(algorithm, block.Bytes),
 		}
 
 		err = cfg.Wallet.Import(name, passphrase, accCfg, src)

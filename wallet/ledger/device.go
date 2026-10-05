@@ -229,7 +229,7 @@ func (ld *ledgerDevice) SignEd25519(path []uint32, context, message []byte) ([]b
 			payloadDesc = payloadChunkAdd
 		}
 
-		message := []byte{claConsumer, insSignEd25519, payloadDesc, 0, payloadLen} //nolint: prealloc
+		message := []byte{claConsumer, insSignEd25519, payloadDesc, 0, payloadLen}
 		message = append(message, chunk...)
 
 		response, err := ld.raw.Exchange(message)
@@ -321,7 +321,7 @@ func (ld *ledgerDevice) signRt(pathBytes []byte, sigCtx signature.Context, messa
 			payloadDesc = payloadChunkAdd
 		}
 
-		message := []byte{claConsumer, instruction, payloadDesc, 0, payloadLen} //nolint: prealloc
+		message := []byte{claConsumer, instruction, payloadDesc, 0, payloadLen}
 		message = append(message, chunk...)
 
 		response, err := ld.raw.Exchange(message)

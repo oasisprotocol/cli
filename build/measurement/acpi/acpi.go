@@ -30,7 +30,8 @@ func GenerateTablesQemu(resources *bundle.TDXResources) ([]byte, []byte, []byte,
 	}
 
 	// Generate RSDP.
-	rsdp := append([]byte{},
+	rsdp := append(
+		[]byte{},
 		0x52, 0x53, 0x44, 0x20, 0x50, 0x54, 0x52, 0x20, // Signature ("RSDP PTR ").
 		0x00,                               // Checksum.
 		0x42, 0x4F, 0x43, 0x48, 0x53, 0x20, // OEM ID ("BOCHS ").
@@ -82,24 +83,29 @@ func GenerateTablesQemu(resources *bundle.TDXResources) ([]byte, []byte, []byte,
 	rsdp = append(rsdp, rsdtAddress[:]...)
 
 	// Generate table loader commands.
-	const ldrLength = 4096
-	ldr := qemuLoaderAppend(nil, &qemuLoaderCmdAllocate{"etc/acpi/rsdp", 16, 2})
-	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAllocate{"etc/acpi/tables", 64, 1})
-	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddChecksum{"etc/acpi/tables", dsdtCsum, dsdtOffset, dsdtLen}) // DSDT
-	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddPtr{"etc/acpi/tables", "etc/acpi/tables", facpOffset + 36, 4})
-	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddPtr{"etc/acpi/tables", "etc/acpi/tables", facpOffset + 40, 4})
-	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddPtr{"etc/acpi/tables", "etc/acpi/tables", facpOffset + 140, 8})
-	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddChecksum{"etc/acpi/tables", facpCsum, facpOffset, facpLen}) // FACP
-	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddChecksum{"etc/acpi/tables", apicCsum, apicOffset, apicLen}) // APIC
-	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddChecksum{"etc/acpi/tables", mcfgCsum, mcfgOffset, mcfgLen}) // MCFG
-	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddChecksum{"etc/acpi/tables", waetCsum, waetOffset, waetLen}) // WAET
-	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddPtr{"etc/acpi/tables", "etc/acpi/tables", rsdtOffset + 36, 4})
-	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddPtr{"etc/acpi/tables", "etc/acpi/tables", rsdtOffset + 40, 4})
-	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddPtr{"etc/acpi/tables", "etc/acpi/tables", rsdtOffset + 44, 4})
-	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddPtr{"etc/acpi/tables", "etc/acpi/tables", rsdtOffset + 48, 4})
-	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddChecksum{"etc/acpi/tables", rsdtCsum, rsdtOffset, rsdtLen}) // RSDT
-	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddPtr{"etc/acpi/rsdp", "etc/acpi/tables", 16, 4})             // RSDT address
-	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddChecksum{"etc/acpi/rsdp", 8, 0, 20})                        // RSDP
+	const (
+		ldrLength  = 4096
+		pathRsdp   = "etc/acpi/rsdp"
+		pathTables = "etc/acpi/tables"
+	)
+
+	ldr := qemuLoaderAppend(nil, &qemuLoaderCmdAllocate{pathRsdp, 16, 2})
+	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAllocate{pathTables, 64, 1})
+	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddChecksum{pathTables, dsdtCsum, dsdtOffset, dsdtLen}) // DSDT
+	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddPtr{pathTables, pathTables, facpOffset + 36, 4})
+	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddPtr{pathTables, pathTables, facpOffset + 40, 4})
+	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddPtr{pathTables, pathTables, facpOffset + 140, 8})
+	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddChecksum{pathTables, facpCsum, facpOffset, facpLen}) // FACP
+	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddChecksum{pathTables, apicCsum, apicOffset, apicLen}) // APIC
+	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddChecksum{pathTables, mcfgCsum, mcfgOffset, mcfgLen}) // MCFG
+	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddChecksum{pathTables, waetCsum, waetOffset, waetLen}) // WAET
+	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddPtr{pathTables, pathTables, rsdtOffset + 36, 4})
+	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddPtr{pathTables, pathTables, rsdtOffset + 40, 4})
+	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddPtr{pathTables, pathTables, rsdtOffset + 44, 4})
+	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddPtr{pathTables, pathTables, rsdtOffset + 48, 4})
+	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddChecksum{pathTables, rsdtCsum, rsdtOffset, rsdtLen}) // RSDT
+	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddPtr{pathRsdp, pathTables, 16, 4})                    // RSDT address
+	ldr = qemuLoaderAppend(ldr, &qemuLoaderCmdAddChecksum{pathRsdp, 8, 0, 20})                        // RSDP
 	if len(ldr) < ldrLength {
 		ldr = append(ldr, bytes.Repeat([]byte{0x00}, ldrLength-len(ldr))...)
 	}

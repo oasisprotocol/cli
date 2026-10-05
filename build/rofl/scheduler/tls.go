@@ -3,7 +3,6 @@ package scheduler
 import (
 	"bytes"
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/base64"
 	"fmt"
 	"net/http"
@@ -25,15 +24,15 @@ func NewHTTPClient(dsc *rofl.Registration) (*http.Client, error) {
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
 			MinVersion: tls.VersionTLS12,
-			VerifyPeerCertificate: func(rawCerts [][]byte, _ [][]*x509.Certificate) error {
-				if len(rawCerts) == 0 {
+			VerifyConnection: func(cs tls.ConnectionState) error {
+				// Ensure certificate verification runs for every connection,
+				// including resumed TLS sessions, which bypass function
+				// VerifyPeerCertificate.
+				if len(cs.PeerCertificates) == 0 {
 					return fmt.Errorf("server did not send a certificate")
 				}
 
-				cert, err := x509.ParseCertificate(rawCerts[0])
-				if err != nil {
-					return fmt.Errorf("bad X509 certificate: %w", err)
-				}
+				cert := cs.PeerCertificates[0]
 
 				if !bytes.Equal(cert.RawSubjectPublicKeyInfo, expectedSubjectPublicKeyInfo) {
 					return fmt.Errorf("server certificate public key does not match expected value")

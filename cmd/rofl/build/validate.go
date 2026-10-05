@@ -294,7 +294,7 @@ func validateComposeFile(composeFile string, manifest *buildRofl.Manifest, opts 
 		var imageSize uint64
 		for _, layer := range mf.Layers {
 			if layer.Size > 0 {
-				imageSize += uint64(layer.Size) //nolint: gosec
+				imageSize += uint64(layer.Size)
 			}
 		}
 		totalSize += imageSize

@@ -22,20 +22,20 @@ func getParatimeName(cfg *cliConfig.Config, id string) string {
 	for _, net := range cfg.Networks.All {
 		for ptName, pt := range net.ParaTimes.All {
 			if id == pt.ID {
-				return (ptName)
+				return ptName
 			}
 		}
 	}
-	return ("unknown")
+	return "unknown" //nolint:goconst
 }
 
 func getNetworkName(context string) string {
 	for key, net := range sdkConfig.DefaultNetworks.All {
 		if context == net.ChainContext {
-			return (key)
+			return key
 		}
 	}
-	return ("unknown")
+	return "unknown"
 }
 
 var statusCmd = &cobra.Command{

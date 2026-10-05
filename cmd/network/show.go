@@ -69,7 +69,7 @@ func prettyPrintEntityNodes(ctx context.Context, npa *common.NPASelection, staki
 	if balance != nil {
 		fmtBalance = helpers.FormatConsensusDenomination(npa.Network, *balance)
 	} else {
-		fmtBalance = "unknown"
+		fmtBalance = "unknown" //nolint:goconst
 	}
 	fmt.Printf("Stake:          %s\n", fmtBalance)
 

@@ -108,7 +108,7 @@ func fetchLatest(ctx context.Context) (*ghRelease, error) {
 			req.Header.Set("Authorization", "Bearer "+t)
 		}
 
-		res, err := httpClient.Do(req) //nolint: gosec
+		res, err := httpClient.Do(req)
 		if err != nil {
 			return nil, err
 		}
@@ -134,20 +134,30 @@ func fetchLatest(ctx context.Context) (*ghRelease, error) {
 	}
 }
 
+const (
+	amd64     = "amd64"
+	arm64     = "arm64"
+	all       = "all"
+	universal = "universal"
+	x86_64    = "x86_64"
+	x64       = "x64"
+	aarch64   = "aarch64"
+)
+
 var archRE = map[string]*regexp.Regexp{
-	"amd64": regexp.MustCompile(`(?:^|[-_])(amd64|x86_64|x64)(?:[-_.]|$)`),
-	"arm64": regexp.MustCompile(`(?:^|[-_])(arm64|aarch64|universal)(?:[-_.]|$)`),
+	amd64: regexp.MustCompile(`(?:^|[-_])(amd64|x86_64|x64)(?:[-_.]|$)`),
+	arm64: regexp.MustCompile(`(?:^|[-_])(arm64|aarch64|universal)(?:[-_.]|$)`),
 }
 
 // archAliases returns candidate substrings ordered by preference.
 func archAliases(arch string) []string {
 	switch arch {
-	case "amd64":
-		return []string{"amd64", "x86_64", "x64", "universal", "all"}
-	case "arm64":
-		return []string{"arm64", "aarch64", "universal", "all"}
+	case amd64:
+		return []string{amd64, x86_64, x64, universal, all}
+	case arm64:
+		return []string{arm64, aarch64, universal, all}
 	default:
-		return []string{arch, "all"}
+		return []string{arch, all}
 	}
 }
 
@@ -197,7 +207,7 @@ func doDownload(ctx context.Context, url string) (string, error) {
 	}
 
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	res, err := httpClient.Do(req) //nolint: gosec
+	res, err := httpClient.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -253,14 +263,14 @@ func replaceExecutable(dest string, r io.Reader, perm os.FileMode) error {
 		return err
 	}
 
-	if err = os.Rename(tmpPath, dest); err == nil { //nolint: gosec
+	if err = os.Rename(tmpPath, dest); err == nil {
 		cleanup = false
 		return nil
 	}
 
 	if runtime.GOOS == osWindows {
 		pending := dest + ".new"
-		if err2 := os.Rename(tmpPath, pending); err2 != nil { //nolint: gosec
+		if err2 := os.Rename(tmpPath, pending); err2 != nil {
 			return fmt.Errorf("rename failed (%v / %v)", err, err2)
 		}
 		scheduleWindowsMove(pending, dest)
@@ -289,7 +299,8 @@ func scheduleWindowsMove(src, dst string) {
 		`Wait-Process -Id %d -Timeout 15; Move-Item -LiteralPath %q -Destination %q -Force`,
 		curPID, src, dst,
 	)
-	psCmd := exec.Command(shell,
+	psCmd := exec.Command(
+		shell,
 		"-NoLogo", "-NoProfile", "-Command", psScript,
 	)
 	if err := psCmd.Start(); err == nil {
@@ -297,7 +308,8 @@ func scheduleWindowsMove(src, dst string) {
 	}
 
 	// Fallback to classic cmd.exe with timeout; /nobreak prevents key-press abort.
-	_ = exec.Command("cmd", "/C",
+	_ = exec.Command(
+		"cmd", "/C",
 		"timeout", "/t", "2", "/nobreak", ">", "nul", "&&",
 		"move", "/Y", src, dst,
 	).Start()

@@ -35,7 +35,7 @@ func migrateFromV0(cfg *Config) (bool, error) {
 					Decimals: 18,
 				},
 				// The consensus layer denomination when deposited into the runtime.
-				"TEST": {
+				"TEST": { //nolint:goconst
 					Symbol:   "TEST",
 					Decimals: 18,
 				},

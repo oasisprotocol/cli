@@ -25,6 +25,9 @@ var (
 
 	// VerboseFlag specifies the command's verbosity.
 	VerboseFlag *flag.FlagSet
+
+	// DenominationFlags holds flags for --description, --symbol, and --num-decimals.
+	DenominationFlags *flag.FlagSet
 )
 
 // FormatType specifies the type of format for output of commands.
@@ -65,6 +68,10 @@ var (
 	answerYes      bool
 	outputFormat   = FormatText
 	verbose        bool
+
+	denominationDescription string
+	denominationSymbol      string
+	denominationNumDecimals uint
 )
 
 // GetHeight returns the user-selected block height.
@@ -125,4 +132,9 @@ func init() {
 
 	VerboseFlag = flag.NewFlagSet("", flag.ContinueOnError)
 	VerboseFlag.BoolVarP(&verbose, "verbose", "v", false, "verbose")
+
+	DenominationFlags = flag.NewFlagSet("", flag.ContinueOnError)
+	DenominationFlags.StringVar(&denominationDescription, "description", "", "description")
+	DenominationFlags.StringVar(&denominationSymbol, "symbol", "", "symbol")
+	DenominationFlags.UintVar(&denominationNumDecimals, "num-decimals", 0, "number of decimals")
 }

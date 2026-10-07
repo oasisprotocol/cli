@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 
 	cmnGrpc "github.com/oasisprotocol/oasis-core/go/common/grpc"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
@@ -18,34 +17,28 @@ import (
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
-var (
-	symbol      string
-	numDecimals uint
-	description string
+var addLocalCmd = &cobra.Command{
+	Use:   "add-local <name> <rpc-endpoint>",
+	Short: "Add a new local network",
+	Args:  cobra.ExactArgs(2),
+	Run: func(_ *cobra.Command, args []string) {
+		name, rpc := args[0], args[1]
 
-	addLocalCmd = &cobra.Command{
-		Use:   "add-local <name> <rpc-endpoint>",
-		Short: "Add a new local network",
-		Args:  cobra.ExactArgs(2),
-		Run: func(_ *cobra.Command, args []string) {
-			name, rpc := args[0], args[1]
+		// Validate initial network configuration early.
+		cobra.CheckErr(config.ValidateIdentifier(name))
 
-			// Validate initial network configuration early.
-			cobra.CheckErr(config.ValidateIdentifier(name))
-
-			// Check if a local file name was given without protocol.
-			if !strings.HasPrefix(rpc, "unix:") {
-				if info, err := os.Stat(rpc); err == nil {
-					if !info.IsDir() {
-						rpc = "unix:" + rpc
-					}
+		// Check if a local file name was given without protocol.
+		if !strings.HasPrefix(rpc, "unix:") {
+			if info, err := os.Stat(rpc); err == nil {
+				if !info.IsDir() {
+					rpc = "unix:" + rpc
 				}
 			}
+		}
 
-			AddLocalNetwork(name, rpc)
-		},
-	}
-)
+		AddLocalNetwork(name, rpc)
+	},
+}
 
 func AddLocalNetwork(name string, rpc string) {
 	cfg := cliConfig.Global()
@@ -75,40 +68,19 @@ func AddLocalNetwork(name string, rpc string) {
 	net.ChainContext = chainContext
 	cobra.CheckErr(net.Validate())
 
-	// With a very high probability, the user is going to be
-	// adding a local endpoint for an existing network, so try
-	// to clone config details from any of the hardcoded
-	// defaults.
-	var clonedDefault bool
+	// Try to clone config details from any of the hardcoded defaults.
 	for _, defaultNet := range config.DefaultNetworks.All {
 		if defaultNet.ChainContext != chainContext {
 			continue
 		}
 
-		// Yep.
 		net.Denomination = defaultNet.Denomination
 		net.ParaTimes = defaultNet.ParaTimes
-		clonedDefault = true
 		break
 	}
 
-	if symbol != "" {
-		net.Denomination.Symbol = symbol
-	}
-
-	if numDecimals != 0 {
-		net.Denomination.Decimals = uint8(numDecimals) //nolint: gosec
-	}
-
-	if description != "" {
-		net.Description = description
-	}
-
-	// If we failed to crib details from a hardcoded config,
-	// and user did not set -y flag ask the user.
-	if !clonedDefault && !common.GetAnswerYes() {
-		networkDetailsFromSurvey(&net)
-	}
+	// Let the user change detected parameters, if needed.
+	networkDetailsFromSurvey(&net)
 
 	err = cfg.Networks.Add(name, &net)
 	cobra.CheckErr(err)
@@ -149,16 +121,5 @@ func extractAbsPath(rpc string) (string, error) {
 
 func init() {
 	addLocalCmd.Flags().AddFlagSet(common.AnswerYesFlag)
-
-	symbolFlag := flag.NewFlagSet("", flag.ContinueOnError)
-	symbolFlag.StringVar(&symbol, "symbol", "", "network's symbol")
-	addLocalCmd.Flags().AddFlagSet(symbolFlag)
-
-	numDecimalsFlag := flag.NewFlagSet("", flag.ContinueOnError)
-	numDecimalsFlag.UintVar(&numDecimals, "num-decimals", 0, "network's number of decimals")
-	addLocalCmd.Flags().AddFlagSet(numDecimalsFlag)
-
-	descriptionFlag := flag.NewFlagSet("", flag.ContinueOnError)
-	descriptionFlag.StringVar(&description, "description", "", "network's description")
-	addLocalCmd.Flags().AddFlagSet(descriptionFlag)
+	addLocalCmd.Flags().AddFlagSet(common.DenominationFlags)
 }

@@ -308,15 +308,20 @@ var (
 				}
 
 				// Prepare transaction.
+				deployRequest := scheduler.DeployRequest{
+					Deployment:  machineDeployment,
+					WipeStorage: roflCommon.WipeStorage,
+				}
+				fmt.Printf("Command: %s\n", scheduler.MethodDeploy)
+				fmt.Printf("Args:\n")
+				fmt.Println(common.PrettyPrint(npa, "  ", deployRequest))
+
 				tx := roflmarket.NewInstanceExecuteCmdsTx(nil, &roflmarket.InstanceExecuteCmds{
 					Provider: *providerAddr,
 					ID:       machineID,
 					Cmds: [][]byte{cbor.Marshal(scheduler.Command{
 						Method: scheduler.MethodDeploy,
-						Args: cbor.Marshal(scheduler.DeployRequest{
-							Deployment:  machineDeployment,
-							WipeStorage: roflCommon.WipeStorage,
-						}),
+						Args:   cbor.Marshal(deployRequest),
 					})},
 				})
 

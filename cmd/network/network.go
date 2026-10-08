@@ -1,7 +1,6 @@
 package network
 
 import (
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
@@ -18,36 +17,22 @@ var Cmd = &cobra.Command{
 }
 
 func networkDetailsFromSurvey(net *config.Network) {
-	// Ask user for some additional parameters.
-	questions := []*survey.Question{
-		{
-			Name:   "description",
-			Prompt: &survey.Input{Message: "Description:"},
-		},
-		{
-			Name:   "symbol",
-			Prompt: &survey.Input{Message: "Denomination symbol:"},
-		},
-		{
-			Name: "decimals",
-			Prompt: &survey.Input{
-				Message: "Denomination decimal places:",
-				Default: "9",
-			},
-			Validate: survey.Required,
-		},
+	// 9 is the default used for new networks when nothing better (an existing value cloned from a
+	// hardcoded default network, or a --num-decimals flag) is available.
+	decimals := net.Denomination.Decimals
+	if decimals == 0 {
+		decimals = 9
 	}
-	answers := struct {
-		Description string
-		Symbol      string
-		Decimals    uint8
-	}{}
-	err := common.AskMulti(questions, &answers)
-	cobra.CheckErr(err)
+	details := common.DenominationDetails{
+		Description: net.Description,
+		Symbol:      net.Denomination.Symbol,
+		Decimals:    decimals,
+	}
+	common.AskDenominationDetails(&details)
 
-	net.Description = answers.Description
-	net.Denomination.Symbol = answers.Symbol
-	net.Denomination.Decimals = answers.Decimals
+	net.Description = details.Description
+	net.Denomination.Symbol = details.Symbol
+	net.Denomination.Decimals = details.Decimals
 }
 
 func init() {

@@ -10,6 +10,7 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/config"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 
+	"github.com/oasisprotocol/cli/cmd/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
 )
 
@@ -61,7 +62,7 @@ var addCmd = &cobra.Command{
 
 		cobra.CheckErr(net.Validate())
 
-		// Ask user for some additional parameters.
+		// Let the user change detected parameters, if needed.
 		networkDetailsFromSurvey(&net)
 
 		err := cfg.Networks.Add(name, &net)
@@ -70,4 +71,9 @@ var addCmd = &cobra.Command{
 		err = cfg.Save()
 		cobra.CheckErr(err)
 	},
+}
+
+func init() {
+	addCmd.Flags().AddFlagSet(common.AnswerYesFlag)
+	addCmd.Flags().AddFlagSet(common.DenominationFlags)
 }

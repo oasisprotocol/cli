@@ -34,6 +34,7 @@ import (
 	roflCmdBuild "github.com/oasisprotocol/cli/cmd/rofl/build"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
 	cliConfig "github.com/oasisprotocol/cli/config"
+	"github.com/oasisprotocol/cli/wallet"
 )
 
 var (
@@ -181,9 +182,12 @@ var (
 				machineDeployment.Metadata[scheduler.MetadataKeyProxyCustomDomains] = customDomains
 			}
 
-			acc := common.LoadAccount(cliConfig.Global(), cliConfig.Global().Wallet.Default)
-			if !common.TxUnsigned {
+			var acc wallet.Account
+			switch common.TxUnsigned {
+			case false:
 				acc = common.LoadAccount(cliConfig.Global(), npa.AccountName)
+			default:
+				acc = common.LoadAccount(cliConfig.Global(), cliConfig.Global().Wallet.Default)
 			}
 			obtainMachine := func() (*buildRofl.Machine, *roflmarket.Instance, error) {
 				if deployOffer != "" {

@@ -35,7 +35,7 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
 	github.com/tyler-smith/go-bip39 v1.1.0
-	github.com/wI2L/jsondiff v0.7.0
+	github.com/wI2L/jsondiff v0.7.1
 	github.com/zondax/ledger-go v1.0.1
 	golang.org/x/crypto v0.58.0
 	golang.org/x/net v0.61.0

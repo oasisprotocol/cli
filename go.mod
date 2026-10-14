@@ -15,7 +15,7 @@ replace (
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/adrg/xdg v0.5.3
-	github.com/btcsuite/btcd/btcec/v2 v2.3.5
+	github.com/btcsuite/btcd/btcec/v2 v2.5.0
 	github.com/compose-spec/compose-go/v2 v2.16.1
 	github.com/ethereum/go-ethereum v1.16.7
 	github.com/foxboron/go-uefi v0.0.0-20241017190036-fab4fdf2f2f3

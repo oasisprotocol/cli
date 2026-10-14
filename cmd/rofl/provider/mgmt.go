@@ -444,12 +444,12 @@ func maybeLoadManifestAndSetNPA(cfg *cliConfig.Config, npa *common.NPASelection)
 	switch manifest.Provider {
 	case "":
 	default:
-		accCfg, err := common.LoadAccountConfig(cfg, manifest.Provider)
+		accountName, accCfg, err := common.LoadAccountConfig(cfg, manifest.Provider)
 		if err != nil {
 			return nil, err
 		}
 		npa.Account = accCfg
-		npa.AccountName = manifest.Provider
+		npa.AccountName = accountName
 	}
 	return manifest, nil
 }

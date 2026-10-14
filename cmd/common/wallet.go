@@ -111,7 +111,7 @@ func LoadAccount(cfg *config.Config, name string) wallet.Account {
 		return acc
 	}
 
-	acfg, err := LoadAccountConfig(cfg, name)
+	name, acfg, err := LoadAccountConfig(cfg, name)
 	cobra.CheckErr(err)
 
 	af, err := acfg.LoadFactory()
@@ -156,18 +156,32 @@ func ParseTestAccountAddress(name string) string {
 	return ""
 }
 
-// LoadAccountConfig loads the config instance of the given named account.
-func LoadAccountConfig(cfg *config.Config, name string) (*config.Account, error) {
+// LoadAccountConfig loads the name and config instance of the given account name or address.
+func LoadAccountConfig(cfg *config.Config, name string) (string, *config.Account, error) {
 	if testName := ParseTestAccountAddress(name); testName != "" {
-		return LoadTestAccountConfig(testName)
+		acfg, err := LoadTestAccountConfig(testName)
+		return name, acfg, err
 	}
 
 	// Early check for whether the account exists so that we don't ask for passphrase first.
 	if acfg, exists := cfg.Wallet.All[name]; exists {
-		return acfg, nil
+		return name, acfg, nil
 	}
 
-	return nil, fmt.Errorf("account '%s' does not exist in the wallet", name)
+	// Name may be a native or Ethereum address instead; resolve it to the matching configured
+	// wallet account, if any.
+	if addr, ethAddr, err := helpers.ResolveEthOrOasisAddress(name); err == nil && addr != nil {
+		for accName, acfg := range cfg.Wallet.All {
+			switch {
+			case acfg.GetAddress() == *addr:
+				return accName, acfg, nil
+			case ethAddr != nil && acfg.GetEthAddress() != nil && *acfg.GetEthAddress() == *ethAddr:
+				return accName, acfg, nil
+			}
+		}
+	}
+
+	return "", nil, fmt.Errorf("account '%s' does not exist in the wallet", name)
 }
 
 // LoadTestAccount loads the given named test account.

@@ -19,7 +19,7 @@ var exportCmd = &cobra.Command{
 
 		common.Warn("WARNING: Exporting the account will expose secret key material!")
 		acc := common.LoadAccount(config.Global(), name)
-		accCfg, _ := common.LoadAccountConfig(config.Global(), name)
+		_, accCfg, _ := common.LoadAccountConfig(config.Global(), name)
 
 		showPublicWalletInfo(name, acc, accCfg)
 

@@ -20,7 +20,7 @@ var showCmd = &cobra.Command{
 		name := args[0]
 
 		acc := common.LoadAccount(config.Global(), name)
-		accCfg, _ := common.LoadAccountConfig(config.Global(), name)
+		_, accCfg, _ := common.LoadAccountConfig(config.Global(), name)
 		showPublicWalletInfo(name, acc, accCfg)
 	},
 }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"maps"
+	"math"
 	"os"
 	"sort"
 	"strings"
@@ -375,7 +376,7 @@ func replaceUnavailableMachine(
 			return nil, false, queryErr
 		}
 		reason = "not found"
-	case !now.Before(time.Unix(int64(instance.PaidUntil), 0)):
+	case instance.PaidUntil <= math.MaxInt64 && !now.Before(time.Unix(int64(instance.PaidUntil), 0)):
 		reason = "expired"
 	default:
 		return instance, false, nil

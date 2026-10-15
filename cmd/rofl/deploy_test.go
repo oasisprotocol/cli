@@ -2,6 +2,7 @@ package rofl
 
 import (
 	"errors"
+	"math"
 	"testing"
 	"time"
 
@@ -16,6 +17,7 @@ func TestReplaceUnavailableMachine(t *testing.T) {
 	missing := errors.New("roflmarket: instance not found")
 	for _, tc := range []struct {
 		name       string
+		paidUntil  uint64
 		now        time.Time
 		queryErr   error
 		replace    bool
@@ -26,6 +28,8 @@ func TestReplaceUnavailableMachine(t *testing.T) {
 	}{
 		{name: "unexpired", now: time.Unix(99, 999999999), replace: true},
 		{name: "unexpired without replacement", now: time.Unix(99, 0)},
+		{name: "beyond signed timestamp range", paidUntil: math.MaxInt64 + 1, now: time.Unix(101, 0), replace: true},
+		{name: "maximum timestamp", paidUntil: math.MaxUint64, now: time.Unix(101, 0)},
 		{name: "expiration boundary", now: time.Unix(100, 0), replace: true, wantRent: true},
 		{name: "expired accepted", now: time.Unix(101, 0), replace: true, wantRent: true},
 		{name: "expired without replacement", now: time.Unix(101, 0), wantErrMsg: "machine instance expired; use --replace-machine"},
@@ -37,6 +41,9 @@ func TestReplaceUnavailableMachine(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			original := &roflmarket.Instance{PaidUntil: 100, Status: roflmarket.InstanceStatusAccepted}
+			if tc.paidUntil != 0 {
+				original.PaidUntil = tc.paidUntil
+			}
 			instance := original
 			if tc.queryErr != nil {
 				instance = nil

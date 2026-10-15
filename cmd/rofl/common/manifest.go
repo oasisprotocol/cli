@@ -109,11 +109,11 @@ func MaybeLoadManifestAndSetNPA(cfg *cliConfig.Config, npa *common.NPASelection,
 	case npa.AccountSetExplicitly, common.TxUnsigned:
 		// Account explicitly overridden on the command line, leave unchanged.
 	default:
-		accCfg, err := common.LoadAccountConfig(cfg, d.Admin)
+		accountName, accCfg, err := common.LoadAccountConfig(cfg, d.Admin)
 		switch {
 		case err == nil:
 			npa.Account = accCfg
-			npa.AccountName = d.Admin
+			npa.AccountName = accountName
 		case opts != nil && opts.NeedAdmin:
 			return nil, "", nil, err
 		default:

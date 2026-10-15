@@ -82,8 +82,9 @@ func GetNPASelection(cfg *cliConfig.Config) *NPASelection {
 		s.AccountSetExplicitly = true
 	}
 	if s.AccountName != "" {
-		accCfg, err := LoadAccountConfig(cfg, s.AccountName)
+		accountName, accCfg, err := LoadAccountConfig(cfg, s.AccountName)
 		cobra.CheckErr(err)
+		s.AccountName = accountName
 		s.Account = accCfg
 	}
 

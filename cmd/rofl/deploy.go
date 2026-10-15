@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"maps"
-	"math"
 	"os"
 	"sort"
 	"strings"
@@ -367,6 +366,8 @@ func replaceUnavailableMachine(
 	replace bool,
 	obtain func() (*roflmarket.Instance, error),
 ) (*roflmarket.Instance, bool, error) {
+	// Compare Unix seconds directly to avoid overflowing time.Time for large paid periods.
+	nowUnix := now.Unix()
 	var reason string
 	switch {
 	case queryErr != nil:
@@ -376,7 +377,7 @@ func replaceUnavailableMachine(
 			return nil, false, queryErr
 		}
 		reason = "not found"
-	case instance.PaidUntil <= math.MaxInt64 && !now.Before(time.Unix(int64(instance.PaidUntil), 0)):
+	case nowUnix >= 0 && uint64(nowUnix) >= instance.PaidUntil:
 		reason = "expired"
 	default:
 		return instance, false, nil

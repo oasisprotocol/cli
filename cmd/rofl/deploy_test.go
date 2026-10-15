@@ -15,6 +15,8 @@ func TestReplaceUnavailableMachine(t *testing.T) {
 	queryFailure := errors.New("query failed")
 	rentFailure := errors.New("rental failed")
 	missing := errors.New("roflmarket: instance not found")
+	// time.Time stores seconds relative to year 1 instead of the Unix epoch.
+	const unixToInternalSeconds = 62135596800
 	for _, tc := range []struct {
 		name       string
 		paidUntil  uint64
@@ -26,24 +28,29 @@ func TestReplaceUnavailableMachine(t *testing.T) {
 		wantErr    error
 		wantErrMsg string
 	}{
-		{name: "unexpired", now: time.Unix(99, 999999999), replace: true},
-		{name: "unexpired without replacement", now: time.Unix(99, 0)},
+		{name: "unexpired", paidUntil: 100, now: time.Unix(99, 999999999), replace: true},
+		{name: "unexpired without replacement", paidUntil: 100, now: time.Unix(99, 0)},
+		{name: "before internal time overflow", paidUntil: math.MaxInt64 - unixToInternalSeconds - 1, now: time.Unix(101, 0), replace: true},
+		{name: "internal time overflow boundary", paidUntil: math.MaxInt64 - unixToInternalSeconds, now: time.Unix(101, 0), replace: true},
+		{name: "after internal time overflow", paidUntil: math.MaxInt64 - unixToInternalSeconds + 1, now: time.Unix(101, 0), replace: true},
+		{name: "maximum signed timestamp", paidUntil: math.MaxInt64, now: time.Unix(101, 0), replace: true},
+		{name: "before epoch", paidUntil: 100, now: time.Unix(-1, 999999999), replace: true},
+		{name: "zero timestamp before epoch", paidUntil: 0, now: time.Unix(-1, 999999999), replace: true},
+		{name: "zero timestamp at epoch", paidUntil: 0, now: time.Unix(0, 0), replace: true, wantRent: true},
+		{name: "zero timestamp after epoch", paidUntil: 0, now: time.Unix(0, 1), wantErrMsg: "machine instance expired; use --replace-machine"},
 		{name: "beyond signed timestamp range", paidUntil: math.MaxInt64 + 1, now: time.Unix(101, 0), replace: true},
 		{name: "maximum timestamp", paidUntil: math.MaxUint64, now: time.Unix(101, 0)},
-		{name: "expiration boundary", now: time.Unix(100, 0), replace: true, wantRent: true},
-		{name: "expired accepted", now: time.Unix(101, 0), replace: true, wantRent: true},
-		{name: "expired without replacement", now: time.Unix(101, 0), wantErrMsg: "machine instance expired; use --replace-machine"},
-		{name: "missing", queryErr: missing, replace: true, wantRent: true},
-		{name: "missing without replacement", queryErr: missing, wantErrMsg: "machine instance not found; use --replace-machine"},
-		{name: "query failure", queryErr: queryFailure, replace: true, wantErr: queryFailure},
-		{name: "expired rental failure", now: time.Unix(100, 0), replace: true, rentErr: rentFailure, wantRent: true, wantErr: rentFailure},
-		{name: "missing rental failure", queryErr: missing, replace: true, rentErr: rentFailure, wantRent: true, wantErr: rentFailure},
+		{name: "expiration boundary", paidUntil: 100, now: time.Unix(100, 0), replace: true, wantRent: true},
+		{name: "expired accepted", paidUntil: 100, now: time.Unix(101, 0), replace: true, wantRent: true},
+		{name: "expired without replacement", paidUntil: 100, now: time.Unix(101, 0), wantErrMsg: "machine instance expired; use --replace-machine"},
+		{name: "missing", paidUntil: 100, queryErr: missing, replace: true, wantRent: true},
+		{name: "missing without replacement", paidUntil: 100, queryErr: missing, wantErrMsg: "machine instance not found; use --replace-machine"},
+		{name: "query failure", paidUntil: 100, queryErr: queryFailure, replace: true, wantErr: queryFailure},
+		{name: "expired rental failure", paidUntil: 100, now: time.Unix(100, 0), replace: true, rentErr: rentFailure, wantRent: true, wantErr: rentFailure},
+		{name: "missing rental failure", paidUntil: 100, queryErr: missing, replace: true, rentErr: rentFailure, wantRent: true, wantErr: rentFailure},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			original := &roflmarket.Instance{PaidUntil: 100, Status: roflmarket.InstanceStatusAccepted}
-			if tc.paidUntil != 0 {
-				original.PaidUntil = tc.paidUntil
-			}
+			original := &roflmarket.Instance{PaidUntil: tc.paidUntil, Status: roflmarket.InstanceStatusAccepted}
 			instance := original
 			if tc.queryErr != nil {
 				instance = nil

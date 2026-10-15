@@ -291,19 +291,15 @@ var (
 				var insDsc *roflmarket.Instance
 				insDsc, err = conn.Runtime(npa.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *providerAddr, machineID)
 
-				// The "instance not found" error originates from Rust code,
-				// so we can't compare it nicely here.
-				if err != nil && strings.Contains(err.Error(), "instance not found") {
-					if deployReplaceMachine {
-						fmt.Printf("Machine instance not found. Obtaining new one...")
-						machine.ID = ""
-						_, insDsc, err = obtainMachine()
-						return insDsc, err
-					}
-
-					cobra.CheckErr("Machine instance not found.\nTip: If your instance expired, run this command with --replace-machine flag to replace it with a new machine.")
+				insDsc, replaced, err := replaceUnavailableMachine(insDsc, err, time.Now(), deployReplaceMachine, func() (*roflmarket.Instance, error) {
+					fmt.Printf("Machine instance expired or not found. Obtaining new one...\n")
+					machine.ID = ""
+					_, replacement, obtainErr := obtainMachine()
+					return replacement, obtainErr
+				})
+				if err != nil || replaced {
+					return insDsc, err
 				}
-				cobra.CheckErr(err)
 
 				if insDsc.Deployment != nil && insDsc.Deployment.AppID != machineDeployment.AppID && !deployForce {
 					fmt.Printf("Machine already contains a deployment of ROFL app '%s'.\n", insDsc.Deployment.AppID)
@@ -360,6 +356,39 @@ var (
 		},
 	}
 )
+
+// replaceUnavailableMachine checks the paid period independently of the instance status.
+// A provider may not have removed an expired instance yet.
+func replaceUnavailableMachine(
+	instance *roflmarket.Instance,
+	queryErr error,
+	now time.Time,
+	replace bool,
+	obtain func() (*roflmarket.Instance, error),
+) (*roflmarket.Instance, bool, error) {
+	// Compare Unix seconds directly to avoid overflowing time.Time for large paid periods.
+	nowUnix := now.Unix()
+	var reason string
+	switch {
+	case queryErr != nil:
+		// The "instance not found" error originates from Rust code,
+		// so we can't compare it nicely here.
+		if !strings.Contains(queryErr.Error(), "instance not found") {
+			return nil, false, queryErr
+		}
+		reason = "not found"
+	case nowUnix >= 0 && uint64(nowUnix) >= instance.PaidUntil:
+		reason = "expired"
+	default:
+		return instance, false, nil
+	}
+
+	if !replace {
+		return nil, false, fmt.Errorf("machine instance %s; use --replace-machine to rent a new machine", reason)
+	}
+	instance, err := obtain()
+	return instance, true, err
+}
 
 // ociRepository returns the OCI repository for the deployment (or a default one if not set).
 func ociRepository(deployment *buildRofl.Deployment) string {

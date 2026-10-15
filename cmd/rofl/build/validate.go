@@ -139,6 +139,9 @@ func validateComposeFile(composeFile string, manifest *buildRofl.Manifest, opts 
 			if strings.HasPrefix(src, "/storage/") {
 				return true
 			}
+			if strings.HasPrefix(src, "/run/rofl/") {
+				return true
+			}
 
 			return false
 		}

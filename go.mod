@@ -17,7 +17,7 @@ require (
 	github.com/adrg/xdg v0.5.3
 	github.com/btcsuite/btcd/btcec/v2 v2.5.1
 	github.com/compose-spec/compose-go/v2 v2.16.2
-	github.com/ethereum/go-ethereum v1.17.8
+	github.com/ethereum/go-ethereum v1.17.10
 	github.com/foxboron/go-uefi v0.0.0-20241017190036-fab4fdf2f2f3
 	github.com/github/go-spdx/v2 v2.8.0
 	github.com/google/uuid v1.6.0
@@ -104,7 +104,7 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.18.7 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
+	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/libp2p/go-libp2p v0.48.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect

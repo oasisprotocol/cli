@@ -31,8 +31,8 @@ const artifactCacheDir = "build_cache"
 // the hash provided in the URI fragment.
 func maybeDownloadArtifact(kind, uri string) string {
 	if common.OutputFormat() != common.FormatJSON {
-		fmt.Printf("Downloading %s artifact...\n", kind)
-		fmt.Printf("  URI: %s\n", uri)
+		fmt.Fprintf(os.Stderr, "Downloading %s artifact...\n", kind)
+		fmt.Fprintf(os.Stderr, "  URI: %s\n", uri)
 	}
 
 	url, err := url.Parse(uri)

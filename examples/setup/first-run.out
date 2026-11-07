@@ -17,8 +17,8 @@ Available Commands:
   wallet      Manage accounts in the local wallet
 
 Flags:
-      --config string   config file to use
-  -h, --help            help for oasis
-  -v, --version         version for oasis
+      --config string          config file to use
+  -h, --help[=true|false]      help for oasis
+  -v, --version[=true|false]   version for oasis
 
 Use "oasis [command] --help" for more information about a command.

@@ -151,6 +151,11 @@ func measureTdxQemuKernelImage(bnd *bundle.Bundle, comp *bundle.Component) ([]by
 		return nil, err
 	}
 
+	if len(kd) < 556 {
+		return nil, fmt.Errorf("truncated kernel image")
+	}
+	kd = bytes.Clone(kd)
+
 	// Qemu performs the following modifications to the linux kernel header.
 	//
 	// See the x86_load_linux function in hw/i386/x86.c in the qemu repository for the updates and
@@ -313,109 +318,90 @@ func (m *tdvfMetadata) computeMrtd(fw []byte, variant int) []byte {
 // parseTdvfMetadata parses the TDVF metadata from the firmware blob.
 //
 // See Section 11 of "Intel TDX Virtual Firmware Design Guide" for details.
+// ovmfTableEntry walks the bounded OVMF GUID footer table. Lengths include the
+// length/GUID trailer (18 bytes), including the footer's own trailer.
+func ovmfTableEntry(fw []byte, wanted string) ([]byte, error) {
+	if len(fw) < 50 {
+		return nil, fmt.Errorf("truncated firmware footer")
+	}
+	end := len(fw) - 32
+	if !bytes.Equal(fw[end-16:end], encodeGUID("96b582de-1fb2-45f7-baea-a366c55a082d")) {
+		return nil, fmt.Errorf("malformed OVMF table footer")
+	}
+	size := int(binary.LittleEndian.Uint16(fw[end-18 : end-16]))
+	if size < 18 || size > end {
+		return nil, fmt.Errorf("invalid OVMF footer size")
+	}
+	start := end - size
+	var result []byte
+	guid := encodeGUID(wanted)
+	for end -= 18; end > start; {
+		if end-start < 18 {
+			return nil, fmt.Errorf("truncated OVMF footer entry")
+		}
+		n := int(binary.LittleEndian.Uint16(fw[end-18 : end-16]))
+		if n < 18 || n > end-start {
+			return nil, fmt.Errorf("invalid OVMF footer entry size")
+		}
+		if bytes.Equal(fw[end-16:end], guid) {
+			if result != nil {
+				return nil, fmt.Errorf("duplicate OVMF footer entry")
+			}
+			result = fw[end-n : end-18]
+		}
+		end -= n
+	}
+	return result, nil
+}
+
 func parseTdvfMetadata(fw []byte) (*tdvfMetadata, error) {
-	const (
-		tdxMetadataOffsetGUID = "e47a6535-984a-4798-865e-4685a7bf8ec2"
-		tdxMetadataVersion    = 1
-		tdvfSignature         = "TDVF"
-		tableFooterGUID       = "96b582de-1fb2-45f7-baea-a366c55a082d"
-		bytesAfterTableFooter = 32
-	)
-
-	offset := len(fw) - bytesAfterTableFooter
-	encodedFooterGUID := encodeGUID(tableFooterGUID)
-	guid := fw[offset-16 : offset]
-	tablesLen := int(binary.LittleEndian.Uint16(fw[offset-16-2 : offset-16]))
-	if !bytes.Equal(guid, encodedFooterGUID) {
-		return nil, fmt.Errorf("malformed OVMF table footer")
+	data, err := ovmfTableEntry(fw, "e47a6535-984a-4798-865e-4685a7bf8ec2")
+	if err != nil {
+		return nil, err
 	}
-	if tablesLen == 0 || tablesLen > offset-16-2 {
-		return nil, fmt.Errorf("malformed OVMF table footer")
+	if len(data) != 4 {
+		return nil, fmt.Errorf("missing or invalid TDVF metadata offset")
 	}
-	tables := fw[offset-16-2-tablesLen : offset-16-2]
-	offset = len(tables)
-
-	// Find TDVF metadata table in OVMF, starting at the end.
-	var data []byte
-	encodedGUID := encodeGUID(tdxMetadataOffsetGUID)
-	for {
-		if offset < 18 {
-			return nil, fmt.Errorf("missing TDVF metadata in firmware")
-		}
-
-		// The data structure is:
-		//
-		//   arbitrary length data
-		//   2 byte length of entire entry
-		//   16 byte GUID
-		//
-		guid = tables[offset-16 : offset]
-		entryLen := int(binary.LittleEndian.Uint16(tables[offset-16-2 : offset-16]))
-		if offset < 18+entryLen {
-			return nil, fmt.Errorf("malformed OVMF table in firmware at offset %d", offset)
-		}
-
-		if bytes.Equal(guid, encodedGUID) {
-			data = tables[offset-18-entryLen : offset-18]
-			break
-		}
-
-		offset -= entryLen
+	distance := uint64(binary.LittleEndian.Uint32(data))
+	if distance < 16 || distance > uint64(len(fw)) {
+		return nil, fmt.Errorf("TDVF metadata offset out of bounds")
 	}
-	if data == nil {
-		return nil, fmt.Errorf("missing TDVF metadata in firmware")
+	offset := uint64(len(fw)) - distance
+	desc := fw[offset : offset+16]
+	if string(desc[:4]) != "TDVF" || binary.LittleEndian.Uint32(desc[8:]) != 1 {
+		return nil, fmt.Errorf("unsupported TDVF metadata descriptor")
 	}
-
-	// Extract and parse TDVF metadata descriptor:
-	//
-	//   4 byte signature
-	//   4 byte length
-	//   4 byte version
-	//   4 byte number of section entries
-	//   32 byte each section * number of sections
-	//
-	tdvfMetaOffset := int(binary.LittleEndian.Uint32(data[len(data)-4:]))
-	tdvfMetaOffset = len(fw) - tdvfMetaOffset
-	tdvfMetaDesc := fw[tdvfMetaOffset : tdvfMetaOffset+16]
-	if string(tdvfMetaDesc[:4]) != tdvfSignature {
-		return nil, fmt.Errorf("malformed TDVF metadata descriptor in firmware")
+	size := uint64(binary.LittleEndian.Uint32(desc[4:]))
+	count := uint64(binary.LittleEndian.Uint32(desc[12:]))
+	if count == 0 || count > 64 || size != 16+32*count || size > distance {
+		return nil, fmt.Errorf("invalid TDVF metadata section count/size")
 	}
-	tdvfVersion := binary.LittleEndian.Uint32(tdvfMetaDesc[8:12])
-	tdvfNumberOfSectionEntries := int(binary.LittleEndian.Uint32(tdvfMetaDesc[12:16]))
-	if tdvfVersion != 1 {
-		return nil, fmt.Errorf("unsupported TDVF metadata descriptor version in firmware")
-	}
-
-	// Parse section entries.
 	var meta tdvfMetadata
-	for section := range tdvfNumberOfSectionEntries {
-		secOffset := tdvfMetaOffset + 16 + 32*section
-		secData := fw[secOffset : secOffset+32]
-
-		s := &tdvfSection{
-			dataOffset:     binary.LittleEndian.Uint32(secData[:4]),
-			rawDataSize:    binary.LittleEndian.Uint32(secData[4:8]),
-			memoryAddress:  binary.LittleEndian.Uint64(secData[8:16]),
-			memoryDataSize: binary.LittleEndian.Uint64(secData[16:24]),
-			secType:        binary.LittleEndian.Uint32(secData[24:28]),
-			attributes:     binary.LittleEndian.Uint32(secData[28:32]),
+	var total uint64
+	for i := uint64(0); i < count; i++ {
+		d := fw[offset+16+32*i : offset+16+32*(i+1)]
+		sec := &tdvfSection{
+			dataOffset: binary.LittleEndian.Uint32(d), rawDataSize: binary.LittleEndian.Uint32(d[4:]),
+			memoryAddress: binary.LittleEndian.Uint64(d[8:]), memoryDataSize: binary.LittleEndian.Uint64(d[16:]),
+			secType: binary.LittleEndian.Uint32(d[24:]), attributes: binary.LittleEndian.Uint32(d[28:]),
 		}
-
-		// Sanity check section.
-		if s.memoryAddress%pageSize != 0 {
-			return nil, fmt.Errorf("TDVF metadata section %d has non-aligned memory address", section)
+		if sec.memoryAddress%pageSize != 0 || sec.memoryDataSize == 0 || sec.memoryDataSize%pageSize != 0 ||
+			sec.memoryAddress+sec.memoryDataSize < sec.memoryAddress ||
+			uint64(sec.dataOffset)+uint64(sec.rawDataSize) > uint64(len(fw)) ||
+			uint64(sec.rawDataSize) > sec.memoryDataSize || sec.attributes & ^uint32(3) != 0 ||
+			(sec.attributes&attributeMrExtend != 0 && uint64(sec.rawDataSize) != sec.memoryDataSize) {
+			return nil, fmt.Errorf("invalid TDVF section %d", i)
 		}
-		if s.memoryDataSize < uint64(s.rawDataSize) {
-			return nil, fmt.Errorf("TDVF metadata section %d memory data size is less than raw data size", section)
+		total += sec.memoryDataSize
+		if total > 64<<20 {
+			return nil, fmt.Errorf("TDVF memory size exceeds limit")
 		}
-		if s.memoryDataSize%pageSize != 0 {
-			return nil, fmt.Errorf("TDVF metadata section %d has non-aligned memory data size", section)
+		for _, prev := range meta.sections {
+			if sec.memoryAddress < prev.memoryAddress+prev.memoryDataSize && prev.memoryAddress < sec.memoryAddress+sec.memoryDataSize {
+				return nil, fmt.Errorf("overlapping TDVF memory sections")
+			}
 		}
-		if s.attributes&attributeMrExtend != 0 && uint64(s.rawDataSize) < s.memoryDataSize {
-			return nil, fmt.Errorf("TDVF metadata section %d raw data size is less than memory data size", section)
-		}
-
-		meta.sections = append(meta.sections, s)
+		meta.sections = append(meta.sections, sec)
 	}
 	return &meta, nil
 }
@@ -473,6 +459,19 @@ func MeasureTdxQemu(bnd *bundle.Bundle, comp *bundle.Component) ([]bundle.Identi
 		return nil, err
 	}
 
+	// TODO: Remove TdxProfileFilenames invocation once core is updated. Use comp.TDX.HasPlatform() instead.
+	profileName := TdxProfileFilenames(comp)
+	_, hasProfile := bnd.Data[profileName]
+	if hasProfile {
+		return measureTdxProfile(bnd, comp, fw, tdvfMeta)
+	}
+	if !isLegacyTdxFirmware(fw) {
+		return nil, fmt.Errorf("unrecognized legacy TDX firmware: provide the firmware-bound platform profile")
+	}
+	return measureTdxQemuLegacy(bnd, comp, fw, tdvfMeta)
+}
+
+func measureTdxQemuLegacy(bnd *bundle.Bundle, comp *bundle.Component, fw []byte, tdvfMeta *tdvfMetadata) ([]bundle.Identity, error) {
 	// RTMR0.
 	tdHobHash := measureTdxQemuTdHob(&comp.TDX.Resources, tdvfMeta)
 	cfvImageHash, _ := hex.DecodeString("344BC51C980BA621AAA00DA3ED7436F7D6E549197DFE699515DFA2C6583D95E6412AF21C097D473155875FFD561D6790")

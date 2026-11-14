@@ -23,6 +23,7 @@ import (
 const (
 	artifactFirmware         = "firmware"
 	artifactKernel           = "kernel"
+	artifactPlatform         = "platform profile"
 	artifactStage2           = "stage 2 template"
 	artifactContainerRuntime = "rofl-container runtime"
 	artifactContainerCompose = "compose.yaml"
@@ -93,6 +94,7 @@ func tdxWantedArtifacts(artifactsCfg buildRofl.ArtifactsConfig) []*artifact {
 	}{
 		{artifactFirmware, func(ac *buildRofl.ArtifactsConfig) string { return ac.Firmware }},
 		{artifactKernel, func(ac *buildRofl.ArtifactsConfig) string { return ac.Kernel }},
+		{artifactPlatform, func(ac *buildRofl.ArtifactsConfig) string { return ac.Platform }},
 		{artifactStage2, func(ac *buildRofl.ArtifactsConfig) string { return ac.Stage2 }},
 		{artifactContainerRuntime, func(ac *buildRofl.ArtifactsConfig) string { return ac.Container.Runtime }},
 		{artifactContainerCompose, func(ac *buildRofl.ArtifactsConfig) string { return ac.Container.Compose }},
@@ -182,6 +184,7 @@ func tdxBundleComponent(
 ) error {
 	// Add the ROFL component.
 	firmwareName := "firmware.fd"
+	platformName := "platform.json.gz"
 	kernelName := "kernel.bin"
 	stage2Name := "stage2.img"
 
@@ -284,8 +287,13 @@ func tdxBundleComponent(
 		kernelName:   artifacts[artifactKernel],
 		stage2Name:   stage2.fn,
 	}
+	if fn := artifacts[artifactPlatform]; fn != "" {
+		fileMap[platformName] = fn
+	}
 	for dst, src := range fileMap {
-		_ = bnd.Add(dst, bundle.NewFileData(src))
+		if err = bnd.Add(dst, bundle.NewFileData(src)); err != nil {
+			return fmt.Errorf("failed to add %s: %w", dst, err)
+		}
 	}
 
 	// Compute expected component identity and include it in the manifest.

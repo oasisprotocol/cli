@@ -19,6 +19,7 @@ const (
 func TestTdxWantedArtifactsUsesResolvedConfig(t *testing.T) {
 	artifacts := tdxWantedArtifacts(buildRofl.ArtifactsConfig{
 		Firmware: "firmware",
+		Platform: "platform",
 		Kernel:   "kernel",
 		Stage2:   "stage2",
 		Container: buildRofl.ContainerArtifactsConfig{
@@ -34,6 +35,7 @@ func TestTdxWantedArtifactsUsesResolvedConfig(t *testing.T) {
 
 	require.Equal(t, map[string]string{
 		artifactFirmware:         "firmware",
+		artifactPlatform:         "platform",
 		artifactKernel:           "kernel",
 		artifactStage2:           "stage2",
 		artifactContainerRuntime: "runtime",

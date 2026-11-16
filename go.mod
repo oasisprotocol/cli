@@ -5,7 +5,6 @@ go 1.27.3
 replace (
 	// Should be synced with Oasis Core as replace directives are not propagated.
 	github.com/cometbft/cometbft => github.com/oasisprotocol/cometbft v0.37.18-oasis3
-	github.com/powerman/rpc-codec => github.com/oasisprotocol/rpc-codec v0.0.0-20260821192426-8771fbee5115
 	github.com/spf13/cast => github.com/oasisprotocol/cast v0.0.0-20220606122631-eba453e69641
 	github.com/spf13/viper => github.com/spf13/viper v1.17.0
 	golang.org/x/crypto/curve25519 => github.com/oasisprotocol/curve25519-voi/primitives/x25519 v0.0.0-20251114093237-2ab5a27a1729
@@ -26,7 +25,7 @@ require (
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20251114093237-2ab5a27a1729
 	github.com/oasisprotocol/deoxysii v0.0.0-20220228165953-2091330c22b7
 	github.com/oasisprotocol/metadata-registry-tools v0.0.0-20220406100644-7e9a2b991920
-	github.com/oasisprotocol/oasis-core/go v0.2604.0
+	github.com/oasisprotocol/oasis-core/go v0.2605.0
 	github.com/oasisprotocol/oasis-sdk/client-sdk/go v0.17.0
 	github.com/olekukonko/tablewriter v1.1.5
 	github.com/opencontainers/image-spec v1.1.1

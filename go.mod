@@ -37,7 +37,7 @@ require (
 	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/wI2L/jsondiff v0.7.1
 	github.com/zondax/ledger-go v1.0.1
-	golang.org/x/crypto v0.58.0
+	golang.org/x/crypto v0.59.0
 	golang.org/x/net v0.62.0
 	golang.org/x/sys v0.50.0
 	golang.org/x/term v0.48.0

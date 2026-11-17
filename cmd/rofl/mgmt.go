@@ -280,7 +280,7 @@ var (
 						Quotes: quote.Policy{
 							PCS: &pcs.QuotePolicy{
 								TCBValidityPeriod:          30,
-								MinTCBEvaluationDataNumber: 18,
+								MinTCBEvaluationDataNumber: 21,
 								TDX:                        tdxQuotePolicy,
 							},
 						},

@@ -318,6 +318,40 @@ func TestResolveArtifacts(t *testing.T) {
 	}, m.ResolveArtifacts("missing", defaults))
 }
 
+func TestResolveArtifactsFirmwarePlatform(t *testing.T) {
+	defaults := ArtifactsConfig{
+		Firmware: "default-firmware",
+		Platform: "default-platform",
+	}
+	legacy := ArtifactsConfig{Firmware: "legacy-firmware"}
+	defaultFirmwareOnly := ArtifactsConfig{Firmware: defaults.Firmware}
+
+	for _, tc := range []struct {
+		name                       string
+		global, deployment         *ArtifactsConfig
+		wantFirmware, wantPlatform string
+	}{
+		{"defaults", nil, nil, defaults.Firmware, defaults.Platform},
+		{"legacy global", &legacy, nil, legacy.Firmware, ""},
+		{"legacy deployment", &defaults, &legacy, legacy.Firmware, ""},
+		{"same firmware", &defaults, &defaultFirmwareOnly, defaults.Firmware, defaults.Platform},
+		{"return to default firmware", &legacy, &defaultFirmwareOnly, defaults.Firmware, defaults.Platform},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			m := Manifest{
+				Artifacts: tc.global,
+				Deployments: map[string]*Deployment{
+					"testnet": {Artifacts: tc.deployment},
+				},
+			}
+
+			got := m.ResolveArtifacts("testnet", defaults)
+			require.Equal(t, tc.wantFirmware, got.Firmware)
+			require.Equal(t, tc.wantPlatform, got.Platform)
+		})
+	}
+}
+
 func TestLoadManifest(t *testing.T) {
 	require := require.New(t)
 

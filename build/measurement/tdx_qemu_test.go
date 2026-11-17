@@ -3,6 +3,9 @@ package measurement
 
 import (
 	"encoding/hex"
+	"encoding/json"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -31,6 +34,13 @@ func TestMeasureTdxKernelCmdline(t *testing.T) {
 func TestMeasureTdxQemuTdHob(t *testing.T) {
 	require := require.New(t)
 
+	// Load TDVF metadata extracted from actual OVMF.
+	tdvfMetaRaw, err := os.ReadFile(filepath.Join("testdata", "tdvf_metadata_ovmf_edk2_202608.json"))
+	require.NoError(err)
+	var tdvfMeta tdvfMetadata
+	err = json.Unmarshal(tdvfMetaRaw, &tdvfMeta)
+	require.NoError(err)
+
 	for _, tc := range []struct {
 		memory   uint64
 		expected string
@@ -52,14 +62,15 @@ func TestMeasureTdxQemuTdHob(t *testing.T) {
 		{8192, "2e070cda358b5aa00f27cca25c47381bb564f4be3a84d059805a73cbbde764ed8341f7e09915b5e7b370f9c08a743fbd"},
 		{16384, "cd2312a0d87ef3c4a928df87088969a80b33d7bf3fc584bdde637b09ed808a8d821a56b78a13a6eb506db7578444abbe"},
 	} {
-		h := measureTdxQemuTdHob(&bundle.TDXResources{
+		h, err := measureTdxQemuTdHob(&bundle.TDXResources{
 			Memory: tc.memory,
-		}, nil)
+		}, &tdvfMeta)
+		require.NoError(err)
 		require.EqualValues(tc.expected, hex.EncodeToString(h))
 	}
 }
 
-func TestMeasureTdxQemuAcpiTables(t *testing.T) {
+func TestMeasureTdxQemuAcpiTablesLegacy(t *testing.T) {
 	require := require.New(t)
 
 	for _, tc := range []struct {
@@ -211,7 +222,7 @@ func TestMeasureTdxQemuAcpiTables(t *testing.T) {
 			"f871fdfcbf08609c01efd099949c6d5b3c7c556db710f11a37e1d4c2c787ef65faad1b66ecdb5d55a2cf4d84049ab5b9",
 		},
 	} {
-		hTables, hRsdp, hLdr, err := measureTdxQemuAcpiTables(&bundle.TDXResources{
+		hTables, hRsdp, hLdr, err := measureTdxQemuAcpiTablesLegacy(&bundle.TDXResources{
 			Memory:   tc.memory,
 			CPUCount: tc.cpus,
 		})

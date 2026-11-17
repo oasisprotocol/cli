@@ -243,6 +243,11 @@ func (m *Manifest) ResolveArtifacts(deployment string, defaults ArtifactsConfig)
 		}
 	}
 
+	// Ensure default firmware corresponds to the default platform.
+	if resolved.Platform == "" && resolved.Firmware == defaults.Firmware {
+		resolved.Platform = defaults.Platform
+	}
+
 	return resolved
 }
 
@@ -573,6 +578,8 @@ type ArtifactsConfig struct {
 	Builder string `yaml:"builder,omitempty" json:"builder,omitempty"`
 	// Firmware is the URI/path to the firmware artifact.
 	Firmware string `yaml:"firmware,omitempty" json:"firmware,omitempty"`
+	// Platform is the URI/path to the platform artifact.
+	Platform string `yaml:"platform,omitempty" json:"platform,omitempty"`
 	// Kernel is the URI/path to the kernel artifact.
 	Kernel string `yaml:"kernel,omitempty" json:"kernel,omitempty"`
 	// Stage2 is the URI/path to the stage 2 disk artifact.
@@ -589,9 +596,18 @@ func (ac *ArtifactsConfig) Merge(other *ArtifactsConfig) {
 	if other.Builder != "" {
 		ac.Builder = other.Builder
 	}
+
+	// Ensure firmware corresponds to the platform if both are set.
 	if other.Firmware != "" {
+		if other.Firmware != ac.Firmware {
+			ac.Platform = ""
+		}
 		ac.Firmware = other.Firmware
 	}
+	if other.Platform != "" {
+		ac.Platform = other.Platform
+	}
+
 	if other.Kernel != "" {
 		ac.Kernel = other.Kernel
 	}
@@ -658,6 +674,7 @@ func (ac *ArtifactsConfig) UpgradePossible(latest *ArtifactsConfig) bool {
 	if upgradePossible([]artifactUpgrade{
 		{&ac.Builder, latest.Builder},
 		{&ac.Firmware, latest.Firmware},
+		{&ac.Platform, latest.Platform},
 		{&ac.Kernel, latest.Kernel},
 		{&ac.Stage2, latest.Stage2},
 	}) {
@@ -682,6 +699,7 @@ func (ac *ArtifactsConfig) UpgradeTo(latest *ArtifactsConfig) bool {
 	changed = upgradeArtifacts([]artifactUpgrade{
 		{&ac.Builder, latest.Builder},
 		{&ac.Firmware, latest.Firmware},
+		{&ac.Platform, latest.Platform},
 		{&ac.Kernel, latest.Kernel},
 		{&ac.Stage2, latest.Stage2},
 	})
@@ -697,6 +715,7 @@ func (ac *ArtifactsConfig) UpgradeExplicitTo(latest *ArtifactsConfig) bool {
 	changed = upgradeExplicitArtifacts([]artifactUpgrade{
 		{&ac.Builder, latest.Builder},
 		{&ac.Firmware, latest.Firmware},
+		{&ac.Platform, latest.Platform},
 		{&ac.Kernel, latest.Kernel},
 		{&ac.Stage2, latest.Stage2},
 	})

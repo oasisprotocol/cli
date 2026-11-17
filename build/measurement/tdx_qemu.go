@@ -8,14 +8,14 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
+	"unicode/utf16"
 
 	"github.com/foxboron/go-uefi/authenticode"
 	"golang.org/x/text/encoding/unicode"
 	"golang.org/x/text/transform"
 
-	"github.com/oasisprotocol/oasis-core/go/common/crypto/tuplehash"
-	"github.com/oasisprotocol/oasis-core/go/common/sgx"
 	"github.com/oasisprotocol/oasis-core/go/common/sgx/pcs"
 	"github.com/oasisprotocol/oasis-core/go/runtime/bundle"
 
@@ -39,81 +39,107 @@ func measureTdxKernelCmdline(cmdline string) []byte {
 	return measureSha384(converted)
 }
 
+// tdxQemuRAMSplit preserves Q35's legacy split with max-ram-below-4g=4G.
+func tdxQemuRAMSplit(memory uint64) (low, high uint64) {
+	if memory < 2816 {
+		return memory << 20, 0
+	}
+	return 2048 << 20, (memory - 2048) << 20
+}
+
 // measureTdxQemuTdHob measures the TD HOB.
-func measureTdxQemuTdHob(resources *bundle.TDXResources, meta *tdvfMetadata) []byte {
-	// Construct a TD hob in the same way as QEMU does. Note that all fields are little-endian.
-	// See: https://github.com/intel-staging/qemu-tdx/blob/tdx-qemu-next/hw/i386/tdvf-hob.c
-	var tdHob []byte
-	// Discover the TD HOB base address from TDVF metadata.
-	tdHobBaseAddr := uint64(0x809000) // TD HOB base address.
-	if meta != nil {
-		for _, s := range meta.sections {
-			if s.secType == tdvfSectionTdHob {
-				tdHobBaseAddr = s.memoryAddress
-				break
+func measureTdxQemuTdHob(resources *bundle.TDXResources, meta *tdvfMetadata) ([]byte, error) {
+	tdHob, err := tdxQemuTdHob(resources.Memory, meta)
+	if err != nil {
+		return nil, err
+	}
+	return measureSha384(tdHob), nil
+}
+
+// tdxQemuTdHob mirrors both pinned QEMUs' tdx_accept_ram_range and tdvf_hob_create.
+// Preserve descriptor boundaries: adjacent accepted TDVF sections are not merged.
+// OVMF hashes the handoff/resource HOBs, excluding the terminating 8-byte HOB.
+func tdxQemuTdHob(memory uint64, tdvfMeta *tdvfMetadata) ([]byte, error) {
+	// Construct the region list from the TDVF metadata.
+	type region struct {
+		start, size uint64
+		kind        uint32
+	}
+	low, high := tdxQemuRAMSplit(memory)
+	regions := []region{{0, low, 7}}
+	if high != 0 {
+		regions = append(regions, region{1 << 32, high, 7})
+	}
+	var hobBase, hobSize uint64
+	for _, s := range tdvfMeta.Sections {
+		if s.SecType > 3 || s.Attributes&attributePageAug != 0 {
+			return nil, fmt.Errorf("unsupported profile TDVF section")
+		}
+		if s.SecType != tdvfSectionTdHob && s.SecType != tdvfSectionTempMem {
+			continue
+		}
+
+		// Discover the TD HOB base address from TDVF metadata.
+		if s.SecType == tdvfSectionTdHob {
+			if hobSize != 0 {
+				return nil, fmt.Errorf("duplicate TD HOB section")
 			}
+			hobBase, hobSize = s.MemoryAddress, s.MemoryDataSize
+		}
+
+		found := false
+		for i, r := range regions {
+			if r.kind != 7 || s.MemoryAddress < r.start || s.MemoryAddress+s.MemoryDataSize > r.start+r.size {
+				continue
+			}
+			regions[i] = region{s.MemoryAddress, s.MemoryDataSize, 0}
+			if s.MemoryAddress > r.start {
+				regions = append(regions, region{r.start, s.MemoryAddress - r.start, 7})
+			}
+			end := s.MemoryAddress + s.MemoryDataSize
+			if end < r.start+r.size {
+				regions = append(regions, region{end, r.start + r.size - end, 7})
+			}
+			found = true
+			break
+		}
+		if !found {
+			return nil, fmt.Errorf("TDVF temporary memory is outside RAM or overlaps")
 		}
 	}
+	slices.SortFunc(regions, func(a, b region) int {
+		if a.start < b.start {
+			return -1
+		}
+		if a.start > b.start {
+			return 1
+		}
+		return 0
+	})
+	length := 56 + 48*len(regions)
+	if hobSize == 0 || uint64(length+8) > hobSize {
+		return nil, fmt.Errorf("TD HOB section too small or missing")
+	}
 
+	// Construct a TD hob in the same way as QEMU does.
 	// Start with EFI_HOB_TYPE_HANDOFF.
-	tdHob = append(tdHob,
-		0x01, 0x00, // Header.HobType (EFI_HOB_TYPE_HANDOFF)
-		0x38, 0x00, // Header.HobLength (56 bytes)
-		0x00, 0x00, 0x00, 0x00, // Header.Reserved
-		0x09, 0x00, 0x00, 0x00, // Version (EFI_HOB_HANDOFF_TABLE_VERSION)
-		0x00, 0x00, 0x00, 0x00, // BootMode
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // EfiMemoryTop
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // EfiMemoryBottom
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // EfiFreeMemoryTop
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // EfiFreeMemoryBottom
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // EfiEndOfHobList (filled later)
-	)
+	tdHob := make([]byte, length)
+	binary.LittleEndian.PutUint16(tdHob, 1)                             // Header.HobType (EFI_HOB_TYPE_HANDOFF)
+	binary.LittleEndian.PutUint16(tdHob[2:], 56)                        // Header.HobLength (56 bytes)
+	binary.LittleEndian.PutUint32(tdHob[8:], 9)                         // Version (EFI_HOB_HANDOFF_TABLE_VERSION)
+	binary.LittleEndian.PutUint64(tdHob[48:], hobBase+uint64(length)+8) // EfiEndOfHobList
 
 	// The rest of the HOBs are EFI_HOB_TYPE_RESOURCE_DESCRIPTOR.
-	remainingMemory := resources.Memory * 1024 * 1024 // Convert to bytes.
-	addMemoryResourceHob := func(resourceType uint8, start, length uint64) {
-		tdHob = append(tdHob,
-			0x03, 0x00, // Header.HobType (EFI_HOB_TYPE_RESOURCE_DESCRIPTOR)
-			0x30, 0x00, // Header.HobLength (48 bytes)
-			0x00, 0x00, 0x00, 0x00, // Header.Reserved
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Owner
-			resourceType, 0x00, 0x00, 0x00, // ResourceType
-			0x07, 0x00, 0x00, 0x00, // ResourceAttribute
-		)
-
-		var val [8]byte
-		binary.LittleEndian.PutUint64(val[:], start)
-		tdHob = append(tdHob, val[:]...) // PhysicalStart
-		binary.LittleEndian.PutUint64(val[:], length)
-		tdHob = append(tdHob, val[:]...) // Length
-
-		// Subtract from remaining memory.
-		remainingMemory -= length
+	for i, r := range regions {
+		d := tdHob[56+i*48:]
+		binary.LittleEndian.PutUint16(d, 3)            // Header.HobType (EFI_HOB_TYPE_RESOURCE_DESCRIPTOR)
+		binary.LittleEndian.PutUint16(d[2:], 48)       // Header.HobLength (48 bytes)
+		binary.LittleEndian.PutUint32(d[24:], r.kind)  // ResourceType
+		binary.LittleEndian.PutUint32(d[28:], 7)       // ResourceAttribute
+		binary.LittleEndian.PutUint64(d[32:], r.start) // PhysicalStart
+		binary.LittleEndian.PutUint64(d[40:], r.size)  // Length
 	}
-
-	addMemoryResourceHob(0x07, 0x0000000000000000, 0x0000000000800000)
-	addMemoryResourceHob(0x00, 0x0000000000800000, 0x0000000000006000)
-	addMemoryResourceHob(0x07, 0x0000000000806000, 0x0000000000003000)
-	addMemoryResourceHob(0x00, 0x0000000000809000, 0x0000000000002000)
-	addMemoryResourceHob(0x00, 0x000000000080B000, 0x0000000000002000)
-	addMemoryResourceHob(0x07, 0x000000000080D000, 0x0000000000003000)
-	addMemoryResourceHob(0x00, 0x0000000000810000, 0x0000000000010000)
-
-	// Handle memory split at 2816 MiB (0xB0000000).
-	if resources.Memory >= 2816 {
-		addMemoryResourceHob(0x07, 0x0000000000820000, 0x000000007F7E0000)
-		addMemoryResourceHob(0x07, 0x0000000100000000, remainingMemory)
-	} else {
-		addMemoryResourceHob(0x07, 0x0000000000820000, remainingMemory)
-	}
-
-	// Update EfiEndOfHobList.
-	var val [8]byte
-	binary.LittleEndian.PutUint64(val[:], tdHobBaseAddr+uint64(len(tdHob))+8)
-	copy(tdHob[48:56], val[:])
-
-	// Measure the TD HOB.
-	return measureSha384(tdHob)
+	return tdHob, nil
 }
 
 // measureLog computes a measurement of the given RTMR event log by simulating extending the RTMR.
@@ -128,8 +154,8 @@ func measureLog(log [][]byte) []byte {
 	return mr[:]
 }
 
-// measureTdxQemuAcpiTables measures QEMU-generated ACPI tables for TDX.
-func measureTdxQemuAcpiTables(resources *bundle.TDXResources) ([]byte, []byte, []byte, error) {
+// measureTdxQemuAcpiTablesLegacy measures QEMU-generated ACPI tables for TDX.
+func measureTdxQemuAcpiTablesLegacy(resources *bundle.TDXResources) ([]byte, []byte, []byte, error) {
 	// Generate ACPI tables.
 	acpiTables, acpiRsdp, acpiLoader, err := acpi.GenerateTablesQemu(resources)
 	if err != nil {
@@ -150,6 +176,11 @@ func measureTdxQemuKernelImage(bnd *bundle.Bundle, comp *bundle.Component) ([]by
 	if err != nil {
 		return nil, err
 	}
+
+	if len(kd) < 556 {
+		return nil, fmt.Errorf("truncated kernel image")
+	}
+	kd = bytes.Clone(kd)
 
 	// Qemu performs the following modifications to the linux kernel header.
 	//
@@ -195,24 +226,24 @@ func encodeGUID(guid string) []byte {
 	return data
 }
 
-// measureTdxEfiVariable measures an EFI variable event.
-func measureTdxEfiVariable(vendorGUID string, varName string) []byte {
-	var data []byte //nolint: prealloc
-	data = append(data, encodeGUID(vendorGUID)...)
+const (
+	efiVariableGlobal        = "8be4df61-93ca-11d2-aa0d-00e098032b8c"
+	efiVariableImageSecurity = "d719b2cb-3d3a-4596-a3bc-dad00e67656f"
+)
 
-	var encLen [8]byte
-	binary.LittleEndian.PutUint64(encLen[:], uint64(len(varName)))
-	data = append(data, encLen[:]...)
-	binary.LittleEndian.PutUint64(encLen[:], 0)
-	data = append(data, encLen[:]...)
+// measureEfiVariableValue measures an EFI variable event.
+func measureEfiVariableValue(guid, name string, value []byte) []byte {
+	data := append([]byte{}, encodeGUID(guid)...)
+	encoded := utf16.Encode([]rune(name))
 
-	// Convert varName to UTF-16LE.
-	utf16le := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewEncoder()
-	xr := transform.NewReader(bytes.NewReader([]byte(varName)), utf16le)
-	converted, _ := io.ReadAll(xr)
-	data = append(data, converted...)
+	data = binary.LittleEndian.AppendUint64(data, uint64(len(encoded)))
+	data = binary.LittleEndian.AppendUint64(data, uint64(len(value)))
 
-	return measureSha384(data)
+	for _, c := range encoded {
+		data = binary.LittleEndian.AppendUint16(data, c)
+	}
+
+	return measureSha384(append(data, value...))
 }
 
 const (
@@ -221,20 +252,22 @@ const (
 	pageSize            = 0x1000
 	mrExtendGranularity = 0x100
 
-	tdvfSectionTdHob = 0x02
+	tdvfSectionCFV     = 0x01
+	tdvfSectionTdHob   = 0x02
+	tdvfSectionTempMem = 0x03
 )
 
 type tdvfSection struct {
-	dataOffset     uint32
-	rawDataSize    uint32
-	memoryAddress  uint64
-	memoryDataSize uint64
-	secType        uint32
-	attributes     uint32
+	DataOffset     uint32
+	RawDataSize    uint32
+	MemoryAddress  uint64
+	MemoryDataSize uint64
+	SecType        uint32
+	Attributes     uint32
 }
 
 type tdvfMetadata struct {
-	sections []*tdvfSection
+	Sections []*tdvfSection
 }
 
 const (
@@ -246,7 +279,7 @@ func (m *tdvfMetadata) computeMrtd(fw []byte, variant int) []byte {
 	h := sha512.New384()
 
 	memPageAdd := func(s *tdvfSection, page uint64) {
-		if s.attributes&attributePageAug == 0 {
+		if s.Attributes&attributePageAug == 0 {
 			// Use TDCALL [TDH.MEM.PAGE.ADD].
 			//
 			// Byte 0 through 11 contain the ASCII string 'MEM.PAGE.ADD'.
@@ -254,13 +287,13 @@ func (m *tdvfMetadata) computeMrtd(fw []byte, variant int) []byte {
 			// All the other bytes contain 0.
 			var buf [128]byte
 			copy(buf[:12], []byte("MEM.PAGE.ADD"))
-			binary.LittleEndian.PutUint64(buf[16:24], s.memoryAddress+page*pageSize)
+			binary.LittleEndian.PutUint64(buf[16:24], s.MemoryAddress+page*pageSize)
 			_, _ = h.Write(buf[:])
 		}
 	}
 
 	mrExtend := func(s *tdvfSection, page uint64) {
-		if s.attributes&attributeMrExtend != 0 {
+		if s.Attributes&attributeMrExtend != 0 {
 			// Need TDCALL [TDH.MR.EXTEND].
 			for i := range pageSize / mrExtendGranularity {
 				// Byte 0 through 8 contain the ASCII string 'MR.EXTEND'.
@@ -268,18 +301,18 @@ func (m *tdvfMetadata) computeMrtd(fw []byte, variant int) []byte {
 				// All the other bytes contain 0.
 				var buf [128]byte
 				copy(buf[:9], []byte("MR.EXTEND"))
-				binary.LittleEndian.PutUint64(buf[16:24], s.memoryAddress+page*pageSize+uint64(i*mrExtendGranularity))
+				binary.LittleEndian.PutUint64(buf[16:24], s.MemoryAddress+page*pageSize+uint64(i*mrExtendGranularity))
 				_, _ = h.Write(buf[:])
 
 				// The other two extension buffers contain the chunk’s content.
-				chunkOffset := int(s.dataOffset) + int(page*pageSize) + i*mrExtendGranularity //nolint: gosec
+				chunkOffset := int(s.DataOffset) + int(page*pageSize) + i*mrExtendGranularity //nolint: gosec
 				_, _ = h.Write(fw[chunkOffset : chunkOffset+mrExtendGranularity])
 			}
 		}
 	}
 
-	for _, s := range m.sections {
-		numPages := s.memoryDataSize / pageSize
+	for _, s := range m.Sections {
+		numPages := s.MemoryDataSize / pageSize
 
 		// There are two known implementations of how QEMU is performing TD initialization:
 		//
@@ -310,141 +343,105 @@ func (m *tdvfMetadata) computeMrtd(fw []byte, variant int) []byte {
 	return h.Sum(nil)
 }
 
+// ovmfTableEntry walks the bounded OVMF GUID footer table. Lengths include the
+// length/GUID trailer (18 bytes), including the footer's own trailer.
+func ovmfTableEntry(fw []byte, wanted string) ([]byte, error) {
+	if len(fw) < 50 {
+		return nil, fmt.Errorf("truncated firmware footer")
+	}
+	end := len(fw) - 32
+	if !bytes.Equal(fw[end-16:end], encodeGUID("96b582de-1fb2-45f7-baea-a366c55a082d")) {
+		return nil, fmt.Errorf("malformed OVMF table footer")
+	}
+	size := int(binary.LittleEndian.Uint16(fw[end-18 : end-16]))
+	if size < 18 || size > end {
+		return nil, fmt.Errorf("invalid OVMF footer size")
+	}
+	start := end - size
+	var result []byte
+	guid := encodeGUID(wanted)
+	for end -= 18; end > start; {
+		if end-start < 18 {
+			return nil, fmt.Errorf("truncated OVMF footer entry")
+		}
+		n := int(binary.LittleEndian.Uint16(fw[end-18 : end-16]))
+		if n < 18 || n > end-start {
+			return nil, fmt.Errorf("invalid OVMF footer entry size")
+		}
+		if bytes.Equal(fw[end-16:end], guid) {
+			if result != nil {
+				return nil, fmt.Errorf("duplicate OVMF footer entry")
+			}
+			result = fw[end-n : end-18]
+		}
+		end -= n
+	}
+	return result, nil
+}
+
 // parseTdvfMetadata parses the TDVF metadata from the firmware blob.
 //
 // See Section 11 of "Intel TDX Virtual Firmware Design Guide" for details.
 func parseTdvfMetadata(fw []byte) (*tdvfMetadata, error) {
-	const (
-		tdxMetadataOffsetGUID = "e47a6535-984a-4798-865e-4685a7bf8ec2"
-		tdxMetadataVersion    = 1
-		tdvfSignature         = "TDVF"
-		tableFooterGUID       = "96b582de-1fb2-45f7-baea-a366c55a082d"
-		bytesAfterTableFooter = 32
-	)
-
-	offset := len(fw) - bytesAfterTableFooter
-	encodedFooterGUID := encodeGUID(tableFooterGUID)
-	guid := fw[offset-16 : offset]
-	tablesLen := int(binary.LittleEndian.Uint16(fw[offset-16-2 : offset-16]))
-	if !bytes.Equal(guid, encodedFooterGUID) {
-		return nil, fmt.Errorf("malformed OVMF table footer")
+	data, err := ovmfTableEntry(fw, "e47a6535-984a-4798-865e-4685a7bf8ec2")
+	if err != nil {
+		return nil, err
 	}
-	if tablesLen == 0 || tablesLen > offset-16-2 {
-		return nil, fmt.Errorf("malformed OVMF table footer")
+	if len(data) != 4 {
+		return nil, fmt.Errorf("missing or invalid TDVF metadata offset")
 	}
-	tables := fw[offset-16-2-tablesLen : offset-16-2]
-	offset = len(tables)
-
-	// Find TDVF metadata table in OVMF, starting at the end.
-	var data []byte
-	encodedGUID := encodeGUID(tdxMetadataOffsetGUID)
-	for {
-		if offset < 18 {
-			return nil, fmt.Errorf("missing TDVF metadata in firmware")
-		}
-
-		// The data structure is:
-		//
-		//   arbitrary length data
-		//   2 byte length of entire entry
-		//   16 byte GUID
-		//
-		guid = tables[offset-16 : offset]
-		entryLen := int(binary.LittleEndian.Uint16(tables[offset-16-2 : offset-16]))
-		if offset < 18+entryLen {
-			return nil, fmt.Errorf("malformed OVMF table in firmware at offset %d", offset)
-		}
-
-		if bytes.Equal(guid, encodedGUID) {
-			data = tables[offset-18-entryLen : offset-18]
-			break
-		}
-
-		offset -= entryLen
+	distance := uint64(binary.LittleEndian.Uint32(data))
+	if distance < 16 || distance > uint64(len(fw)) {
+		return nil, fmt.Errorf("TDVF metadata offset out of bounds")
 	}
-	if data == nil {
-		return nil, fmt.Errorf("missing TDVF metadata in firmware")
+	offset := uint64(len(fw)) - distance
+	desc := fw[offset : offset+16]
+	if string(desc[:4]) != "TDVF" || binary.LittleEndian.Uint32(desc[8:]) != 1 {
+		return nil, fmt.Errorf("unsupported TDVF metadata descriptor")
+	}
+	size := uint64(binary.LittleEndian.Uint32(desc[4:]))
+	count := uint64(binary.LittleEndian.Uint32(desc[12:]))
+	if count == 0 || count > 64 || size != 16+32*count || size > distance {
+		return nil, fmt.Errorf("invalid TDVF metadata section count/size")
 	}
 
-	// Extract and parse TDVF metadata descriptor:
-	//
-	//   4 byte signature
-	//   4 byte length
-	//   4 byte version
-	//   4 byte number of section entries
-	//   32 byte each section * number of sections
-	//
-	tdvfMetaOffset := int(binary.LittleEndian.Uint32(data[len(data)-4:]))
-	tdvfMetaOffset = len(fw) - tdvfMetaOffset
-	tdvfMetaDesc := fw[tdvfMetaOffset : tdvfMetaOffset+16]
-	if string(tdvfMetaDesc[:4]) != tdvfSignature {
-		return nil, fmt.Errorf("malformed TDVF metadata descriptor in firmware")
-	}
-	tdvfVersion := binary.LittleEndian.Uint32(tdvfMetaDesc[8:12])
-	tdvfNumberOfSectionEntries := int(binary.LittleEndian.Uint32(tdvfMetaDesc[12:16]))
-	if tdvfVersion != 1 {
-		return nil, fmt.Errorf("unsupported TDVF metadata descriptor version in firmware")
-	}
-
-	// Parse section entries.
 	var meta tdvfMetadata
-	for section := range tdvfNumberOfSectionEntries {
-		secOffset := tdvfMetaOffset + 16 + 32*section
-		secData := fw[secOffset : secOffset+32]
-
-		s := &tdvfSection{
-			dataOffset:     binary.LittleEndian.Uint32(secData[:4]),
-			rawDataSize:    binary.LittleEndian.Uint32(secData[4:8]),
-			memoryAddress:  binary.LittleEndian.Uint64(secData[8:16]),
-			memoryDataSize: binary.LittleEndian.Uint64(secData[16:24]),
-			secType:        binary.LittleEndian.Uint32(secData[24:28]),
-			attributes:     binary.LittleEndian.Uint32(secData[28:32]),
+	var total uint64
+	for i := uint64(0); i < count; i++ {
+		d := fw[offset+16+32*i : offset+16+32*(i+1)]
+		sec := &tdvfSection{
+			DataOffset:     binary.LittleEndian.Uint32(d),
+			RawDataSize:    binary.LittleEndian.Uint32(d[4:]),
+			MemoryAddress:  binary.LittleEndian.Uint64(d[8:]),
+			MemoryDataSize: binary.LittleEndian.Uint64(d[16:]),
+			SecType:        binary.LittleEndian.Uint32(d[24:]),
+			Attributes:     binary.LittleEndian.Uint32(d[28:]),
 		}
 
-		// Sanity check section.
-		if s.memoryAddress%pageSize != 0 {
-			return nil, fmt.Errorf("TDVF metadata section %d has non-aligned memory address", section)
-		}
-		if s.memoryDataSize < uint64(s.rawDataSize) {
-			return nil, fmt.Errorf("TDVF metadata section %d memory data size is less than raw data size", section)
-		}
-		if s.memoryDataSize%pageSize != 0 {
-			return nil, fmt.Errorf("TDVF metadata section %d has non-aligned memory data size", section)
-		}
-		if s.attributes&attributeMrExtend != 0 && uint64(s.rawDataSize) < s.memoryDataSize {
-			return nil, fmt.Errorf("TDVF metadata section %d raw data size is less than memory data size", section)
+		// Validate section.
+		if sec.MemoryAddress%pageSize != 0 || sec.MemoryDataSize == 0 || sec.MemoryDataSize%pageSize != 0 ||
+			sec.MemoryAddress+sec.MemoryDataSize < sec.MemoryAddress ||
+			uint64(sec.DataOffset)+uint64(sec.RawDataSize) > uint64(len(fw)) ||
+			uint64(sec.RawDataSize) > sec.MemoryDataSize || sec.Attributes & ^uint32(3) != 0 ||
+			(sec.Attributes&attributeMrExtend != 0 && uint64(sec.RawDataSize) != sec.MemoryDataSize) {
+			return nil, fmt.Errorf("invalid TDVF section %d", i)
 		}
 
-		meta.sections = append(meta.sections, s)
+		// Validate total memory size.
+		total += sec.MemoryDataSize
+		if total > 64<<20 {
+			return nil, fmt.Errorf("TDVF memory size exceeds limit")
+		}
+
+		// Check for overlapping sections.
+		for _, prev := range meta.Sections {
+			if sec.MemoryAddress < prev.MemoryAddress+prev.MemoryDataSize && prev.MemoryAddress < sec.MemoryAddress+sec.MemoryDataSize {
+				return nil, fmt.Errorf("overlapping TDVF memory sections")
+			}
+		}
+		meta.Sections = append(meta.Sections, sec)
 	}
 	return &meta, nil
-}
-
-// TODO: Expose this in Oasis Core instead of reimplementing it here.
-func computeEnclaveIdentity(
-	mrtd []byte,
-	rtmr0 []byte,
-	rtmr1 []byte,
-	rtmr2 []byte,
-	rtmr3 []byte,
-) sgx.EnclaveIdentity {
-	var (
-		zeroMrSigner sgx.MrSigner
-		mrEnclave    sgx.MrEnclave
-	)
-	h := tuplehash.New256(32, []byte(pcs.TdEnclaveIdentityContext))
-	_, _ = h.Write(mrtd)
-	_, _ = h.Write(rtmr0)
-	_, _ = h.Write(rtmr1)
-	_, _ = h.Write(rtmr2)
-	_, _ = h.Write(rtmr3)
-	rawMrEnclave := h.Sum(nil)
-	copy(mrEnclave[:], rawMrEnclave)
-
-	return sgx.EnclaveIdentity{
-		MrEnclave: mrEnclave,
-		MrSigner:  zeroMrSigner, // All-zero MRSIGNER (invalid in SGX).
-	}
 }
 
 // MeasureTdxQemu computes the TD measurements for the given component. It assumes that a known
@@ -473,11 +470,147 @@ func MeasureTdxQemu(bnd *bundle.Bundle, comp *bundle.Component) ([]bundle.Identi
 		return nil, err
 	}
 
+	if !comp.TDX.HasPlatform() {
+		return measureTdxQemuLegacy(bnd, comp, fw, tdvfMeta)
+	}
+	return measureTdxQemu(bnd, comp, fw, tdvfMeta)
+}
+
+func efiBootOption() []byte {
+	// EfiBootManagerGetBootManagerMenu(), LOAD_OPTION_ACTIVE | HIDDEN |
+	// CATEGORY_APP, with the FV and file GUIDs from the pinned OVMF build.
+	data := binary.LittleEndian.AppendUint32(nil, 0x109)
+	data = binary.LittleEndian.AppendUint16(data, 44)
+	for _, c := range utf16.Encode([]rune("BootManagerMenuApp\x00")) {
+		data = binary.LittleEndian.AppendUint16(data, c)
+	}
+	data = append(data, 4, 7, 20, 0)
+	data = append(data, encodeGUID("7cb8bdc9-f8eb-4f34-aaea-3ee4af6516a1")...)
+	data = append(data, 4, 6, 20, 0)
+	data = append(data, encodeGUID("eec25bdc-67f2-4d95-b1d5-f81b2039d11d")...)
+	return append(data, 0x7f, 0xff, 4, 0)
+}
+
+// efiLogSeparator is the separator used in EFI event logs.
+var efiLogSeparator = measureSha384([]byte{0, 0, 0, 0})
+
+func tdxRtmr0Log(inputs *TdxPlatformInputs, cfv []byte) [][]byte {
+	rtmr0Log := make([][]byte, 0, 14+len(inputs.FwCfg))
+	rtmr0Log = append(rtmr0Log,
+		measureSha384(inputs.TDHOB),
+		measureSha384(cfv),
+	)
+
+	for _, entry := range inputs.FwCfg {
+		rtmr0Log = append(rtmr0Log, measureSha384(entry.Data))
+	}
+
+	rtmr0Log = append(rtmr0Log,
+		measureEfiVariableValue(efiVariableGlobal, "SecureBoot", []byte{0}),
+		measureEfiVariableValue(efiVariableGlobal, "PK", nil),
+		measureEfiVariableValue(efiVariableGlobal, "KEK", nil),
+		measureEfiVariableValue(efiVariableImageSecurity, "db", nil),
+		measureEfiVariableValue(efiVariableImageSecurity, "dbx", nil),
+		efiLogSeparator,
+		measureSha384(inputs.Loader),
+		measureSha384(inputs.RSDP),
+		measureSha384(inputs.ACPI),
+		measureSha384(inputs.SMBIOS),
+		measureSha384([]byte{0, 0}),
+		measureSha384(efiBootOption()),
+	)
+
+	return rtmr0Log
+}
+
+func tdxRtmr1Log(bnd *bundle.Bundle, comp *bundle.Component) ([][]byte, error) {
+	kernelAuthenticodeHash, err := measureTdxQemuKernelImage(bnd, comp)
+	if err != nil {
+		return nil, err
+	}
+
+	rtmr1Log := [][]byte{
+		kernelAuthenticodeHash,
+		measureSha384([]byte("Calling EFI Application from Boot Option")),
+		efiLogSeparator,
+		measureSha384([]byte("Exit Boot Services Invocation")),
+		measureSha384([]byte("Exit Boot Services Returned with Success")),
+	}
+	return rtmr1Log, nil
+}
+
+func tdxRtmr2Log(comp *bundle.Component) [][]byte {
+	kernelCmdline := strings.Join(comp.TDX.ExtraKernelOptions, " ")
+	rtmr2Log := [][]byte{
+		measureTdxKernelCmdline(kernelCmdline),
+	}
+	return rtmr2Log
+}
+
+func measureTdxQemu(bnd *bundle.Bundle, comp *bundle.Component, fw []byte, tdvfMeta *tdvfMetadata) ([]bundle.Identity, error) {
+	inputs, err := generateTdxPlatformInputs(bnd, comp, fw, tdvfMeta)
+	if err != nil {
+		return nil, err
+	}
+
+	// Ensure that the CFV is present and represents an empty configuration volume.
+	var cfv []byte
+	for _, s := range tdvfMeta.Sections {
+		if s.SecType != tdvfSectionCFV {
+			continue
+		}
+		if cfv != nil {
+			return nil, fmt.Errorf("duplicate TDVF configuration volume")
+		}
+		cfv = fw[s.DataOffset : uint64(s.DataOffset)+uint64(s.RawDataSize)]
+	}
+	emptyCFV, _ := hex.DecodeString("344BC51C980BA621AAA00DA3ED7436F7D6E549197DFE699515DFA2C6583D95E6412AF21C097D473155875FFD561D6790")
+	if !bytes.Equal(measureSha384(cfv), emptyCFV) {
+		return nil, fmt.Errorf("TDX profile requires the pristine configuration volume")
+	}
+
+	// RTMR1.
+	rtmr1Log, err := tdxRtmr1Log(bnd, comp)
+	if err != nil {
+		return nil, err
+	}
+	rtmr1 := measureLog(rtmr1Log)
+
+	// RTMR2.
+	rtmr2Log := tdxRtmr2Log(comp)
+	rtmr2 := measureLog(rtmr2Log)
+
+	// RTMR3.
+	var rtmr3 [48]byte
+	// All-zero for now.
+
+	identities := make([]bundle.Identity, 0, len(inputs))
+	for _, input := range inputs {
+		// RTMR0.
+		rtmr0Log := tdxRtmr0Log(input, cfv)
+		rtmr0 := measureLog(rtmr0Log)
+
+		variant := tdxProfileSpecs[input.Hypervisor].MRTDVariant
+		mrtd := tdvfMeta.computeMrtd(fw, variant)
+		eid := pcs.ComputeTdEnclaveIdentity(mrtd, rtmr0, rtmr1, rtmr2, rtmr3[:])
+
+		identities = append(identities, bundle.Identity{
+			Hypervisor: input.Hypervisor,
+			Enclave:    eid,
+		})
+	}
+	return identities, nil
+}
+
+func measureTdxQemuLegacy(bnd *bundle.Bundle, comp *bundle.Component, fw []byte, tdvfMeta *tdvfMetadata) ([]bundle.Identity, error) {
 	// RTMR0.
-	tdHobHash := measureTdxQemuTdHob(&comp.TDX.Resources, tdvfMeta)
+	tdHobHash, err := measureTdxQemuTdHob(&comp.TDX.Resources, tdvfMeta)
+	if err != nil {
+		return nil, err
+	}
 	cfvImageHash, _ := hex.DecodeString("344BC51C980BA621AAA00DA3ED7436F7D6E549197DFE699515DFA2C6583D95E6412AF21C097D473155875FFD561D6790")
 	boot000Hash, _ := hex.DecodeString("23ADA07F5261F12F34A0BD8E46760962D6B4D576A416F1FEA1C64BC656B1D28EACF7047AE6E967C58FD2A98BFA74C298")
-	acpiTablesHash, acpiRsdpHash, acpiLoaderHash, err := measureTdxQemuAcpiTables(&comp.TDX.Resources)
+	acpiTablesHash, acpiRsdpHash, acpiLoaderHash, err := measureTdxQemuAcpiTablesLegacy(&comp.TDX.Resources)
 	if err != nil {
 		return nil, err
 	}
@@ -485,18 +618,18 @@ func MeasureTdxQemu(bnd *bundle.Bundle, comp *bundle.Component) ([]bundle.Identi
 	rtmr0Log := append([][]byte{},
 		tdHobHash,
 		cfvImageHash,
-		measureTdxEfiVariable("8BE4DF61-93CA-11D2-AA0D-00E098032B8C", "SecureBoot"),
-		measureTdxEfiVariable("8BE4DF61-93CA-11D2-AA0D-00E098032B8C", "PK"),
-		measureTdxEfiVariable("8BE4DF61-93CA-11D2-AA0D-00E098032B8C", "KEK"),
-		measureTdxEfiVariable("D719B2CB-3D3A-4596-A3BC-DAD00E67656F", "db"),
-		measureTdxEfiVariable("D719B2CB-3D3A-4596-A3BC-DAD00E67656F", "dbx"),
-		measureSha384([]byte{0x00, 0x00, 0x00, 0x00}), // Separator.
+		measureEfiVariableValue(efiVariableGlobal, "SecureBoot", nil),
+		measureEfiVariableValue(efiVariableGlobal, "PK", nil),
+		measureEfiVariableValue(efiVariableGlobal, "KEK", nil),
+		measureEfiVariableValue(efiVariableImageSecurity, "db", nil),
+		measureEfiVariableValue(efiVariableImageSecurity, "dbx", nil),
+		efiLogSeparator,
 		acpiLoaderHash,
 		acpiRsdpHash,
 		acpiTablesHash,
 		measureSha384([]byte{0x00, 0x00}), // BootOrder
 		boot000Hash,                       // Boot000
-		measureSha384([]byte{0x00, 0x00, 0x00, 0x00}), // Separator.
+		efiLogSeparator,
 	)
 	rtmr0 := measureLog(rtmr0Log)
 
@@ -508,17 +641,15 @@ func MeasureTdxQemu(bnd *bundle.Bundle, comp *bundle.Component) ([]bundle.Identi
 	rtmr1Log := append([][]byte{},
 		kernelAuthenticodeHash,
 		measureSha384([]byte("Calling EFI Application from Boot Option")),
+		// Note that there is no separator here.
 		measureSha384([]byte("Exit Boot Services Invocation")),
 		measureSha384([]byte("Exit Boot Services Returned with Success")),
 	)
 	rtmr1 := measureLog(rtmr1Log)
 
 	// RTMR2.
-	kernelCmdline := strings.Join(comp.TDX.ExtraKernelOptions, " ")
-	rtmr2log := append([][]byte{},
-		measureTdxKernelCmdline(kernelCmdline),
-	)
-	rtmr2 := measureLog(rtmr2log)
+	rtmr2Log := tdxRtmr2Log(comp)
+	rtmr2 := measureLog(rtmr2Log)
 
 	// RTMR3.
 	var rtmr3 [48]byte
@@ -532,7 +663,7 @@ func MeasureTdxQemu(bnd *bundle.Bundle, comp *bundle.Component) ([]bundle.Identi
 		mrtdVariantSinglePass,
 	} {
 		mrtd := tdvfMeta.computeMrtd(fw, variant)
-		eid := computeEnclaveIdentity(mrtd, rtmr0, rtmr1, rtmr2, rtmr3[:])
+		eid := pcs.ComputeTdEnclaveIdentity(mrtd, rtmr0, rtmr1, rtmr2, rtmr3[:])
 
 		ids = append(ids, bundle.Identity{
 			Hypervisor: fmt.Sprintf("qemu/v%d", variant),

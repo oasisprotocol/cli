@@ -366,13 +366,14 @@ term.
 
 ### Upgrade ROFL app dependencies {#upgrade}
 
-Run `rofl upgrade` to bump ROFL bundle TDX artifacts in your manifest file to
-their latest versions. This includes:
+Run `rofl upgrade` to bump ROFL bundle TDX artifacts and policies in your
+manifest file to their latest versions. This includes:
 
 - the firmware
 - the kernel
 - stage two boot
 - ROFL containers middleware (for TDX containers kind only)
+- minimum TCB evaluation data number
 
 ![code shell](../examples/rofl/upgrade.in.static)
 

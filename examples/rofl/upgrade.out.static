@@ -1,2 +1,4 @@
 Artifacts have been updated to the latest versions.
 Run `oasis rofl build` to build with the new artifacts.
+Updated policies for deployments: default.
+Run `oasis rofl update` for each to apply the new policy on-chain.

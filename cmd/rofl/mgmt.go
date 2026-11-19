@@ -32,6 +32,8 @@ import (
 	"github.com/oasisprotocol/cli/version"
 )
 
+const defaultMinTCBEvaluationDataNumber = 21
+
 var (
 	identifierSchemes = map[string]rofl.IdentifierScheme{
 		"cri": rofl.CreatorRoundIndex,
@@ -280,7 +282,7 @@ var (
 						Quotes: quote.Policy{
 							PCS: &pcs.QuotePolicy{
 								TCBValidityPeriod:          30,
-								MinTCBEvaluationDataNumber: 21,
+								MinTCBEvaluationDataNumber: defaultMinTCBEvaluationDataNumber,
 								TDX:                        tdxQuotePolicy,
 							},
 						},
@@ -575,7 +577,7 @@ var (
 
 	upgradeCmd = &cobra.Command{
 		Use:   "upgrade",
-		Short: "Upgrade all artifacts to their latest default versions",
+		Short: "Upgrade all artifacts and policies to their latest default versions",
 		Args:  cobra.NoArgs,
 		Run: func(_ *cobra.Command, _ []string) {
 			manifest, err := buildRofl.LoadManifest()
@@ -609,6 +611,20 @@ var (
 			}
 			sort.Strings(deploymentArtifactsUpdated)
 
+			// Bump the minimum TCB evaluation data number in deployment policies.
+			var deploymentPoliciesUpdated []string
+			for name, deployment := range manifest.Deployments {
+				if deployment == nil || deployment.Policy == nil || deployment.Policy.Quotes.PCS == nil {
+					continue
+				}
+				pcsPolicy := deployment.Policy.Quotes.PCS
+				if pcsPolicy.MinTCBEvaluationDataNumber < defaultMinTCBEvaluationDataNumber {
+					pcsPolicy.MinTCBEvaluationDataNumber = defaultMinTCBEvaluationDataNumber
+					deploymentPoliciesUpdated = append(deploymentPoliciesUpdated, name)
+				}
+			}
+			sort.Strings(deploymentPoliciesUpdated)
+
 			// Update tooling version.
 			manifest.Tooling = &buildRofl.ToolingConfig{
 				Version: strings.TrimPrefix(version.Software, "v"),
@@ -619,14 +635,20 @@ var (
 				cobra.CheckErr(fmt.Errorf("failed to update manifest: %w", err))
 			}
 
-			if artifactsUpdated {
-				fmt.Printf("Artifacts have been updated to the latest versions.\n")
-				if len(deploymentArtifactsUpdated) > 0 {
-					fmt.Printf("Updated deployment artifact overrides: %s.\n", strings.Join(deploymentArtifactsUpdated, ", "))
+			if artifactsUpdated || len(deploymentPoliciesUpdated) > 0 {
+				if artifactsUpdated {
+					fmt.Printf("Artifacts have been updated to the latest versions.\n")
+					if len(deploymentArtifactsUpdated) > 0 {
+						fmt.Printf("Updated deployment artifact overrides: %s.\n", strings.Join(deploymentArtifactsUpdated, ", "))
+					}
+					fmt.Printf("Run `oasis rofl build` to build with the new artifacts.\n")
 				}
-				fmt.Printf("Run `oasis rofl build` to build with the new artifacts.\n")
+				if len(deploymentPoliciesUpdated) > 0 {
+					fmt.Printf("Updated policies for deployments: %s.\n", strings.Join(deploymentPoliciesUpdated, ", "))
+					fmt.Printf("Run `oasis rofl update` for each to apply the new policy on-chain.\n")
+				}
 			} else {
-				fmt.Printf("Artifacts already up-to-date.\n")
+				fmt.Printf("Artifacts and policies already up-to-date.\n")
 			}
 		},
 	}

@@ -1,1 +1,1 @@
-oasis rofl deploy --deployment mainnet --provider oasis1qzc8pldvm8vm3duvdrj63wgvkw34y9ucfcxzetqr --offer small --term hour --term-count 24
+oasis rofl deploy --deployment mainnet --provider rofl:provider:sapphire --offer small --term hour --term-count 24

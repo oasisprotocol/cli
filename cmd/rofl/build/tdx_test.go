@@ -101,6 +101,55 @@ func TestValidateAppFallsBackToGlobalCompose(t *testing.T) {
 	require.Equal(t, "global.example.com", cfg.Ports[0].CustomDomain)
 }
 
+func TestValidateAppProxyProtocol(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Chdir(tmpDir)
+
+	manifest := testContainerManifest()
+	manifest.Artifacts = &buildRofl.ArtifactsConfig{
+		Container: buildRofl.ContainerArtifactsConfig{
+			Compose: globalComposeFile,
+		},
+	}
+	manifest.Deployments = map[string]*buildRofl.Deployment{
+		"testnet": {
+			Network:  "testnet",
+			ParaTime: "sapphire",
+		},
+	}
+
+	for _, tc := range []struct {
+		annotation string
+		expected   string
+		valid      bool
+	}{
+		{`"net.oasis.proxy.ports.8080.proxy_protocol": v2`, "v2", true},
+		{`"net.oasis.proxy.ports.8080.mode": passthrough`, "", true},
+		{`"net.oasis.proxy.ports.8080.proxy_protocol": v1`, "", false},
+	} {
+		compose := []byte(`services:
+  web:
+    image: ghcr.io/oasisprotocol/test:latest
+    ports:
+      - target: 80
+        published: "8080"
+        protocol: tcp
+    annotations:
+      ` + tc.annotation + `
+`)
+		require.NoError(t, os.WriteFile(filepath.Join(tmpDir, globalComposeFile), compose, 0o600))
+
+		cfg, err := ValidateApp(manifest, "testnet", ValidationOpts{Offline: true})
+		if !tc.valid {
+			require.ErrorContains(t, err, "invalid PROXY protocol version")
+			continue
+		}
+		require.NoError(t, err)
+		require.Len(t, cfg.Ports, 1)
+		require.Equal(t, tc.expected, cfg.Ports[0].ProxyProtocol)
+	}
+}
+
 func testContainerManifest() *buildRofl.Manifest {
 	return &buildRofl.Manifest{
 		Name:    "test-app",

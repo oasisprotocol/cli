@@ -181,6 +181,9 @@ var (
 			if customDomains := extractCustomDomains(extraCfg); customDomains != "" {
 				machineDeployment.Metadata[scheduler.MetadataKeyProxyCustomDomains] = customDomains
 			}
+			if proxyProtocol := extractProxyProtocol(extraCfg); proxyProtocol != "" {
+				machineDeployment.Metadata[scheduler.MetadataKeyProxyProtocol] = proxyProtocol
+			}
 
 			var acc wallet.Account
 			switch common.TxUnsigned {
@@ -489,6 +492,19 @@ func extractCustomDomains(extraCfg *roflCmdBuild.AppExtraConfig) string {
 		customDomains = append(customDomains, p.CustomDomain)
 	}
 	return strings.Join(customDomains, " ")
+}
+
+func extractProxyProtocol(extraCfg *roflCmdBuild.AppExtraConfig) string {
+	if extraCfg == nil {
+		return ""
+	}
+
+	for _, p := range extraCfg.Ports {
+		if p.ProxyProtocol != "" {
+			return p.ProxyProtocol
+		}
+	}
+	return ""
 }
 
 func init() {

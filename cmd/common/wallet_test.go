@@ -18,6 +18,9 @@ func TestResolveAddress(t *testing.T) {
 				"pt1": {
 					ID: "0000000000000000000000000000000000000000000000000000000000000000",
 				},
+				"sapphire": {
+					ID: "000000000000000000000000000000000000000000000000f80306c9858e7279",
+				},
 			},
 		},
 	}
@@ -48,6 +51,11 @@ func TestResolveAddress(t *testing.T) {
 		{"pool:consensus:common", "oasis1qrmufhkkyyf79s5za2r8yga9gnk4t446dcy3a5zm", ""},
 		{"pool:consensus:fee-accumulator", "oasis1qqnv3peudzvekhulf8v3ht29z4cthkhy7gkxmph5", ""},
 		{"pool:consensus:governance-deposits", "oasis1qp65laz8zsa9a305wxeslpnkh9x4dv2h2qhjz0ec", ""},
+		{"rofl:provider:sapphire", "oasis1qzc8pldvm8vm3duvdrj63wgvkw34y9ucfcxzetqr", ""},
+		{"rofl:provider:pt1", "", ""},
+		{"rofl:provider:boom", "", ""},
+		{"rofl:providerx", "", ""},
+		{"rofl:invalid", "", ""},
 		{"test:alice", "oasis1qrec770vrek0a9a5lcrv0zvt22504k68svq7kzve", ""},
 		{"test:dave", "oasis1qrk58a6j2qn065m6p06jgjyt032f7qucy5wqeqpt", "0xDce075E1C39b1ae0b75D554558b6451A226ffe00"},
 		{"test:frank", "oasis1qqnf0s9p8z79zfutszt0hwlh7w7jjrfqnq997mlw", ""},

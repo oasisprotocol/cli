@@ -201,7 +201,7 @@ type Offer struct {
 }
 
 // ArtifactKinds are the artifact kinds recognized by the scheduler in AllowedArtifacts.
-var ArtifactKinds = []string{"firmware", "kernel", "initrd", "stage2"}
+var ArtifactKinds = []string{"firmware", "kernel", "initrd", "stage2", "platform"}
 
 // Validate validates the offer.
 func (o *Offer) Validate() error {

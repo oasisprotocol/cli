@@ -13,7 +13,6 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/connection"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/helpers"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/modules/roflmarket"
-	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
 	"github.com/oasisprotocol/cli/cmd/common"
 	roflCommon "github.com/oasisprotocol/cli/cmd/rofl/common"
@@ -40,21 +39,19 @@ Use --format json for machine-readable output including provider metadata.`,
 		conn, err := connection.Connect(ctx, npa.Network)
 		cobra.CheckErr(err)
 
-		// Parse provider address.
+		// Resolve provider address.
 		providerAddr := args[0]
-		var addr types.Address
-		if err = addr.UnmarshalText([]byte(providerAddr)); err != nil {
-			cobra.CheckErr(fmt.Errorf("invalid provider address '%s': %w", providerAddr, err))
-		}
+		addr, _, err := common.ResolveLocalAccountOrAddress(npa.Network, providerAddr)
+		cobra.CheckErr(err)
 
 		// Query the provider from the chain.
-		provider, err := conn.Runtime(npa.ParaTime).ROFLMarket.Provider(ctx, client.RoundLatest, addr)
+		provider, err := conn.Runtime(npa.ParaTime).ROFLMarket.Provider(ctx, client.RoundLatest, *addr)
 		if err != nil {
 			cobra.CheckErr(fmt.Errorf("failed to query provider: %w", err))
 		}
 
 		// Query offers for the provider.
-		offers, err := conn.Runtime(npa.ParaTime).ROFLMarket.Offers(ctx, client.RoundLatest, addr)
+		offers, err := conn.Runtime(npa.ParaTime).ROFLMarket.Offers(ctx, client.RoundLatest, *addr)
 		if err != nil {
 			cobra.CheckErr(fmt.Errorf("failed to query offers for provider: %w", err))
 		}

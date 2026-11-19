@@ -17,6 +17,7 @@ import (
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/testing"
 	"github.com/oasisprotocol/oasis-sdk/client-sdk/go/types"
 
+	buildRoflProvider "github.com/oasisprotocol/cli/build/rofl/provider"
 	"github.com/oasisprotocol/cli/config"
 	"github.com/oasisprotocol/cli/wallet"
 	"github.com/oasisprotocol/cli/wallet/test"
@@ -28,6 +29,7 @@ const (
 	addressExplicitConsensus = "consensus"
 	addressExplicitPool      = "pool"
 	addressExplicitTest      = "test"
+	addressExplicitRofl      = "rofl"
 
 	// Shared address literals.
 	poolCommon         = "common"
@@ -41,6 +43,9 @@ const (
 	poolRewards           = "rewards"
 	poolPendingWithdrawal = "pending-withdrawal"
 	poolPendingDelegation = "pending-delegation"
+
+	// ROFL address literals.
+	roflProvider = "provider"
 )
 
 var (
@@ -283,6 +288,29 @@ func ResolveAddress(net *configSdk.Network, address string) (*types.Address, *et
 			return &testKey.Address, testKey.EthAddress, nil
 		}
 		return nil, nil, fmt.Errorf("unsupported test account: %s", data)
+	case addressExplicitRofl:
+		switch data {
+		case roflProvider:
+			// rofl:provider:<paratime>
+			if len(subs) != 3 {
+				return nil, nil, fmt.Errorf("invalid ROFL provider address: %s", address)
+			}
+			ptName := subs[2]
+
+			pt, ok := net.ParaTimes.All[ptName]
+			if !ok {
+				return nil, nil, fmt.Errorf("unknown paratime: %s", ptName)
+			}
+
+			if svc, ok := buildRoflProvider.DefaultRoflServices[pt.ID]; ok {
+				if svc.Provider != "" {
+					return helpers.ResolveEthOrOasisAddress(svc.Provider)
+				}
+			}
+			return nil, nil, fmt.Errorf("unknown ROFL provider: %s", address)
+		default:
+			return nil, nil, fmt.Errorf("unsupported ROFL account kind: %s", data)
+		}
 	default:
 		// Unsupported kind.
 		return nil, nil, fmt.Errorf("unsupported explicit address kind: %s", kind)

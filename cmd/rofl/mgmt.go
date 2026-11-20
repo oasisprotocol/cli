@@ -32,7 +32,7 @@ import (
 	"github.com/oasisprotocol/cli/version"
 )
 
-const defaultMinTCBEvaluationDataNumber = 21
+const defaultMinTCBEvaluationDataNumber = 22
 
 var (
 	identifierSchemes = map[string]rofl.IdentifierScheme{

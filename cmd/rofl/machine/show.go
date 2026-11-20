@@ -109,6 +109,9 @@ func prettyPrintMachine(mCfg *machineCfg, out *machineShowOutput) {
 	fmt.Println()
 	fmt.Printf("Creator:    %s\n", common.PrettyAddress(out.Machine.Creator.String()))
 	fmt.Printf("Admin:      %s\n", common.PrettyAddress(out.Machine.Admin.String()))
+	if out.Machine.PendingAdmin != nil {
+		fmt.Printf("  Pending:  %s\n", common.PrettyAddress(out.Machine.PendingAdmin.String()))
+	}
 	switch out.Machine.NodeID {
 	case nil:
 		fmt.Printf("Node ID:    <none>\n")

@@ -114,7 +114,8 @@ var (
 
 	changeAdminCmd = &cobra.Command{
 		Use:     "set-admin [<machine-name> | <provider-address>:<machine-id>] <new-admin>",
-		Short:   "Change the machine administrator",
+		Short:   "Propose a new machine administrator",
+		Long:    "Propose a new machine administrator. The change only takes effect once the new administrator accepts it using `rofl machine accept-admin`. Proposing the current administrator cancels any pending change.",
 		Aliases: []string{"change-admin"},
 		Args:    cobra.RangeArgs(1, 2),
 		Run: func(_ *cobra.Command, args []string) {
@@ -153,10 +154,12 @@ var (
 			fmt.Printf("Machine:   %s [%s]\n", mCfg.MachineName, mCfg.Machine.ID)
 
 			// Resolve old admin in online mode.
+			var oldAdminAddr *types.Address
 			if !txCfg.Offline {
 				insDsc, err := conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *mCfg.ProviderAddr, mCfg.MachineID)
 				cobra.CheckErr(err)
 
+				oldAdminAddr = &insDsc.Admin
 				fmt.Printf("Old admin: %s\n", common.PrettyAddress(insDsc.Admin.String()))
 			}
 
@@ -181,7 +184,78 @@ var (
 				return
 			}
 
-			fmt.Printf("Machine admin address changed.\n")
+			if oldAdminAddr != nil && oldAdminAddr.Equal(*newAdminAddr) {
+				fmt.Printf("Pending machine admin change cancelled.\n")
+				return
+			}
+
+			fmt.Printf("Machine admin change proposed.\n")
+			fmt.Printf("The new admin must accept it for the change to take effect by running:\n")
+			fmt.Println()
+			fmt.Printf("  oasis rofl machine accept-admin %s:%s\n", mCfg.ProviderAddr, mCfg.Machine.ID)
+		},
+	}
+
+	acceptAdminCmd = &cobra.Command{
+		Use:   "accept-admin [<machine-name> | <provider-address>:<machine-id>]",
+		Short: "Accept a pending machine administrator change",
+		Long:  "Accept a pending machine administrator change (by the new admin).",
+		Args:  cobra.MaximumNArgs(1),
+		Run: func(_ *cobra.Command, args []string) {
+			txCfg := common.GetTransactionConfig()
+			mCfg, err := resolveMachineCfg(args, &roflCommon.ManifestOptions{
+				NeedAppID: true,
+				NeedAdmin: false,
+			})
+			cobra.CheckErr(err)
+
+			// When not in offline mode, connect to the given network endpoint.
+			ctx := context.Background()
+			var conn connection.Connection
+			if !txCfg.Offline {
+				conn, err = connection.Connect(ctx, mCfg.NPA.Network)
+				cobra.CheckErr(err)
+			}
+
+			fmt.Printf("Provider:  %s\n", common.PrettyAddress(mCfg.ProviderAddr.String()))
+			fmt.Printf("Machine:   %s [%s]\n", mCfg.MachineName, mCfg.Machine.ID)
+
+			// Resolve old and pending admin in online mode.
+			var pendingAdminAddr *types.Address
+			if !txCfg.Offline {
+				insDsc, err := conn.Runtime(mCfg.NPA.ParaTime).ROFLMarket.Instance(ctx, client.RoundLatest, *mCfg.ProviderAddr, mCfg.MachineID)
+				cobra.CheckErr(err)
+
+				if insDsc.PendingAdmin == nil {
+					cobra.CheckErr("machine has no pending admin change")
+				}
+				pendingAdminAddr = insDsc.PendingAdmin
+
+				fmt.Printf("Old admin: %s\n", common.PrettyAddress(insDsc.Admin.String()))
+				fmt.Printf("New admin: %s\n", common.PrettyAddress(insDsc.PendingAdmin.String()))
+			}
+
+			common.Warn("WARNING: Accepting the change will clear the current machine deployment and any queued commands!")
+
+			acc := common.LoadAccount(cliConfig.Global(), mCfg.NPA.AccountName)
+			if pendingAdminAddr != nil && !pendingAdminAddr.Equal(acc.Address()) {
+				cobra.CheckErr(fmt.Errorf("account '%s' is not the pending machine admin", mCfg.NPA.AccountName))
+			}
+
+			// Prepare transaction.
+			tx := roflmarket.NewInstanceAcceptAdminTx(nil, &roflmarket.InstanceAcceptAdmin{
+				Provider: *mCfg.ProviderAddr,
+				ID:       mCfg.MachineID,
+			})
+
+			sigTx, meta, err := common.SignParaTimeTransaction(ctx, mCfg.NPA, acc, conn, tx, nil)
+			cobra.CheckErr(err)
+
+			if !common.BroadcastOrExportTransaction(ctx, mCfg.NPA, conn, sigTx, meta, nil) {
+				return
+			}
+
+			fmt.Printf("Machine admin change accepted.\n")
 		},
 	}
 
@@ -466,6 +540,10 @@ func init() {
 	common.AddAccountFlag(changeAdminCmd)
 	changeAdminCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
 	changeAdminCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
+
+	common.AddSelectorFlags(acceptAdminCmd)
+	acceptAdminCmd.Flags().AddFlagSet(common.RuntimeTxFlags)
+	acceptAdminCmd.Flags().AddFlagSet(roflCommon.DeploymentFlags)
 
 	common.AddSelectorFlags(topUpCmd)
 	topUpCmd.Flags().AddFlagSet(common.RuntimeTxFlags)

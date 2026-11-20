@@ -402,11 +402,33 @@ Run `rofl machine set-admin` to change the administrator of an individual
 machine instance. This is independent of the ROFL app administrator and only
 affects management of the specific machine instance.
 
+Changing the machine administrator is a two-step process. First, the current
+administrator proposes the new administrator:
+
 ![code shell](../examples/rofl/machine-set-admin.in.static)
 
-To change the administrator of the machine without a local manifest, run:
+To propose the new administrator of the machine without a local manifest, run:
 
 ![code shell](../examples/rofl/machine-set-admin-address.in.static)
+
+The current administrator remains in control of the machine until the proposed
+administrator accepts the change by running `rofl machine accept-admin` using
+their account:
+
+![code shell](../examples/rofl/machine-accept-admin-address.in.static)
+
+Accepting the change clears the current machine deployment and any queued
+commands, so the new administrator needs to deploy the app again. Until the
+change is accepted, the current administrator can cancel it by proposing
+themselves as the new administrator.
+
+:::info
+
+The proposed administrator can also be a smart contract. In that case, the
+contract accepts the change by calling `roflmarket.InstanceAcceptAdmin` via the
+subcall precompile.
+
+:::
 
 ### Remove ROFL app from the network {#remove}
 

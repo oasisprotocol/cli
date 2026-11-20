@@ -19,4 +19,6 @@ const (
 	MetadataKeyORCReference = "net.oasis.deployment.orc.ref"
 	// MetadataKeyProxyCustomDomains is the name of the metadata key that stores the proxy custom domains.
 	MetadataKeyProxyCustomDomains = "net.oasis.proxy.custom_domains"
+	// MetadataKeyProxyProtocol is the name of the metadata key that stores the PROXY protocol version.
+	MetadataKeyProxyProtocol = "net.oasis.proxy.proxy_protocol"
 )

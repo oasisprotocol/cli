@@ -41,6 +41,8 @@ type PortMapping struct {
 	GenericDomain string
 	// CustomDomain is the custom domain name (if any).
 	CustomDomain string
+	// ProxyProtocol is the PROXY protocol version that the service expects on the port (if any).
+	ProxyProtocol string
 }
 
 // ValidateApp validates the ROFL app manifest for the selected deployment.
@@ -193,12 +195,14 @@ func validateComposeFile(composeFile string, manifest *buildRofl.Manifest, opts 
 				}
 				customDomains[customDomain] = struct{}{}
 			}
+			proxyProtocol := service.Annotations[fmt.Sprintf("net.oasis.proxy.ports.%s.proxy_protocol", port.Published)]
 			appCfg.Ports = append(appCfg.Ports, &PortMapping{
 				ServiceName:   serviceName,
 				Port:          port.Published,
 				ProxyMode:     proxyMode,
 				GenericDomain: genericDomain,
 				CustomDomain:  customDomain,
+				ProxyProtocol: proxyProtocol,
 			})
 		}
 
@@ -227,6 +231,13 @@ func validateComposeFile(composeFile string, manifest *buildRofl.Manifest, opts 
 						return nil, fmt.Errorf("proxy port annotation of service '%s', port '%d' has an invalid mode: %s", serviceName, port, value)
 					}
 				case "custom_domain":
+				case "proxy_protocol":
+					// Validate supported versions.
+					switch value {
+					case "v2":
+					default:
+						return nil, fmt.Errorf("proxy port annotation of service '%s', port '%d' has an invalid PROXY protocol version: %s", serviceName, port, value)
+					}
 				default:
 				}
 			default:

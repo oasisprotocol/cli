@@ -248,6 +248,19 @@ var (
 				allManifestEnclaves[eid.ID] = struct{}{}
 			}
 
+			// The "effective latest" enclave identities are the untagged ones plus whichever
+			// versioned ones are tagged with the app's current version (from the manifest's
+			// top-level `version` field), since either can represent the current app version.
+			effectiveLatestEnclaves := make(map[sgx.EnclaveIdentity]struct{}, len(latestManifestEnclaves))
+			for id := range latestManifestEnclaves {
+				effectiveLatestEnclaves[id] = struct{}{}
+			}
+			for _, eid := range deployment.Policy.Enclaves {
+				if !eid.IsLatest() && eid.Version == manifest.Version {
+					effectiveLatestEnclaves[eid.ID] = struct{}{}
+				}
+			}
+
 			// Perform verification when requested.
 			if doVerify {
 				showIdentityDiff := func(this, other map[sgx.EnclaveIdentity]struct{}, thisName, otherName string) {
@@ -264,14 +277,25 @@ var (
 					}
 				}
 
-				if !maps.Equal(buildEnclaves, latestManifestEnclaves) {
+				// The build must match one of the effective latest enclave identities (the
+				// untagged one, and/or whichever versioned one matches the manifest's current
+				// version).
+				matches := len(buildEnclaves) > 0
+				for enclaveID := range buildEnclaves {
+					if _, ok := effectiveLatestEnclaves[enclaveID]; !ok {
+						matches = false
+						break
+					}
+				}
+
+				if !matches {
 					fmt.Println("Built enclave identities DIFFER from latest manifest enclave identities!")
-					showIdentityDiff(buildEnclaves, latestManifestEnclaves, "Built", "Manifest")
+					showIdentityDiff(buildEnclaves, effectiveLatestEnclaves, "Built", "Manifest")
 					return fmt.Errorf("enclave identity verification failed")
 				}
 
 				fmt.Println("Built enclave identities MATCH latest manifest enclave identities.")
-				if len(latestManifestEnclaves) != len(allManifestEnclaves) {
+				if len(effectiveLatestEnclaves) != len(allManifestEnclaves) {
 					fmt.Println("NOTE: Non-latest enclave identities present in manifest!")
 				}
 

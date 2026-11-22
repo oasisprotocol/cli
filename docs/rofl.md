@@ -275,7 +275,9 @@ offer:
   available provider term by default.
 - `--term-count <number>` specifies the multiplier. Default is `1`.
 - `--replace-machine` if the existing machine in the manifest file expired,
-  rent a new machine and replace the existing machine ID.
+  rent a new machine and replace the existing machine ID. This also applies
+  when an expired machine is still listed as accepted. Without this flag,
+  deploying to an expired machine fails. An unexpired machine is reused.
 
 ![code shell](../examples/rofl/deploy.in.static)
 

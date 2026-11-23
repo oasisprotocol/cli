@@ -150,6 +150,69 @@ func TestValidateAppProxyProtocol(t *testing.T) {
 	}
 }
 
+func TestValidateAppProxyTimeouts(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Chdir(tmpDir)
+
+	manifest := testContainerManifest()
+	manifest.Artifacts = &buildRofl.ArtifactsConfig{
+		Container: buildRofl.ContainerArtifactsConfig{
+			Compose: globalComposeFile,
+		},
+	}
+
+	for _, tc := range []struct {
+		annotations string
+		expected    PortMapping
+		err         string
+	}{
+		{
+			annotations: `"net.oasis.proxy.ports.8080.timeout_rw": "300"
+      "net.oasis.proxy.ports.8080.timeout_connection": 3600
+      "net.oasis.proxy.ports.8080.timeout_connect": 5`,
+			expected: PortMapping{TimeoutConnect: 5, TimeoutConnection: 3600, TimeoutRW: 300},
+		},
+		{
+			annotations: `"net.oasis.proxy.ports.8080.mode": passthrough`,
+		},
+		{
+			annotations: `"net.oasis.proxy.ports.8080.timeout_rw": 0`,
+			err:         "has an invalid timeout_rw",
+		},
+		{
+			annotations: `"net.oasis.proxy.ports.8080.timeout_connection": 86401`,
+			err:         "has an invalid timeout_connection",
+		},
+		{
+			annotations: `"net.oasis.proxy.ports.8080.timeout_connect": 5s`,
+			err:         "has an invalid timeout_connect",
+		},
+	} {
+		compose := []byte(`services:
+  web:
+    image: ghcr.io/oasisprotocol/test:latest
+    ports:
+      - target: 80
+        published: "8080"
+        protocol: tcp
+    annotations:
+      ` + tc.annotations + `
+`)
+		require.NoError(t, os.WriteFile(filepath.Join(tmpDir, globalComposeFile), compose, 0o600))
+
+		cfg, err := ValidateApp(manifest, "", ValidationOpts{Offline: true})
+		if tc.err != "" {
+			require.ErrorContains(t, err, tc.err)
+			continue
+		}
+		require.NoError(t, err)
+		require.Len(t, cfg.Ports, 1)
+		require.Equal(t, tc.expected.TimeoutConnect, cfg.Ports[0].TimeoutConnect)
+		require.Equal(t, tc.expected.TimeoutConnection, cfg.Ports[0].TimeoutConnection)
+		require.Equal(t, tc.expected.TimeoutRW, cfg.Ports[0].TimeoutRW)
+	}
+}
+
 func testContainerManifest() *buildRofl.Manifest {
 	return &buildRofl.Manifest{
 		Name:    "test-app",

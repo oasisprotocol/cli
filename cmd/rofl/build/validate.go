@@ -43,6 +43,24 @@ type PortMapping struct {
 	CustomDomain string
 	// ProxyProtocol is the PROXY protocol version that the service expects on the port (if any).
 	ProxyProtocol string
+	// TimeoutConnect is the proxy timeout for connecting to the service in seconds (zero for default).
+	TimeoutConnect uint64
+	// TimeoutConnection is the maximum proxy connection duration in seconds (zero for default).
+	TimeoutConnection uint64
+	// TimeoutRW is the proxy read/write timeout in seconds (zero for default).
+	TimeoutRW uint64
+}
+
+// maxProxyTimeout is the maximum proxy timeout (in seconds) that can be configured for a port.
+const maxProxyTimeout = 24 * 60 * 60
+
+// parseProxyTimeout parses a proxy timeout annotation value (in seconds).
+func parseProxyTimeout(value string) (uint64, error) {
+	timeout, err := strconv.ParseUint(value, 10, 64)
+	if err != nil || timeout == 0 || timeout > maxProxyTimeout {
+		return 0, fmt.Errorf("must be a number of seconds between 1 and %d", maxProxyTimeout)
+	}
+	return timeout, nil
 }
 
 // ValidateApp validates the ROFL app manifest for the selected deployment.
@@ -196,13 +214,21 @@ func validateComposeFile(composeFile string, manifest *buildRofl.Manifest, opts 
 				customDomains[customDomain] = struct{}{}
 			}
 			proxyProtocol := service.Annotations[fmt.Sprintf("net.oasis.proxy.ports.%s.proxy_protocol", port.Published)]
+			proxyTimeout := func(setting string) uint64 {
+				// Invalid values are rejected when validating annotations below.
+				timeout, _ := parseProxyTimeout(service.Annotations[fmt.Sprintf("net.oasis.proxy.ports.%s.timeout_%s", port.Published, setting)])
+				return timeout
+			}
 			appCfg.Ports = append(appCfg.Ports, &PortMapping{
-				ServiceName:   serviceName,
-				Port:          port.Published,
-				ProxyMode:     proxyMode,
-				GenericDomain: genericDomain,
-				CustomDomain:  customDomain,
-				ProxyProtocol: proxyProtocol,
+				ServiceName:       serviceName,
+				Port:              port.Published,
+				ProxyMode:         proxyMode,
+				GenericDomain:     genericDomain,
+				CustomDomain:      customDomain,
+				ProxyProtocol:     proxyProtocol,
+				TimeoutConnect:    proxyTimeout("connect"),
+				TimeoutConnection: proxyTimeout("connection"),
+				TimeoutRW:         proxyTimeout("rw"),
 			})
 		}
 
@@ -237,6 +263,10 @@ func validateComposeFile(composeFile string, manifest *buildRofl.Manifest, opts 
 					case "v2":
 					default:
 						return nil, fmt.Errorf("proxy port annotation of service '%s', port '%d' has an invalid PROXY protocol version: %s", serviceName, port, value)
+					}
+				case "timeout_connect", "timeout_connection", "timeout_rw":
+					if _, err := parseProxyTimeout(value); err != nil {
+						return nil, fmt.Errorf("proxy port annotation of service '%s', port '%d' has an invalid %s: %w", serviceName, port, keyAtoms[5], err)
 					}
 				default:
 				}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -53,6 +54,34 @@ type PortMapping struct {
 
 // maxProxyTimeout is the maximum proxy timeout (in seconds) that can be configured for a port.
 const maxProxyTimeout = 24 * 60 * 60
+
+// proxyDomainProfile converts domains to the IDNA ASCII form in the same way as the proxy
+// (UTS #46 non-transitional processing without STD3 or hyphen restrictions).
+var proxyDomainProfile = idna.New(
+	idna.MapForLookup(),
+	idna.Transitional(false),
+	idna.StrictDomainName(false),
+	idna.CheckHyphens(false),
+	idna.CheckJoiners(true),
+	idna.BidiRule(),
+)
+
+// canonicalProxyDomain returns the canonical form of a domain under which the proxy routes it.
+//
+// Domains that only differ in case, a trailing dot or their Unicode and ASCII spelling are the
+// same domain to the proxy.
+func canonicalProxyDomain(domain string) (string, error) {
+	canonical, err := proxyDomainProfile.ToASCII(domain)
+	if err != nil {
+		return "", err
+	}
+	// Conversion is done first as it can map other characters (e.g. U+3002) to dots.
+	canonical = strings.TrimSuffix(canonical, ".")
+	if slices.Contains(strings.Split(canonical, "."), "") {
+		return "", fmt.Errorf("empty label")
+	}
+	return canonical, nil
+}
 
 // parseProxyTimeout parses a proxy timeout annotation value (in seconds).
 func parseProxyTimeout(value string) (uint64, error) {
@@ -208,10 +237,14 @@ func validateComposeFile(composeFile string, manifest *buildRofl.Manifest, opts 
 			genericDomain := fmt.Sprintf("p%s", port.Published)
 			customDomain := service.Annotations[fmt.Sprintf("net.oasis.proxy.ports.%s.custom_domain", port.Published)]
 			if customDomain != "" {
-				if _, ok := customDomains[customDomain]; ok {
+				canonicalDomain, err := canonicalProxyDomain(customDomain)
+				if err != nil {
+					return nil, fmt.Errorf("custom domain '%s' of service '%s' is invalid: %w", customDomain, serviceName, err)
+				}
+				if _, ok := customDomains[canonicalDomain]; ok {
 					return nil, fmt.Errorf("custom domain '%s' of service '%s' is already in use", customDomain, serviceName)
 				}
-				customDomains[customDomain] = struct{}{}
+				customDomains[canonicalDomain] = struct{}{}
 			}
 			proxyProtocol := service.Annotations[fmt.Sprintf("net.oasis.proxy.ports.%s.proxy_protocol", port.Published)]
 			proxyTimeout := func(setting string) uint64 {

@@ -150,6 +150,158 @@ func TestValidateAppProxyProtocol(t *testing.T) {
 	}
 }
 
+func TestValidateAppProxyTimeouts(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Chdir(tmpDir)
+
+	manifest := testContainerManifest()
+	manifest.Artifacts = &buildRofl.ArtifactsConfig{
+		Container: buildRofl.ContainerArtifactsConfig{
+			Compose: globalComposeFile,
+		},
+	}
+
+	for _, tc := range []struct {
+		annotations string
+		expected    PortMapping
+		err         string
+	}{
+		{
+			annotations: `"net.oasis.proxy.ports.8080.timeout_rw": "300"
+      "net.oasis.proxy.ports.8080.timeout_connection": 3600
+      "net.oasis.proxy.ports.8080.timeout_connect": 5`,
+			expected: PortMapping{TimeoutConnect: 5, TimeoutConnection: 3600, TimeoutRW: 300},
+		},
+		{
+			annotations: `"net.oasis.proxy.ports.8080.mode": passthrough`,
+		},
+		{
+			annotations: `"net.oasis.proxy.ports.8080.timeout_rw": 0`,
+			err:         "has an invalid timeout_rw",
+		},
+		{
+			annotations: `"net.oasis.proxy.ports.8080.timeout_connection": 86401`,
+			err:         "has an invalid timeout_connection",
+		},
+		{
+			annotations: `"net.oasis.proxy.ports.8080.timeout_connect": 5s`,
+			err:         "has an invalid timeout_connect",
+		},
+	} {
+		compose := []byte(`services:
+  web:
+    image: ghcr.io/oasisprotocol/test:latest
+    ports:
+      - target: 80
+        published: "8080"
+        protocol: tcp
+    annotations:
+      ` + tc.annotations + `
+`)
+		require.NoError(t, os.WriteFile(filepath.Join(tmpDir, globalComposeFile), compose, 0o600))
+
+		cfg, err := ValidateApp(manifest, "", ValidationOpts{Offline: true})
+		if tc.err != "" {
+			require.ErrorContains(t, err, tc.err)
+			continue
+		}
+		require.NoError(t, err)
+		require.Len(t, cfg.Ports, 1)
+		require.Equal(t, tc.expected.TimeoutConnect, cfg.Ports[0].TimeoutConnect)
+		require.Equal(t, tc.expected.TimeoutConnection, cfg.Ports[0].TimeoutConnection)
+		require.Equal(t, tc.expected.TimeoutRW, cfg.Ports[0].TimeoutRW)
+	}
+}
+
+func TestValidateAppDuplicateCustomDomains(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Chdir(tmpDir)
+
+	manifest := testContainerManifest()
+	manifest.Artifacts = &buildRofl.ArtifactsConfig{
+		Container: buildRofl.ContainerArtifactsConfig{
+			Compose: globalComposeFile,
+		},
+	}
+
+	for _, tc := range [][2]string{
+		{"app.example.org", "App.Example.org."},
+		{"xn--bcher-kva.example.org", "Bücher.example.org"},
+	} {
+		compose := []byte(`services:
+  web:
+    image: ghcr.io/oasisprotocol/test:latest
+    ports:
+      - target: 80
+        published: "8080"
+        protocol: tcp
+      - target: 81
+        published: "8081"
+        protocol: tcp
+    annotations:
+      "net.oasis.proxy.ports.8080.custom_domain": ` + tc[0] + `
+      "net.oasis.proxy.ports.8081.custom_domain": ` + tc[1] + `
+`)
+		require.NoError(t, os.WriteFile(filepath.Join(tmpDir, globalComposeFile), compose, 0o600))
+
+		_, err := ValidateApp(manifest, "", ValidationOpts{Offline: true})
+		require.ErrorContains(t, err, "is already in use", tc[1])
+	}
+}
+
+func TestCanonicalProxyDomain(t *testing.T) {
+	// These must match the canonical names used by the proxy (rofl-proxy `canonical_name`).
+	for _, tc := range [][2]string{
+		{"App.Example.ORG.", "app.example.org"},
+		{"bücher.example.org", "xn--bcher-kva.example.org"},
+		{"BÜCHER.Example.org.", "xn--bcher-kva.example.org"},
+		{"XN--BCHER-KVA.example.org", "xn--bcher-kva.example.org"},
+		{"straße.example", "xn--strae-oqa.example"},
+		{"bücher。example。org", "xn--bcher-kva.example.org"},
+	} {
+		canonical, err := canonicalProxyDomain(tc[0])
+		require.NoError(t, err, tc[0])
+		require.Equal(t, tc[1], canonical, tc[0])
+	}
+
+	for _, domain := range []string{"", "docs.example..", "docs。。example", "xn--a.example.org"} {
+		_, err := canonicalProxyDomain(domain)
+		require.Error(t, err, domain)
+	}
+}
+
+func TestValidateAppCustomDomainEmptyLabel(t *testing.T) {
+	tmpDir := t.TempDir()
+	t.Chdir(tmpDir)
+
+	manifest := testContainerManifest()
+	manifest.Artifacts = &buildRofl.ArtifactsConfig{
+		Container: buildRofl.ContainerArtifactsConfig{
+			Compose: globalComposeFile,
+		},
+	}
+
+	for _, tc := range []struct {
+		domain string
+		valid  bool
+	}{
+		{"docs.example.org", true},
+		{"docs.example.org.", true},
+		{"docs.example..", false},
+		{"docs..example.org", false},
+		{".example.org", false},
+	} {
+		writeComposeFile(t, filepath.Join(tmpDir, globalComposeFile), "8080", tc.domain)
+
+		_, err := ValidateApp(manifest, "", ValidationOpts{Offline: true})
+		if tc.valid {
+			require.NoError(t, err, tc.domain)
+		} else {
+			require.ErrorContains(t, err, "is invalid", tc.domain)
+		}
+	}
+}
+
 func testContainerManifest() *buildRofl.Manifest {
 	return &buildRofl.Manifest{
 		Name:    "test-app",

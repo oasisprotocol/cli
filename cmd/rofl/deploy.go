@@ -8,6 +8,7 @@ import (
 	"maps"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -184,6 +185,7 @@ var (
 			if proxyProtocol := extractProxyProtocol(extraCfg); proxyProtocol != "" {
 				machineDeployment.Metadata[scheduler.MetadataKeyProxyProtocol] = proxyProtocol
 			}
+			maps.Copy(machineDeployment.Metadata, extractProxyTimeouts(extraCfg))
 
 			var acc wallet.Account
 			switch common.TxUnsigned {
@@ -505,6 +507,30 @@ func extractProxyProtocol(extraCfg *roflCmdBuild.AppExtraConfig) string {
 		}
 	}
 	return ""
+}
+
+// extractProxyTimeouts returns the deployment metadata that requests proxy timeouts from the
+// provider. The provider's proxy handles all ports of an instance together, so the maximum
+// timeouts across ports are requested while the proxy inside the instance enforces the exact
+// per-port timeouts.
+func extractProxyTimeouts(extraCfg *roflCmdBuild.AppExtraConfig) map[string]string {
+	metadata := make(map[string]string)
+	if extraCfg == nil {
+		return metadata
+	}
+
+	var timeoutRW, timeoutConnection uint64
+	for _, p := range extraCfg.Ports {
+		timeoutRW = max(timeoutRW, p.TimeoutRW)
+		timeoutConnection = max(timeoutConnection, p.TimeoutConnection)
+	}
+	if timeoutRW > 0 {
+		metadata[scheduler.MetadataKeyProxyTimeoutRW] = strconv.FormatUint(timeoutRW, 10)
+	}
+	if timeoutConnection > 0 {
+		metadata[scheduler.MetadataKeyProxyTimeoutConnection] = strconv.FormatUint(timeoutConnection, 10)
+	}
+	return metadata
 }
 
 func init() {

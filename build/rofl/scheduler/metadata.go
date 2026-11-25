@@ -21,4 +21,10 @@ const (
 	MetadataKeyProxyCustomDomains = "net.oasis.proxy.custom_domains"
 	// MetadataKeyProxyProtocol is the name of the metadata key that stores the PROXY protocol version.
 	MetadataKeyProxyProtocol = "net.oasis.proxy.proxy_protocol"
+	// MetadataKeyProxyTimeoutRW is the name of the metadata key that stores the requested proxy
+	// read/write timeout (in seconds).
+	MetadataKeyProxyTimeoutRW = "net.oasis.proxy.timeout_rw"
+	// MetadataKeyProxyTimeoutConnection is the name of the metadata key that stores the requested
+	// maximum proxy connection duration (in seconds).
+	MetadataKeyProxyTimeoutConnection = "net.oasis.proxy.timeout_connection"
 )
